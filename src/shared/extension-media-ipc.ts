@@ -8,7 +8,7 @@ import {
   MediaPickSaveTargetRequestSchema,
   MediaPickSaveTargetResultSchema,
   MediaResourceLeaseSchema
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 import { z } from 'zod'
 
 const extensionIdSchema = z
@@ -77,7 +77,7 @@ export const ExtensionMediaPickFilesIpcResultSchema = MediaPickFilesResultSchema
 export const ExtensionMediaPickSaveTargetIpcResultSchema = MediaPickSaveTargetResultSchema
 
 /**
- * Main -> Kun only. Raw paths and the protected operation token MUST NOT be
+ * Main -> Rcode only. Raw paths and the protected operation token MUST NOT be
  * returned to the workbench renderer or Extension View.
  */
 export const ExtensionMediaSelectionRegistrationRequestSchema = z.strictObject({
@@ -114,7 +114,7 @@ export const ExtensionMediaFileIdentitySchema = z.strictObject({
 })
 export type ExtensionMediaFileIdentity = z.infer<typeof ExtensionMediaFileIdentitySchema>
 
-/** Main -> Kun request to resolve a handle for one authenticated View. */
+/** Main -> Rcode request to resolve a handle for one authenticated View. */
 export const ExtensionMediaLeaseCreationRequestSchema = z.strictObject({
   binding: ExtensionMediaViewBindingSchema,
   handleId: MediaHandleIdSchema,
@@ -125,7 +125,7 @@ export type ExtensionMediaLeaseCreationRequest = z.infer<
 >
 
 /**
- * Kun -> Main only. `absolutePath` is consumed by the Main lease resolver and
+ * Rcode -> Main only. `absolutePath` is consumed by the Main lease resolver and
  * never appears in ExtensionMediaLeaseCreationResultSchema.
  */
 export const ExtensionMediaLeaseRegistrationSchema = z.strictObject({
@@ -145,7 +145,7 @@ export type ExtensionMediaLeaseCreationResult = z.infer<
   typeof ExtensionMediaLeaseCreationResultSchema
 >
 
-/** Kun -> Main only. The absolute path is consumed by the desktop action. */
+/** Rcode -> Main only. The absolute path is consumed by the desktop action. */
 export const ExtensionArtifactResolutionSchema = z.strictObject({
   artifactId: GeneratedArtifactIdSchema,
   absolutePath: absolutePathSchema,
@@ -189,7 +189,7 @@ export const ExtensionMediaLeaseRevocationResultSchema = z.strictObject({
 })
 
 export const ExtensionMediaDiagnosticsSchema = z.strictObject({
-  scheme: z.literal('kun-media'),
+  scheme: z.literal('Rcode-media'),
   preparedViewCount: z.number().int().nonnegative(),
   activeLeaseCount: z.number().int().nonnegative(),
   activeStreamCount: z.number().int().nonnegative(),

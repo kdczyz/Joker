@@ -10,7 +10,7 @@ const baseProps = {
   onPickWorkspace: () => undefined,
   onRefreshWorkspace: () => undefined,
   workspaceName: 'write_workspace',
-  workspacePathLabel: '/home/user/.kun/write_workspace'
+  workspacePathLabel: '/home/user/.Rcode/write_workspace'
 }
 
 describe('WriteWorkspaceStart', () => {
@@ -22,7 +22,7 @@ describe('WriteWorkspaceStart', () => {
 
     expect(html).toContain('Create your first writing space')
     expect(html).toContain('Create writing space')
-    expect(html).toContain('Use Kun default space')
+    expect(html).toContain('Use Rcode default space')
     expect(html).toContain('separately from code projects')
   })
 
@@ -31,7 +31,7 @@ describe('WriteWorkspaceStart', () => {
 
     expect(html).toContain('New draft')
     expect(html).toContain('Ask AI for an outline')
-    expect(html).not.toContain('Use Kun default space')
+    expect(html).not.toContain('Use Rcode default space')
   })
 
   it('keeps workspace initialization failures visible in the main panel', () => {

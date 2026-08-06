@@ -21,7 +21,7 @@ export type WriteThreadRegistry = {
 type WriteThreadCandidate = Pick<NormalizedThread, 'id' | 'workspace'> &
   Partial<Pick<NormalizedThread, 'title' | 'updatedAt' | 'archived'>>
 
-const WRITE_THREAD_REGISTRY_KEY = 'kun.write.threadRegistry.v1'
+const WRITE_THREAD_REGISTRY_KEY = 'Rcode.write.threadRegistry.v1'
 
 export function emptyWriteThreadRegistry(): WriteThreadRegistry {
   return { version: 1, workspaces: {} }
@@ -34,7 +34,7 @@ export function writeWorkspaceKey(workspaceRoot: string | undefined | null): str
 export function writeFileKey(filePath: string | undefined | null): string {
   const normalized = (filePath ?? '').trim().replace(/\\/g, '/').replace(/\/+$/, '')
   if (!normalized) return ''
-  const platform = typeof window !== 'undefined' ? window.kunGui?.platform : undefined
+  const platform = typeof window !== 'undefined' ? window.RcodeGui?.platform : undefined
   return platform === 'win32' || /^[A-Za-z]:\//.test(normalized)
     ? normalized.toLowerCase()
     : normalized

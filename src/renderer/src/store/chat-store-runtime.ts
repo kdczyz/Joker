@@ -288,7 +288,7 @@ function notifyTurnComplete(threadId: string | null, state: ChatState, dedupeKey
   if (
     !threadId ||
     typeof window === 'undefined' ||
-    typeof window.kunGui?.showTurnCompleteNotification !== 'function'
+    typeof window.RcodeGui?.showTurnCompleteNotification !== 'function'
   ) {
     return
   }
@@ -298,22 +298,22 @@ function notifyTurnComplete(threadId: string | null, state: ChatState, dedupeKey
     state.threads.find((thread) => thread.id === threadId)?.title?.trim() ||
     i18n.t('common:untitledThread')
 
-  void window.kunGui
+  void window.RcodeGui
     .showTurnCompleteNotification({
       threadId,
       title: i18n.t('common:turnCompleteNotificationTitle'),
       body: i18n.t('common:turnCompleteNotificationBody', { title: threadTitle })
     })
     .then((result) => {
-      if (result.ok || typeof window.kunGui?.logError !== 'function') return
-      void window.kunGui.logError('notification', 'Turn completion notification failed', {
+      if (result.ok || typeof window.RcodeGui?.logError !== 'function') return
+      void window.RcodeGui.logError('notification', 'Turn completion notification failed', {
         message: result.message,
         threadId
       }).catch(() => undefined)
     })
     .catch((error: unknown) => {
-      if (typeof window.kunGui?.logError !== 'function') return
-      void window.kunGui.logError('notification', 'Turn completion notification failed', {
+      if (typeof window.RcodeGui?.logError !== 'function') return
+      void window.RcodeGui.logError('notification', 'Turn completion notification failed', {
         message: error instanceof Error ? error.message : String(error),
         threadId
       }).catch(() => undefined)
@@ -331,11 +331,11 @@ function notifyTurnComplete(threadId: string | null, state: ChatState, dedupeKey
  */
 function releaseThreadWorktreeIfNeeded(threadId: string | null): void {
   if (!threadId || typeof window === 'undefined') return
-  if (typeof window.kunGui?.releaseWorktree !== 'function') return
+  if (typeof window.RcodeGui?.releaseWorktree !== 'function') return
   const record = readThreadWorktreeRegistry().worktrees[threadId]
   if (!record) return
   if (record.poolIndex === undefined) return
-  void window.kunGui
+  void window.RcodeGui
     .releaseWorktree({
       projectPath: record.projectPath,
       poolIndex: record.poolIndex
@@ -746,7 +746,7 @@ async function reconcileCompletedTurnFromThreadDetail(input: {
     }))
   } catch (error) {
     if (typeof window === 'undefined') return
-    void window.kunGui?.logError?.('turn-completion-reconcile', 'Failed to reconcile completed turn', {
+    void window.RcodeGui?.logError?.('turn-completion-reconcile', 'Failed to reconcile completed turn', {
       message: error instanceof Error ? error.message : String(error),
       threadId
     }).catch(() => undefined)
@@ -794,8 +794,8 @@ export function buildThreadEventSink(
           notifyWriteWorkspaceFileRefresh(get, effect.event)
           break
         case 'mirror_claw_reply':
-          if (typeof window.kunGui?.mirrorClawChannelMessage === 'function') {
-            void window.kunGui.mirrorClawChannelMessage(effect.threadId, effect.text, 'assistant')
+          if (typeof window.RcodeGui?.mirrorClawChannelMessage === 'function') {
+            void window.RcodeGui.mirrorClawChannelMessage(effect.threadId, effect.text, 'assistant')
               .catch(() => undefined)
           }
           break
@@ -841,7 +841,7 @@ export function buildThreadEventSink(
       // Re-arm the busy watchdog on every live tick so it behaves as an
       // *inactivity* timer rather than an absolute one. onSeq fires for
       // every SSE batch — both content events and the runtime's 15s
-      // heartbeat (kun events route) — so a healthy turn always keeps the
+      // heartbeat (Rcode events route) — so a healthy turn always keeps the
       // watchdog postponed, even a long-running tool call that produces no
       // output for minutes. Recovery ("正在恢复运行时事件流…") then only
       // triggers after the heartbeat genuinely stops for BUSY_WATCHDOG_MS

@@ -1,7 +1,7 @@
 import {
   DEFAULT_CLAW_RECENT_THREAD_LIST_LIMIT,
   DEFAULT_CLAW_MODEL,
-  MIN_KUN_LOCAL_PORT,
+  MIN_RCODE_LOCAL_PORT,
   DEFAULT_WEIXIN_BRIDGE_RPC_URL,
   type ClawImChannelV1,
   type ClawImConversationV1,
@@ -39,7 +39,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function normalizeClawImPort(value: unknown, fallback: number): number {
   if (value === 8787) return fallback
-  return normalizePositiveInteger(value, fallback, MIN_KUN_LOCAL_PORT, 65_535)
+  return normalizePositiveInteger(value, fallback, MIN_RCODE_LOCAL_PORT, 65_535)
 }
 
 function defaultClawChannelLabel(provider: ClawImProvider): string {

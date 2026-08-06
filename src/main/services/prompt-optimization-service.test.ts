@@ -4,7 +4,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultTerminalSettings,
@@ -14,7 +14,7 @@ import {
 } from '../../shared/app-settings'
 import { optimizePrompt } from './prompt-optimization-service'
 
-function createSettings(patch: Partial<AppSettingsV1['agents']['kun']> = {}): AppSettingsV1 {
+function createSettings(patch: Partial<AppSettingsV1['agents']['Rcode']> = {}): AppSettingsV1 {
   return {
     version: 1,
     locale: 'en',
@@ -23,18 +23,18 @@ function createSettings(patch: Partial<AppSettingsV1['agents']['kun']> = {}): Ap
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
+      Rcode: {
+        ...defaultRcodeRuntimeSettings(),
         apiKey: 'sk-runtime',
         promptOptimization: {
-          ...defaultKunRuntimeSettings().promptOptimization,
+          ...defaultRcodeRuntimeSettings().promptOptimization,
           enabled: true
         },
         ...patch
       }
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: {
       enabled: true,
       retentionDays: 2

@@ -17,7 +17,7 @@ type ReadWorkspaceFileRequest = {
 
 function artifact(id: string, kind: DesignArtifact['kind']): DesignArtifact {
   const relativePath =
-    kind === 'canvas' ? `.kun-design/doc/${id}/canvas.json` : `.kun-design/doc/${id}/v1.html`
+    kind === 'canvas' ? `.Rcode-design/doc/${id}/canvas.json` : `.Rcode-design/doc/${id}/v1.html`
   return {
     id,
     kind,
@@ -34,7 +34,7 @@ describe('design workspace HTML artifact duplication', () => {
 
   beforeEach(() => {
     writeWorkspaceFile.mockClear()
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
     const canvas = artifact('canvas', 'canvas')
     const screen = artifact('screen', 'html')
     const doc: DesignDocument = {
@@ -92,7 +92,7 @@ describe('design workspace HTML artifact duplication', () => {
         ? { ok: true as const, content: '# Hidden screen notes' }
         : { ok: true as const, content: '<html><body>Hidden</body></html>' }
     )
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile, readWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile, readWorkspaceFile } })
     useDesignWorkspaceStore.setState({
       documents: [doc],
       activeDocumentId: 'doc',
@@ -118,17 +118,17 @@ describe('design workspace HTML artifact duplication', () => {
       workspaceRoot: '/workspace'
     }))
     expect(writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: expect.stringMatching(/^\.kun-design\/doc\/.+\/v1\.html$/),
+      path: expect.stringMatching(/^\.Rcode-design\/doc\/.+\/v1\.html$/),
       workspaceRoot: '/workspace',
       content: '<html><body>Hidden</body></html>'
     }))
     expect(writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: expect.stringMatching(/^\.kun-design\/doc\/.+\/DESIGN\.md$/),
+      path: expect.stringMatching(/^\.Rcode-design\/doc\/.+\/DESIGN\.md$/),
       workspaceRoot: '/workspace',
       content: '# Hidden screen notes'
     }))
     expect(writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: expect.stringMatching(/^\.kun-design\/doc\/.+\/meta\.json$/),
+      path: expect.stringMatching(/^\.Rcode-design\/doc\/.+\/meta\.json$/),
       content: expect.stringContaining('"boardHidden": false')
     }))
   })
@@ -153,7 +153,7 @@ describe('design workspace HTML artifact duplication', () => {
         ? { ok: false as const, error: 'missing' }
         : { ok: true as const, content: '<html><body>No notes</body></html>' }
     )
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile, readWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile, readWorkspaceFile } })
     useDesignWorkspaceStore.setState({
       documents: [doc],
       activeDocumentId: 'doc',
@@ -168,7 +168,7 @@ describe('design workspace HTML artifact duplication', () => {
       .artifacts.find((item) => item.id !== source.id && item.title === 'No notes copy')
     expect(copy).toBeDefined()
     expect(writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: expect.stringMatching(/^\.kun-design\/doc\/.+\/v1\.html$/),
+      path: expect.stringMatching(/^\.Rcode-design\/doc\/.+\/v1\.html$/),
       content: '<html><body>No notes</body></html>'
     }))
     expect(

@@ -5,7 +5,7 @@ import { mkdtemp, rm } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { verifyVideoEditorArchive } from './pack-kun-video-editor.mjs'
+import { verifyVideoEditorArchive } from './pack-Rcode-video-editor.mjs'
 import { verifyNativeEvidenceBundle } from './verify-extension-native-evidence.mjs'
 
 const FULL_COMMIT = /^[a-f0-9]{40}$/i
@@ -174,7 +174,7 @@ async function main() {
     return
   }
 
-  const directory = await mkdtemp(join(tmpdir(), 'kun-manual-extension-release-'))
+  const directory = await mkdtemp(join(tmpdir(), 'Rcode-manual-extension-release-'))
   try {
     runInvocation(createReleaseDownloadInvocation({ tag, directory }))
     const result = await verifyManualReleaseDirectory({
@@ -187,7 +187,7 @@ async function main() {
     process.stdout.write(
       `Manual Extension release bundle OK: ${tag}, commit ${result.commit}, ` +
       `${result.native.artifacts.length} native artifacts, ` +
-      `Kun Video Editor sha256 ${result.extension.sha256}\n`
+      `Rcode Video Editor sha256 ${result.extension.sha256}\n`
     )
   } finally {
     await rm(directory, { recursive: true, force: true })

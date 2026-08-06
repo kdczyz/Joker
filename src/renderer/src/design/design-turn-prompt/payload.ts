@@ -95,8 +95,8 @@ function buildScreenManifest(options: BuildDesignTurnPromptPayloadOptions): Scre
 }
 
 async function readWorkspaceText(workspaceRoot: string, path: string): Promise<string> {
-  if (typeof window === 'undefined' || typeof window.kunGui?.readWorkspaceFile !== 'function') return ''
-  const result = await window.kunGui.readWorkspaceFile({ path, workspaceRoot }).catch(() => null)
+  if (typeof window === 'undefined' || typeof window.RcodeGui?.readWorkspaceFile !== 'function') return ''
+  const result = await window.RcodeGui.readWorkspaceFile({ path, workspaceRoot }).catch(() => null)
   return result?.ok ? result.content : ''
 }
 

@@ -22,9 +22,9 @@ import {
 } from '../../shared/ui-plugin'
 
 /**
- * UI 插件落盘服务。插件目录: ~/.kun/ui-plugins/<id>/
+ * UI 插件落盘服务。插件目录: ~/.Rcode/ui-plugins/<id>/
  * 安装走“白名单复制”:只复制 manifest.json 与 figures/backgrounds 引用的图片,
- * 源目录里的其它任何文件(脚本、可执行文件等)一概不进入 Kun 数据目录。
+ * 源目录里的其它任何文件(脚本、可执行文件等)一概不进入 Rcode 数据目录。
  */
 
 export type UiPluginInstallResult =
@@ -100,8 +100,8 @@ const JPEG_START_OF_FRAME_MARKERS = new Set([
   0xcf
 ])
 
-export function uiPluginsRootDir(kunHomeDir: string): string {
-  return join(kunHomeDir, 'ui-plugins')
+export function uiPluginsRootDir(RcodeHomeDir: string): string {
+  return join(RcodeHomeDir, 'ui-plugins')
 }
 
 function confinedPluginPath(rootDir: string, pluginId: string, relativePath?: string): string {

@@ -38,7 +38,7 @@ function channel(conversations: ClawImConversationV1[] = []): ClawImChannelV1 {
     threadId: 'legacy_thread',
     workspaceRoot: '/workspace',
     agentProfile: {
-      name: 'kun', description: '', identity: '', personality: '', userContext: '', replyRules: ''
+      name: 'Rcode', description: '', identity: '', personality: '', userContext: '', replyRules: ''
     },
     conversations,
     welcomeSentAt: '',

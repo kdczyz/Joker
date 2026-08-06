@@ -25,7 +25,7 @@ function feishuSettings(): AppSettingsV1 {
     threadId: '',
     workspaceRoot: '/tmp/workspace',
     agentProfile: {
-      name: 'Kun',
+      name: 'Rcode',
       description: '',
       identity: '',
       personality: '',

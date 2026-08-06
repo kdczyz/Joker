@@ -1,10 +1,10 @@
 import { chmod, lstat, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { basename, dirname, join } from 'node:path'
-import { atomicWriteFile } from '../../kun/src/adapters/file/atomic-write.js'
+import { atomicWriteFile } from '../../Rcode/src/adapters/file/atomic-write.js'
 import {
-  applyKunRuntimePatch,
-  kunSettingsEnvelope,
+  applyRcodeRuntimePatch,
+  RcodeSettingsEnvelope,
   DEFAULT_GUI_UPDATE_CHANNEL,
   DEFAULT_CHECKPOINT_CLEANUP_ENABLED,
   DEFAULT_CHECKPOINT_CLEANUP_INTERVAL_DAYS,
@@ -14,13 +14,13 @@ import {
   DEFAULT_WRITE_WORKSPACE_ROOT,
   DEFAULT_WRITE_WELCOME_FILE_NAME,
   defaultClawSettings,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultDesignSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
-  getKunRuntimeSettings,
-  mergeKunRuntimeSettings,
+  getRcodeRuntimeSettings,
+  mergeRcodeRuntimeSettings,
   mergeModelProviderSettings,
   defaultWriteSettings,
   mergeClawSettings,
@@ -63,19 +63,19 @@ export type SettingsCredentialMigration = {
   ) => Promise<SettingsCredentialMigrationResult>
 }
 
-// 数据默认根目录从 ~/.deepseekgui 升级为 ~/.kun。老安装的既有目录由
+// 数据默认根目录从 ~/.deepseekgui 升级为 ~/.Rcode。老安装的既有目录由
 // legacy-data-migration.ts 在启动期搬迁并留兼容链接;settings 里存的旧
 // 绝对路径也在那里按迁移结果重写,这里只负责“新值”。
-const DEFAULT_WORKSPACE_ROOT = join(homedir(), '.kun', 'default_workspace')
+const DEFAULT_WORKSPACE_ROOT = join(homedir(), '.Rcode', 'default_workspace')
 // 对话会话不绑定项目文件夹,每个新会话在此目录下自动创建时间戳子目录作为工作目录。
 // macOS/Windows 用系统 Documents 文件夹;Linux 没有 Documents 约定,改用 XDG 风格目录。
 const DEFAULT_CONVERSATION_WORKSPACE_ROOT_ABSOLUTE =
   process.platform === 'linux'
-    ? join(homedir(), '.local', 'share', 'Kun', 'conversations')
-    : join(homedir(), 'Documents', 'Kun')
-const DEFAULT_CLAW_CHANNELS_ROOT = join(homedir(), '.kun', 'claw')
+    ? join(homedir(), '.local', 'share', 'Rcode', 'conversations')
+    : join(homedir(), 'Documents', 'Rcode')
+const DEFAULT_CLAW_CHANNELS_ROOT = join(homedir(), '.Rcode', 'claw')
 const DEFAULT_WRITE_WORKSPACE_ROOT_ABSOLUTE = expandHomePath(DEFAULT_WRITE_WORKSPACE_ROOT)
-const SETTINGS_FILE_NAME = 'kun-settings.json'
+const SETTINGS_FILE_NAME = 'Rcode-settings.json'
 // 旧版设置文件名。userData 整目录迁移后旧文件会原样留在新目录里,
 // 首次加载从它兜底读取,load() 随后把规范化结果另存为新文件名;旧
 // 文件保留不动,用户回滚老版本时还能读到可用配置。
@@ -236,7 +236,7 @@ const defaultSettings = (): AppSettingsV1 => ({
   cursorSpotlightColor: DEFAULT_CURSOR_SPOTLIGHT_COLOR,
   provider: defaultModelProviderSettings(),
   agents: {
-    kun: defaultKunRuntimeSettings()
+    Rcode: defaultRcodeRuntimeSettings()
   },
   workspaceRoot: DEFAULT_WORKSPACE_ROOT,
   conversationWorkspaceRoot: DEFAULT_CONVERSATION_WORKSPACE_ROOT_ABSOLUTE,
@@ -274,8 +274,8 @@ function buildMergedSettings(parsed: Partial<AppSettingsV1>): AppSettingsV1 {
     ...defaults,
     ...migrated,
     provider: mergeModelProviderSettings(defaults.provider, migrated.provider),
-    agents: kunSettingsEnvelope(
-      mergeKunRuntimeSettings(getKunRuntimeSettings(defaults), migrated.agents?.kun)
+    agents: RcodeSettingsEnvelope(
+      mergeRcodeRuntimeSettings(getRcodeRuntimeSettings(defaults), migrated.agents?.Rcode)
     ),
     log: { ...defaults.log, ...migrated.log },
     checkpointCleanup: normalizeCheckpointCleanupSettings({
@@ -310,7 +310,7 @@ function hasLegacyProviderPlaintext(settings: AppSettingsV1): boolean {
   const provider = settings.provider
   if (provider.apiKey.trim()) return true
   if (provider.providers.some((entry) => entry.apiKey.trim())) return true
-  return getKunRuntimeSettings(settings).apiKey.trim().length > 0
+  return getRcodeRuntimeSettings(settings).apiKey.trim().length > 0
 }
 
 function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
@@ -373,11 +373,11 @@ async function replaceInvalidSettingsWithDefaults(
   await store.save(defaults)
   if (backupPath) {
     console.warn(
-      `[kun-gui] Invalid settings were replaced with defaults (${reason}). Backup: ${backupPath}`
+      `[Rcode-gui] Invalid settings were replaced with defaults (${reason}). Backup: ${backupPath}`
     )
   } else {
     console.warn(
-      `[kun-gui] Invalid settings were replaced with defaults (${reason}). Backup could not be written for ${sourcePath}.`
+      `[Rcode-gui] Invalid settings were replaced with defaults (${reason}). Backup could not be written for ${sourcePath}.`
     )
   }
   return defaults
@@ -475,7 +475,7 @@ export class JsonSettingsStore {
     if (this.options.credentialMigration && hasLegacyProviderPlaintext(prepared)) {
       const backupPath = await writeLegacyCredentialSettingsBackup(sourcePath, raw)
       if (!backupPath) {
-        console.warn('[kun-gui] Legacy credential migration deferred because the settings backup could not be written.')
+        console.warn('[Rcode-gui] Legacy credential migration deferred because the settings backup could not be written.')
         this.cache = prepared
         return this.cache
       }
@@ -499,7 +499,7 @@ export class JsonSettingsStore {
         await this.persistSettings(migration.persistedSettings)
       } catch (error) {
         await migration.rollback().catch(() => undefined)
-        console.warn('[kun-gui] Legacy credential migration settings commit failed; plaintext settings remain authoritative.', {
+        console.warn('[Rcode-gui] Legacy credential migration settings commit failed; plaintext settings remain authoritative.', {
           message: error instanceof Error ? error.message : String(error)
         })
         this.cache = prepared
@@ -507,7 +507,7 @@ export class JsonSettingsStore {
       }
     }
     await migration.commit().catch((error) => {
-      console.warn('[kun-gui] Legacy credential migration commit marker is pending recovery.', {
+      console.warn('[Rcode-gui] Legacy credential migration commit marker is pending recovery.', {
         message: error instanceof Error ? error.message : String(error)
       })
     })
@@ -543,7 +543,7 @@ export class JsonSettingsStore {
       throw error
     }
     await migration.commit().catch((error) => {
-      console.warn('[kun-gui] Legacy credential migration commit marker is pending recovery.', {
+      console.warn('[Rcode-gui] Legacy credential migration commit marker is pending recovery.', {
         message: error instanceof Error ? error.message : String(error)
       })
     })
@@ -554,7 +554,7 @@ export class JsonSettingsStore {
     const cur = await this.load()
     const { agents: agentsPatch, provider: providerPatch, ...restPatch } = partial
     const next = normalizeStoredSettings({
-      ...applyKunRuntimePatch(cur, agentsPatch?.kun),
+      ...applyRcodeRuntimePatch(cur, agentsPatch?.Rcode),
       ...restPatch,
       provider: mergeModelProviderSettings(cur.provider, providerPatch),
       log: { ...cur.log, ...(partial.log ?? {}) },
@@ -591,7 +591,7 @@ export class JsonSettingsStore {
       return await this.options.credentialMigration.prepare(settings, { replaceCommitted })
     } catch (error) {
       if (replaceCommitted) throw error
-      console.warn('[kun-gui] Legacy credential migration is unavailable; retaining compatibility settings.', {
+      console.warn('[Rcode-gui] Legacy credential migration is unavailable; retaining compatibility settings.', {
         message: error instanceof Error ? error.message : String(error)
       })
       return null

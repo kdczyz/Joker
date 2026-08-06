@@ -52,7 +52,7 @@ function Require-Command([string]$Name) {
 }
 
 function Load-LocalReleaseEnv([string]$RootPath) {
-  $configured = [Environment]::GetEnvironmentVariable('KUN_RELEASE_ENV', 'Process')
+  $configured = [Environment]::GetEnvironmentVariable('RCODE_RELEASE_ENV', 'Process')
   if (-not $configured) {
     $configured = [Environment]::GetEnvironmentVariable('DEEPSEEK_GUI_RELEASE_ENV', 'Process')
   }
@@ -97,8 +97,8 @@ $RequestedChannel = if ($Stable) {
   $Channel
 } elseif ($env:RELEASE_CHANNEL) {
   $env:RELEASE_CHANNEL
-} elseif ($env:KUN_UPDATE_CHANNEL) {
-  $env:KUN_UPDATE_CHANNEL
+} elseif ($env:RCODE_UPDATE_CHANNEL) {
+  $env:RCODE_UPDATE_CHANNEL
 } elseif ($env:DEEPSEEK_GUI_UPDATE_CHANNEL) {
   $env:DEEPSEEK_GUI_UPDATE_CHANNEL
 } else {
@@ -143,12 +143,12 @@ Write-Info "GitHub release tag: $TagName"
 Write-Info "Release channel: $ReleaseChannel"
 $ReleaseVersion = $TagName.TrimStart('v')
 Assert-Semver $ReleaseVersion
-$env:KUN_APP_VERSION = $ReleaseVersion
+$env:RCODE_APP_VERSION = $ReleaseVersion
 $env:DEEPSEEK_GUI_APP_VERSION = $ReleaseVersion
 $env:RELEASE_CHANNEL = $ReleaseChannel
-$env:KUN_UPDATE_CHANNEL = $ReleaseChannel
+$env:RCODE_UPDATE_CHANNEL = $ReleaseChannel
 $env:DEEPSEEK_GUI_UPDATE_CHANNEL = $ReleaseChannel
-Write-Info "App version: $env:KUN_APP_VERSION"
+Write-Info "App version: $env:RCODE_APP_VERSION"
 
 & gh release view $TagName 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) {
@@ -186,13 +186,13 @@ Remove-Item -Recurse -Force -ErrorAction SilentlyContinue `
   (Join-Path $Root 'dist\mac-arm64'), `
   (Join-Path $Root 'dist\linux-unpacked')
 Remove-Item -Force -ErrorAction SilentlyContinue `
-  (Join-Path $Root 'dist\Kun-*'), `
+  (Join-Path $Root 'dist\Rcode-*'), `
   (Join-Path $Root 'dist\DeepSeek-GUI-*'), `
   (Join-Path $Root 'dist\DeepSeek GUI-*'), `
   (Join-Path $Root 'dist\latest*.yml'), `
   (Join-Path $Root 'dist\*.blockmap'), `
   (Join-Path $Root 'dist\extension-native-evidence-*.json'), `
-  (Join-Path $Root 'dist\kun-video-editor-*.kunx')
+  (Join-Path $Root 'dist\Rcode-video-editor-*.Rcodex')
 
 Write-Info 'Building Windows installer...'
 & npm run dist:win
@@ -216,18 +216,18 @@ if ($LASTEXITCODE -ne 0) {
 }
 
 Write-Info 'Smoking host-native FFmpeg broker...'
-$env:KUN_RUN_MEDIA_SMOKE = '1'
+$env:RCODE_RUN_MEDIA_SMOKE = '1'
 & npm run smoke:extension-native-media
-Remove-Item Env:\KUN_RUN_MEDIA_SMOKE -ErrorAction SilentlyContinue
+Remove-Item Env:\RCODE_RUN_MEDIA_SMOKE -ErrorAction SilentlyContinue
 if ($LASTEXITCODE -ne 0) {
   Write-Err 'Windows host-native FFmpeg broker smoke failed.'
   exit 1
 }
 
-Write-Info 'Smoking packaged Kun Video Editor native workflow...'
+Write-Info 'Smoking packaged Rcode Video Editor native workflow...'
 & npm run smoke:packaged-video-editor-native
 if ($LASTEXITCODE -ne 0) {
-  Write-Err 'Windows packaged Kun Video Editor native workflow smoke failed.'
+  Write-Err 'Windows packaged Rcode Video Editor native workflow smoke failed.'
   exit 1
 }
 
@@ -304,7 +304,7 @@ if ($Publish) {
   }
   Write-Ok "Release $TagName is now public."
 } else {
-  Write-Info 'Release remains draft. Publish only after macOS, Windows, Linux, evidence, and .kunx assets are ready.'
+  Write-Info 'Release remains draft. Publish only after macOS, Windows, Linux, evidence, and .Rcodex assets are ready.'
 }
 
 Write-Ok "Windows assets uploaded to $TagName."

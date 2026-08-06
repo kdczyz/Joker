@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  getKunRuntimeSettings,
-  mergeKunRuntimeSettings,
-  type KunRuntimeSettingsPatchV1,
-  type KunRuntimeSettingsV1
+  getRcodeRuntimeSettings,
+  mergeRcodeRuntimeSettings,
+  type RcodeRuntimeSettingsPatchV1,
+  type RcodeRuntimeSettingsV1
 } from '@shared/app-settings'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { emitRendererSettingsChanged } from '../../lib/keyboard-shortcut-settings'
@@ -23,7 +23,7 @@ type Props = {
  */
 export function SubagentDetailPanel({ className, onCollapse }: Props): ReactElement {
   const { t } = useTranslation('common')
-  const [kun, setKun] = useState<KunRuntimeSettingsV1 | null>(null)
+  const [Rcode, setRcode] = useState<RcodeRuntimeSettingsV1 | null>(null)
   const [error, setError] = useState<string | null>(null)
   const mountedRef = useRef(true)
   const revisionRef = useRef(0)
@@ -33,7 +33,7 @@ export function SubagentDetailPanel({ className, onCollapse }: Props): ReactElem
     try {
       const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
       if (!mountedRef.current) return
-      setKun(getKunRuntimeSettings(settings))
+      setRcode(getRcodeRuntimeSettings(settings))
       setError(null)
     } catch (caught) {
       if (!mountedRef.current) return
@@ -49,20 +49,20 @@ export function SubagentDetailPanel({ className, onCollapse }: Props): ReactElem
     }
   }, [load])
 
-  const persistPatch = useCallback((patch: KunRuntimeSettingsPatchV1): Promise<void> => {
+  const persistPatch = useCallback((patch: RcodeRuntimeSettingsPatchV1): Promise<void> => {
     const revision = ++revisionRef.current
-    setKun((current) => current ? mergeKunRuntimeSettings(current, patch) : current)
+    setRcode((current) => current ? mergeRcodeRuntimeSettings(current, patch) : current)
     setError(null)
 
     const save = saveQueueRef.current
       .catch(() => undefined)
       .then(async () => {
-        const saved = await rendererRuntimeClient.setSettings({ agents: { kun: patch } })
+        const saved = await rendererRuntimeClient.setSettings({ agents: { Rcode: patch } })
         if (!mountedRef.current) return
         // A newer optimistic patch may already be visible. Only replace it with
         // the normalized server snapshot when this is still the newest save.
         if (revision === revisionRef.current) {
-          setKun(getKunRuntimeSettings(saved))
+          setRcode(getRcodeRuntimeSettings(saved))
           emitRendererSettingsChanged(saved)
         }
       })
@@ -90,9 +90,9 @@ export function SubagentDetailPanel({ className, onCollapse }: Props): ReactElem
           </button>
         </div>
       ) : null}
-      {kun ? (
+      {Rcode ? (
         <SubagentSettingsEditor
-          kun={kun}
+          Rcode={Rcode}
           onPatch={persistPatch}
           variant="panel"
           className="min-h-0 flex-1"

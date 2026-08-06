@@ -45,7 +45,7 @@ describe('design.generate_directions tool executor', () => {
       path: request.path,
       savedAt: '2026-07-02T00:00:00.000Z'
     }))
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
     useDesignWorkspaceStore.setState({ workspaceRoot: '/workspace' })
 
     const result = executeDesignToolInvocation({

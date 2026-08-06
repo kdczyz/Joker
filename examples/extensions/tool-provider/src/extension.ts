@@ -4,7 +4,7 @@ import type {
   JsonObject,
   ToolInvocationContext,
   ToolResult
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 
 export const workspaceSummaryTool = {
   id: 'workspace-summary',
@@ -79,5 +79,5 @@ export async function activate(context: ExtensionContext): Promise<void> {
 }
 
 export async function deactivate(): Promise<void> {
-  // Kun cancels in-flight invocations and disposes the registration.
+  // Rcode cancels in-flight invocations and disposes the registration.
 }

@@ -35,7 +35,7 @@ export const DEFAULT_CATEGORIES: DataMigrationCategory[] = [
 
 export function DataMigrationSettingsSection(): ReactElement {
   const { t } = useTranslation('settings')
-  const api = window.kunGui.dataMigration
+  const api = window.RcodeGui.dataMigration
   const [flow, setFlow] = useState<Flow>('landing')
   const [status, setStatus] = useState<DataMigrationOperationStatus | null>(null)
   const [progress, setProgress] = useState<DataMigrationProgress | null>(null)
@@ -240,7 +240,7 @@ export function DataMigrationSettingsSection(): ReactElement {
 
   const chooseOutput = async () => {
     const result = await api.pickExportPackage(outputPath || undefined)
-    if (!result.canceled && result.path) setOutputPath(result.path.endsWith('.kunpack') ? result.path : `${result.path}.kunpack`)
+    if (!result.canceled && result.path) setOutputPath(result.path.endsWith('.Rcodepack') ? result.path : `${result.path}.Rcodepack`)
   }
 
   const clearPasswords = () => {

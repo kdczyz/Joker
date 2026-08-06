@@ -124,14 +124,14 @@ export class ProtectedCredentialSurfaceController {
     const id = randomBytes(24).toString('base64url')
     const webPreferences: NonNullable<BrowserWindowConstructorOptions['webPreferences']> = {
       preload: this.preloadPath,
-      additionalArguments: [`--kun-protected-surface-session=${id}`],
+      additionalArguments: [`--Rcode-protected-surface-session=${id}`],
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
       webSecurity: true,
       allowRunningInsecureContent: false,
       webviewTag: false,
-      partition: `temp:kun-protected-${id}`
+      partition: `temp:Rcode-protected-${id}`
     }
     const window = new BrowserWindow({
       width: 520,
@@ -262,14 +262,14 @@ export class ProtectedCredentialSurfaceController {
   ): BrowserWindow {
     const webPreferences: NonNullable<BrowserWindowConstructorOptions['webPreferences']> = {
       preload: this.preloadPath,
-      additionalArguments: [`--kun-protected-surface-session=${id}`],
+      additionalArguments: [`--Rcode-protected-surface-session=${id}`],
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
       webSecurity: true,
       allowRunningInsecureContent: false,
       webviewTag: false,
-      partition: `temp:kun-protected-${id}`
+      partition: `temp:Rcode-protected-${id}`
     }
     const window = new BrowserWindow({
       width,

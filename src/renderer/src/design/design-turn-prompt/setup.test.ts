@@ -10,13 +10,13 @@ function artifact(id: string): DesignArtifact {
     id,
     kind: 'html',
     title: 'Home',
-    relativePath: `.kun-design/doc/${id}/v2.html`,
-    designMdPath: `.kun-design/doc/${id}/DESIGN.md`,
+    relativePath: `.Rcode-design/doc/${id}/v2.html`,
+    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
     versions: [
-      { id: `${id}-v1`, relativePath: `.kun-design/doc/${id}/v1.html`, createdAt: now, summary: 'Base screen' },
-      { id: `${id}-v2`, relativePath: `.kun-design/doc/${id}/v2.html`, createdAt: now, summary: '' }
+      { id: `${id}-v1`, relativePath: `.Rcode-design/doc/${id}/v1.html`, createdAt: now, summary: 'Base screen' },
+      { id: `${id}-v2`, relativePath: `.Rcode-design/doc/${id}/v2.html`, createdAt: now, summary: '' }
     ]
   }
 }
@@ -26,13 +26,13 @@ function svgArtifact(id: string): DesignArtifact {
     id,
     kind: 'svg',
     title: 'Orbit loader',
-    relativePath: `.kun-design/doc/${id}/v2.svg`,
-    designMdPath: `.kun-design/doc/${id}/DESIGN.md`,
+    relativePath: `.Rcode-design/doc/${id}/v2.svg`,
+    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
     versions: [
-      { id: `${id}-v1`, relativePath: `.kun-design/doc/${id}/v1.svg`, createdAt: now, summary: 'Base motion' },
-      { id: `${id}-v2`, relativePath: `.kun-design/doc/${id}/v2.svg`, createdAt: now, summary: '' }
+      { id: `${id}-v1`, relativePath: `.Rcode-design/doc/${id}/v1.svg`, createdAt: now, summary: 'Base motion' },
+      { id: `${id}-v2`, relativePath: `.Rcode-design/doc/${id}/v2.svg`, createdAt: now, summary: '' }
     ],
     node: { x: 0, y: 0, width: 320, height: 240, sizeMode: 'manual', viewMode: 'preview' }
   }
@@ -41,10 +41,10 @@ function svgArtifact(id: string): DesignArtifact {
 function resolvedTarget(patch: Partial<ResolvedDesignTurnTarget> = {}): ResolvedDesignTurnTarget {
   return {
     target: 'html',
-    artifactRelativePath: '.kun-design/doc/home/v2.html',
-    basePath: '.kun-design/doc/home/v1.html',
+    artifactRelativePath: '.Rcode-design/doc/home/v2.html',
+    basePath: '.Rcode-design/doc/home/v1.html',
     htmlArtifactId: 'home',
-    designNotesPath: '.kun-design/doc/home/DESIGN.md',
+    designNotesPath: '.Rcode-design/doc/home/DESIGN.md',
     visibleTargets: [],
     targetAutoRepairKey: 'artifact:home',
     ...patch
@@ -95,11 +95,11 @@ describe('prepareDesignTurnFiles', () => {
 
     expect(result).toEqual({ ok: true, previewSource: 'base', notesWritten: true })
     expect(api.writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: '.kun-design/doc/home/v2.html',
+      path: '.Rcode-design/doc/home/v2.html',
       content: '<!doctype html><html><body>Base</body></html>'
     }))
     expect(api.writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: '.kun-design/doc/home/DESIGN.md',
+      path: '.Rcode-design/doc/home/DESIGN.md',
       content: expect.stringContaining('Tighten hierarchy')
     }))
     expect(api.writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
@@ -125,11 +125,11 @@ describe('prepareDesignTurnFiles', () => {
       promptText: 'Add a calmer loop',
       resolvedTarget: resolvedTarget({
         target: 'svg',
-        artifactRelativePath: '.kun-design/doc/orbit/v2.svg',
-        basePath: '.kun-design/doc/orbit/v1.svg',
+        artifactRelativePath: '.Rcode-design/doc/orbit/v2.svg',
+        basePath: '.Rcode-design/doc/orbit/v1.svg',
         htmlArtifactId: undefined,
         svgArtifactId: 'orbit',
-        designNotesPath: '.kun-design/doc/orbit/DESIGN.md'
+        designNotesPath: '.Rcode-design/doc/orbit/DESIGN.md'
       }),
       artifacts: [svg],
       api
@@ -137,13 +137,13 @@ describe('prepareDesignTurnFiles', () => {
 
     expect(result).toEqual({ ok: true, previewSource: 'base', notesWritten: true })
     expect(api.readWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: '.kun-design/doc/orbit/v2.svg'
+      path: '.Rcode-design/doc/orbit/v2.svg'
     }))
     expect(api.writeWorkspaceFile).not.toHaveBeenCalledWith(expect.objectContaining({
-      path: '.kun-design/doc/orbit/v2.svg'
+      path: '.Rcode-design/doc/orbit/v2.svg'
     }))
     expect(api.writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: '.kun-design/doc/orbit/DESIGN.md',
+      path: '.Rcode-design/doc/orbit/DESIGN.md',
       content: expect.stringContaining('Add a calmer loop')
     }))
   })

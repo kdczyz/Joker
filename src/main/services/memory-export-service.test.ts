@@ -17,7 +17,7 @@ describe('exportMemoryMarkdown', () => {
 
   beforeEach(async () => {
     if (tempDir) await rm(tempDir, { recursive: true, force: true })
-    tempDir = mkdtempSync(join(tmpdir(), 'kun-memory-export-'))
+    tempDir = mkdtempSync(join(tmpdir(), 'Rcode-memory-export-'))
     vi.mocked(dialog.showSaveDialog).mockReset()
   })
 

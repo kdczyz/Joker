@@ -122,7 +122,7 @@ export function serializeNativeDesignSystemAsDesignMd(
       ...(token.value.lineHeight ? { lineHeight: `${token.value.lineHeight}px` } : {})
     }
   }
-  if (!current) return `---\n${stringify({ name, ...sections }).trimEnd()}\n---\n# Brand & Style\n\nProject design system managed by Kun.\n\n# Colors\n\nUse semantic color roles consistently.\n\n# Typography\n\nUse the defined hierarchy consistently.\n`
+  if (!current) return `---\n${stringify({ name, ...sections }).trimEnd()}\n---\n# Brand & Style\n\nProject design system managed by Rcode.\n\n# Colors\n\nUse semantic color roles consistently.\n\n# Typography\n\nUse the defined hierarchy consistently.\n`
   const patches = Object.entries(sections).flatMap(([section, values]) => Object.entries(values).map(([key, value]) => ({ section: section as 'colors' | 'typography' | 'rounded' | 'spacing' | 'components', key, value })))
   return patchProjectDesignMd(current.raw, patches).document?.raw ?? current.raw
 }

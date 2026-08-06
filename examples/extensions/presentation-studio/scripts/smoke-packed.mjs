@@ -5,7 +5,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { fileURLToPath, pathToFileURL } from 'node:url'
 import { promisify } from 'node:util'
-import { extractKunxArchive } from '../../../../kun/dist/extensions/archive.js'
+import { extractRcodexArchive } from '../../../../Rcode/dist/extensions/archive.js'
 
 const execFileAsync = promisify(execFile)
 const extensionRoot = dirname(dirname(fileURLToPath(import.meta.url)))
@@ -13,9 +13,9 @@ const repositoryRoot = dirname(dirname(dirname(extensionRoot)))
 const temporary = await mkdtemp(join(tmpdir(), 'presentation-studio-pack-smoke-'))
 
 try {
-  const archivePath = join(temporary, 'presentation-studio.kunx')
+  const archivePath = join(temporary, 'presentation-studio.Rcodex')
   const { stdout } = await execFileAsync(process.execPath, [
-    join(repositoryRoot, 'kun', 'dist', 'cli', 'serve-entry.js'),
+    join(repositoryRoot, 'Rcode', 'dist', 'cli', 'serve-entry.js'),
     'extension', 'pack', extensionRoot,
     '--output', archivePath,
     '--overwrite',
@@ -26,12 +26,12 @@ try {
   assert.equal(output.result.archivePath, archivePath)
 
   const extractedRoot = join(temporary, 'extracted')
-  const extracted = await extractKunxArchive(archivePath, extractedRoot)
+  const extracted = await extractRcodexArchive(archivePath, extractedRoot)
   assert.equal(extracted.manifest.main, 'dist/host/extension.js')
   assert.equal(extracted.manifest.version, '0.1.10')
   assert.deepEqual(extracted.manifest.contributes['views.rightSidebar'], [{
     id: 'studio',
-    title: 'Kun PPT',
+    title: 'Rcode PPT',
     entry: 'dist/webview/index.html',
     icon: 'assets/presentation-studio.svg',
     showInRightRail: true,
@@ -106,7 +106,7 @@ try {
   ])
   for (const registration of disposables) await registration.dispose()
   await extensionModule.deactivate?.()
-  process.stdout.write('Packed Kun PPT extracted, imported, and activated successfully.\n')
+  process.stdout.write('Packed Rcode PPT extracted, imported, and activated successfully.\n')
 } finally {
   await rm(temporary, { recursive: true, force: true })
 }

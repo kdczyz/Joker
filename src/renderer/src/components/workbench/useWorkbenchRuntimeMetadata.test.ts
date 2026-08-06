@@ -89,7 +89,7 @@ import { useWorkbenchRuntimeMetadata } from './useWorkbenchRuntimeMetadata'
 const baselineSkill = {
   id: 'baseline',
   name: 'Baseline',
-  root: '/workspace/.kun/skills/baseline',
+  root: '/workspace/.Rcode/skills/baseline',
   scope: 'project' as const,
   legacy: true
 }
@@ -125,7 +125,7 @@ describe('useWorkbenchRuntimeMetadata', () => {
       validationErrors: []
     })
     vi.stubGlobal('window', {
-      kunGui: { listSkills: runtime.listLocalSkills }
+      RcodeGui: { listSkills: runtime.listLocalSkills }
     })
   })
 

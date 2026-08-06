@@ -7,7 +7,7 @@ import {
   type JsonObject,
   type JsonValue,
   type ResultPreviewSource
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 import type { ExtensionWorkbenchNotification } from '@shared/extension-ipc'
 import {
   extensionHostIconUrl,
@@ -590,7 +590,7 @@ export function ExtensionViewOutlet({
   onClose?: () => void
 }): ReactElement {
   if (contribution.owner.kind !== 'extension') {
-    return <div role="alert">Built-in Views are rendered by their owning Kun component.</div>
+    return <div role="alert">Built-in Views are rendered by their owning Rcode component.</div>
   }
   if (
     contribution.point !== 'message.resultPreviews' &&

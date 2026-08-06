@@ -15,7 +15,7 @@ function usage() {
   node scripts/prepare-whisper-runner.cjs [--platform darwin|win32|linux] [--arch arm64|x64] [--force]
 
 Environment:
-  KUN_WHISPER_CPP_REF=${DEFAULT_WHISPER_CPP_REF}
+  RCODE_WHISPER_CPP_REF=${DEFAULT_WHISPER_CPP_REF}
 `)
 }
 
@@ -84,7 +84,7 @@ function assertCommand(command, installHint) {
 }
 
 function whisperRef() {
-  return (process.env.KUN_WHISPER_CPP_REF || DEFAULT_WHISPER_CPP_REF).trim()
+  return (process.env.RCODE_WHISPER_CPP_REF || DEFAULT_WHISPER_CPP_REF).trim()
 }
 
 function sourceDir() {

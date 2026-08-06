@@ -10,44 +10,44 @@ const PLATFORMS = ['darwin', 'win32', 'linux']
 const FULL_COMMIT = /^[a-f0-9]{40}$/i
 const FULL_SHA256 = /^[a-f0-9]{64}$/
 const VERSION_PART = '[0-9A-Za-z][0-9A-Za-z._-]*'
-const KUN_NAMED_RELEASE_ASSET = /^Kun-/
+const RCODE_NAMED_RELEASE_ASSET = /^Rcode-/
 
 const FINAL_ARTIFACTS = [
   {
     platform: 'darwin',
     role: 'mac-arm64-dmg',
-    pattern: new RegExp(`^Kun-(${VERSION_PART})-mac-arm64\\.dmg$`),
-    ancillaryPattern: new RegExp(`^Kun-(${VERSION_PART})-mac-arm64\\.dmg\\.blockmap$`)
+    pattern: new RegExp(`^Rcode-(${VERSION_PART})-mac-arm64\\.dmg$`),
+    ancillaryPattern: new RegExp(`^Rcode-(${VERSION_PART})-mac-arm64\\.dmg\\.blockmap$`)
   },
   {
     platform: 'darwin',
     role: 'mac-arm64-zip',
-    pattern: new RegExp(`^Kun-(${VERSION_PART})-mac-arm64\\.zip$`),
-    ancillaryPattern: new RegExp(`^Kun-(${VERSION_PART})-mac-arm64\\.zip\\.blockmap$`)
+    pattern: new RegExp(`^Rcode-(${VERSION_PART})-mac-arm64\\.zip$`),
+    ancillaryPattern: new RegExp(`^Rcode-(${VERSION_PART})-mac-arm64\\.zip\\.blockmap$`)
   },
   {
     platform: 'darwin',
     role: 'mac-x64-dmg',
-    pattern: new RegExp(`^Kun-(${VERSION_PART})-mac-x64\\.dmg$`),
-    ancillaryPattern: new RegExp(`^Kun-(${VERSION_PART})-mac-x64\\.dmg\\.blockmap$`)
+    pattern: new RegExp(`^Rcode-(${VERSION_PART})-mac-x64\\.dmg$`),
+    ancillaryPattern: new RegExp(`^Rcode-(${VERSION_PART})-mac-x64\\.dmg\\.blockmap$`)
   },
   {
     platform: 'darwin',
     role: 'mac-x64-zip',
-    pattern: new RegExp(`^Kun-(${VERSION_PART})-mac-x64\\.zip$`),
-    ancillaryPattern: new RegExp(`^Kun-(${VERSION_PART})-mac-x64\\.zip\\.blockmap$`)
+    pattern: new RegExp(`^Rcode-(${VERSION_PART})-mac-x64\\.zip$`),
+    ancillaryPattern: new RegExp(`^Rcode-(${VERSION_PART})-mac-x64\\.zip\\.blockmap$`)
   },
   {
     platform: 'win32',
     role: 'win-x64-exe',
-    pattern: new RegExp(`^Kun-(${VERSION_PART})-win-x64\\.exe$`),
-    ancillaryPattern: new RegExp(`^Kun-(${VERSION_PART})-win-x64\\.exe\\.blockmap$`)
+    pattern: new RegExp(`^Rcode-(${VERSION_PART})-win-x64\\.exe$`),
+    ancillaryPattern: new RegExp(`^Rcode-(${VERSION_PART})-win-x64\\.exe\\.blockmap$`)
   },
   {
     platform: 'linux',
     role: 'linux-x64-appimage',
-    pattern: new RegExp(`^Kun-(${VERSION_PART})-linux-x86_64\\.AppImage$`),
-    ancillaryPattern: new RegExp(`^Kun-(${VERSION_PART})-linux-x86_64\\.AppImage\\.blockmap$`)
+    pattern: new RegExp(`^Rcode-(${VERSION_PART})-linux-x86_64\\.AppImage$`),
+    ancillaryPattern: new RegExp(`^Rcode-(${VERSION_PART})-linux-x86_64\\.AppImage\\.blockmap$`)
   }
 ]
 
@@ -105,7 +105,7 @@ export async function verifyNativeEvidenceBundle({
   const ancillaryFiles = []
   for (const file of files) {
     const name = basename(file)
-    if (!KUN_NAMED_RELEASE_ASSET.test(name)) continue
+    if (!RCODE_NAMED_RELEASE_ASSET.test(name)) continue
     const matches = FINAL_ARTIFACTS.filter((rule) => rule.pattern.test(name))
     if (matches.length > 1) throw new Error(`Ambiguous final native artifact name: ${name}`)
     if (matches.length === 1) {
@@ -118,7 +118,7 @@ export async function verifyNativeEvidenceBundle({
       ancillaryFiles.push({ name, rule: ancillaryMatches[0] })
       continue
     }
-    throw new Error(`Downloaded release contains unexpected Kun-named asset: ${name}`)
+    throw new Error(`Downloaded release contains unexpected Rcode-named asset: ${name}`)
   }
 
   const recordedFiles = new Set()

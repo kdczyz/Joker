@@ -1,4 +1,4 @@
-import { JsonValueSchema, type JsonValue } from '@kun/extension-api'
+import { JsonValueSchema, type JsonValue } from '@Rcode/extension-api'
 import type {
   ExtensionLoadConfigurationRequest,
   ExtensionRuntimeRequestResult,
@@ -17,8 +17,8 @@ type ExtensionSettingsTransport = {
 }
 
 const trustedExtensionSettingsTransport: ExtensionSettingsTransport = {
-  load: (request) => window.kunGui.extensionLoadConfiguration(request),
-  update: (request) => window.kunGui.extensionUpdateConfiguration(request)
+  load: (request) => window.RcodeGui.extensionLoadConfiguration(request),
+  update: (request) => window.RcodeGui.extensionUpdateConfiguration(request)
 }
 
 /** Authenticated renderer adapter; the runtime remains the persistence/validation authority. */

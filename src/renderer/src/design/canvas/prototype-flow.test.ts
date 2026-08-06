@@ -6,7 +6,7 @@ import type { DesignArtifact } from '../design-types'
 const createdAt = '2026-06-29T00:00:00.000Z'
 
 function artifact(id: string, title: string, extra: Partial<DesignArtifact> = {}): DesignArtifact {
-  const relativePath = `.kun-design/doc/${id}/v1.html`
+  const relativePath = `.Rcode-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',

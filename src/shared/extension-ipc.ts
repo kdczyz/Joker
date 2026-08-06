@@ -3,7 +3,7 @@ import type {
   HostContentScriptContext,
   HostContentScriptDiagnostic,
   JsonValue
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 
 export const EXTENSION_ID_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}\.[a-z0-9][a-z0-9-]{0,63}$/
 
@@ -223,7 +223,7 @@ export type ExtensionViewEventPayload = {
 
 /** Main-authenticated handoff from an isolated extension View to the composer. */
 export type ExtensionComposerContextEvent = {
-  /** Host-only scope fence; never forwarded to Kun as model-visible context. */
+  /** Host-only scope fence; never forwarded to Rcode as model-visible context. */
   workspaceRoot?: string
   attachment: ComposerContextAttachment
 }
@@ -273,7 +273,7 @@ export type ExtensionAccountSessionRequest = {
 
 /**
  * The OAuth callback URL is deliberately absent. Electron Main collects it in
- * a protected, host-owned window and forwards it directly to Kun.
+ * a protected, host-owned window and forwards it directly to Rcode.
  */
 export type ExtensionCompleteAccountSessionRequest = ExtensionAccountSessionRequest & {
   extensionVersion: string
@@ -299,13 +299,13 @@ export type ExtensionRenameAccountRequest = {
 
 /**
  * The replacement key is deliberately absent. Electron Main collects it in a
- * protected host-owned window and forwards it directly to Kun.
+ * protected host-owned window and forwards it directly to Rcode.
  */
 export type ExtensionReplaceApiKeyAccountRequest = ExtensionRenameAccountRequest
 
 /**
  * The credential value is deliberately absent. Electron Main collects it in a
- * protected, host-owned window and forwards it directly to Kun.
+ * protected, host-owned window and forwards it directly to Rcode.
  */
 export type ExtensionCreateApiKeyAccountRequest = {
   extensionId: string

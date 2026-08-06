@@ -36,7 +36,7 @@ export function useSvgArtifactPreview(
     let cancelled = false
     let watchId = ''
     let offChanged: (() => void) | undefined
-    const api = typeof window !== 'undefined' ? window.kunGui : undefined
+    const api = typeof window !== 'undefined' ? window.RcodeGui : undefined
     setState(INITIAL)
     if (!workspaceRoot || !relativePath || typeof api?.readWorkspaceFile !== 'function') return
 

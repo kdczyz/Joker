@@ -116,7 +116,7 @@ export function LlmDebugSettingsSection({ ctx }: { ctx: Record<string, any> }): 
     setLoading(true)
     setError(null)
     try {
-      const result = await window.kunGui.runtimeRequest('/v1/debug/llm-rounds', 'GET')
+      const result = await window.RcodeGui.runtimeRequest('/v1/debug/llm-rounds', 'GET')
       if (!result.ok) {
         setError(`HTTP ${result.status}`)
         return

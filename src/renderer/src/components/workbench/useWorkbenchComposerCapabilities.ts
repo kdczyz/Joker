@@ -3,8 +3,8 @@ import {
   modelSupportsImageInput,
   type ModelProviderModelProfileV1
 } from '@shared/app-settings'
-import type { ModelProviderModelGroup } from '@shared/kun-gui-api'
-import type { CoreRuntimeInfoJson } from '../../agent/kun-contract'
+import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { CoreRuntimeInfoJson } from '../../agent/Rcode-contract'
 import { resolveComposerContextWindowTokens } from '../../store/chat-store-helpers'
 import type { RightPanelMode } from '../chat/WorkbenchTopBar'
 import { BUILTIN_RIGHT_PANEL_IDS } from '../../extensions/contribution-ids'

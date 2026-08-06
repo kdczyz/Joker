@@ -154,7 +154,7 @@ export type MediaOpenViewResourceRequest = z.infer<typeof MediaOpenViewResourceR
 export const MediaResourceLeaseSchema = z.strictObject({
   leaseId: MediaLeaseIdSchema,
   handleId: MediaHandleIdSchema,
-  url: z.string().min(24).max(2048).regex(new RegExp('^kun-media://')),
+  url: z.string().min(24).max(2048).regex(new RegExp('^Rcode-media://')),
   mimeType: z.string().min(3).max(128),
   expiresAt: z.string().datetime()
 })
@@ -255,7 +255,7 @@ const FfmpegBindingNameSchema = z.string().min(1).max(64).regex(/^[a-z][a-z0-9_-
  * Optional runtime scheduling hints for bounded native media work. The Host is
  * authoritative: callers cannot select a process, path, queue, or worker. The
  * retry contract is deliberately small so a broker never repeats an unknown
- * side effect; only failures explicitly classified as transient by Kun qualify.
+ * side effect; only failures explicitly classified as transient by Rcode qualify.
  */
 export const MediaJobPrioritySchema = z.enum([
   'background',
@@ -367,12 +367,12 @@ function validateBoundedOtioJson(
     for (const [key, child] of Object.entries(current.value as Record<string, unknown>)) {
       if (key === 'target_url' && (
         typeof child !== 'string' ||
-        !/^kun-media:\/\/[A-Za-z0-9][A-Za-z0-9._~-]{0,127}$/u.test(child)
+        !/^Rcode-media:\/\/[A-Za-z0-9][A-Za-z0-9._~-]{0,127}$/u.test(child)
       )) {
         context.addIssue({
           code: 'custom',
           path: ['content'],
-          message: 'OTIO media references must use bounded opaque kun-media URLs'
+          message: 'OTIO media references must use bounded opaque Rcode-media URLs'
         })
         return
       }
@@ -697,7 +697,7 @@ export const MediaVisualModelDescriptorSchema = z.strictObject({
 export type MediaVisualModelDescriptor = z.infer<typeof MediaVisualModelDescriptorSchema>
 
 export const MediaVisualModelInstallReceiptSchema = z.strictObject({
-  broker: z.literal('kun-model-broker'),
+  broker: z.literal('Rcode-model-broker'),
   packageSource: z.enum(['bundled', 'downloaded']),
   packageId: z.string().min(1).max(128),
   modelId: z.string().min(1).max(128),
@@ -837,7 +837,7 @@ export const MediaAnalyzeVisualFramesResultSchema = z.discriminatedUnion('outcom
       vector: z.array(z.number().finite().min(-1).max(1)).min(1).max(4_096)
     })).min(1).max(16),
     provenance: z.strictObject({
-      algorithm: z.literal('kun.rgb-edge-features'),
+      algorithm: z.literal('Rcode.rgb-edge-features'),
       algorithmVersion: z.literal('1.0.0'),
       decodedFrameWidth: z.literal(32),
       decodedFrameHeight: z.literal(32),

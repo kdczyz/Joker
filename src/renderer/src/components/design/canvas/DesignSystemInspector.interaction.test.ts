@@ -12,7 +12,7 @@ describe('DesignSystemInspector interactions', () => {
 
   beforeEach(async () => {
     ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
-    vi.stubGlobal('window', { confirm: vi.fn(() => true), kunGui: {} })
+    vi.stubGlobal('window', { confirm: vi.fn(() => true), RcodeGui: {} })
     vi.stubGlobal('navigator', { clipboard: { writeText: vi.fn() } })
     const document = parseProjectDesignMd(VALID).document!
     useProjectDesignSystemStore.getState().activateWorkspace('/workspace')

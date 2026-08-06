@@ -13,7 +13,7 @@ import {
   type DataMigrationWorkspaceCatalogEntry,
   type PackageRelativePath
 } from '../../shared/data-migration'
-import type { Zip64ArchiveEntryInput } from './kunpack-zip'
+import type { Zip64ArchiveEntryInput } from './Rcodepack-zip'
 
 export type DataMigrationWorkspaceCapability = 'code' | 'design' | 'write'
 
@@ -283,7 +283,7 @@ export function assertMigrationOutputOutsideWorkspaces(outputPath: string, works
       throw new Error(`migration output cannot be placed inside a selected workspace: ${workspace.sourcePathDisplay}`)
     }
   }
-  if (output.split(sep).some((segment) => segment === '.kun-migration-staging' || segment === '.kun-migration-backup')) {
+  if (output.split(sep).some((segment) => segment === '.Rcode-migration-staging' || segment === '.Rcode-migration-backup')) {
     throw new Error('migration output cannot be placed inside a migration staging or backup directory')
   }
 }

@@ -132,7 +132,7 @@ describe('package relative paths', () => {
 })
 
 describe('migration inclusion policy', () => {
-  it('hard-excludes Kun-owned credentials under every preset', () => {
+  it('hard-excludes Rcode-owned credentials under every preset', () => {
     expect(classifyDataMigrationPath({ path: 'credentials/credentials.enc.json', scope: 'runtime', preset: 'complete' })).toEqual({
       action: 'hard-exclude',
       ruleId: 'runtime-credentials'
@@ -150,11 +150,11 @@ describe('migration inclusion policy', () => {
   })
 
   it('never drops Design and SDD artifacts as generic build output', () => {
-    expect(classifyDataMigrationPath({ path: '.kun-design/screen/dist/index.html', scope: 'workspace', preset: 'smaller' })).toEqual({
+    expect(classifyDataMigrationPath({ path: '.Rcode-design/screen/dist/index.html', scope: 'workspace', preset: 'smaller' })).toEqual({
       action: 'include',
       ruleId: 'portable-artifact'
     })
-    expect(classifyDataMigrationPath({ path: '.kunsdd/draft/build/spec.md', scope: 'workspace', preset: 'smaller' }).action).toBe('include')
+    expect(classifyDataMigrationPath({ path: '.Rcodesdd/draft/build/spec.md', scope: 'workspace', preset: 'smaller' }).action).toBe('include')
   })
 
   it.each(['.env', '.env.production', 'id_ed25519', 'client.pem', '.npmrc'])(
@@ -187,10 +187,10 @@ describe('cross-platform source paths', () => {
       root: '/',
       segments: ['Users', 'alice', 'project']
     })
-    expect(parseMigrationSourcePath('~/.kun/write_workspace', 'linux')).toMatchObject({
+    expect(parseMigrationSourcePath('~/.Rcode/write_workspace', 'linux')).toMatchObject({
       kind: 'home',
       root: '~',
-      segments: ['.kun', 'write_workspace']
+      segments: ['.Rcode', 'write_workspace']
     })
   })
 

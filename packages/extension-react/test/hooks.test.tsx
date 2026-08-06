@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react'
 import { act, create, type ReactTestRenderer } from 'react-test-renderer'
 import { describe, expect, it, vi } from 'vitest'
-import { createExtensionTestHarness } from '@kun/extension-test'
+import { createExtensionTestHarness } from '@Rcode/extension-test'
 import {
   ExtensionViewProvider,
   useAgentRun,
@@ -13,7 +13,7 @@ import {
   useViewState
 } from '../src/index.js'
 
-describe('@kun/extension-react', () => {
+describe('@Rcode/extension-react', () => {
   it('invokes commands through the framework-neutral client and exposes execution state', async () => {
     const harness = createExtensionTestHarness({ permissions: ['commands.register'] })
     await harness.client.commands.registerCommand('sum', (args) => {
@@ -165,7 +165,7 @@ describe('@kun/extension-react', () => {
       })
     })
     await act(async () => {
-      harness.webview.sendMessage(harness.transport, 'kun.extension.view.overflow', {
+      harness.webview.sendMessage(harness.transport, 'Rcode.extension.view.overflow', {
         code: 'cursor_expired',
         oldestAvailableCursor: 4
       })

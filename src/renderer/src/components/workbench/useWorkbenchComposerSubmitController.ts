@@ -1,6 +1,6 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { ModelProviderModelGroup } from '@shared/kun-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
 import {
   isComposerChatModelId,
   modelProfileSupportsTextChat
@@ -166,14 +166,14 @@ export function useWorkbenchComposerSubmitController({
   const { t } = useTranslation('common')
 
   const mirrorClawCommand = useCallback(async (userText: string, replyText: string): Promise<void> => {
-    if (!activeThreadId || typeof window.kunGui?.mirrorClawChannelMessage !== 'function') return
-    const userResult = await window.kunGui.mirrorClawChannelMessage(
+    if (!activeThreadId || typeof window.RcodeGui?.mirrorClawChannelMessage !== 'function') return
+    const userResult = await window.RcodeGui.mirrorClawChannelMessage(
       activeThreadId,
       userText,
       'user'
     )
     if (!userResult.ok) return
-    await window.kunGui.mirrorClawChannelMessage(
+    await window.RcodeGui.mirrorClawChannelMessage(
       activeThreadId,
       replyText,
       'assistant'
@@ -232,7 +232,7 @@ export function useWorkbenchComposerSubmitController({
       if (remainingChars <= 0) return
       const key = contextKey(reference.relativePath || reference.path)
       if (seen.has(key)) return
-      const result = await window.kunGui.readWorkspaceFile({
+      const result = await window.RcodeGui.readWorkspaceFile({
         ...(reference.workspaceRoot === null
           ? {}
           : { workspaceRoot: reference.workspaceRoot || workspace }),
@@ -382,9 +382,9 @@ export function useWorkbenchComposerSubmitController({
         v
       ].join('\n\n').trim()
       let retrieval: WriteRetrievalContext | null = null
-      if (retrievalQuery && typeof window.kunGui?.retrieveWriteContext === 'function') {
+      if (retrievalQuery && typeof window.RcodeGui?.retrieveWriteContext === 'function') {
         try {
-          const result = await window.kunGui.retrieveWriteContext({
+          const result = await window.RcodeGui.retrieveWriteContext({
             workspaceRoot: writeWorkspaceRoot,
             currentFilePath: writeActiveFilePath ?? undefined,
             query: retrievalQuery,
@@ -393,7 +393,7 @@ export function useWorkbenchComposerSubmitController({
           })
           if (result.ok) retrieval = result.context
         } catch (error) {
-          void window.kunGui?.logError?.('write-retrieval', 'Failed to retrieve write context', {
+          void window.RcodeGui?.logError?.('write-retrieval', 'Failed to retrieve write context', {
             message: error instanceof Error ? error.message : String(error)
           })
         }
@@ -621,8 +621,8 @@ export function useWorkbenchComposerSubmitController({
         }
         setInput('')
         void (async () => {
-          const taskResult = typeof window.kunGui?.createClawTaskFromText === 'function'
-            ? await window.kunGui.createClawTaskFromText(v, {
+          const taskResult = typeof window.RcodeGui?.createClawTaskFromText === 'function'
+            ? await window.RcodeGui.createClawTaskFromText(v, {
                 channelId: activeClawChannelId,
                 modelHint: activeClawChannelModel,
                 ...(reasoningEffort ? { reasoningEffort } : {}),

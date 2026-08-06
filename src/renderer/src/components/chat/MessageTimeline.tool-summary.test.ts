@@ -227,7 +227,7 @@ describe('MessageTimeline tool summaries', () => {
   })
 })
 
-describe('MessageTimeline Kun runtime metadata smoke', () => {
+describe('MessageTimeline Rcode runtime metadata smoke', () => {
   beforeEach(() => {
     useChatStore.setState({
       route: 'chat',
@@ -366,7 +366,7 @@ describe('MessageTimeline Kun runtime metadata smoke', () => {
     const html = renderToStaticMarkup(createElement(GeneratedFilesPanel, { blocks: [block] }))
     expect(html).toContain('Preview unavailable')
     expect(html).toContain('disabled=""')
-    expect(html).not.toContain('src="kun-media:')
+    expect(html).not.toContain('src="Rcode-media:')
   })
 
   it('deduplicates generated files across tool blocks by path', () => {
@@ -402,7 +402,7 @@ describe('MessageTimeline Kun runtime metadata smoke', () => {
       meta: {
         generatedFiles: [
           { relativePath: 'presentations/brief.pptx' },
-          { relativePath: 'brief.kun-ppt.html' }
+          { relativePath: 'brief.Rcode-ppt.html' }
         ]
       }
     })
@@ -479,7 +479,7 @@ describe('MessageTimeline Kun runtime metadata smoke', () => {
         '[Claw IM agent instructions]',
         '',
         '[Agent name]',
-        'kun',
+        'Rcode',
         '',
         '---',
         '[Current user request]',
@@ -512,8 +512,8 @@ describe('MessageTimeline Kun runtime metadata smoke', () => {
         },
         sources: [
           {
-            title: 'Kun docs',
-            url: 'https://example.com/kun'
+            title: 'Rcode docs',
+            url: 'https://example.com/Rcode'
           }
         ]
       }
@@ -527,7 +527,7 @@ describe('MessageTimeline Kun runtime metadata smoke', () => {
     expect(html).toContain('Child agent')
     expect(html).toContain('research')
     expect(html).toContain('Sources 1')
-    expect(html).toContain('https://example.com/kun')
+    expect(html).toContain('https://example.com/Rcode')
   })
 
   it('renders failed tool bubbles with the orange warning tone', () => {
@@ -560,8 +560,8 @@ describe('MessageTimeline Kun runtime metadata smoke', () => {
         },
         sources: [
           {
-            title: 'Kun docs',
-            url: 'https://example.com/kun'
+            title: 'Rcode docs',
+            url: 'https://example.com/Rcode'
           }
         ]
       }

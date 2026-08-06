@@ -6,7 +6,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -25,7 +25,7 @@ vi.mock('node:os', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:os')>()
   return {
     ...actual,
-    homedir: () => process.env.KUN_SKILL_TEST_HOME || actual.homedir()
+    homedir: () => process.env.RCODE_SKILL_TEST_HOME || actual.homedir()
   }
 })
 
@@ -34,11 +34,11 @@ describe('skill-service', () => {
 
   beforeEach(async () => {
     tempRoot = await mkdtemp(join(tmpdir(), 'gui-skills-'))
-    process.env.KUN_SKILL_TEST_HOME = tempRoot
+    process.env.RCODE_SKILL_TEST_HOME = tempRoot
   })
 
   afterEach(async () => {
-    delete process.env.KUN_SKILL_TEST_HOME
+    delete process.env.RCODE_SKILL_TEST_HOME
     await rm(tempRoot, { recursive: true, force: true })
   })
 
@@ -67,9 +67,9 @@ describe('skill-service', () => {
     }))
   })
 
-  it('discovers project Kun skills from .kun/skills and exposes the root to runtime', async () => {
-    const workspaceRoot = join(tempRoot, 'workspace-kun')
-    const skillRoot = join(workspaceRoot, '.kun', 'skills')
+  it('discovers project Rcode skills from .Rcode/skills and exposes the root to runtime', async () => {
+    const workspaceRoot = join(tempRoot, 'workspace-Rcode')
+    const skillRoot = join(workspaceRoot, '.Rcode', 'skills')
     const pmSkill = join(skillRoot, 'pm')
     await mkdir(pmSkill, { recursive: true })
     await writeFile(
@@ -99,10 +99,10 @@ describe('skill-service', () => {
     const roots = await listGuiSkillRoots(settings, workspaceRoot)
     expect(roots.ok).toBe(true)
     if (!roots.ok) return
-    const kunRoot = roots.roots.find((root) => root.id === 'workspace-kun')
-    expect(kunRoot).toMatchObject({
+    const RcodeRoot = roots.roots.find((root) => root.id === 'workspace-Rcode')
+    expect(RcodeRoot).toMatchObject({
       path: skillRoot,
-      labelKey: 'pluginSkillRootWorkspaceKun',
+      labelKey: 'pluginSkillRootWorkspaceRcode',
       scope: 'project',
       source: 'common',
       exists: true,
@@ -282,7 +282,7 @@ describe('skill-service', () => {
   it('recognizes roots under ~/.codex/plugins/cache as Codex plugin caches', () => {
     expect(isCodexPluginCacheRoot(join(tempRoot, '.codex', 'plugins', 'cache', 'vercel', '2.1', 'skills'))).toBe(true)
     expect(isCodexPluginCacheRoot(join(tempRoot, '.codex', 'skills'))).toBe(false)
-    expect(isCodexPluginCacheRoot(join(tempRoot, '.kun', 'skills'))).toBe(false)
+    expect(isCodexPluginCacheRoot(join(tempRoot, '.Rcode', 'skills'))).toBe(false)
   })
 
   it('rejects a skill.json whose entry escapes the package directory (path traversal)', async () => {
@@ -339,9 +339,9 @@ describe('skill-service', () => {
       uiFontScale: 0.82,
     chatContentMaxWidthPx: 896,
       provider: defaultModelProviderSettings(),
-      agents: { kun: defaultKunRuntimeSettings() },
+      agents: { Rcode: defaultRcodeRuntimeSettings() },
       workspaceRoot,
-      conversationWorkspaceRoot: '~/Documents/Kun',
+      conversationWorkspaceRoot: '~/Documents/Rcode',
       log: { enabled: false, retentionDays: 7 },
       checkpointCleanup: { enabled: false, intervalDays: 3 },
       notifications: { turnComplete: true },

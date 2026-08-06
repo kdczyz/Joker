@@ -167,13 +167,13 @@ export function useWriteWorkspaceLifecycle({
   useEffect(() => {
     if (!activeFilePath || !workspaceRoot.trim() || (!activeFileIsText && !activeFileIsImage)) return
     if (
-      typeof window.kunGui?.watchWorkspaceFile !== 'function' ||
-      typeof window.kunGui?.unwatchWorkspaceFile !== 'function' ||
-      typeof window.kunGui?.onWorkspaceFileChanged !== 'function'
+      typeof window.RcodeGui?.watchWorkspaceFile !== 'function' ||
+      typeof window.RcodeGui?.unwatchWorkspaceFile !== 'function' ||
+      typeof window.RcodeGui?.onWorkspaceFileChanged !== 'function'
     ) return
 
     return startWriteWorkspaceFileWatch({
-      api: window.kunGui,
+      api: window.RcodeGui,
       workspaceRoot,
       path: activeFilePath,
       kind: activeFileIsImage ? 'image' : 'text',

@@ -33,7 +33,7 @@ export function syncLoginItemSettings(
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    console.warn('[kun-gui] failed to update login item settings:', error)
+    console.warn('[Rcode-gui] failed to update login item settings:', error)
     logWarn('desktop-behavior', 'Failed to update login item settings.', { message })
   }
 }

@@ -1,7 +1,7 @@
 import type {
   CoreRuntimeInfoJson,
   CoreRuntimeToolDiagnosticsJson
-} from '../agent/kun-contract'
+} from '../agent/Rcode-contract'
 
 export type McpMarketplaceOverlayStatus =
   | 'offline'

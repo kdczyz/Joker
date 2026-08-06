@@ -1,4 +1,4 @@
-import { ExtensionContributionsSchema } from '@kun/extension-api'
+import { ExtensionContributionsSchema } from '@Rcode/extension-api'
 import { describe, expect, it } from 'vitest'
 import {
   ContributionRegistry,

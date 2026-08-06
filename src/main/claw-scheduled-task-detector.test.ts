@@ -3,7 +3,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -32,10 +32,10 @@ function settings(endpointFormat: ModelEndpointFormat): AppSettingsV1 {
     chatContentMaxWidthPx: 896,
     provider,
     agents: {
-      kun: defaultKunRuntimeSettings()
+      Rcode: defaultRcodeRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -174,8 +174,8 @@ describe('detectClawScheduledTaskRequest endpoint formats', () => {
         }
       }
     })
-    appSettings.agents.kun = {
-      ...appSettings.agents.kun,
+    appSettings.agents.Rcode = {
+      ...appSettings.agents.Rcode,
       providerId: 'codex', model: 'gpt-5.6-sol', apiKey: credentials,
       baseUrl: 'https://chatgpt.com/backend-api/codex', endpointFormat: 'responses'
     }

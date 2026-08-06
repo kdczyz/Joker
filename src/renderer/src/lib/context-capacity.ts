@@ -107,7 +107,7 @@ export function estimateTokensFromText(text: string): number {
 
 // A screenshot or embedded image is forwarded to the model as a bounded vision
 // payload, not as its raw base64 text — the runtime strips the base64 at
-// send-time and charges a flat per-image cost (see kun tool-result-image.ts).
+// send-time and charges a flat per-image cost (see Rcode tool-result-image.ts).
 // A tool result's `detail` here is JSON.stringify(output), which still carries
 // the raw base64 (often hundreds of thousands of characters). Tokenizing that
 // as text would read a single screenshot as ~100k+ tokens and peg the gauge at

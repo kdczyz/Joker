@@ -1,4 +1,4 @@
-import { ExtensionIdSchema, NotificationOptionsSchema } from '@kun/extension-api'
+import { ExtensionIdSchema, NotificationOptionsSchema } from '@Rcode/extension-api'
 import type {
   ExtensionNotificationSnapshot,
   ExtensionWorkbenchNotification
@@ -80,7 +80,7 @@ export function ExtensionWorkbenchLifecycle(): ReactElement {
         await syncHostContentScriptPlan(plan, extensionWorkspaceRoot)
       })
       .catch((error) => {
-        void window.kunGui?.logError?.('extension-content-script', 'Failed to sync host content scripts', {
+        void window.RcodeGui?.logError?.('extension-content-script', 'Failed to sync host content scripts', {
           message: error instanceof Error ? error.message : String(error)
         })
       })
@@ -90,11 +90,11 @@ export function ExtensionWorkbenchLifecycle(): ReactElement {
     const refresh = (): void => {
       void loadComposerModels()
     }
-    window.addEventListener('kun:provider-bindings-changed', refresh)
-    return () => window.removeEventListener('kun:provider-bindings-changed', refresh)
+    window.addEventListener('Rcode:provider-bindings-changed', refresh)
+    return () => window.removeEventListener('Rcode:provider-bindings-changed', refresh)
   }, [loadComposerModels])
 
-  useEffect(() => window.kunGui.onExtensionNotifications((payload) => {
+  useEffect(() => window.RcodeGui.onExtensionNotifications((payload) => {
     const next = parseExtensionNotificationSnapshot(payload)
     const liveIds = new Set(next.map((notification) => notification.notificationId))
     for (const notificationId of respondingNotifications.current) {
@@ -111,13 +111,13 @@ export function ExtensionWorkbenchLifecycle(): ReactElement {
       (notification) => notification.notificationId !== notificationId
     ))
     try {
-      await window.kunGui.extensionRespondNotification({
+      await window.RcodeGui.extensionRespondNotification({
         notificationId,
         ...(actionId === undefined ? {} : { actionId })
       })
     } catch (error) {
       respondingNotifications.current.delete(notificationId)
-      void window.kunGui.logError('extension-notification', 'Failed to respond to extension notification', {
+      void window.RcodeGui.logError('extension-notification', 'Failed to respond to extension notification', {
         message: error instanceof Error ? error.message : String(error)
       })
     }

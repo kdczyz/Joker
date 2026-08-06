@@ -19,7 +19,7 @@ function normalizeArch(arch) {
 async function beforePack(context) {
   const platform = normalizePlatform(context.electronPlatformName)
   const arch = normalizeArch(context.arch)
-  if (process.env.KUN_SKIP_WHISPER_RUNNER === '1') {
+  if (process.env.RCODE_SKIP_WHISPER_RUNNER === '1') {
     console.warn(`[before-pack] Skipping bundled Whisper runner for ${platform}-${arch}.`)
     return
   }

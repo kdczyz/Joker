@@ -16,7 +16,7 @@ import {
   type ClawSettingsPatchV1,
   type DesignSettingsPatchV1,
   type GuiUpdateConfigV1,
-  type KunRuntimeSettingsV1,
+  type RcodeRuntimeSettingsV1,
   type ModelProviderProfileV1,
   type NotificationConfigV1,
   type ScheduleSettingsPatchV1,
@@ -28,14 +28,14 @@ import {
 import { isAppLocale } from './app-locales'
 import { normalizeKeyboardShortcuts, type KeyboardShortcutsConfigV1 } from './keyboard-shortcuts'
 import {
-  defaultKunRuntimeSettings,
-  getKunRuntimeSettings,
-  kunSettingsEnvelope,
-  mergeKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
+  getRcodeRuntimeSettings,
+  RcodeSettingsEnvelope,
+  mergeRcodeRuntimeSettings,
   migrateLegacyAppSettings
-} from './app-settings-kun'
+} from './app-settings-Rcode'
 import {
-  defaultMiniMaxMediaGenerationKunPatch,
+  defaultMiniMaxMediaGenerationRcodePatch,
   normalizeModelProviderSettings
 } from './app-settings-provider'
 import { normalizeDeepseekBaseUrl } from './app-settings-normalizers'
@@ -65,21 +65,21 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     terminal?: TerminalSettingsPatchV1
   }
   const providerSettings = normalizeModelProviderSettings(maybeSettings.provider)
-  const rawKun = maybeSettings.agents?.kun
+  const rawRcode = maybeSettings.agents?.Rcode
   const runtime = normalizeRuntimeModelProviderSelection(
-    getKunRuntimeSettings(maybeSettings),
+    getRcodeRuntimeSettings(maybeSettings),
     providerSettings.providers,
-    typeof rawKun?.model === 'string' && Boolean(rawKun.model.trim())
+    typeof rawRcode?.model === 'string' && Boolean(rawRcode.model.trim())
   )
-  const rawMediaPatch: Parameters<typeof defaultMiniMaxMediaGenerationKunPatch>[0]['kunPatch'] = {
-    ...(rawKun?.textToSpeech !== undefined ? { textToSpeech: rawKun.textToSpeech } : {}),
-    ...(rawKun?.musicGeneration !== undefined ? { musicGeneration: rawKun.musicGeneration } : {}),
-    ...(rawKun?.videoGeneration !== undefined ? { videoGeneration: rawKun.videoGeneration } : {})
+  const rawMediaPatch: Parameters<typeof defaultMiniMaxMediaGenerationRcodePatch>[0]['RcodePatch'] = {
+    ...(rawRcode?.textToSpeech !== undefined ? { textToSpeech: rawRcode.textToSpeech } : {}),
+    ...(rawRcode?.musicGeneration !== undefined ? { musicGeneration: rawRcode.musicGeneration } : {}),
+    ...(rawRcode?.videoGeneration !== undefined ? { videoGeneration: rawRcode.videoGeneration } : {})
   }
-  const miniMaxMediaDefaults = defaultMiniMaxMediaGenerationKunPatch({
+  const miniMaxMediaDefaults = defaultMiniMaxMediaGenerationRcodePatch({
     providers: providerSettings.providers,
-    currentKun: runtime,
-    kunPatch: rawMediaPatch
+    currentRcode: runtime,
+    RcodePatch: rawMediaPatch
   })
   return {
     version: 1,
@@ -93,7 +93,7 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     cursorSpotlight: maybeSettings.cursorSpotlight !== false,
     cursorSpotlightColor: normalizeCursorSpotlightColor(maybeSettings.cursorSpotlightColor),
     provider: providerSettings,
-    agents: kunSettingsEnvelope(mergeKunRuntimeSettings(defaultKunRuntimeSettings(), {
+    agents: RcodeSettingsEnvelope(mergeRcodeRuntimeSettings(defaultRcodeRuntimeSettings(), {
       ...runtime,
       baseUrl: runtime.baseUrl.trim() ? normalizeDeepseekBaseUrl(runtime.baseUrl) : '',
       ...(miniMaxMediaDefaults ?? {})
@@ -133,10 +133,10 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
 }
 
 function normalizeRuntimeModelProviderSelection(
-  runtime: KunRuntimeSettingsV1,
+  runtime: RcodeRuntimeSettingsV1,
   providers: readonly ModelProviderProfileV1[],
   preferModelOwner: boolean
-): KunRuntimeSettingsV1 {
+): RcodeRuntimeSettingsV1 {
   if (providers.length === 0) return runtime
   const main = normalizeModelProviderPair(runtime.providerId, runtime.model, providers, preferModelOwner)
   const profiles = runtime.subagents?.profiles.map((profile) => {
@@ -304,16 +304,16 @@ function shouldMigrateLegacySettings(settings: AppSettingsV1): boolean {
     agentProvider?: unknown
     deepseek?: unknown
     agents?: {
-      kun?: Partial<ReturnType<typeof defaultKunRuntimeSettings>>
+      Rcode?: Partial<ReturnType<typeof defaultRcodeRuntimeSettings>>
       codewhale?: unknown
       reasonix?: unknown
     }
   }
-  if (!raw.agents?.kun) return true
+  if (!raw.agents?.Rcode) return true
   if ('agentProvider' in raw || 'deepseek' in raw) return true
   if (raw.agents.codewhale || raw.agents.reasonix) return true
-  const dataDir = typeof raw.agents.kun.dataDir === 'string'
-    ? raw.agents.kun.dataDir.replace(/\\/g, '/').toLowerCase()
+  const dataDir = typeof raw.agents.Rcode.dataDir === 'string'
+    ? raw.agents.Rcode.dataDir.replace(/\\/g, '/').toLowerCase()
     : ''
   return dataDir === '~/.deepseekgui/coreagent' || dataDir.endsWith('/.deepseekgui/coreagent')
 }

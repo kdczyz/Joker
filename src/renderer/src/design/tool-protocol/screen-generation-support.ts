@@ -30,7 +30,7 @@ export function ensureBoardArtifact(): DesignArtifact & { kind: 'canvas' } {
   const docId = store.ensureActiveDocument()
   const createdAt = new Date().toISOString()
   const artifactId = createDesignArtifactId()
-  const relativePath = `.kun-design/${docId}/${artifactId}/canvas.json`
+  const relativePath = `.Rcode-design/${docId}/${artifactId}/canvas.json`
   const board: DesignArtifact & { kind: 'canvas' } = {
     id: artifactId,
     kind: 'canvas',

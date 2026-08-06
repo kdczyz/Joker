@@ -28,14 +28,14 @@ import {
   type StoredCodeRightTabsRegistry
 } from './workbench/code-right-tabs-state'
 
-const LEFT_PANEL_WIDTH_KEY = 'kun.layout.leftSidebarWidth'
-const LEFT_PANEL_COLLAPSED_KEY = 'kun.layout.leftSidebarCollapsed'
-const RIGHT_PANEL_WIDTH_KEY = 'kun.layout.rightInspectorWidth'
-const RIGHT_PANEL_MODE_KEY = 'kun.layout.rightPanelMode'
-export const CODE_RIGHT_TABS_KEY = 'kun.layout.codeRightTabs.v1'
-export const CODE_RIGHT_WIDTHS_KEY = 'kun.layout.codeRightWidths.v1'
-const TERMINAL_OPEN_KEY = 'kun.layout.terminalOpen'
-const TERMINAL_HEIGHT_KEY = 'kun.layout.terminalHeight'
+const LEFT_PANEL_WIDTH_KEY = 'Rcode.layout.leftSidebarWidth'
+const LEFT_PANEL_COLLAPSED_KEY = 'Rcode.layout.leftSidebarCollapsed'
+const RIGHT_PANEL_WIDTH_KEY = 'Rcode.layout.rightInspectorWidth'
+const RIGHT_PANEL_MODE_KEY = 'Rcode.layout.rightPanelMode'
+export const CODE_RIGHT_TABS_KEY = 'Rcode.layout.codeRightTabs.v1'
+export const CODE_RIGHT_WIDTHS_KEY = 'Rcode.layout.codeRightWidths.v1'
+const TERMINAL_OPEN_KEY = 'Rcode.layout.terminalOpen'
+const TERMINAL_HEIGHT_KEY = 'Rcode.layout.terminalHeight'
 const LEFT_PANEL_DEFAULT = 304
 const RIGHT_PANEL_DEFAULT = 360
 export const CODE_PANEL_PREFERRED = 560

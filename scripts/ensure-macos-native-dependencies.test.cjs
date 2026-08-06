@@ -10,7 +10,7 @@ const {
 } = require('./ensure-macos-native-dependencies.cjs')
 
 async function fixture() {
-  const root = join(tmpdir(), `kun-sharp-architecture-${process.pid}-${Date.now()}-${Math.random()}`)
+  const root = join(tmpdir(), `Rcode-sharp-architecture-${process.pid}-${Date.now()}-${Math.random()}`)
   await mkdir(join(root, 'node_modules', 'sharp'), { recursive: true })
   await writeFile(
     join(root, 'node_modules', 'sharp', 'package.json'),
@@ -73,7 +73,7 @@ test('requires target Sharp, libvips, and Canvas packages after installation', a
   })
   assert.equal(calls.length, 1)
   assert.ok(calls[0].args.includes('--cpu=x64'))
-  assert.match(calls[0].options.cwd, /kun-macos-native-x64-/)
+  assert.match(calls[0].options.cwd, /Rcode-macos-native-x64-/)
 })
 
 test('fails closed when npm does not install the target architecture', async (t) => {

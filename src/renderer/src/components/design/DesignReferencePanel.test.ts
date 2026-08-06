@@ -14,7 +14,7 @@ import { DesignReferencePanel } from './DesignReferencePanel'
 const createdAt = '2026-07-02T00:00:00.000Z'
 
 function artifact(id: string, title: string, extra: Partial<DesignArtifact> = {}): DesignArtifact {
-  const relativePath = `.kun-design/doc/${id}/v1.html`
+  const relativePath = `.Rcode-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',
@@ -43,12 +43,12 @@ describe('DesignReferencePanel', () => {
     const image = addShape(doc, {
       ...createDefaultShape('image', 0, 0),
       name: 'Hero reference',
-      imageUrl: '.kun-design/assets/hero.png'
+      imageUrl: '.Rcode-design/assets/hero.png'
     })
     addShape(doc, createHtmlFrameShape('Home', 500, 0, 'home'))
     const artifacts = [
       artifact('home', 'Home', {
-        designMdPath: '.kun-design/doc/home/DESIGN.md',
+        designMdPath: '.Rcode-design/doc/home/DESIGN.md',
         prototypeLinks: [{ targetTitle: 'Checkout', href: '../checkout/v1.html' }]
       })
     ]

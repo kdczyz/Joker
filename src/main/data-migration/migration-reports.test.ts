@@ -71,7 +71,7 @@ function journal(input: { operationId: string; phase: 'completed' | 'committing'
 
 describe('migration reports and backup retention', () => {
   it('writes immutable local reports and redacts credentials from user-facing strings and detail keys', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-migration-reports-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-migration-reports-'))
     roots.push(root)
     const store = new MigrationReportStore(root)
     const path = await store.writeImmutable(report())

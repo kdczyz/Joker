@@ -2,13 +2,13 @@ function normalizePathForMatch(path: string): string {
   return path.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
 }
 
-// 品牌升级后默认目录在 ~/.kun 下;老版本/迁移失败的机器上仍可能出现
+// 品牌升级后默认目录在 ~/.Rcode 下;老版本/迁移失败的机器上仍可能出现
 // ~/.deepseekgui 形式,这里对两套路径都要认,并归一到同一个身份键,
 // 避免同一个默认工作区在侧栏里出现两份。
 function isDefaultWorkspacePath(normalized: string): boolean {
   return (
-    normalized === '~/.kun/default_workspace'
-    || normalized.endsWith('/.kun/default_workspace')
+    normalized === '~/.Rcode/default_workspace'
+    || normalized.endsWith('/.Rcode/default_workspace')
     || normalized === '~/.deepseekgui/default_workspace'
     || normalized.endsWith('/.deepseekgui/default_workspace')
   )
@@ -19,7 +19,7 @@ export function workspaceRootIdentityKey(path?: string): string {
   if (!trimmed) return ''
   const normalized = normalizePathForMatch(trimmed)
   if (isDefaultWorkspacePath(normalized)) {
-    return '~/.kun/default_workspace'
+    return '~/.Rcode/default_workspace'
   }
   return normalized
 }
@@ -62,14 +62,14 @@ export function isClawWorkspacePath(path?: string): boolean {
   const trimmed = path?.trim() ?? ''
   if (!trimmed) return false
   const normalized = normalizePathForMatch(trimmed)
-  return normalized.includes('/.kun/claw/') || normalized.includes('/.deepseekgui/claw/')
+  return normalized.includes('/.Rcode/claw/') || normalized.includes('/.deepseekgui/claw/')
 }
 
-// 对话会话不绑定项目文件夹,默认在 ~/Documents/Kun(macOS/Windows)或
-// ~/.local/share/Kun/conversations(Linux)下按时间戳创建工作目录。
+// 对话会话不绑定项目文件夹,默认在 ~/Documents/Rcode(macOS/Windows)或
+// ~/.local/share/Rcode/conversations(Linux)下按时间戳创建工作目录。
 export function defaultConversationWorkspaceRoot(): string {
-  const platform = typeof window !== 'undefined' && window.kunGui?.platform ? window.kunGui.platform : ''
-  return platform === 'linux' ? '~/.local/share/Kun/conversations' : '~/Documents/Kun'
+  const platform = typeof window !== 'undefined' && window.RcodeGui?.platform ? window.RcodeGui.platform : ''
+  return platform === 'linux' ? '~/.local/share/Rcode/conversations' : '~/Documents/Rcode'
 }
 // 兼容旧引用;动态取值。
 export const DEFAULT_CONVERSATION_WORKSPACE_ROOT = defaultConversationWorkspaceRoot()
@@ -87,11 +87,11 @@ export function isConversationWorkspacePath(path?: string, root?: string): boole
   return normalizedPath.startsWith(normalizedRoot.endsWith('/') ? normalizedRoot : `${normalizedRoot}/`)
 }
 
-// 仅供路径前缀比较:把 ~ 展开成 home(渲染层没有 node:os,这里用 window.kunGui.homeDir)。
+// 仅供路径前缀比较:把 ~ 展开成 home(渲染层没有 node:os,这里用 window.RcodeGui.homeDir)。
 // 与主进程的 expandHomePath 行为一致;拿不到 homeDir 时退化为不展开,仍能匹配绝对路径。
 function expandHomeForMatch(value: string): string {
   if (!value.startsWith('~')) return value
-  const home = typeof window !== 'undefined' && window.kunGui?.homeDir ? window.kunGui.homeDir : ''
+  const home = typeof window !== 'undefined' && window.RcodeGui?.homeDir ? window.RcodeGui.homeDir : ''
   if (!home) return value
   if (value === '~') return home
   if (value.startsWith('~/') || value.startsWith('~\\')) {
@@ -105,10 +105,10 @@ export function isInternalDeepSeekGuiWorkspace(path?: string): boolean {
   if (!trimmed) return false
   const normalized = normalizePathForMatch(trimmed)
   return (
-    normalized === '~/.kun/write_workspace'
-    || normalized.endsWith('/.kun/write_workspace')
-    || normalized === '~/.kun/design-workspace'
-    || normalized.endsWith('/.kun/design-workspace')
+    normalized === '~/.Rcode/write_workspace'
+    || normalized.endsWith('/.Rcode/write_workspace')
+    || normalized === '~/.Rcode/design-workspace'
+    || normalized.endsWith('/.Rcode/design-workspace')
     || normalized === '~/.deepseekgui/write_workspace'
     || normalized.endsWith('/.deepseekgui/write_workspace')
     || normalized === '~/.deepseekgui/design-workspace'

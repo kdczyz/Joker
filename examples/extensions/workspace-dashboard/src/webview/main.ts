@@ -1,12 +1,12 @@
-import { ExtensionHostClient, type HostTransport, type JsonObject } from '@kun/extension-api'
+import { ExtensionHostClient, type HostTransport, type JsonObject } from '@Rcode/extension-api'
 
 declare global {
   interface Window {
-    readonly kunExtension: HostTransport
+    readonly RcodeExtension: HostTransport
   }
 }
 
-const client = new ExtensionHostClient(window.kunExtension)
+const client = new ExtensionHostClient(window.RcodeExtension)
 const refreshButton = document.querySelector<HTMLButtonElement>('#refresh')
 const status = document.querySelector<HTMLElement>('#status')
 const entryList = document.querySelector<HTMLOListElement>('#entries')

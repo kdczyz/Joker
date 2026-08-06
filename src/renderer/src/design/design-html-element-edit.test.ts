@@ -6,7 +6,7 @@ function elementContext(patch: Partial<DesignHtmlElementContext>): DesignHtmlEle
   return {
     artifactId: 'screen',
     artifactTitle: 'Screen',
-    artifactRelativePath: '.kun-design/screen/v1.html',
+    artifactRelativePath: '.Rcode-design/screen/v1.html',
     selector: 'body > main:nth-of-type(1) > h1:nth-of-type(1)',
     tagName: 'H1',
     text: 'Old headline',

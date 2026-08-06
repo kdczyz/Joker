@@ -336,7 +336,7 @@ export function buildWriteInlineCompletionPrompt(
 ): string {
   const mode = resolveMode(request)
   const lines = [
-    '<!-- Kun inline completion.',
+    '<!-- Rcode inline completion.',
     'Complete the text at the cursor.',
     'The boundary blocks below identify local context, but the response must be plain insertable text only.',
     'Return only the text to insert at the cursor.',
@@ -411,7 +411,7 @@ export function buildWriteInlineCompletionChatMessages(
     {
       role: 'system',
       content: [
-        'You are Kun inline writing. You perform local writing completion and in-place text edits.',
+        'You are Rcode inline writing. You perform local writing completion and in-place text edits.',
         'For edit tasks, reason from <<<PREFIX ... >>>, <<<EDIT_SCOPE ... >>>, and <<<SUFFIX ... >>>, then return only the replacement inside <<<EDIT ... >>>.',
         'Do not include explanations, markdown fences outside the marked action, before/after labels, or unchanged surrounding text outside the chosen action.'
       ].join('\n')

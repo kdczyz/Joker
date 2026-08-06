@@ -1,7 +1,7 @@
 import type { Dispatch, ReactElement, SetStateAction } from 'react'
-import { Archive, AudioLines, Bot, BrainCircuit, GitBranch, Bug, ChevronLeft, Globe, Keyboard, Mic, Palette, PencilLine, Puzzle, RefreshCw, ServerCog, Settings, ShieldCheck, Smartphone, Sparkles, TerminalSquare, UsersRound, PackageOpen } from 'lucide-react'
+import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, GitBranch, Globe, Keyboard, Mic, Palette, PencilLine, Puzzle, RefreshCw, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
 
-type SettingsCategory = 'general' | 'providers' | 'write' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'easterEgg' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'write' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration'
 
 export function SettingsSidebar({
   category,
@@ -46,6 +46,15 @@ export function SettingsSidebar({
         >
           <Globe className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('general')}
+        </button>
+        <button
+          type="button"
+          data-cursor-spotlight-target
+          className={catCls('profile')}
+          onClick={() => setCategory('profile')}
+        >
+          <User className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
+          {t('profile')}
         </button>
         <button
           type="button"
@@ -169,15 +178,6 @@ export function SettingsSidebar({
         <button
           type="button"
           data-cursor-spotlight-target
-          className={catCls('easterEgg')}
-          onClick={() => setCategory('easterEgg')}
-        >
-          <Sparkles className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
-          {t('easterEgg')}
-        </button>
-        <button
-          type="button"
-          data-cursor-spotlight-target
           className={catCls('updates')}
           onClick={() => setCategory('updates')}
         >
@@ -218,7 +218,7 @@ export function SettingsSidebar({
             <Settings className="h-4 w-4" strokeWidth={1.75} />
           </div>
           <div className="min-w-0 text-[12px] text-ds-muted">
-            <div className="truncate font-medium text-ds-ink">Kun</div>
+            <div className="truncate font-medium text-ds-ink">Rcode</div>
             <div className="truncate">{t('settingsFooter')}</div>
           </div>
         </div>

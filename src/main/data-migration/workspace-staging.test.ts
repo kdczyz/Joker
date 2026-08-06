@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { parsePackageRelativePath } from '../../shared/data-migration'
-import { prepareZip64ArchiveEntries, writeZip64Archive } from './kunpack-zip'
+import { prepareZip64ArchiveEntries, writeZip64Archive } from './Rcodepack-zip'
 import {
   commitStagedWorkspace,
   restoreWorkspaceCommit,
@@ -33,7 +33,7 @@ async function archive(root: string, files: Array<{ path: string; contents: stri
 
 describe('workspace staging and conflict commits', () => {
   it('extracts into a same-parent hidden root, verifies hashes, and atomically commits Keep both', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-workspace-stage-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-workspace-stage-'))
     roots.push(root)
     const source = await archive(root, [
       { path: 'README.md', contents: 'hello' },
@@ -47,7 +47,7 @@ describe('workspace staging and conflict commits', () => {
       destinationPlatform: process.platform === 'win32' ? 'windows' : 'macos',
       supportsSymbolicLinks: false
     })
-    expect(staged.stagingRoot).toContain('.kun-migration-staging-')
+    expect(staged.stagingRoot).toContain('.Rcode-migration-staging-')
     const committed = await commitStagedWorkspace({ staged, strategy: 'keep-both' })
     expect(await readFile(join(destination, 'README.md'), 'utf8')).toBe('hello')
     expect(committed.mutations[0]?.kind).toBe('create')
@@ -56,7 +56,7 @@ describe('workspace staging and conflict commits', () => {
   })
 
   it('supports Merge imported-sibling and replace-with-backup decisions', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-workspace-merge-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-workspace-merge-'))
     roots.push(root)
     const destination = join(root, 'Project')
     await mkdir(destination)
@@ -82,14 +82,14 @@ describe('workspace staging and conflict commits', () => {
     })
     const replaced = await commitStagedWorkspace({ staged: replaceStage, strategy: 'replace' })
     expect(await readFile(join(destination, 'config.json'), 'utf8')).toBe('source')
-    expect(replaced.backupRoot).toContain('.kun-migration-backup')
+    expect(replaced.backupRoot).toContain('.Rcode-migration-backup')
     expect(await restoreWorkspaceCommit(replaced.mutations)).toEqual([])
     expect(await readFile(join(destination, 'config.json'), 'utf8')).toBe('target')
   })
 
   it('materializes only internal relative links when the destination supports them', async () => {
     if (process.platform === 'win32') return
-    const root = await mkdtemp(join(tmpdir(), 'kun-workspace-links-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-workspace-links-'))
     roots.push(root)
     const source = await archive(root, [
       { path: 'target.txt', contents: 'target' },
@@ -106,7 +106,7 @@ describe('workspace staging and conflict commits', () => {
   })
 
   it('preserves independently modified imported paths during rollback', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-workspace-rollback-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-workspace-rollback-'))
     roots.push(root)
     const source = await archive(root, [{ path: 'README.md', contents: 'imported' }])
     const destination = join(root, 'Project')
@@ -122,7 +122,7 @@ describe('workspace staging and conflict commits', () => {
   })
 
   it('fails closed when a removable destination volume disappears after staging', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-workspace-removable-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-workspace-removable-'))
     const source = await archive(root, [{ path: 'README.md', contents: 'portable' }])
     const destination = join(root, 'Project')
     const staged = await stageWorkspaceImport({

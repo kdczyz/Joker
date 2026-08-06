@@ -259,8 +259,8 @@ const backgroundOnlyManifest = {
 }
 
 beforeEach(async () => {
-  userDataDir = await mkdtemp(join(tmpdir(), 'kun-ui-plugin-data-'))
-  sourceDir = await mkdtemp(join(tmpdir(), 'kun-ui-plugin-src-'))
+  userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-ui-plugin-data-'))
+  sourceDir = await mkdtemp(join(tmpdir(), 'Rcode-ui-plugin-src-'))
 })
 
 afterEach(async () => {
@@ -895,7 +895,7 @@ describe('bundled starlight example', () => {
     const loaded = await loadUiPluginFigures(userDataDir, 'starlight')
     expect(loaded.ok).toBe(true)
     if (!loaded.ok) return
-    expect(loaded.manifest.name).toBe('星夜 Kun')
+    expect(loaded.manifest.name).toBe('星夜 Rcode')
     expect(loaded.figures.swim?.startsWith('data:image/png;base64,')).toBe(true)
     expect(
       loaded.backgrounds.assets?.['img/starlight-stage.webp']?.startsWith('data:image/webp;base64,')

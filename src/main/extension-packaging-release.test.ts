@@ -11,7 +11,7 @@ const afterPack = require('../../scripts/after-pack.cjs')
 const temporaryRoots: string[] = []
 
 function temporaryRoot(): string {
-  const root = mkdtempSync(join(tmpdir(), 'kun-extension-packaging-'))
+  const root = mkdtempSync(join(tmpdir(), 'Rcode-extension-packaging-'))
   temporaryRoots.push(root)
   return root
 }
@@ -25,7 +25,7 @@ function packContext(root: string, platform: 'darwin' | 'win32' | 'linux') {
   return {
     appOutDir: join(root, platform),
     electronPlatformName: platform,
-    packager: { appInfo: { productFilename: 'Kun' } }
+    packager: { appInfo: { productFilename: 'Rcode' } }
   }
 }
 
@@ -33,16 +33,16 @@ function writeBundledExtensionResources(context: ReturnType<typeof packContext>)
   const root = join(afterPack._internals.packedResourcesDir(context), 'bundled-extensions')
   const extensions = [
     {
-      id: 'kun-examples.kun-video-editor',
-      archive: 'kun-video-editor-0.1.0.kunx'
+      id: 'Rcode-examples.Rcode-video-editor',
+      archive: 'Rcode-video-editor-0.1.0.Rcodex'
     },
     {
-      id: 'kun-examples.presentation-studio',
-      archive: 'presentation-studio-0.1.0.kunx'
+      id: 'Rcode-examples.presentation-studio',
+      archive: 'presentation-studio-0.1.0.Rcodex'
     },
     {
-      id: 'kun-examples.social-media-sidebar',
-      archive: 'social-media-sidebar-0.1.3.kunx'
+      id: 'Rcode-examples.social-media-sidebar',
+      archive: 'social-media-sidebar-0.1.3.Rcodex'
     }
   ].map((entry) => {
     const bytes = Buffer.from(`deterministic bundled extension archive: ${entry.id}`)
@@ -81,34 +81,34 @@ describe('Extension Platform packaged release resources', () => {
       'packages/extension-api/dist/**/*',
       'packages/extension-api/schema/**/*',
       'packages/extension-api/fixtures/**/*',
-      'packages/create-kun-extension/package.json',
-      'packages/create-kun-extension/src/**/*',
-      'packages/create-kun-extension/templates/**/*'
+      'packages/create-Rcode-extension/package.json',
+      'packages/create-Rcode-extension/src/**/*',
+      'packages/create-Rcode-extension/templates/**/*'
     ]))
 
-    expect(afterPack.KUN_RUNTIME_REQUIRED_PATHS).toEqual(expect.arrayContaining([
-      'kun/dist/cli/extension-cli.js',
-      'kun/dist/extensions/host-runner.js',
-      'packages/extension-api/schema/kun-extension.schema.json',
+    expect(afterPack.RCODE_RUNTIME_REQUIRED_PATHS).toEqual(expect.arrayContaining([
+      'Rcode/dist/cli/extension-cli.js',
+      'Rcode/dist/extensions/host-runner.js',
+      'packages/extension-api/schema/Rcode-extension.schema.json',
       'packages/extension-api/fixtures/api-major-negotiation.json',
-      'packages/create-kun-extension/templates/node/src/extension.ts',
-      'packages/create-kun-extension/templates/react/src/host/extension.ts',
-      'packages/create-kun-extension/templates/react/src/webview/main.tsx',
-      'packages/create-kun-extension/templates/webview/src/webview/main.ts'
+      'packages/create-Rcode-extension/templates/node/src/extension.ts',
+      'packages/create-Rcode-extension/templates/react/src/host/extension.ts',
+      'packages/create-Rcode-extension/templates/react/src/webview/main.tsx',
+      'packages/create-Rcode-extension/templates/webview/src/webview/main.ts'
     ]))
     expect(builderConfig.extraResources).toEqual(expect.arrayContaining([{
       from: 'resources/bundled-extensions',
       to: 'bundled-extensions',
-      filter: ['catalog.json', '*.kunx']
+      filter: ['catalog.json', '*.Rcodex']
     }]))
     expect(afterPack.REQUIRED_BUNDLED_EXTENSION_IDS).toContain(
-      'kun-examples.kun-video-editor'
+      'Rcode-examples.Rcode-video-editor'
     )
     expect(afterPack.REQUIRED_BUNDLED_EXTENSION_IDS).toContain(
-      'kun-examples.presentation-studio'
+      'Rcode-examples.presentation-studio'
     )
     expect(afterPack.REQUIRED_BUNDLED_EXTENSION_IDS).toContain(
-      'kun-examples.social-media-sidebar'
+      'Rcode-examples.social-media-sidebar'
     )
   })
 
@@ -119,16 +119,16 @@ describe('Extension Platform packaged release resources', () => {
       const context = packContext(root, platform)
       const unpackedRoot = afterPack._internals.unpackedAppRoot(context)
 
-      for (const relativePath of afterPack.KUN_RUNTIME_REQUIRED_PATHS) {
+      for (const relativePath of afterPack.RCODE_RUNTIME_REQUIRED_PATHS) {
         touch(join(unpackedRoot, relativePath))
       }
       touch(join(unpackedRoot, 'node_modules/better-sqlite3/package.json'))
       writeBundledExtensionResources(context)
 
-      expect(() => afterPack._internals.validateBundledKunRuntime(context)).not.toThrow()
+      expect(() => afterPack._internals.validateBundledRcodeRuntime(context)).not.toThrow()
       expect(() => afterPack._internals.validateBundledExtensionResources(context)).not.toThrow()
       if (platform === 'darwin') {
-        expect(unpackedRoot).toContain(join('Kun.app', 'Contents', 'Resources', 'app.asar.unpacked'))
+        expect(unpackedRoot).toContain(join('Rcode.app', 'Contents', 'Resources', 'app.asar.unpacked'))
       } else {
         expect(unpackedRoot).toContain(join(platform, 'resources', 'app.asar.unpacked'))
       }
@@ -140,7 +140,7 @@ describe('Extension Platform packaged release resources', () => {
     const context = packContext(root, 'darwin')
     writeBundledExtensionResources(context)
     writeFileSync(
-      join(afterPack._internals.packedResourcesDir(context), 'bundled-extensions', 'kun-video-editor-0.1.0.kunx'),
+      join(afterPack._internals.packedResourcesDir(context), 'bundled-extensions', 'Rcode-video-editor-0.1.0.Rcodex'),
       'tampered'
     )
     expect(() => afterPack._internals.validateBundledExtensionResources(context)).toThrow(

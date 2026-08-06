@@ -6,10 +6,10 @@ import type {
   LegacySessionDetectedSource,
   LegacySessionImportSummary,
   LegacySessionSourceKind
-} from '../../shared/kun-gui-api'
+} from '../../shared/Rcode-gui-api'
 
 /**
- * 把“DeepSeek GUI”时代遗留的会话目录导入到当前 Kun 数据目录。
+ * 把“DeepSeek GUI”时代遗留的会话目录导入到当前 Rcode 数据目录。
  *
  * 关键事实(决定了实现方式):
  *   - 新旧版本会话的磁盘格式完全一致:每个线程一个目录,内含
@@ -32,19 +32,19 @@ const THREAD_DIR_MARKERS = ['metadata.jsonl', 'thread.json', 'messages.jsonl'] a
 export type LegacySessionSourceCandidate = {
   id: string
   kind: LegacySessionSourceKind
-  /** 旧版线程目录的绝对路径,如 ~/.deepseekgui/kun/threads。 */
+  /** 旧版线程目录的绝对路径,如 ~/.deepseekgui/Rcode/threads。 */
   path: string
 }
 
 export type LegacySessionImportLogger = (message: string, detail?: unknown) => void
 
 /**
- * 自动检测的旧数据来源。顺序即展示优先级:先列近期版本(kun),
+ * 自动检测的旧数据来源。顺序即展示优先级:先列近期版本(Rcode),
  * 再列更早的 coreagent 时代数据。两者磁盘格式相同。
  */
 export function defaultLegacySourceCandidates(homeDir: string): LegacySessionSourceCandidate[] {
   return [
-    { id: 'deepseekgui-kun', kind: 'kun', path: join(homeDir, '.deepseekgui', 'kun', 'threads') },
+    { id: 'deepseekgui-Rcode', kind: 'Rcode', path: join(homeDir, '.deepseekgui', 'Rcode', 'threads') },
     {
       id: 'deepseekgui-coreagent',
       kind: 'coreagent',
@@ -98,7 +98,7 @@ async function listThreadDirNames(parent: string): Promise<string[]> {
 
 /**
  * 把用户手选的文件夹解析成真正的 threads 目录:既支持直接选中 threads 目录,
- * 也支持选中它的上级(如 .../kun),自动下探一层 threads。
+ * 也支持选中它的上级(如 .../Rcode),自动下探一层 threads。
  */
 async function resolveSourceThreadsDir(picked: string): Promise<string> {
   if ((await listThreadDirNames(picked)).length > 0) return picked

@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto'
 import type { AppSettingsV1 } from '../../shared/app-settings'
-import { getKunRuntimeSettings } from '../../shared/app-settings'
+import { getRcodeRuntimeSettings } from '../../shared/app-settings'
 import {
-  loadKunProjectConfig,
-  type KunProjectConfigLoadResult
-} from '../../../kun/src/config/project-config.js'
-import { McpServerConfig } from '../../../kun/src/contracts/capabilities.js'
+  loadRcodeProjectConfig,
+  type RcodeProjectConfigLoadResult
+} from '../../../Rcode/src/config/project-config.js'
+import { McpServerConfig } from '../../../Rcode/src/contracts/capabilities.js'
 
-export const GENERATED_PROJECT_MCP_SERVER_PREFIX = '__kun_project_'
+export const GENERATED_PROJECT_MCP_SERVER_PREFIX = '__Rcode_project_'
 
 export type ProjectConfigTrustStatus = 'untrusted' | 'trusted' | 'stale'
 
@@ -21,7 +21,7 @@ export type ProjectConfigServerSummary = {
 export type ProjectConfigState = {
   workspaceRoot: string
   path: string
-  status: KunProjectConfigLoadResult['status']
+  status: RcodeProjectConfigLoadResult['status']
   message?: string
   digest?: string
   trust: ProjectConfigTrustStatus
@@ -34,8 +34,8 @@ export async function readProjectConfigState(
   settings: AppSettingsV1,
   workspaceRoot: string
 ): Promise<ProjectConfigState> {
-  const loaded = await loadKunProjectConfig(workspaceRoot)
-  const grants = getKunRuntimeSettings(settings).projectConfig.grants
+  const loaded = await loadRcodeProjectConfig(workspaceRoot)
+  const grants = getRcodeRuntimeSettings(settings).projectConfig.grants
   const workspaceGrant = grants.find((grant) =>
     comparablePath(grant.workspaceRoot) === comparablePath(loaded.workspaceRoot)
   )
@@ -69,11 +69,11 @@ export async function readProjectConfigState(
 export async function approvedProjectMcpServers(
   settings: AppSettingsV1
 ): Promise<Record<string, Record<string, unknown>>> {
-  const grants = getKunRuntimeSettings(settings).projectConfig.grants
+  const grants = getRcodeRuntimeSettings(settings).projectConfig.grants
   const servers: Record<string, Record<string, unknown>> = {}
   const seenWorkspaces = new Set<string>()
   for (const grant of grants.slice(0, 64)) {
-    const loaded = await loadKunProjectConfig(grant.workspaceRoot)
+    const loaded = await loadRcodeProjectConfig(grant.workspaceRoot)
     if (loaded.status !== 'valid' || loaded.digest !== grant.configDigest) continue
     const workspaceKey = comparablePath(loaded.workspaceRoot)
     if (seenWorkspaces.has(workspaceKey)) continue

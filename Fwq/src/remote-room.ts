@@ -260,6 +260,11 @@ export class RemoteRoom extends DurableObject<Env> {
       await this.recordEvent(socket, attachment, message);
       return;
     }
+    // Config sync: any role can broadcast to all other connections of the same user
+    if (message.type === "config.sync") {
+      this.broadcastConfigSync(socket, attachment);
+      return;
+    }
     safeSend(socket, { type: "remote.error", error: "当前连接不允许此操作" });
   }
 
@@ -368,6 +373,16 @@ export class RemoteRoom extends DurableObject<Env> {
 
   private broadcastToControllers(payload: unknown): void {
     for (const socket of this.ctx.getWebSockets("controller")) safeSend(socket, payload);
+  }
+
+  /** Broadcast config.sync to all other connections of the same user (both roles). */
+  private broadcastConfigSync(sourceSocket: WebSocket, source: ConnectionAttachment): void {
+    const message = { type: "config.sync", source: source.deviceId ?? "controller", at: Date.now() };
+    for (const socket of this.ctx.getWebSockets()) {
+      if (socket === sourceSocket || socket.readyState !== WebSocket.OPEN) continue;
+      const att = attachmentOf(socket);
+      if (att?.userId === source.userId) safeSend(socket, message);
+    }
   }
 
   private async createCommand(socket: WebSocket, attachment: ConnectionAttachment, message: Record<string, unknown>): Promise<void> {

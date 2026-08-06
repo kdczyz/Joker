@@ -16,10 +16,10 @@ function canvasArtifact(): DesignArtifact {
     id: 'canvas',
     kind: 'canvas',
     title: 'Board',
-    relativePath: '.kun-design/doc/canvas/canvas.json',
+    relativePath: '.Rcode-design/doc/canvas/canvas.json',
     createdAt,
     updatedAt: createdAt,
-    versions: [{ id: 'canvas-v1', relativePath: '.kun-design/doc/canvas/canvas.json', createdAt, summary: '' }]
+    versions: [{ id: 'canvas-v1', relativePath: '.Rcode-design/doc/canvas/canvas.json', createdAt, summary: '' }]
   }
 }
 
@@ -28,14 +28,14 @@ function pendingSvgArtifact(): DesignArtifact {
     id: 'motion',
     kind: 'svg',
     title: 'Motion',
-    relativePath: '.kun-design/doc/motion/v1.svg',
-    designMdPath: '.kun-design/doc/motion/DESIGN.md',
+    relativePath: '.Rcode-design/doc/motion/v1.svg',
+    designMdPath: '.Rcode-design/doc/motion/DESIGN.md',
     previewStatus: 'pending',
     createdAt,
     updatedAt: createdAt,
     versions: [{
       id: 'motion-v1',
-      relativePath: '.kun-design/doc/motion/v1.svg',
+      relativePath: '.Rcode-design/doc/motion/v1.svg',
       createdAt,
       summary: 'Skeleton reservation'
     }]
@@ -77,14 +77,14 @@ describe('SVG design workspace versions', () => {
 
   beforeEach(() => {
     files.clear()
-    files.set('.kun-design/doc/motion/v1.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle id="dot" cx="32" cy="32" r="8" /></svg>')
+    files.set('.Rcode-design/doc/motion/v1.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle id="dot" cx="32" cy="32" r="8" /></svg>')
     createWorkspaceFile.mockClear()
     readWorkspaceFile.mockClear()
     listWorkspaceDirectory.mockClear()
     writeWorkspaceFile.mockClear()
     deleteWorkspaceEntry.mockClear()
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         createWorkspaceFile,
         readWorkspaceFile,
         listWorkspaceDirectory,
@@ -116,7 +116,7 @@ describe('SVG design workspace versions', () => {
   afterEach(() => vi.unstubAllGlobals())
 
   it('reuses a freshly reserved SVG v1, then versions later edits after it becomes ready', async () => {
-    files.set('.kun-design/doc/motion/v1.svg', buildSvgArtifactSkeleton({
+    files.set('.Rcode-design/doc/motion/v1.svg', buildSvgArtifactSkeleton({
       title: 'Motion',
       brief: 'Reserved motion',
       width: 64,
@@ -129,14 +129,14 @@ describe('SVG design workspace versions', () => {
     })
     expect(initial).toEqual({
       artifactId: 'motion',
-      relativePath: '.kun-design/doc/motion/v1.svg',
-      designMdPath: '.kun-design/doc/motion/DESIGN.md',
+      relativePath: '.Rcode-design/doc/motion/v1.svg',
+      designMdPath: '.Rcode-design/doc/motion/DESIGN.md',
       newlyCreated: false,
       versionCreated: false
     })
     expect(useDesignWorkspaceStore.getState().artifacts.find((item) => item.id === 'motion')?.versions).toHaveLength(1)
 
-    files.set('.kun-design/doc/motion/v1.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle r="8" /></svg>')
+    files.set('.Rcode-design/doc/motion/v1.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><circle r="8" /></svg>')
     useDesignWorkspaceStore.getState().setArtifactPreviewStatus('motion', 'ready')
     const iteration = await useDesignWorkspaceStore.getState().prepareSvgTurn('Slow the loop down', {
       artifactId: 'motion',
@@ -145,8 +145,8 @@ describe('SVG design workspace versions', () => {
     })
     expect(iteration).toMatchObject({
       artifactId: 'motion',
-      relativePath: '.kun-design/doc/motion/v2.svg',
-      basePath: '.kun-design/doc/motion/v1.svg'
+      relativePath: '.Rcode-design/doc/motion/v2.svg',
+      basePath: '.Rcode-design/doc/motion/v1.svg'
     })
   })
 
@@ -158,8 +158,8 @@ describe('SVG design workspace versions', () => {
     })
 
     expect(iteration).toMatchObject({
-      relativePath: '.kun-design/doc/motion/v2.svg',
-      basePath: '.kun-design/doc/motion/v1.svg',
+      relativePath: '.Rcode-design/doc/motion/v2.svg',
+      basePath: '.Rcode-design/doc/motion/v1.svg',
       versionCreated: true
     })
   })
@@ -167,11 +167,11 @@ describe('SVG design workspace versions', () => {
   it('uses the highest disk SVG version instead of overwriting a version missing from metadata', async () => {
     const sparse: DesignArtifact = {
       ...pendingSvgArtifact(),
-      relativePath: '.kun-design/doc/motion/v3.svg',
+      relativePath: '.Rcode-design/doc/motion/v3.svg',
       previewStatus: 'ready',
       versions: [
-        { id: 'motion-v3', relativePath: '.kun-design/doc/motion/v3.svg', createdAt, summary: 'Latest hand-authored version' },
-        { id: 'motion-v1', relativePath: '.kun-design/doc/motion/v1.svg', createdAt, summary: 'Initial version' }
+        { id: 'motion-v3', relativePath: '.Rcode-design/doc/motion/v3.svg', createdAt, summary: 'Latest hand-authored version' },
+        { id: 'motion-v1', relativePath: '.Rcode-design/doc/motion/v1.svg', createdAt, summary: 'Initial version' }
       ]
     }
     const document: DesignDocument = {
@@ -189,8 +189,8 @@ describe('SVG design workspace versions', () => {
       artifacts: document.artifacts,
       activeArtifactId: sparse.id
     })
-    files.set('.kun-design/doc/motion/v3.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" /></svg>')
-    files.set('.kun-design/doc/motion/v4.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M0 0h64v64z" /></svg>')
+    files.set('.Rcode-design/doc/motion/v3.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" /></svg>')
+    files.set('.Rcode-design/doc/motion/v4.svg', '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><path d="M0 0h64v64z" /></svg>')
 
     const iteration = await useDesignWorkspaceStore.getState().prepareSvgTurn('Refine the hand-authored motion', {
       artifactId: sparse.id,
@@ -198,10 +198,10 @@ describe('SVG design workspace versions', () => {
     })
 
     expect(iteration).toMatchObject({
-      relativePath: '.kun-design/doc/motion/v5.svg',
-      basePath: '.kun-design/doc/motion/v3.svg'
+      relativePath: '.Rcode-design/doc/motion/v5.svg',
+      basePath: '.Rcode-design/doc/motion/v3.svg'
     })
-    expect(files.get('.kun-design/doc/motion/v4.svg')).toContain('<path')
+    expect(files.get('.Rcode-design/doc/motion/v4.svg')).toContain('<path')
   })
 
   it('retries the next version when an exclusive create loses a post-list race', async () => {
@@ -213,10 +213,10 @@ describe('SVG design workspace versions', () => {
       activate: false
     })
 
-    expect(iteration.relativePath).toBe('.kun-design/doc/motion/v3.svg')
+    expect(iteration.relativePath).toBe('.Rcode-design/doc/motion/v3.svg')
     expect(createWorkspaceFile.mock.calls.map(([payload]) => payload.path)).toEqual([
-      '.kun-design/doc/motion/v2.svg',
-      '.kun-design/doc/motion/v3.svg'
+      '.Rcode-design/doc/motion/v2.svg',
+      '.Rcode-design/doc/motion/v3.svg'
     ])
   })
 
@@ -249,13 +249,13 @@ describe('SVG design workspace versions', () => {
 
     const motion = useDesignWorkspaceStore.getState().artifacts.find((item) => item.id === 'motion')
     expect(motion).toMatchObject({
-      relativePath: '.kun-design/doc/motion/v1.svg',
+      relativePath: '.Rcode-design/doc/motion/v1.svg',
       previewStatus: 'ready'
     })
     expect(motion?.versions).toHaveLength(1)
-    expect(files.has('.kun-design/doc/motion/v2.svg')).toBe(false)
+    expect(files.has('.Rcode-design/doc/motion/v2.svg')).toBe(false)
     expect(deleteWorkspaceEntry).toHaveBeenCalledWith(expect.objectContaining({
-      path: '.kun-design/doc/motion/v2.svg'
+      path: '.Rcode-design/doc/motion/v2.svg'
     }))
   })
 
@@ -270,15 +270,15 @@ describe('SVG design workspace versions', () => {
     expect(useDesignWorkspaceStore.getState().artifacts.some((item) => item.id === 'svg-atomic')).toBe(false)
     expect([...files.keys()].some((path) => path.includes('/svg-atomic/'))).toBe(false)
     expect(deleteWorkspaceEntry).toHaveBeenCalledWith(expect.objectContaining({
-      path: '.kun-design/doc/svg-atomic/v1.svg'
+      path: '.Rcode-design/doc/svg-atomic/v1.svg'
     }))
     expect(deleteWorkspaceEntry).not.toHaveBeenCalledWith(expect.objectContaining({
-      path: '.kun-design/doc/svg-atomic'
+      path: '.Rcode-design/doc/svg-atomic'
     }))
   })
 
   it('preserves pre-existing side files when an initial metadata commit fails', async () => {
-    files.set('.kun-design/doc/svg-with-notes/DESIGN.md', '# User notes\n')
+    files.set('.Rcode-design/doc/svg-with-notes/DESIGN.md', '# User notes\n')
     writeWorkspaceFile.mockResolvedValueOnce({ ok: false, message: 'metadata unavailable' })
 
     await expect(useDesignWorkspaceStore.getState().prepareSvgTurn('Reserve safely', {
@@ -286,8 +286,8 @@ describe('SVG design workspace versions', () => {
       artifactId: 'svg-with-notes'
     })).rejects.toThrow('metadata unavailable')
 
-    expect(files.get('.kun-design/doc/svg-with-notes/DESIGN.md')).toBe('# User notes\n')
-    expect(files.has('.kun-design/doc/svg-with-notes/v1.svg')).toBe(false)
+    expect(files.get('.Rcode-design/doc/svg-with-notes/DESIGN.md')).toBe('# User notes\n')
+    expect(files.has('.Rcode-design/doc/svg-with-notes/v1.svg')).toBe(false)
   })
 
   it('aborts and removes a new reservation if the active document changes during file creation', async () => {
@@ -303,7 +303,7 @@ describe('SVG design workspace versions', () => {
     })
     await vi.waitFor(() => expect(createWorkspaceFile).toHaveBeenCalled())
     const original = useDesignWorkspaceStore.getState().documents[0]
-    const otherCanvas = { ...canvasArtifact(), id: 'other-canvas', relativePath: '.kun-design/other/other-canvas/canvas.json' }
+    const otherCanvas = { ...canvasArtifact(), id: 'other-canvas', relativePath: '.Rcode-design/other/other-canvas/canvas.json' }
     const other: DesignDocument = {
       id: 'other',
       title: 'Other',
@@ -324,7 +324,7 @@ describe('SVG design workspace versions', () => {
     await expect(operation).rejects.toThrow('active workspace or design document changed')
     expect(useDesignWorkspaceStore.getState().documents.flatMap((document) => document.artifacts)
       .some((artifact) => artifact.id === 'svg-context')).toBe(false)
-    expect(files.has('.kun-design/doc/svg-context/v1.svg')).toBe(false)
+    expect(files.has('.Rcode-design/doc/svg-context/v1.svg')).toBe(false)
   })
 
   it('rolls back a prepared version before runtime dispatch', async () => {
@@ -337,10 +337,10 @@ describe('SVG design workspace versions', () => {
     await prepared.rollbackPreparedVersion?.()
 
     expect(useDesignWorkspaceStore.getState().artifacts.find((artifact) => artifact.id === 'motion')).toMatchObject({
-      relativePath: '.kun-design/doc/motion/v1.svg',
-      versions: [{ relativePath: '.kun-design/doc/motion/v1.svg' }]
+      relativePath: '.Rcode-design/doc/motion/v1.svg',
+      versions: [{ relativePath: '.Rcode-design/doc/motion/v1.svg' }]
     })
-    expect(files.has('.kun-design/doc/motion/v2.svg')).toBe(false)
+    expect(files.has('.Rcode-design/doc/motion/v2.svg')).toBe(false)
   })
 
   it('rolls back a duplicate copy if the active document changes before insertion', async () => {
@@ -353,7 +353,7 @@ describe('SVG design workspace versions', () => {
     const operation = useDesignWorkspaceStore.getState().duplicateArtifact('motion')
     await vi.waitFor(() => expect(createWorkspaceFile).toHaveBeenCalled())
     const original = useDesignWorkspaceStore.getState().documents[0]
-    const otherCanvas = { ...canvasArtifact(), id: 'copy-canvas', relativePath: '.kun-design/copy/copy-canvas/canvas.json' }
+    const otherCanvas = { ...canvasArtifact(), id: 'copy-canvas', relativePath: '.Rcode-design/copy/copy-canvas/canvas.json' }
     const other: DesignDocument = {
       id: 'copy', title: 'Copy target', createdAt, updatedAt: createdAt, order: 1,
       artifacts: [otherCanvas], activeArtifactId: otherCanvas.id
@@ -368,13 +368,13 @@ describe('SVG design workspace versions', () => {
     expect(useDesignWorkspaceStore.getState().documents.flatMap((document) => document.artifacts)
       .filter((artifact) => artifact.kind === 'svg')).toHaveLength(1)
     expect([...files.keys()].filter((path) => path.endsWith('/v1.svg'))).toEqual([
-      '.kun-design/doc/motion/v1.svg'
+      '.Rcode-design/doc/motion/v1.svg'
     ])
   })
 
   it('infers SVG dimensions when valid legacy metadata has no node', async () => {
     const artifactId = 'svg-legacy-node'
-    const relativePath = `.kun-design/doc/${artifactId}/v1.svg`
+    const relativePath = `.Rcode-design/doc/${artifactId}/v1.svg`
     const documentsIndex = JSON.stringify({
       version: 1,
       activeDocumentId: 'doc',
@@ -390,22 +390,22 @@ describe('SVG design workspace versions', () => {
     })
     const source = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 160"><rect width="320" height="160" /></svg>'
     const rehydrateRead = vi.fn(async ({ path }: { path: string }) => {
-      if (path === '.kun-design/documents.json') return { ok: true as const, content: documentsIndex }
-      if (path === `.kun-design/doc/${artifactId}/meta.json`) return { ok: true as const, content: meta }
+      if (path === '.Rcode-design/documents.json') return { ok: true as const, content: documentsIndex }
+      if (path === `.Rcode-design/doc/${artifactId}/meta.json`) return { ok: true as const, content: meta }
       if (path === relativePath) {
         return { ok: true as const, path, content: source, size: source.length, truncated: false }
       }
       return { ok: false as const, message: 'missing' }
     })
     const rehydrateList = vi.fn(async ({ path }: { path: string }) => {
-      if (path === '.kun-design') return { ok: true as const, entries: [{ name: 'doc', type: 'directory' as const }] }
-      if (path === '.kun-design/doc') {
+      if (path === '.Rcode-design') return { ok: true as const, entries: [{ name: 'doc', type: 'directory' as const }] }
+      if (path === '.Rcode-design/doc') {
         return { ok: true as const, entries: [{ name: artifactId, type: 'directory' as const }] }
       }
       return { ok: true as const, entries: [] }
     })
     vi.stubGlobal('window', {
-      kunGui: { writeWorkspaceFile, readWorkspaceFile: rehydrateRead, listWorkspaceDirectory: rehydrateList }
+      RcodeGui: { writeWorkspaceFile, readWorkspaceFile: rehydrateRead, listWorkspaceDirectory: rehydrateList }
     })
 
     await useDesignWorkspaceStore.getState().rehydrateArtifacts()
@@ -431,7 +431,7 @@ describe('SVG design workspace versions', () => {
       expected: 'error'
     }
   ] as const)('derives $expected status when duplicating a $label', async ({ source, expected }) => {
-    files.set('.kun-design/doc/motion/v1.svg', source)
+    files.set('.Rcode-design/doc/motion/v1.svg', source)
 
     await useDesignWorkspaceStore.getState().duplicateArtifact('motion')
 

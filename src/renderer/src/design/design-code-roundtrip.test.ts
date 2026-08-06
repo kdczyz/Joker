@@ -14,8 +14,8 @@ function artifact(kind: DesignArtifact['kind'] = 'html'): DesignArtifact {
     id: `${kind}_1`,
     kind,
     title: kind === 'html' ? 'Home' : 'Board',
-    relativePath: `.kun-design/doc/${kind}_1/${kind === 'html' ? 'v1.html' : 'canvas.json'}`,
-    designMdPath: kind === 'html' ? '.kun-design/doc/html_1/DESIGN.md' : undefined,
+    relativePath: `.Rcode-design/doc/${kind}_1/${kind === 'html' ? 'v1.html' : 'canvas.json'}`,
+    designMdPath: kind === 'html' ? '.Rcode-design/doc/html_1/DESIGN.md' : undefined,
     createdAt: now,
     updatedAt: now,
     versions: []
@@ -55,10 +55,10 @@ describe('design code roundtrip', () => {
       workspaceRoot: '/workspace'
     }))
     expect(result.designSystemHash).toBeTruthy()
-    expect(result.prompt).toContain('Design source (a standalone HTML mockup): .kun-design/doc/html_1/v1.html')
+    expect(result.prompt).toContain('Design source (a standalone HTML mockup): .Rcode-design/doc/html_1/v1.html')
     expect(result.prompt).toContain('Project design system: DESIGN.md')
     expect(result.prompt).toContain('Target stack: React + Tailwind')
-    expect(result.prompt).toContain('Read the design notes `.kun-design/doc/html_1/DESIGN.md`')
+    expect(result.prompt).toContain('Read the design notes `.Rcode-design/doc/html_1/DESIGN.md`')
   })
 
   it('keeps design-system publish failures non-fatal', async () => {

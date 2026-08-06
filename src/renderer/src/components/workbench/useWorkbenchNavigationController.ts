@@ -281,10 +281,10 @@ export function useWorkbenchNavigationController({
     try {
       const writeState = useWriteWorkspaceStore.getState()
       writeState.setFileError(null)
-      if (typeof window.kunGui?.pickWorkspaceDirectory !== 'function') {
+      if (typeof window.RcodeGui?.pickWorkspaceDirectory !== 'function') {
         throw new Error('workspace:pick-directory unavailable')
       }
-      const picked = await window.kunGui.pickWorkspaceDirectory(
+      const picked = await window.RcodeGui.pickWorkspaceDirectory(
         writeState.workspaceRoot || writeState.defaultWorkspaceRoot || workspaceRoot || undefined
       )
       if (!picked.canceled && picked.path) {

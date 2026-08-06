@@ -22,7 +22,7 @@ import type {
   Locale,
   ProviderStatus,
   Theme
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 
 const MAX_RETAINED_AGENT_EVENTS = 512
 const MAX_AGENT_SUBSCRIBE_RETRY_MS = 5_000
@@ -39,7 +39,7 @@ export function ExtensionViewProvider({ client, children }: ExtensionViewProvide
 
 export function useExtensionClient(): ExtensionHostClient {
   const client = useContext(ClientContext)
-  if (!client) throw new Error('Kun React hooks must be used inside ExtensionViewProvider')
+  if (!client) throw new Error('Rcode React hooks must be used inside ExtensionViewProvider')
   return client
 }
 
@@ -358,7 +358,7 @@ export function useAgentRun(runId: string | undefined): AgentRunHookResult {
       }
     }
     const overflowSubscription = client.ui.onDidReceiveMessage((message) => {
-      if (message.channel === 'kun.extension.view.overflow') void reconnect()
+      if (message.channel === 'Rcode.extension.view.overflow') void reconnect()
     })
     void connect()
     return () => {

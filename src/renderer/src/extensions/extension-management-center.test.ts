@@ -35,7 +35,7 @@ describe('ExtensionManagementCenter', () => {
     expect(extensionCanRollback(entry())).toBe(true)
     expect(extensionCanRollback(entry({ previousSelectedVersion: undefined }))).toBe(false)
     expect(extensionCardLogoUrl('acme.sample', 'assets/logo.svg')).toBe(
-      'kun-extension://acme.sample/assets/logo.svg?kunHostResource=icon'
+      'Rcode-extension://acme.sample/assets/logo.svg?RcodeHostResource=icon'
     )
     expect(extensionCardLogoUrl('acme.sample')).toBeUndefined()
   })
@@ -48,7 +48,7 @@ describe('ExtensionManagementCenter', () => {
       onOpenIntegrations: vi.fn(),
       onOpenView: vi.fn()
     }))
-    expect(html).toContain('Kun Extension Center')
+    expect(html).toContain('Rcode Extension Center')
     expect(html).toContain('Looking for UI appearance packs, MCP, or Skills?')
     expect(html).toContain('Those systems remain separate')
     expect(html).toContain('No automatic update checks')

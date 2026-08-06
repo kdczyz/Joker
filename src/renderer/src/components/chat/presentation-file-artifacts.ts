@@ -1,7 +1,7 @@
 import type { ChatBlock, GeneratedFileReference, ToolBlock } from '../../agent/types'
 import { PRESENTATION_STUDIO_EXTENSION_ID } from '@shared/presentation-artifact'
 
-export type PresentationArtifactKind = 'powerpoint' | 'kun-html'
+export type PresentationArtifactKind = 'powerpoint' | 'Rcode-html'
 
 export type PresentationFileArtifact = {
   path: string
@@ -82,7 +82,7 @@ function pathKey(path: string, workspaceRoot: string, platform: string): string 
   return caseComparablePath(relative, platform)
 }
 
-function isTrustedKunHtmlProducer(block: ToolBlock): boolean {
+function isTrustedRcodeHtmlProducer(block: ToolBlock): boolean {
   return block.meta?.presentationArtifactProducer === PRESENTATION_STUDIO_ARTIFACT_PRODUCER
 }
 
@@ -94,8 +94,8 @@ function trustedContentSha256(block: ToolBlock): string | undefined {
 }
 
 function canPublishArtifact(block: ToolBlock, kind: PresentationArtifactKind): boolean {
-  if (kind !== 'kun-html') return true
-  return isTrustedKunHtmlProducer(block) && Boolean(trustedContentSha256(block))
+  if (kind !== 'Rcode-html') return true
+  return isTrustedRcodeHtmlProducer(block) && Boolean(trustedContentSha256(block))
 }
 
 function preferArtifactPath(existing: string, candidate: string): string {
@@ -114,8 +114,8 @@ export function presentationArtifactKindForPath(
 ): { kind: PresentationArtifactKind; extension: string } | null {
   if (!path.trim() || path.length > MAX_PRESENTATION_ARTIFACT_PATH_LENGTH) return null
   const normalized = normalizeSlashes(path).toLowerCase()
-  if (normalized.endsWith('.kun-ppt.html')) {
-    return { kind: 'kun-html', extension: 'HTML' }
+  if (normalized.endsWith('.Rcode-ppt.html')) {
+    return { kind: 'Rcode-html', extension: 'HTML' }
   }
   const name = nameFromPath(normalized)
   const dot = name.lastIndexOf('.')
@@ -192,7 +192,7 @@ export function derivePresentationFileArtifacts(
       extension: resolvedKind.extension,
       ...(metadata?.mimeType?.trim() ? { mimeType: metadata.mimeType.trim() } : {}),
       ...(typeof metadata?.byteSize === 'number' ? { byteSize: metadata.byteSize } : {}),
-      ...(resolvedKind.kind === 'kun-html'
+      ...(resolvedKind.kind === 'Rcode-html'
         ? { contentSha256: trustedContentSha256(block) }
         : {})
     }

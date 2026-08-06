@@ -7,7 +7,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -15,7 +15,7 @@ import {
   defaultTerminalSettings,
   type AppSettingsV1
 } from '../shared/app-settings'
-import { fetchUpstreamModelIds, readConfiguredKunModelIds } from './upstream-models'
+import { fetchUpstreamModelIds, readConfiguredRcodeModelIds } from './upstream-models'
 
 function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
   const provider = defaultModelProviderSettings()
@@ -41,15 +41,15 @@ function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
       ]
     },
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
+      Rcode: {
+        ...defaultRcodeRuntimeSettings(),
         dataDir,
         model,
         providerId: 'custom-provider'
       }
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -68,7 +68,7 @@ function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
 }
 
 describe('upstream model picker list', () => {
-  it('includes Kun config model profiles, aliases, and the configured agent model', async () => {
+  it('includes Rcode config model profiles, aliases, and the configured agent model', async () => {
     const dataDir = mkdtempSync(join(tmpdir(), 'deepseek-gui-models-'))
     await mkdir(dataDir, { recursive: true })
     await writeFile(
@@ -90,7 +90,7 @@ describe('upstream model picker list', () => {
       'utf8'
     )
 
-    const ids = await readConfiguredKunModelIds(settings(dataDir))
+    const ids = await readConfiguredRcodeModelIds(settings(dataDir))
 
     expect(ids).toEqual(expect.arrayContaining([
       'deepseek-v4-pro',

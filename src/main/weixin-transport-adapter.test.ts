@@ -9,7 +9,7 @@ function channel(): ClawImChannelV1 {
     platformCredential: {
       kind: 'weixin', accountId: 'account_1', sessionKey: '', createdAt: '2026-07-11T00:00:00.000Z'
     },
-    agentProfile: { name: 'kun', description: '', identity: '', personality: '', userContext: '', replyRules: '' },
+    agentProfile: { name: 'Rcode', description: '', identity: '', personality: '', userContext: '', replyRules: '' },
     createdAt: '2026-07-11T00:00:00.000Z', updatedAt: '2026-07-11T00:00:00.000Z'
   }
 }

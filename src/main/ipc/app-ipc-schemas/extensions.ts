@@ -3,7 +3,7 @@ import {
   JsonValueSchema,
   ManifestLocaleTagSchema,
   PermissionSchema
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 import { z } from 'zod'
 import {
   EXTENSION_HOST_SURFACES,

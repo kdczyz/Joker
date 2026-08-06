@@ -9,11 +9,11 @@ function normalizedHomeDir(homeDir: string | undefined): string {
 }
 
 function currentPlatform(): string {
-  return typeof window !== 'undefined' ? window.kunGui?.platform ?? '' : ''
+  return typeof window !== 'undefined' ? window.RcodeGui?.platform ?? '' : ''
 }
 
 function currentHomeDir(): string {
-  return typeof window !== 'undefined' ? window.kunGui?.homeDir ?? '' : ''
+  return typeof window !== 'undefined' ? window.RcodeGui?.homeDir ?? '' : ''
 }
 
 export function compactHomePathForSettingsDisplay(
@@ -95,20 +95,20 @@ export function expandSettingsHomePathsForUse(
 ): AppSettingsV1 {
   const expand = (value: string): string => expandHomePathForSettingsUse(value, homeDir, platform)
   const expandList = (values: readonly string[]): string[] => expandHomePathListForSettingsUse(values, homeDir, platform)
-  const kun = settings.agents.kun
+  const Rcode = settings.agents.Rcode
   return {
     ...settings,
     workspaceRoot: expand(settings.workspaceRoot),
     conversationWorkspaceRoot: expand(settings.conversationWorkspaceRoot),
     agents: {
       ...settings.agents,
-      kun: {
-        ...kun,
-        binaryPath: expand(kun.binaryPath),
-        dataDir: expand(kun.dataDir),
+      Rcode: {
+        ...Rcode,
+        binaryPath: expand(Rcode.binaryPath),
+        dataDir: expand(Rcode.dataDir),
         storage: {
-          ...kun.storage,
-          sqlitePath: expand(kun.storage.sqlitePath)
+          ...Rcode.storage,
+          sqlitePath: expand(Rcode.storage.sqlitePath)
         }
       }
     },

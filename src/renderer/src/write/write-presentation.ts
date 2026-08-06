@@ -29,7 +29,7 @@ export function buildWritePresentationPrompt(input: {
     '',
     `唯一来源 Markdown：${input.sourcePath}`,
     `工作区：${input.workspaceRoot}`,
-    `PPT 项目目录：.kun-presentations/${deckName}`,
+    `PPT 项目目录：.Rcode-presentations/${deckName}`,
     `最终文件：presentations/${deckName}.pptx`,
     '',
     '先读取 Markdown 并给出幻灯片大纲、建议页数、受众和视觉方向；再调用 ppt_master_confirm_design 展示原生确认卡。只有我在确认卡中选择“Generate PPT”后，才能继续生成，并把返回的 approval_token 传给每次 ppt_master_run 调用。',

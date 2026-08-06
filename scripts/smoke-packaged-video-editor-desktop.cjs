@@ -31,7 +31,7 @@ const {
   desktopUserDataCandidates,
   platformDesktopArguments,
   resolveDesktopLaunchSelection,
-  runPackagedKun,
+  runPackagedRcode,
   terminateProcessTree,
   waitForPortsClosed
 } = require('./smoke-packaged-extension-desktop.cjs')
@@ -40,7 +40,7 @@ const {
   resolveHostMediaExecutables
 } = require('./lib/extension-native-media-smoke.cjs')
 
-const EXTENSION_ID = 'kun-examples.kun-video-editor'
+const EXTENSION_ID = 'Rcode-examples.Rcode-video-editor'
 const EXTENSION_VERSION = '0.4.4'
 const CONTRIBUTION_ID = `extension:${EXTENSION_ID}/editor`
 const VIDEO_EDITOR_PERMISSIONS = Object.freeze([
@@ -58,11 +58,11 @@ const VIDEO_EDITOR_PERMISSIONS = Object.freeze([
   'workspace.read',
   'workspace.write'
 ])
-const SUCCESS_MARKER = 'Packaged Kun Video Editor desktop E2E OK ('
+const SUCCESS_MARKER = 'Packaged Rcode Video Editor desktop E2E OK ('
 const DEFAULT_TIMEOUT_MS = 180_000
 const DEFAULT_JOB_TIMEOUT_MS = 120_000
 const MAX_CLEANUP_TIMEOUT_MS = 15_000
-const MODEL_NAME = 'kun-video-editor-desktop-e2e'
+const MODEL_NAME = 'Rcode-video-editor-desktop-e2e'
 
 async function main() {
   const timeoutMs = positiveIntegerArgument('--timeout-ms', DEFAULT_TIMEOUT_MS)
@@ -75,7 +75,7 @@ async function main() {
   )
   if (!runtimeExecutable) {
     throw new Error(
-      `The packaged Kun application at ${resourcesDir} is not host-native for ${process.arch}`
+      `The packaged Rcode application at ${resourcesDir} is not host-native for ${process.arch}`
     )
   }
   const desktopLaunchSelection = resolveDesktopLaunchSelection({
@@ -85,7 +85,7 @@ async function main() {
     desktopExecutable: argumentValue('--desktop-executable')
   })
   const unpackedRoot = join(resourcesDir, 'app.asar.unpacked')
-  const runtimeEntry = join(unpackedRoot, 'kun', 'dist', 'cli', 'serve-entry.js')
+  const runtimeEntry = join(unpackedRoot, 'Rcode', 'dist', 'cli', 'serve-entry.js')
   validatePackagedResources(resourcesDir, unpackedRoot)
 
   const repositoryRoot = resolve(argumentValue('--repository-root') ?? join(__dirname, '..'))
@@ -97,15 +97,15 @@ async function main() {
     repositoryRoot,
     'examples',
     'extensions',
-    'kun-video-editor',
+    'Rcode-video-editor',
     'fixtures',
     'talking-head.srt'
   )
   assertRegularFile(transcriptFixture, 'committed SRT fixture')
 
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'kun-video-editor-desktop-e2e-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-video-editor-desktop-e2e-'))
   const home = join(temporaryRoot, 'home')
-  const profile = join(home, '.kun', 'data')
+  const profile = join(home, '.Rcode', 'data')
   const userData = join(temporaryRoot, 'electron-user-data')
   const appData = join(temporaryRoot, 'app-data')
   const localAppData = join(temporaryRoot, 'local-app-data')
@@ -162,7 +162,7 @@ async function main() {
       explicitUserData: userData
     }).map(async (directory) => {
       await mkdir(directory, { recursive: true })
-      await writeFile(join(directory, 'kun-settings.json'), serializedSettings)
+      await writeFile(join(directory, 'Rcode-settings.json'), serializedSettings)
     }))
 
     const isolatedEnvironment = createIsolatedEnvironment(process.env, {
@@ -171,10 +171,10 @@ async function main() {
       localAppData,
       temporaryDirectory
     })
-    isolatedEnvironment.KUN_FFMPEG_PATH = mediaExecutables.ffmpeg
-    isolatedEnvironment.KUN_FFPROBE_PATH = mediaExecutables.ffprobe
+    isolatedEnvironment.RCODE_FFMPEG_PATH = mediaExecutables.ffmpeg
+    isolatedEnvironment.RCODE_FFPROBE_PATH = mediaExecutables.ffprobe
 
-    runPackagedKun(
+    runPackagedRcode(
       desktopLaunchSelection.cliExecutable,
       runtimeEntry,
       [
@@ -219,8 +219,8 @@ async function main() {
         value.lang.toLowerCase().startsWith('zh') &&
         value.theme === 'light' &&
         value.text.includes('开始你的第一支作品') &&
-        value.text.includes('Kun 视频剪辑'),
-      'Chinese/light Kun Video Editor View',
+        value.text.includes('Rcode 视频剪辑'),
+      'Chinese/light Rcode Video Editor View',
       timeoutMs
     )
     assertNoGuestErrors(snapshot, 'initializing the Chinese/light editor')
@@ -334,10 +334,10 @@ async function main() {
       electronApplication,
       (value) => value.lang.toLowerCase().startsWith('en') && value.theme === 'dark' &&
         value.text.toLowerCase().includes('ready to deliver') && value.text.includes('Output mode'),
-      'English/dark View update from Kun settings',
+      'English/dark View update from Rcode settings',
       timeoutMs
     )
-    assertNoGuestErrors(snapshot, 'following English/dark Kun settings')
+    assertNoGuestErrors(snapshot, 'following English/dark Rcode settings')
 
     // Give the debounced View state writer time to commit before exercising a
     // full desktop shutdown/relaunch with the same isolated profile.
@@ -411,7 +411,7 @@ async function main() {
       await modelFixture.close().catch((error) => cleanupErrors.push(error))
       await waitForPortsClosed([modelFixture.port], 2_000).catch((error) => cleanupErrors.push(error))
     }
-    if (process.env.KUN_KEEP_VIDEO_EDITOR_DESKTOP_E2E === '1') {
+    if (process.env.RCODE_KEEP_VIDEO_EDITOR_DESKTOP_E2E === '1') {
       process.stderr.write(`Preserved desktop E2E profile: ${temporaryRoot}\n`)
       process.stderr.write(`Preserved desktop E2E workspace: ${workspaceRoot}\n`)
     } else {
@@ -426,7 +426,7 @@ async function main() {
     const message = primaryError instanceof Error
       ? primaryError.stack ?? primaryError.message
       : primaryError === undefined
-        ? 'Kun Video Editor desktop E2E cleanup failed'
+        ? 'Rcode Video Editor desktop E2E cleanup failed'
         : String(primaryError)
     const cleanup = cleanupErrors.length > 0
       ? `\nCleanup failures:\n${cleanupErrors.map((error) => `- ${error instanceof Error ? error.message : String(error)}`).join('\n')}`
@@ -442,8 +442,8 @@ function desktopVideoEditorSettings({ runtimePort, workspaceRoot, dataDir, model
     locale: 'zh',
     theme: 'light',
     agents: {
-      kun: {
-        ...base.agents.kun,
+      Rcode: {
+        ...base.agents.Rcode,
         apiKey: 'desktop-e2e-local-placeholder',
         baseUrl: modelBaseUrl,
         providerId: 'deepseek',
@@ -459,8 +459,8 @@ function desktopVideoEditorSettings({ runtimePort, workspaceRoot, dataDir, model
 async function resolveVideoEditorArchive(resourcesDir, explicit) {
   if (explicit) {
     const archive = resolve(explicit)
-    assertRegularFile(archive, 'explicit Kun Video Editor .kunx')
-    if (!archive.endsWith('.kunx')) throw new Error(`Video editor archive must end with .kunx: ${archive}`)
+    assertRegularFile(archive, 'explicit Rcode Video Editor .Rcodex')
+    if (!archive.endsWith('.Rcodex')) throw new Error(`Video editor archive must end with .Rcodex: ${archive}`)
     return archive
   }
   const bundledRoot = join(resourcesDir, 'bundled-extensions')
@@ -479,7 +479,7 @@ async function resolveVideoEditorArchive(resourcesDir, explicit) {
     throw new Error(`Packaged bundled-extension catalog must contain exactly one ${EXTENSION_ID}`)
   }
   const archive = join(bundledRoot, matches[0].archive)
-  assertRegularFile(archive, 'packaged bundled Kun Video Editor .kunx')
+  assertRegularFile(archive, 'packaged bundled Rcode Video Editor .Rcodex')
   return archive
 }
 
@@ -500,7 +500,7 @@ function createVideoFixture(ffmpegPath, output, cwd, timeoutMs) {
     const detail = `${String(result.stdout ?? '')}\n${String(result.stderr ?? '')}`.trim().slice(-8_000)
     throw new Error(
       `Cannot create the real MP4 desktop fixture with ${ffmpegPath}. ` +
-      'Install an FFmpeg build with libx264 and AAC, or set KUN_FFMPEG_PATH. ' +
+      'Install an FFmpeg build with libx264 and AAC, or set RCODE_FFMPEG_PATH. ' +
       `Exit: ${result.signal ?? result.status ?? 'unknown'}${detail ? `\n${detail}` : ''}`
     )
   }
@@ -554,7 +554,7 @@ async function installNativeDialogStubs(electronApplication, {
       messageBoxes: [],
       calls: []
     }
-    globalThis.__kunVideoEditorDesktopE2eDialogs = state
+    globalThis.__RcodeVideoEditorDesktopE2eDialogs = state
     dialog.showOpenDialog = async (...args) => {
       const options = args.at(-1) ?? {}
       const selected = state.openSelections.shift()
@@ -604,13 +604,13 @@ async function findWorkbenchWindow(electronApplication, timeoutMs) {
   return pollUntil(async () => {
     for (const window of electronApplication.windows()) {
       try {
-        if (await window.evaluate(() => typeof globalThis.kunGui === 'object')) return window
+        if (await window.evaluate(() => typeof globalThis.RcodeGui === 'object')) return window
       } catch {
         // Window may still be navigating.
       }
     }
     return undefined
-  }, { timeoutMs, description: 'packaged Kun workbench window' })
+  }, { timeoutMs, description: 'packaged Rcode workbench window' })
 }
 
 async function findProtectedConsentWindow(electronApplication, workbench, timeoutMs) {
@@ -691,11 +691,11 @@ async function openUntrustedVideoEditor(
   timeoutMs
 ) {
   if (await hasVideoEditorGuest(electronApplication)) {
-    throw new Error('Kun Video Editor opened before the first-launch workspace trust review')
+    throw new Error('Rcode Video Editor opened before the first-launch workspace trust review')
   }
   await assertVideoEditorHiddenFromRightRail(workbench, workspaceRoot, timeoutMs)
   const card = await openVideoEditorManagementCard(workbench, timeoutMs)
-  const authorize = card.getByRole('button', { name: /^(?:授权后打开 Kun 视频编辑器|Authorize to open Kun Video Editor)$/ })
+  const authorize = card.getByRole('button', { name: /^(?:授权后打开 Rcode 视频编辑器|Authorize to open Rcode Video Editor)$/ })
   await authorize.waitFor({ state: 'visible', timeout: timeoutMs })
   await authorize.click()
   const review = card.getByRole('button', { name: /^(?:在受保护窗口审核并应用|Review and apply in protected window)$/ })
@@ -709,7 +709,7 @@ async function openUntrustedVideoEditor(
   const permissionPrompt = await readProtectedConsentPrompt(permissionPromptWindow)
   assertLocalizedFirstLaunchPermissionPrompt(permissionPrompt, { workspaceRoot })
   await permissionPromptWindow.locator('#consent-approve').click()
-  const open = card.getByRole('button', { name: /^(?:打开 Kun 视频编辑器|Open Kun Video Editor)$/ })
+  const open = card.getByRole('button', { name: /^(?:打开 Rcode 视频编辑器|Open Rcode Video Editor)$/ })
   await open.waitFor({ state: 'visible', timeout: timeoutMs })
   await open.click()
   await waitForVideoEditorGuest(
@@ -723,7 +723,7 @@ async function openUntrustedVideoEditor(
 async function openVideoEditor(workbench, electronApplication, timeoutMs) {
   if (await hasVideoEditorGuest(electronApplication)) return
   const card = await openVideoEditorManagementCard(workbench, timeoutMs)
-  const open = card.getByRole('button', { name: /^(?:打开 Kun 视频编辑器|Open Kun Video Editor)$/ })
+  const open = card.getByRole('button', { name: /^(?:打开 Rcode 视频编辑器|Open Rcode Video Editor)$/ })
   await open.waitFor({ state: 'visible', timeout: timeoutMs })
   await open.click()
   try {
@@ -744,7 +744,7 @@ async function openVideoEditor(workbench, electronApplication, timeoutMs) {
 async function assertVideoEditorHiddenFromRightRail(workbench, workspaceRoot, timeoutMs) {
   const discovery = await pollUntil(async () => workbench.evaluate(
     async ({ extensionId, workspaceRoot: currentWorkspaceRoot }) => {
-      const result = await globalThis.kunGui.extensionGetWorkbench({
+      const result = await globalThis.RcodeGui.extensionGetWorkbench({
         workspaceRoot: currentWorkspaceRoot,
         locale: 'zh-CN'
       })
@@ -761,7 +761,7 @@ async function assertVideoEditorHiddenFromRightRail(workbench, workspaceRoot, ti
     description: `default-hidden video editor contribution ${CONTRIBUTION_ID}`
   })
   if (!discovery || await workbench.locator(`button[data-contribution-id="${CONTRIBUTION_ID}"]`).count() !== 0) {
-    throw new Error('Kun Video Editor must not be displayed in the Code right rail by default')
+    throw new Error('Rcode Video Editor must not be displayed in the Code right rail by default')
   }
 }
 
@@ -867,14 +867,14 @@ function assertLocalizedFirstLaunchPermissionPrompt(prompt, { workspaceRoot }) {
   const detailEvidence = [
     '此次权限变更仅适用于所选工作区。',
     '变更后的 Broker 权限：',
-    'Kun 生成的风险摘要：',
+    'Rcode 生成的风险摘要：',
     'Node 代码使用当前操作系统用户的权限运行。',
     '工作区读取权限可访问已批准工作区中的文件和扩展状态。',
     '工作区写入权限可在已批准的工作区中创建或修改文件。',
     '媒体读取权限可通过不透明授权检查用户选择的本地媒体。',
     '媒体处理和任务权限可运行并管理持久化的本地任务。',
     '媒体导出权限可写入用户批准的输出位置。',
-    'Agent 和工具权限可启动私有 Agent 运行，并向 Kun 提供声明的工具。',
+    'Agent 和工具权限可启动私有 Agent 运行，并向 Rcode 提供声明的工具。',
     '扩展 Node Host 本身并不是操作系统沙箱。',
     ...VIDEO_EDITOR_PERMISSIONS.map((permission) => `• ${permission}`)
   ]
@@ -911,7 +911,7 @@ async function hasVideoEditorGuest(electronApplication) {
   return electronApplication.evaluate(({ webContents }, extensionId) =>
     webContents.getAllWebContents().some((contents) =>
       contents.getType() === 'webview' &&
-      contents.getURL().startsWith(`kun-extension://${extensionId}/`)
+      contents.getURL().startsWith(`Rcode-extension://${extensionId}/`)
     ), EXTENSION_ID)
 }
 
@@ -919,9 +919,9 @@ async function evaluateVideoEditorGuest(electronApplication, expression) {
   return electronApplication.evaluate(async ({ webContents }, input) => {
     const guest = webContents.getAllWebContents().find((contents) =>
       contents.getType() === 'webview' &&
-      contents.getURL().startsWith(`kun-extension://${input.extensionId}/`)
+      contents.getURL().startsWith(`Rcode-extension://${input.extensionId}/`)
     )
-    if (!guest || guest.isDestroyed()) throw new Error('Kun Video Editor guest WebContents is unavailable')
+    if (!guest || guest.isDestroyed()) throw new Error('Rcode Video Editor guest WebContents is unavailable')
     return guest.executeJavaScript(input.expression, true)
   }, { extensionId: EXTENSION_ID, expression })
 }
@@ -933,7 +933,7 @@ async function readGuestSnapshot(electronApplication) {
     const projectName = projectSelect?.selectedOptions?.[0]?.textContent?.split(' · r')[0]?.trim() ?? ''
     const revisionText = document.querySelector('.project-actions .revision-badge')?.textContent ?? ''
     return {
-      ready: document.readyState === 'complete' && typeof globalThis.kunExtension?.request === 'function',
+      ready: document.readyState === 'complete' && typeof globalThis.RcodeExtension?.request === 'function',
       busy: document.querySelector('#video-editor-main')?.getAttribute('aria-busy') === 'true',
       lang: document.documentElement.lang || '',
       theme: document.documentElement.dataset.theme || document.querySelector('.editor-app')?.dataset.theme || '',
@@ -991,7 +991,7 @@ async function setGuestFormValue(electronApplication, selector, value) {
     input.dispatchEvent(new Event('change', { bubbles: true }))
     return true
   })()`)
-  if (!updated) throw new Error(`Cannot set Kun Video Editor form control: ${selector}`)
+  if (!updated) throw new Error(`Cannot set Rcode Video Editor form control: ${selector}`)
 }
 
 async function submitGuestForm(electronApplication, selector) {
@@ -1001,7 +1001,7 @@ async function submitGuestForm(electronApplication, selector) {
     form.requestSubmit()
     return true
   })()`)
-  if (!submitted) throw new Error(`Cannot submit Kun Video Editor form: ${selector}`)
+  if (!submitted) throw new Error(`Cannot submit Rcode Video Editor form: ${selector}`)
 }
 
 async function clickGuestButton(electronApplication, text, withinSelector, timeoutMs = 15_000) {
@@ -1043,19 +1043,19 @@ async function clickGuestSelector(electronApplication, selector, index = 0) {
 
 async function applyWorkbenchSettings(workbench, patch) {
   const result = await workbench.evaluate(async (settingsPatch) => {
-    const saved = await globalThis.kunGui.setSettings(settingsPatch)
-    globalThis.dispatchEvent(new CustomEvent('kun:settings-changed', { detail: saved }))
+    const saved = await globalThis.RcodeGui.setSettings(settingsPatch)
+    globalThis.dispatchEvent(new CustomEvent('Rcode:settings-changed', { detail: saved }))
     return { locale: saved.locale, theme: saved.theme }
   }, patch)
   if (result.locale !== patch.locale || result.theme !== patch.theme) {
-    throw new Error(`Kun did not persist locale/theme E2E patch: ${JSON.stringify(result)}`)
+    throw new Error(`Rcode did not persist locale/theme E2E patch: ${JSON.stringify(result)}`)
   }
 }
 
 async function startAgentToolTurn(workbench, workspaceRoot) {
   return workbench.evaluate(async ({ workspace, model }) => {
     const request = async (path, method, body) => {
-      const response = await globalThis.kunGui.runtimeRequest(
+      const response = await globalThis.RcodeGui.runtimeRequest(
         path,
         method,
         body === undefined ? undefined : JSON.stringify(body)
@@ -1064,7 +1064,7 @@ async function startAgentToolTurn(workbench, workspaceRoot) {
       return response.body ? JSON.parse(response.body) : undefined
     }
     const thread = await request('/v1/threads', 'POST', {
-      title: 'Kun Video Editor desktop E2E Agent sync',
+      title: 'Rcode Video Editor desktop E2E Agent sync',
       workspace,
       model,
       mode: 'agent',
@@ -1085,7 +1085,7 @@ async function startAgentToolTurn(workbench, workspaceRoot) {
 async function waitForAgentTurn(workbench, turn, timeoutMs) {
   return pollUntil(async () => {
     const response = await workbench.evaluate(async ({ threadId, turnId }) => {
-      return globalThis.kunGui.runtimeRequest(
+      return globalThis.RcodeGui.runtimeRequest(
         `/v1/threads/${encodeURIComponent(threadId)}/turns/${encodeURIComponent(turnId)}`,
         'GET'
       )
@@ -1151,8 +1151,8 @@ async function startOfflineModelFixture() {
     } else {
       for (const frame of openAiTextFrames(
         sawToolResult
-          ? 'Kun Video Editor desktop E2E selected the project through the extension tool.'
-          : 'Kun Video Editor desktop E2E model fixture is ready.'
+          ? 'Rcode Video Editor desktop E2E selected the project through the extension tool.'
+          : 'Rcode Video Editor desktop E2E model fixture is ready.'
       )) response.write(frame)
     }
     response.end()
@@ -1185,7 +1185,7 @@ async function startOfflineModelFixture() {
 }
 
 function openAiToolCallFrames({ toolName, argumentsJson }) {
-  const id = 'chatcmpl-kun-video-editor-desktop-e2e'
+  const id = 'chatcmpl-Rcode-video-editor-desktop-e2e'
   return [
     sseFrame({
       id,
@@ -1214,7 +1214,7 @@ function openAiToolCallFrames({ toolName, argumentsJson }) {
 }
 
 function openAiTextFrames(text) {
-  const id = 'chatcmpl-kun-video-editor-desktop-e2e-text'
+  const id = 'chatcmpl-Rcode-video-editor-desktop-e2e-text'
   return [
     sseFrame({
       id,
@@ -1238,10 +1238,10 @@ function assertNoGuestErrors(snapshot, operation) {
   const errors = snapshot.notices.filter(({ className }) => /notice-error/u.test(className))
   if (errors.length > 0) {
     throw new Error(
-      `Kun Video Editor reported an error while ${operation}: ${JSON.stringify(errors)}. ` +
+      `Rcode Video Editor reported an error while ${operation}: ${JSON.stringify(errors)}. ` +
       `Capability guidance: ${snapshot.capabilityTitle || snapshot.boundaryNotes.join(' | ') || 'none'}. ` +
       'For media failures: Install FFmpeg with libx264 and AAC plus ffprobe, or set absolute ' +
-      `KUN_FFMPEG_PATH/KUN_FFPROBE_PATH values. Guest state: ${guestDiagnostic(snapshot)}`
+      `RCODE_FFMPEG_PATH/RCODE_FFPROBE_PATH values. Guest state: ${guestDiagnostic(snapshot)}`
     )
   }
 }

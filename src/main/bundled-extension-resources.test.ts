@@ -14,7 +14,7 @@ afterEach(() => {
 })
 
 function root(): string {
-  const value = mkdtempSync(join(tmpdir(), 'kun-bundled-extension-resources-'))
+  const value = mkdtempSync(join(tmpdir(), 'Rcode-bundled-extension-resources-'))
   roots.push(value)
   return value
 }
@@ -34,7 +34,7 @@ describe('bundled extension resources', () => {
     })).toBe(join(base, 'product-resources', 'bundled-extensions'))
   })
 
-  it('passes a bundle directory to Kun only after its catalog exists', () => {
+  it('passes a bundle directory to Rcode only after its catalog exists', () => {
     const base = root()
     const appRoot = join(base, 'repo')
     const directory = join(appRoot, 'resources', 'bundled-extensions')

@@ -75,15 +75,15 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
   if (!options) return false
 
   const server = new McpServer(
-    { name: 'kun-schedule', version: '0.1.0' },
+    { name: 'Rcode-schedule', version: '0.1.0' },
     { capabilities: { logging: {} } }
   )
 
   const registerListTool = (name: string): void => {
     server.registerTool(name, {
       description: name.startsWith('claw_')
-        ? 'Legacy alias. List scheduled tasks managed by the currently running Kun app.'
-        : 'List scheduled tasks managed by the currently running Kun app.'
+        ? 'Legacy alias. List scheduled tasks managed by the currently running Rcode app.'
+        : 'List scheduled tasks managed by the currently running Rcode app.'
     }, async () => {
       try {
         const result = await postJson(options, '/schedule/internal/list', {})
@@ -105,8 +105,8 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
   const registerCreateTool = (name: string): void => {
     server.registerTool(name, {
       description: name.startsWith('claw_')
-        ? 'Legacy alias. Create a scheduled task in Kun. Supports one-time (`at`), daily, or interval schedules.'
-        : 'Create a scheduled task in Kun. Supports one-time (`at`), daily, or interval schedules. When creating from an existing conversation, pass that conversation\'s provider_id, model, and reasoning_effort so the scheduled task keeps the same execution settings.',
+        ? 'Legacy alias. Create a scheduled task in Rcode. Supports one-time (`at`), daily, or interval schedules.'
+        : 'Create a scheduled task in Rcode. Supports one-time (`at`), daily, or interval schedules. When creating from an existing conversation, pass that conversation\'s provider_id, model, and reasoning_effort so the scheduled task keeps the same execution settings.',
       inputSchema: {
         title: z.string().min(1).describe('Short task title shown in the GUI'),
         prompt: z.string().min(1).describe('The prompt/instruction the agent should run at schedule time'),
@@ -116,7 +116,7 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
         every_minutes: z.number().int().min(1).max(10080).optional().describe('Interval in minutes, required when schedule_kind is `interval`'),
         workspace_root: z.string().optional().describe('Optional workspace directory override'),
         claw_channel_id: z.string().optional().describe('Optional Claw IM channel id whose persona should run this task'),
-        provider_id: z.string().optional().describe('Optional model provider id configured in Kun settings'),
+        provider_id: z.string().optional().describe('Optional model provider id configured in Rcode settings'),
         model: z.string().optional().describe('Optional model id, e.g. deepseek-v4-pro / deepseek-v4-flash'),
         reasoning_effort: z.enum(['auto', 'off', 'low', 'medium', 'high', 'max']).optional().describe('Optional reasoning strength'),
         mode: z.enum(['agent', 'plan']).optional().describe('Execution mode'),
@@ -159,8 +159,8 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
   const registerUpdateTool = (name: string): void => {
     server.registerTool(name, {
       description: name.startsWith('claw_')
-        ? 'Legacy alias. Update an existing Kun scheduled task.'
-        : 'Update an existing Kun scheduled task.',
+        ? 'Legacy alias. Update an existing Rcode scheduled task.'
+        : 'Update an existing Rcode scheduled task.',
       inputSchema: {
         task_id: z.string().min(1).describe('Task id returned by gui_schedule_list or gui_schedule_create'),
         title: z.string().optional(),
@@ -222,8 +222,8 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
   const registerDeleteTool = (name: string): void => {
     server.registerTool(name, {
       description: name.startsWith('claw_')
-        ? 'Legacy alias. Delete a scheduled task from Kun.'
-        : 'Delete a scheduled task from Kun.',
+        ? 'Legacy alias. Delete a scheduled task from Rcode.'
+        : 'Delete a scheduled task from Rcode.',
       inputSchema: {
         task_id: z.string().min(1).describe('Task id returned by gui_schedule_list or gui_schedule_create')
       }
@@ -240,7 +240,7 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
   registerDeleteTool('gui_schedule_delete')
 
   // The `gui_plan_create` MCP tool has been retired in favour of the
-  // native Kun `create_plan` tool. See RETIRED_CLAW_GUI_PLAN_TOOL_NAMES
+  // native Rcode `create_plan` tool. See RETIRED_CLAW_GUI_PLAN_TOOL_NAMES
   // for the list of removed tool names.
 
   // Workflow tools — the same bridge exposes the GUI's node-based workflows that
@@ -310,7 +310,7 @@ export async function runClawScheduleMcpServerFromArgv(argv: string[]): Promise<
     })
 
     // Keep run_workflow's description (the workflow catalog the agent sees) fresh:
-    // without needing a kun restart: re-fetch on an interval and update the tool
+    // without needing a Rcode restart: re-fetch on an interval and update the tool
     // only when the list actually changes. update() emits tools/list_changed, so
     // the agent re-reads the current catalog on its next turn.
     let lastCatalog = ' '

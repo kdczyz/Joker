@@ -1,4 +1,4 @@
-import { LocaleSchema, ThemeSchema, type Locale, type Theme } from '@kun/extension-api'
+import { LocaleSchema, ThemeSchema, type Locale, type Theme } from '@Rcode/extension-api'
 
 export type ExtensionWorkbenchEnvironmentInput = {
   themePreference: 'system' | 'light' | 'dark'

@@ -1,7 +1,7 @@
 import { AlertTriangle, RefreshCw, X } from 'lucide-react'
 import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
-import { HostMessageSchema, type HostMessage } from '@kun/extension-api'
+import { HostMessageSchema, type HostMessage } from '@Rcode/extension-api'
 import type { RegisteredContribution } from './contribution-registry'
 import {
   extensionWorkbenchClient,
@@ -63,7 +63,7 @@ export function validateExtensionViewSession(
   }
   try {
     const url = new URL(session.src)
-    if (url.protocol !== 'kun-extension:' || url.hostname !== contribution.owner.extensionId) {
+    if (url.protocol !== 'Rcode-extension:' || url.hostname !== contribution.owner.extensionId) {
       return 'View Session resource origin mismatch.'
     }
   } catch {

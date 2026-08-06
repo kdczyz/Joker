@@ -79,7 +79,7 @@ export function createAppIcon(source: string): Electron.NativeImage {
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     console.warn(
-      '[kun-gui] failed to load app icon from',
+      '[Rcode-gui] failed to load app icon from',
       absolute || source,
       '-',
       message

@@ -17,26 +17,26 @@ import { spawnSync } from 'node:child_process'
 import { basename, dirname, join, relative, resolve, sep } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { runRequiredNpm } from './lib/extension-release-execution.mjs'
-import { assertStandaloneVideoEditorHostBundle } from './pack-kun-video-editor.mjs'
+import { assertStandaloneVideoEditorHostBundle } from './pack-Rcode-video-editor.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const cliPath = join(root, 'kun', 'dist', 'cli', 'serve-entry.js')
+const cliPath = join(root, 'Rcode', 'dist', 'cli', 'serve-entry.js')
 const defaultOutput = join(root, 'resources', 'bundled-extensions')
 
 export const BUNDLED_EXTENSION_CATALOG_FILE = 'catalog.json'
 export const BUNDLED_EXTENSION_DEFINITIONS = Object.freeze([
   Object.freeze({
-    id: 'kun-examples.kun-video-editor',
-    name: 'kun-video-editor',
-    root: join(root, 'examples', 'extensions', 'kun-video-editor')
+    id: 'rcode-examples.rcode-video-editor',
+    name: 'rcode-video-editor',
+    root: join(root, 'examples', 'extensions', 'Rcode-video-editor')
   }),
   Object.freeze({
-    id: 'kun-examples.presentation-studio',
+    id: 'rcode-examples.presentation-studio',
     name: 'presentation-studio',
     root: join(root, 'examples', 'extensions', 'presentation-studio')
   }),
   Object.freeze({
-    id: 'kun-examples.social-media-sidebar',
+    id: 'rcode-examples.social-media-sidebar',
     name: 'social-media-sidebar',
     root: join(root, 'examples', 'extensions', 'social-media-sidebar')
   })
@@ -52,7 +52,7 @@ export function bundledArchiveName(manifest, expectedName) {
   ) {
     throw new Error(`Invalid ${expectedName} version: ${String(manifest?.version)}`)
   }
-  return `${manifest.name}-${manifest.version}.kunx`
+  return `${manifest.name}-${manifest.version}.Rcodex`
 }
 
 export function bundledCatalogEntry(definition, manifest, archive, sha256) {
@@ -68,10 +68,10 @@ export function bundledCatalogEntry(definition, manifest, archive, sha256) {
   ) {
     throw new Error(`Bundled extension permissions are invalid: ${id}`)
   }
-  if (typeof manifest.engines?.kun !== 'string' || typeof manifest.apiVersion !== 'string') {
+  if (typeof manifest.engines?.Rcode !== 'string' || typeof manifest.apiVersion !== 'string') {
     throw new Error(`Bundled extension compatibility metadata is invalid: ${id}`)
   }
-  if (basename(archive) !== archive || !/^[0-9A-Za-z][0-9A-Za-z._-]*\.kunx$/u.test(archive)) {
+  if (basename(archive) !== archive || !/^[0-9A-Za-z][0-9A-Za-z._-]*\.Rcodex$/u.test(archive)) {
     throw new Error(`Bundled extension archive name is invalid: ${archive}`)
   }
   if (!/^[a-f0-9]{64}$/u.test(sha256)) {
@@ -82,7 +82,7 @@ export function bundledCatalogEntry(definition, manifest, archive, sha256) {
     version: manifest.version,
     archive,
     sha256,
-    enginesKun: manifest.engines.kun,
+    enginesRcode: manifest.engines.Rcode,
     apiVersion: manifest.apiVersion,
     permissions: [...new Set(manifest.permissions)].sort(),
     ...(manifest.signature === undefined ? {} : { signature: manifest.signature })
@@ -111,20 +111,20 @@ export async function packBundledExtensions({ output = defaultOutput } = {}) {
 }
 
 async function packBundledExtension(definition, directory) {
-  const manifestPath = join(definition.root, 'kun-extension.json')
+  const manifestPath = join(definition.root, 'Rcode-extension.json')
   const manifest = JSON.parse(await readFile(manifestPath, 'utf8'))
   const archiveName = bundledArchiveName(manifest, definition.name)
   const archive = join(directory, archiveName)
   const temporary = await mkdtemp(join(directory, `.${definition.name}-pack-`))
-  const first = join(temporary, 'first.kunx')
-  const second = join(temporary, 'second.kunx')
+  const firstOutput = join(temporary, 'first')
+  const secondOutput = join(temporary, 'second')
   try {
     runRequiredNpm({
       label: `${definition.name} build`,
       args: ['--prefix', definition.root, 'run', 'build'],
       cwd: root
     })
-    if (definition.id === 'kun-examples.kun-video-editor') {
+    if (definition.id === 'rcode-examples.rcode-video-editor') {
       await assertStandaloneVideoEditorHostBundle(join(definition.root, 'dist', 'host'))
     }
     runRequired(process.execPath, [
@@ -134,7 +134,7 @@ async function packBundledExtension(definition, directory) {
       definition.root,
       '--json'
     ])
-    for (const target of [first, second]) {
+    for (const target of [firstOutput, secondOutput]) {
       runRequired(process.execPath, [
         cliPath,
         'extension',
@@ -146,6 +146,15 @@ async function packBundledExtension(definition, directory) {
         '--json'
       ])
     }
+    const firstEntries = await readdir(firstOutput)
+    const secondEntries = await readdir(secondOutput)
+    const firstFile = firstEntries.find(f => f.endsWith('.Rcodex'))
+    const secondFile = secondEntries.find(f => f.endsWith('.Rcodex'))
+    if (!firstFile || !secondFile) {
+      throw new Error(`Bundled extension pack did not produce archive files: ${definition.id}`)
+    }
+    const first = join(firstOutput, firstFile)
+    const second = join(secondOutput, secondFile)
     const identity = await assertDeterministicArchives(definition.id, first, second)
     await rm(archive, { force: true })
     await rename(first, archive)
@@ -197,7 +206,7 @@ async function removeStaleBundledArchives(directory, expected) {
   const names = BUNDLED_EXTENSION_DEFINITIONS.map((entry) => entry.name)
   for (const entry of await readdir(directory, { withFileTypes: true })) {
     if (expected.has(entry.name)) continue
-    if (!names.some((name) => entry.name.startsWith(`${name}-`) && entry.name.endsWith('.kunx'))) {
+    if (!names.some((name) => entry.name.startsWith(`${name}-`) && entry.name.endsWith('.Rcodex'))) {
       continue
     }
     await rm(join(directory, entry.name), { recursive: true, force: true })

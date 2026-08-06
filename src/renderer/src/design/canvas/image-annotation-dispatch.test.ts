@@ -12,7 +12,7 @@ const boardArtifact: DesignArtifact = {
   id: 'board',
   kind: 'canvas',
   title: 'Board',
-  relativePath: '.kun-design/doc/board/canvas.json',
+  relativePath: '.Rcode-design/doc/board/canvas.json',
   createdAt: '2026-07-02T00:00:00.000Z',
   updatedAt: '2026-07-02T00:00:00.000Z',
   versions: []
@@ -73,8 +73,8 @@ function baseOptions() {
 
 describe('image annotation dispatch', () => {
   it('detects code-canvas document keys', () => {
-    expect(isCodeCanvasDocumentKey(`workspace\0.kun-canvas/code-thread/canvas.json`)).toBe(true)
-    expect(isCodeCanvasDocumentKey('workspace/.kun-design/doc/canvas.json')).toBe(false)
+    expect(isCodeCanvasDocumentKey(`workspace\0.Rcode-canvas/code-thread/canvas.json`)).toBe(true)
+    expect(isCodeCanvasDocumentKey('workspace/.Rcode-design/doc/canvas.json')).toBe(false)
   })
 
   it('saves the annotated image and routes a design repair turn', async () => {
@@ -116,7 +116,7 @@ describe('image annotation dispatch', () => {
 
     const status = await applyImageAnnotationResult({
       ...options,
-      currentDocumentKey: `workspace\0.kun-canvas/code-thread/canvas.json`,
+      currentDocumentKey: `workspace\0.Rcode-canvas/code-thread/canvas.json`,
       getCanvasShapeState: () => canvasState,
       getDesignState: () => designState
     })

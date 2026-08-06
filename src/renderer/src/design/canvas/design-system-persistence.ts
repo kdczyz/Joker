@@ -11,7 +11,7 @@ import {
   writeDesignWorkspaceFile
 } from '../design-persistence-coordinator'
 
-const DESIGN_DIR = '.kun-design'
+const DESIGN_DIR = '.Rcode-design'
 const CANVAS_SHAPE_TYPES = new Set<ShapeType>([
   'rect',
   'ellipse',
@@ -184,9 +184,9 @@ export async function loadDesignSystem(
   workspaceRoot: string,
   baseDir?: string
 ): Promise<DesignSystem | null> {
-  if (!workspaceRoot || typeof window.kunGui?.readWorkspaceFile !== 'function') return null
+  if (!workspaceRoot || typeof window.RcodeGui?.readWorkspaceFile !== 'function') return null
   try {
-    const result = await window.kunGui.readWorkspaceFile({
+    const result = await window.RcodeGui.readWorkspaceFile({
       path: designSystemPath(baseDir),
       workspaceRoot
     })

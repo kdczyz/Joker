@@ -3,7 +3,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -98,18 +98,18 @@ function settings(): AppSettingsV1 {
     cursorSpotlight: true,
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
-        binaryPath: '~/bin/kun',
-        dataDir: '~/.kun/data',
+      Rcode: {
+        ...defaultRcodeRuntimeSettings(),
+        binaryPath: '~/bin/Rcode',
+        dataDir: '~/.Rcode/data',
         storage: {
-          ...defaultKunRuntimeSettings().storage,
-          sqlitePath: '~/Library/Application Support/Kun/kun.sqlite3'
+          ...defaultRcodeRuntimeSettings().storage,
+          sqlitePath: '~/Library/Application Support/Rcode/Rcode.sqlite3'
         }
       }
     },
-    workspaceRoot: '~/.kun/default_workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    workspaceRoot: '~/.Rcode/default_workspace',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: { enabled: true, retentionDays: 2 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -117,9 +117,9 @@ function settings(): AppSettingsV1 {
     keyboardShortcuts: defaultKeyboardShortcuts(),
     write: {
       ...defaultWriteSettings(),
-      defaultWorkspaceRoot: '~/.kun/write_workspace',
+      defaultWorkspaceRoot: '~/.Rcode/write_workspace',
       activeWorkspaceRoot: '~/drafts',
-      workspaces: ['~/.kun/write_workspace', '~/drafts']
+      workspaces: ['~/.Rcode/write_workspace', '~/drafts']
     },
     claw: {
       ...defaultClawSettings(),
@@ -153,10 +153,10 @@ function settings(): AppSettingsV1 {
 
 describe('settings home paths', () => {
   it('compacts absolute home paths on macOS and Linux', () => {
-    expect(compactHomePathForSettingsDisplay('/Users/mothra/.kun/default_workspace', '/Users/mothra', 'darwin'))
-      .toBe('~/.kun/default_workspace')
-    expect(compactHomePathForSettingsDisplay('/home/mothra/.kun/default_workspace', '/home/mothra', 'linux'))
-      .toBe('~/.kun/default_workspace')
+    expect(compactHomePathForSettingsDisplay('/Users/mothra/.Rcode/default_workspace', '/Users/mothra', 'darwin'))
+      .toBe('~/.Rcode/default_workspace')
+    expect(compactHomePathForSettingsDisplay('/home/mothra/.Rcode/default_workspace', '/home/mothra', 'linux'))
+      .toBe('~/.Rcode/default_workspace')
     expect(compactHomePathForSettingsDisplay('/Users/mothra/work/', '/Users/mothra', 'darwin'))
       .toBe('~/work/')
     expect(compactHomePathForSettingsDisplay('/Users/mothra/', '/Users/mothra', 'darwin'))
@@ -164,17 +164,17 @@ describe('settings home paths', () => {
   })
 
   it('does not compact home paths on Windows', () => {
-    expect(compactHomePathForSettingsDisplay('C:\\Users\\mothra\\.kun', 'C:\\Users\\mothra', 'win32'))
-      .toBe('C:\\Users\\mothra\\.kun')
+    expect(compactHomePathForSettingsDisplay('C:\\Users\\mothra\\.Rcode', 'C:\\Users\\mothra', 'win32'))
+      .toBe('C:\\Users\\mothra\\.Rcode')
   })
 
   it('expands tilde input on macOS and Linux only', () => {
-    expect(expandHomePathForSettingsUse('~/.kun/data', '/Users/mothra', 'darwin'))
-      .toBe('/Users/mothra/.kun/data')
-    expect(expandHomePathForSettingsUse('~/.kun/data', '/home/mothra', 'linux'))
-      .toBe('/home/mothra/.kun/data')
-    expect(expandHomePathForSettingsUse('~\\.kun\\data', '/Users/mothra', 'win32'))
-      .toBe('~\\.kun\\data')
+    expect(expandHomePathForSettingsUse('~/.Rcode/data', '/Users/mothra', 'darwin'))
+      .toBe('/Users/mothra/.Rcode/data')
+    expect(expandHomePathForSettingsUse('~/.Rcode/data', '/home/mothra', 'linux'))
+      .toBe('/home/mothra/.Rcode/data')
+    expect(expandHomePathForSettingsUse('~\\.Rcode\\data', '/Users/mothra', 'win32'))
+      .toBe('~\\.Rcode\\data')
   })
 
   it('keeps multiline path text shape while compacting and expanding', () => {
@@ -188,12 +188,12 @@ describe('settings home paths', () => {
   it('expands nested settings paths before saving', () => {
     const expanded = expandSettingsHomePathsForUse(settings(), '/Users/mothra', 'darwin')
 
-    expect(expanded.workspaceRoot).toBe('/Users/mothra/.kun/default_workspace')
-    expect(expanded.conversationWorkspaceRoot).toBe('/Users/mothra/Documents/Kun')
-    expect(expanded.agents.kun.binaryPath).toBe('/Users/mothra/bin/kun')
-    expect(expanded.agents.kun.dataDir).toBe('/Users/mothra/.kun/data')
-    expect(expanded.agents.kun.storage.sqlitePath).toBe('/Users/mothra/Library/Application Support/Kun/kun.sqlite3')
-    expect(expanded.write.defaultWorkspaceRoot).toBe('/Users/mothra/.kun/write_workspace')
+    expect(expanded.workspaceRoot).toBe('/Users/mothra/.Rcode/default_workspace')
+    expect(expanded.conversationWorkspaceRoot).toBe('/Users/mothra/Documents/Rcode')
+    expect(expanded.agents.Rcode.binaryPath).toBe('/Users/mothra/bin/Rcode')
+    expect(expanded.agents.Rcode.dataDir).toBe('/Users/mothra/.Rcode/data')
+    expect(expanded.agents.Rcode.storage.sqlitePath).toBe('/Users/mothra/Library/Application Support/Rcode/Rcode.sqlite3')
+    expect(expanded.write.defaultWorkspaceRoot).toBe('/Users/mothra/.Rcode/write_workspace')
     expect(expanded.write.activeWorkspaceRoot).toBe('/Users/mothra/drafts')
     expect(expanded.claw.im.workspaceRoot).toBe('/Users/mothra/claw')
     expect(expanded.claw.skills.extraDirs).toEqual(['/Users/mothra/skills'])

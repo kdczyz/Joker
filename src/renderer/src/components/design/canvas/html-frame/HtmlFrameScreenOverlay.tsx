@@ -220,8 +220,8 @@ function ScreenOverlayInner({
       return
     }
     if (
-      typeof window.kunGui?.readWorkspaceFile !== 'function' ||
-      typeof window.kunGui?.writeWorkspaceFile !== 'function'
+      typeof window.RcodeGui?.readWorkspaceFile !== 'function' ||
+      typeof window.RcodeGui?.writeWorkspaceFile !== 'function'
     ) {
       setElementTextStatus({ kind: 'error', message: 'Workspace file editing is unavailable.' })
       return
@@ -229,7 +229,7 @@ function ScreenOverlayInner({
 
     setElementTextStatus({ kind: 'saving' })
     void (async () => {
-      const read = await window.kunGui.readWorkspaceFile({
+      const read = await window.RcodeGui.readWorkspaceFile({
         path: artifact.relativePath,
         workspaceRoot
       })

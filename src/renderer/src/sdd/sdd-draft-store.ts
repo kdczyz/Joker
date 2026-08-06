@@ -66,7 +66,7 @@ export type SddDraftState = {
   clearActiveDraft: () => void
 }
 
-const SDD_DRAFT_REGISTRY_STORAGE_KEY = 'kun.sdd.draft.registry.v1'
+const SDD_DRAFT_REGISTRY_STORAGE_KEY = 'Rcode.sdd.draft.registry.v1'
 
 function normalizeWorkspaceRoot(value: string | undefined | null): string {
   return (value ?? '').trim().replaceAll('\\', '/').replace(/\/+$/, '')
@@ -120,7 +120,7 @@ function normalizeDraft(raw: unknown, fallbackId = ''): SddDraft | null {
   const workspaceRoot = normalizeWorkspaceRoot(normalizeText(raw.workspaceRoot))
   const relativePath = normalizeSddRelativePath(normalizeText(raw.relativePath))
   if (!id || !workspaceRoot || !relativePath) return null
-  // Pre-unit-layout registry entries (.kunsdd/draft/...) are retired here in
+  // Pre-unit-layout registry entries (.Rcodesdd/draft/...) are retired here in
   // one place: dropping the draft also drops its activeByWorkspace pointer
   // and content snapshot downstream.
   if (!isSddDraftRelativePath(relativePath)) return null

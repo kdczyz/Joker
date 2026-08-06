@@ -22,7 +22,7 @@ function telegramSettings(): AppSettingsV1 {
     threadId: '',
     workspaceRoot: '/tmp/workspace',
     agentProfile: {
-      name: 'Kun',
+      name: 'Rcode',
       description: '',
       identity: '',
       personality: '',
@@ -32,7 +32,7 @@ function telegramSettings(): AppSettingsV1 {
     platformCredential: {
       kind: 'telegram',
       botToken: `123:${'a'.repeat(35)}`,
-      botUsername: 'kun_test_bot',
+      botUsername: 'Rcode_test_bot',
       allowedChatIds: '',
       createdAt: '2026-07-11T00:00:00.000Z'
     },

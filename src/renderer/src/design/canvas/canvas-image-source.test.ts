@@ -45,7 +45,7 @@ describe('canvas image source loading', () => {
     const readWorkspaceImage = vi.fn()
       .mockResolvedValueOnce({ ok: false, message: 'File not found' })
       .mockResolvedValueOnce({ ok: true, dataUrl, path: '/ws/img/flaky.png', mimeType: 'image/png', size: 2 })
-    vi.stubGlobal('window', { kunGui: { readWorkspaceImage } })
+    vi.stubGlobal('window', { RcodeGui: { readWorkspaceImage } })
 
     await expect(loadWorkspaceImageDataUrl('/ws', 'img/flaky-retry.png')).resolves.toBeNull()
     await expect(loadWorkspaceImageDataUrl('/ws', 'img/flaky-retry.png')).resolves.toBe(dataUrl)
@@ -53,7 +53,7 @@ describe('canvas image source loading', () => {
   })
 
   it('reads absolute local image paths without applying the canvas workspace boundary', async () => {
-    const absolutePath = '/Users/zxy/.kun/default_workspace/.deepseekgui-images/generated.png'
+    const absolutePath = '/Users/zxy/.Rcode/default_workspace/.deepseekgui-images/generated.png'
     const readWorkspaceImage = vi.fn(async () => ({
       ok: true,
       dataUrl: 'data:image/png;base64,ok',
@@ -61,12 +61,12 @@ describe('canvas image source loading', () => {
       mimeType: 'image/png',
       size: 2
     }))
-    vi.stubGlobal('window', { kunGui: { readWorkspaceImage } })
+    vi.stubGlobal('window', { RcodeGui: { readWorkspaceImage } })
 
-    await expect(loadWorkspaceImageDataUrl('/Users/zxy/.kun/design-workspace', absolutePath))
+    await expect(loadWorkspaceImageDataUrl('/Users/zxy/.Rcode/design-workspace', absolutePath))
       .resolves.toBe('data:image/png;base64,ok')
     expect(isAbsoluteLocalImagePath(absolutePath)).toBe(true)
     expect(readWorkspaceImage).toHaveBeenCalledWith({ path: absolutePath })
-    expect(workspaceImageDataUrlCacheStats('/Users/zxy/.kun/design-workspace').entries).toBe(1)
+    expect(workspaceImageDataUrlCacheStats('/Users/zxy/.Rcode/design-workspace').entries).toBe(1)
   })
 })

@@ -11,7 +11,7 @@ import { fetchWithOptionalProxy } from '../proxy-fetch'
 
 /**
  * Keep this release and digest synchronized with the managed-marker constants
- * in kun/src/adapters/tool/ppt-master-tool.ts: the installer must fail closed.
+ * in Rcode/src/adapters/tool/ppt-master-tool.ts: the installer must fail closed.
  */
 export const PPT_MASTER_VERSION = '3.1.0'
 export const PPT_MASTER_ARCHIVE_URL =
@@ -21,9 +21,9 @@ export const PPT_MASTER_ARCHIVE_SHA256 = 'b5ecfc7bf2a2682087c05786eb146ffa3a11ed
 const MAX_ARCHIVE_BYTES = 160 * 1024 * 1024
 const COMMAND_TIMEOUT_MS = 15 * 60 * 1000
 const MAX_COMMAND_OUTPUT = 24_000
-const INSTALL_METADATA_FILE = '.kun-ppt-master.json'
+const INSTALL_METADATA_FILE = '.Rcode-ppt-master.json'
 const UPSTREAM_ENTRY_FILE = 'PPT_MASTER_UPSTREAM.md'
-const MANAGED_BY = 'kun-gui'
+const MANAGED_BY = 'Rcode-gui'
 // The Write integration exposes only Markdown -> SVG -> PPTX. Installing the
 // upstream catch-all requirements would also pull PDF, EPUB, notebook, web,
 // narration, image-generation, and preview-server stacks (including a ~24 MB
@@ -53,8 +53,8 @@ type CommandResult = {
   output: string
 }
 
-export function pptMasterSkillDir(kunHomeDir: string): string {
-  return join(kunHomeDir, 'skills', 'ppt-master')
+export function pptMasterSkillDir(RcodeHomeDir: string): string {
+  return join(RcodeHomeDir, 'skills', 'ppt-master')
 }
 
 export function pptMasterPythonPath(skillDir: string, platform = process.platform): string {
@@ -69,7 +69,7 @@ export function pptMasterPythonPath(skillDir: string, platform = process.platfor
  * dependencies into the user's global Python installation.
  */
 export function ensurePptMaster(options: {
-  kunHomeDir: string
+  RcodeHomeDir: string
   proxyUrl?: string
 }): Promise<PptMasterEnsureResult> {
   if (installPromise) return installPromise
@@ -81,10 +81,10 @@ export function ensurePptMaster(options: {
 }
 
 async function ensurePptMasterOnce(options: {
-  kunHomeDir: string
+  RcodeHomeDir: string
   proxyUrl?: string
 }): Promise<PptMasterEnsureResult> {
-  const skillDir = pptMasterSkillDir(options.kunHomeDir)
+  const skillDir = pptMasterSkillDir(options.RcodeHomeDir)
   // `installed` also means the runtime must be rebuilt: it may have started
   // before the package or its venv existed, so its local-tool registry was
   // intentionally empty at that point.
@@ -94,7 +94,7 @@ async function ensurePptMasterOnce(options: {
       await installSkillPackage(skillDir, options.proxyUrl ?? '')
       installed = true
     }
-    await ensureKunSkillEntry(skillDir)
+    await ensureRcodeSkillEntry(skillDir)
 
     const python = await resolvePython()
     if (!python) {
@@ -190,13 +190,13 @@ async function downloadArchive(destination: string, proxyUrl: string): Promise<v
   }
 }
 
-async function ensureKunSkillEntry(skillDir: string): Promise<void> {
+async function ensureRcodeSkillEntry(skillDir: string): Promise<void> {
   const upstreamPath = join(skillDir, UPSTREAM_ENTRY_FILE)
   const legacyPath = join(skillDir, 'SKILL.md')
   if (!await isRegularFile(upstreamPath)) {
     await copyFile(legacyPath, upstreamPath)
   }
-  await writeFile(join(skillDir, 'SKILL.md'), KUN_PPT_MASTER_SKILL, 'utf8')
+  await writeFile(join(skillDir, 'SKILL.md'), RCODE_PPT_MASTER_SKILL, 'utf8')
   await writeFile(join(skillDir, 'skill.json'), `${JSON.stringify({
     id: 'ppt-master',
     name: 'PPT Master',
@@ -335,15 +335,15 @@ function formatCommandOutput(output: string): string {
   return normalized ? normalized.slice(-1_200) : 'No additional detail was returned.'
 }
 
-// The upstream entry is ~77KB while Kun injects at most 24KB per active skill.
+// The upstream entry is ~77KB while Rcode injects at most 24KB per active skill.
 // This compact adapter leaves the full upstream procedure beside it and tells the
 // model exactly when to read the detailed sections through its normal tools.
-const KUN_PPT_MASTER_SKILL = `---
+const RCODE_PPT_MASTER_SKILL = `---
 name: ppt-master
 description: Create native, editable PPTX presentations from Markdown in Write mode.
 ---
 
-# PPT Master for Kun Write
+# PPT Master for Rcode Write
 
 This package is the PPT Master workflow. The full upstream guide is at
 \`PPT_MASTER_UPSTREAM.md\` in this same directory. Use \`ppt_master_read_guide\`
@@ -354,11 +354,11 @@ or export rules. Do not try to load that entire file into one response.
 
 - The user's prompt identifies the Markdown source and workspace. Read that file
   before planning. Treat it as read-only: never edit, rename, or move it.
-- Create the project below \`<workspace>/.kun-presentations/\`, and import the
+- Create the project below \`<workspace>/.Rcode-presentations/\`, and import the
   source with \`project_manager.py import-sources ... --copy\`. This overrides
-  upstream's \`--move\` default for the Kun Write integration.
+  upstream's \`--move\` default for the Rcode Write integration.
 - Put the final canonical PPTX in \`<workspace>/presentations/\`. Keep SVG,
-  project files, images, and backups under \`.kun-presentations/\`.
+  project files, images, and backups under \`.Rcode-presentations/\`.
 - Use the \`ppt_master_run\` tool for every PPT Master script step. It is the
   only supported execution route in the normal workspace-write sandbox; do not
   substitute generic bash commands.

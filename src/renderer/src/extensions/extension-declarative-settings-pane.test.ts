@@ -1,4 +1,4 @@
-import { ExtensionContributionsSchema } from '@kun/extension-api'
+import { ExtensionContributionsSchema } from '@Rcode/extension-api'
 import { createElement } from 'react'
 import { act, create, type ReactTestRenderer } from 'react-test-renderer'
 import { describe, expect, it, vi } from 'vitest'

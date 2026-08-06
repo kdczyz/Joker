@@ -1,18 +1,18 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import { defaultKunRuntimeSettings } from '@shared/app-settings'
+import { defaultRcodeRuntimeSettings } from '@shared/app-settings'
 import { SettingsSidebar } from './SettingsSidebar'
 import { SubagentsSettingsSection } from './settings-section-subagents'
 
 vi.mock('./subagents/SubagentSettingsEditor', () => ({
   SubagentSettingsEditor: (props: {
-    kun: { model: string }
+    Rcode: { model: string }
     onPatch: unknown
     variant: string
   }) => createElement('div', {
     'data-testid': 'subagent-settings-editor',
-    'data-model': props.kun.model,
+    'data-model': props.Rcode.model,
     'data-on-patch': typeof props.onPatch,
     'data-variant': props.variant
   })
@@ -45,11 +45,11 @@ function t(key: string): string {
 }
 
 describe('SubagentsSettingsSection', () => {
-  it('renders the settings editor with the current Kun settings and settings layout', () => {
+  it('renders the settings editor with the current Rcode settings and settings layout', () => {
     const html = renderToStaticMarkup(createElement(SubagentsSettingsSection, {
       ctx: {
-        kun: defaultKunRuntimeSettings(),
-        updateKun: () => undefined
+        Rcode: defaultRcodeRuntimeSettings(),
+        updateRcode: () => undefined
       }
     }))
 

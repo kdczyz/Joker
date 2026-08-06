@@ -8,12 +8,12 @@ export type WorkspacePathTarget = {
 }
 
 async function invokeOpenEditorPath(options: OpenEditorPathOptions): Promise<EditorOpenResult> {
-  if (typeof window === 'undefined' || typeof window.kunGui?.openEditorPath !== 'function') {
+  if (typeof window === 'undefined' || typeof window.RcodeGui?.openEditorPath !== 'function') {
     return { ok: false, message: 'Editor bridge is unavailable.' }
   }
 
   try {
-    return await window.kunGui.openEditorPath(options)
+    return await window.RcodeGui.openEditorPath(options)
   } catch (error) {
     return { ok: false, message: error instanceof Error ? error.message : String(error) }
   }
@@ -25,11 +25,11 @@ async function resolveExactWorkspaceFile(
 ): Promise<{ ok: true; path: string } | { ok: false; message: string }> {
   const root = workspaceRoot.trim()
   if (!root) return { ok: false, message: 'Workspace root is required.' }
-  if (typeof window === 'undefined' || typeof window.kunGui?.resolveWorkspaceFile !== 'function') {
+  if (typeof window === 'undefined' || typeof window.RcodeGui?.resolveWorkspaceFile !== 'function') {
     return { ok: false, message: 'Workspace file bridge is unavailable.' }
   }
   try {
-    return await window.kunGui.resolveWorkspaceFile({ path: targetPath, workspaceRoot: root })
+    return await window.RcodeGui.resolveWorkspaceFile({ path: targetPath, workspaceRoot: root })
   } catch (error) {
     return { ok: false, message: error instanceof Error ? error.message : String(error) }
   }

@@ -148,9 +148,9 @@ export function normalizeModelUsageResponse(raw: RawModelUsageResponse): ModelUs
 }
 
 export async function loadModelUsage(range: DailyUsageRange): Promise<ModelUsageSummary | null> {
-  if (typeof window.kunGui?.runtimeRequest !== 'function') return null
+  if (typeof window.RcodeGui?.runtimeRequest !== 'function') return null
   const response = await withUsageRequestTimeout(
-    window.kunGui.runtimeRequest(buildModelUsagePath(range), 'GET'),
+    window.RcodeGui.runtimeRequest(buildModelUsagePath(range), 'GET'),
     'model usage'
   )
   if (!response.ok || !response.body.trim()) {

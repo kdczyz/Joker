@@ -148,7 +148,7 @@ export async function runDesignPages(deps: RunDesignPagesDeps): Promise<void> {
     // file, not an agent-generated HTML artifact. Reuse it when it already exists.
     if (withFoundation) {
       if (signal.cancelled) return
-      const structuredSystem = await window.kunGui?.readWorkspaceFile?.({
+      const structuredSystem = await window.RcodeGui?.readWorkspaceFile?.({
         path: PROJECT_DESIGN_MD_PATH,
         workspaceRoot: deps.workspaceRoot
       }).catch(() => null)
@@ -223,8 +223,8 @@ export async function runDesignPages(deps: RunDesignPagesDeps): Promise<void> {
       return {
         entry,
         id,
-        relativePath: `.kun-design/${docId}/${id}/v1.html`,
-        designMdPath: `.kun-design/${docId}/${id}/DESIGN.md`,
+        relativePath: `.Rcode-design/${docId}/${id}/v1.html`,
+        designMdPath: `.Rcode-design/${docId}/${id}/DESIGN.md`,
         createdAt: new Date().toISOString(),
         node: {
           ...defaultDesignArtifactNode(baseIndex + i),
@@ -282,7 +282,7 @@ export async function runDesignPages(deps: RunDesignPagesDeps): Promise<void> {
     // 4) Generate pages in parallel. The parent design agent only delegates:
     // every child gets one pre-created artifact path and may edit ONLY that
     // page's HTML + DESIGN.md. `delegate_task` calls from one assistant message
-    // run in a parallel batch in Kun's AgentLoop.
+    // run in a parallel batch in Rcode's AgentLoop.
     const foundationLines = buildFoundationFollowLines({
       ...(designMdRef ? { designMdPath: designMdRef } : {}),
       ...(designSystemRef ? { designSystemMdPath: designSystemRef } : {})

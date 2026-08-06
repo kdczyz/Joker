@@ -102,7 +102,7 @@ function activateTextFile(): void {
 
 describe('useWorkbenchComposerSubmitController', () => {
   beforeEach(() => {
-    vi.stubGlobal('window', { kunGui: {} })
+    vi.stubGlobal('window', { RcodeGui: {} })
     useChatStore.setState({ route: 'write', runtimeConnection: 'ready' })
     activateTextFile()
   })
@@ -130,7 +130,7 @@ describe('useWorkbenchComposerSubmitController', () => {
   it('saves the captured draft before sending it to the writing assistant', async () => {
     const write = deferred<{ ok: true; path: string; savedAt: string }>()
     const writeWorkspaceFile = vi.fn(() => write.promise)
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
     useWriteWorkspaceStore.getState().setFileContent('latest local draft')
     const input = inputHarness('revise it')
     const sendMessage = vi.fn(async () => true)
@@ -178,7 +178,7 @@ describe('useWorkbenchComposerSubmitController', () => {
         path: '/tmp/write/draft.md',
         savedAt: '2026-07-12T00:00:02.000Z'
       })
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
     useWriteWorkspaceStore.getState().setFileContent('temporary edit')
     const olderSave = useWriteWorkspaceStore.getState().flushSave('/tmp/write')
     await vi.waitFor(() => expect(writeWorkspaceFile).toHaveBeenCalledTimes(1))
@@ -207,7 +207,7 @@ describe('useWorkbenchComposerSubmitController', () => {
 
   it('restores the prompt and does not send when the draft save fails', async () => {
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         writeWorkspaceFile: vi.fn(async () => ({ ok: false as const, message: 'disk full' }))
       }
     })
@@ -252,7 +252,7 @@ describe('useWorkbenchComposerSubmitController', () => {
 
   it('aborts when the active file changes while saving', async () => {
     const write = deferred<{ ok: true; path: string; savedAt: string }>()
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile: vi.fn(() => write.promise) } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile: vi.fn(() => write.promise) } })
     useWriteWorkspaceStore.getState().setFileContent('draft A')
     const input = inputHarness('edit A')
     const sendMessage = vi.fn(async () => true)
@@ -284,7 +284,7 @@ describe('useWorkbenchComposerSubmitController', () => {
   it('aborts instead of sending stale retrieval when the document changes mid-retrieval', async () => {
     const retrieval = deferred<{ ok: false; message: string }>()
     vi.stubGlobal('window', {
-      kunGui: { retrieveWriteContext: vi.fn(() => retrieval.promise) }
+      RcodeGui: { retrieveWriteContext: vi.fn(() => retrieval.promise) }
     })
     const input = inputHarness('summarize')
     const sendMessage = vi.fn(async () => true)
@@ -295,7 +295,7 @@ describe('useWorkbenchComposerSubmitController', () => {
     }))
 
     controller.sendWritePrompt('summarize')
-    await vi.waitFor(() => expect(window.kunGui.retrieveWriteContext).toHaveBeenCalledOnce())
+    await vi.waitFor(() => expect(window.RcodeGui.retrieveWriteContext).toHaveBeenCalledOnce())
     useWriteWorkspaceStore.getState().setFileContent('edit typed during retrieval')
     retrieval.resolve({ ok: false, message: 'no retrieval result' })
 
@@ -306,7 +306,7 @@ describe('useWorkbenchComposerSubmitController', () => {
   it('does not restore a stale Write prompt into another route composer', async () => {
     const retrieval = deferred<{ ok: false; message: string }>()
     vi.stubGlobal('window', {
-      kunGui: { retrieveWriteContext: vi.fn(() => retrieval.promise) }
+      RcodeGui: { retrieveWriteContext: vi.fn(() => retrieval.promise) }
     })
     const input = inputHarness('write prompt')
     const sendMessage = vi.fn(async () => true)
@@ -317,7 +317,7 @@ describe('useWorkbenchComposerSubmitController', () => {
     }))
 
     controller.sendWritePrompt('write prompt')
-    await vi.waitFor(() => expect(window.kunGui.retrieveWriteContext).toHaveBeenCalledOnce())
+    await vi.waitFor(() => expect(window.RcodeGui.retrieveWriteContext).toHaveBeenCalledOnce())
     useChatStore.setState({ route: 'chat' })
     input.setInput('new chat prompt')
     retrieval.resolve({ ok: false, message: 'no retrieval result' })

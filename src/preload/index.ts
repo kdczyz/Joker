@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webFrame, webUtils } from 'electron'
-import type { KunGuiApi } from '../shared/kun-gui-api'
+import type { RcodeGuiApi } from '../shared/Rcode-gui-api'
 import { registerExtensionContentScriptPreload } from './extension-content-script'
 
 registerExtensionContentScriptPreload({ contextBridge, ipcRenderer, webFrame })
@@ -7,7 +7,7 @@ registerExtensionContentScriptPreload({ contextBridge, ipcRenderer, webFrame })
 // The preload runs sandboxed (webPreferences.sandbox = true), so it cannot
 // require node built-ins like node:os. The home dir is passed in from the main
 // process via additionalArguments and read off process.argv instead.
-const HOME_DIR_ARG = '--kun-home-dir='
+const HOME_DIR_ARG = '--Rcode-home-dir='
 const homeDirFromArgs =
   process.argv.find((arg) => arg.startsWith(HOME_DIR_ARG))?.slice(HOME_DIR_ARG.length) ?? ''
 
@@ -80,7 +80,7 @@ const api = {
     ipcRenderer.invoke('runtime:request', { path, method, body }),
   uploadRuntimeImageAttachment: (request) =>
     ipcRenderer.invoke('runtime:attachment:upload-image', request),
-  resolveKunApproval: (request) => ipcRenderer.invoke('approval:decide', request),
+  resolveRcodeApproval: (request) => ipcRenderer.invoke('approval:decide', request),
   restartRuntime: () => ipcRenderer.invoke('runtime:restart'),
   fetchUpstreamModels: () => ipcRenderer.invoke('upstream:models'),
   probeModelProvider: (payload) => ipcRenderer.invoke('provider:probe', payload),
@@ -126,11 +126,11 @@ const api = {
   confirmDialog: (options) =>
     ipcRenderer.invoke('dialog:confirm', options),
   detectLegacySessions: () =>
-    ipcRenderer.invoke('kun:sessions:detect-legacy'),
+    ipcRenderer.invoke('Rcode:sessions:detect-legacy'),
   importLegacySessions: (sourceDir) =>
-    ipcRenderer.invoke('kun:sessions:import-legacy', { sourceDir }),
+    ipcRenderer.invoke('Rcode:sessions:import-legacy', { sourceDir }),
   pickLegacySessionDir: () =>
-    ipcRenderer.invoke('kun:sessions:pick-source-dir'),
+    ipcRenderer.invoke('Rcode:sessions:pick-source-dir'),
   listSkills: (workspaceRoot) =>
     ipcRenderer.invoke('skill:list', { workspaceRoot }),
   listSkillRoots: (workspaceRoot) =>
@@ -154,24 +154,24 @@ const api = {
     ipcRenderer.invoke('ui-plugin:theme:activate', { id }),
   deactivateUiPluginTheme: () =>
     ipcRenderer.invoke('ui-plugin:theme:deactivate'),
-  getKunConfigFile: () =>
-    ipcRenderer.invoke('kun:config:read'),
-  setKunConfigFile: (content) =>
-    ipcRenderer.invoke('kun:config:write', content),
-  openKunConfigDir: () =>
-    ipcRenderer.invoke('kun:config:open-dir'),
-  getKunProjectConfigFile: (workspaceRoot) =>
-    ipcRenderer.invoke('kun:project-config:read', { workspaceRoot }),
-  setKunProjectConfigFile: (workspaceRoot, content) =>
-    ipcRenderer.invoke('kun:project-config:write', { workspaceRoot, content }),
-  setKunProjectConfigTrust: (workspaceRoot, trusted, expectedDigest) =>
-    ipcRenderer.invoke('kun:project-config:trust', {
+  getRcodeConfigFile: () =>
+    ipcRenderer.invoke('Rcode:config:read'),
+  setRcodeConfigFile: (content) =>
+    ipcRenderer.invoke('Rcode:config:write', content),
+  openRcodeConfigDir: () =>
+    ipcRenderer.invoke('Rcode:config:open-dir'),
+  getRcodeProjectConfigFile: (workspaceRoot) =>
+    ipcRenderer.invoke('Rcode:project-config:read', { workspaceRoot }),
+  setRcodeProjectConfigFile: (workspaceRoot, content) =>
+    ipcRenderer.invoke('Rcode:project-config:write', { workspaceRoot, content }),
+  setRcodeProjectConfigTrust: (workspaceRoot, trusted, expectedDigest) =>
+    ipcRenderer.invoke('Rcode:project-config:trust', {
       workspaceRoot,
       trusted,
       ...(trusted && expectedDigest ? { expectedDigest } : {})
     }),
-  openKunProjectConfigDir: (workspaceRoot) =>
-    ipcRenderer.invoke('kun:project-config:open-dir', { workspaceRoot }),
+  openRcodeProjectConfigDir: (workspaceRoot) =>
+    ipcRenderer.invoke('Rcode:project-config:open-dir', { workspaceRoot }),
   getGitBranches: (workspaceRoot) =>
     ipcRenderer.invoke('git:branches', workspaceRoot),
   switchGitBranch: (workspaceRoot, branch) =>
@@ -530,7 +530,33 @@ const api = {
     ) => handler(payload)
     ipcRenderer.on('terminal:exit', wrapped)
     return () => ipcRenderer.removeListener('terminal:exit', wrapped)
+  },
+  remoteAgent: {
+    start: (token: string) => ipcRenderer.invoke('remote-agent:start', token),
+    stop: () => ipcRenderer.invoke('remote-agent:stop'),
+    getStatus: () => ipcRenderer.invoke('remote-agent:status'),
+    onStatus: (handler: (payload: { state: string; message?: string }) => void) => {
+      const wrapped = (_: Electron.IpcRendererEvent, payload: { state: string; message?: string }) => handler(payload)
+      ipcRenderer.on('remote-agent:status', wrapped)
+      return () => ipcRenderer.removeListener('remote-agent:status', wrapped)
+    },
+    onCommand: (handler: (payload: unknown) => void) => {
+      const wrapped = (_: Electron.IpcRendererEvent, payload: unknown) => handler(payload)
+      ipcRenderer.on('remote-agent:command', wrapped)
+      return () => ipcRenderer.removeListener('remote-agent:command', wrapped)
+    },
+    onEvent: (handler: (payload: { commandId: string; event: Record<string, unknown> }) => void) => {
+      const wrapped = (_: Electron.IpcRendererEvent, payload: { commandId: string; event: Record<string, unknown> }) => handler(payload)
+      ipcRenderer.on('remote-agent:event', wrapped)
+      return () => ipcRenderer.removeListener('remote-agent:event', wrapped)
+    },
+    notifyConfigSync: () => ipcRenderer.invoke('remote-agent:notify-config-sync'),
+    onConfigSync: (handler: (payload: { source: string }) => void) => {
+      const wrapped = (_: Electron.IpcRendererEvent, payload: { source: string }) => handler(payload)
+      ipcRenderer.on('remote-agent:config-sync', wrapped)
+      return () => ipcRenderer.removeListener('remote-agent:config-sync', wrapped)
+    }
   }
-} satisfies KunGuiApi
+} satisfies RcodeGuiApi
 
-contextBridge.exposeInMainWorld('kunGui', api)
+contextBridge.exposeInMainWorld('RcodeGui', api)

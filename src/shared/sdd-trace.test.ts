@@ -133,7 +133,7 @@ describe('deriveSddStatuses', () => {
 
 describe('trace snapshot diffing', () => {
   it('detects changed and added requirement blocks', () => {
-    const snapshot = buildSddTraceSnapshot(DRAFT, '.kunplan/sdd-x.md')
+    const snapshot = buildSddTraceSnapshot(DRAFT, '.Rcodeplan/sdd-x.md')
     const edited = `${DRAFT.replace('用户在工具栏看到导出入口。', '入口移到右键菜单。')}\n### R-3: 新增需求\n- [ ] 新验收\n`
     const diff = diffSddRequirementChanges(edited, snapshot)
     expect(diff.changedIds).toEqual(['R-1'])
@@ -141,7 +141,7 @@ describe('trace snapshot diffing', () => {
   })
 
   it('treats status-only changes as unchanged content', () => {
-    const snapshot = buildSddTraceSnapshot(DRAFT, '.kunplan/sdd-x.md')
+    const snapshot = buildSddTraceSnapshot(DRAFT, '.Rcodeplan/sdd-x.md')
     const statusOnly = setSddRequirementStatus(DRAFT, 'R-1', 'done')
     expect(diffSddRequirementChanges(statusOnly, snapshot).changedIds).toEqual([])
   })

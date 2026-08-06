@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next'
 import {
   APP_LOCALE_OPTIONS,
   DEFAULT_MODEL_PROVIDER_ID,
-  KUN_TOOL_PERMISSION_MODES,
-  kunToolPermissionModeSettings,
+  RCODE_TOOL_PERMISSION_MODES,
+  RcodeToolPermissionModeSettings,
   normalizeAppSettings,
   type AppSettingsPatch,
   type AppSettingsV1,
-  type KunToolPermissionMode,
+  type RcodeToolPermissionMode,
   type ModelProviderPreset
 } from '@shared/app-settings'
 import {
@@ -61,14 +61,14 @@ const themeOptions: { value: ThemePref; icon: typeof Sun; labelKey: string }[] =
 const DEEPSEEK_USAGE_URL = 'https://platform.deepseek.com/usage'
 
 type PermissionOption = {
-  value: KunToolPermissionMode
+  value: RcodeToolPermissionMode
   labelKey: string
   descriptionKey: string
   Icon: typeof Hand
   iconClass: string
 }
 
-const PERMISSION_OPTIONS: PermissionOption[] = KUN_TOOL_PERMISSION_MODES.map((value) => {
+const PERMISSION_OPTIONS: PermissionOption[] = RCODE_TOOL_PERMISSION_MODES.map((value) => {
   switch (value) {
     case 'always-ask':
       return {
@@ -266,8 +266,8 @@ export function InitialSetupDialog(): ReactElement {
   }
 
   const handleOpenKeyPage = (url: string) => {
-    if (typeof window.kunGui?.openExternal !== 'function') return
-    void window.kunGui.openExternal(url).catch(() => undefined)
+    if (typeof window.RcodeGui?.openExternal !== 'function') return
+    void window.RcodeGui.openExternal(url).catch(() => undefined)
   }
 
   const selectedCard = PROVIDER_CARDS.find((card) => card.presetId === selection.presetId) ?? PROVIDER_CARDS[0]
@@ -290,7 +290,7 @@ export function InitialSetupDialog(): ReactElement {
     setSelection((current) => ({ ...current, mode }))
   }
 
-  const selectPermissionMode = (permissionMode: KunToolPermissionMode): void => {
+  const selectPermissionMode = (permissionMode: RcodeToolPermissionMode): void => {
     setError(null)
     setSelection((current) => ({ ...current, permissionMode }))
     const current = formRef.current
@@ -298,9 +298,9 @@ export function InitialSetupDialog(): ReactElement {
     updateForm({
       agents: {
         ...current.agents,
-        kun: {
-          ...current.agents.kun,
-          ...kunToolPermissionModeSettings(permissionMode)
+        Rcode: {
+          ...current.agents.Rcode,
+          ...RcodeToolPermissionModeSettings(permissionMode)
         }
       }
     } as SetupFormPatch)

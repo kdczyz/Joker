@@ -74,15 +74,15 @@ export function useWorkbenchAttachmentController({
       for (const [index, file] of files.entries()) {
         const localFilePath =
           options.localFilePaths?.[index] ||
-          (typeof window.kunGui?.getPathForFile === 'function' ? window.kunGui.getPathForFile(file) : '')
+          (typeof window.RcodeGui?.getPathForFile === 'function' ? window.RcodeGui.getPathForFile(file) : '')
         if (isPdfAttachmentFile(file)) {
-          if (!localFilePath || typeof window.kunGui?.readLocalPdfText !== 'function') {
+          if (!localFilePath || typeof window.RcodeGui?.readLocalPdfText !== 'function') {
             throw new Error(t('composerPdfAttachmentUnavailable'))
           }
           if (!attachmentCapabilities || typeof provider.uploadAttachment !== 'function') {
             throw new Error(t('composerAttachmentUnavailable'))
           }
-          const result = await window.kunGui.readLocalPdfText({ path: localFilePath })
+          const result = await window.RcodeGui.readLocalPdfText({ path: localFilePath })
           if (!result.ok) throw new Error(result.message)
           const documentText = result.text.trim()
           if (!documentText) throw new Error(t('composerPdfAttachmentNoText'))
@@ -114,7 +114,7 @@ export function useWorkbenchAttachmentController({
         if (!selectedModelSupportsImageInput) {
           throw new Error(t('composerAttachmentModelUnsupported'))
         }
-        if (!attachmentCapabilities || typeof window.kunGui?.uploadRuntimeImageAttachment !== 'function') {
+        if (!attachmentCapabilities || typeof window.RcodeGui?.uploadRuntimeImageAttachment !== 'function') {
           throw new Error(t('composerAttachmentUnavailable'))
         }
         const result = await uploadRuntimeImageAttachment({
@@ -158,7 +158,7 @@ export function useWorkbenchAttachmentController({
     if (!attachmentUploadEnabled) return
     if (
       !attachmentCapabilities ||
-      typeof window.kunGui?.uploadRuntimeImageAttachment !== 'function'
+      typeof window.RcodeGui?.uploadRuntimeImageAttachment !== 'function'
     ) {
       setAttachmentUploadError(t('composerAttachmentUnavailable'))
       return

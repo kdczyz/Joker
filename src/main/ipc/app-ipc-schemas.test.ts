@@ -34,7 +34,7 @@ describe('app-ipc-schemas', () => {
     expect(payload.path).toBe('/v1/threads?limit=1')
   })
 
-  it('accepts the Kun runtime info endpoint', () => {
+  it('accepts the Rcode runtime info endpoint', () => {
     const payload = runtimeRequestPayloadSchema.parse({
       path: '/v1/runtime/info',
       method: 'GET'
@@ -43,7 +43,7 @@ describe('app-ipc-schemas', () => {
     expect(payload.path).toBe('/v1/runtime/info')
   })
 
-  it('accepts the Kun runtime tool diagnostics endpoint', () => {
+  it('accepts the Rcode runtime tool diagnostics endpoint', () => {
     const payload = runtimeRequestPayloadSchema.parse({
       path: '/v1/runtime/tools',
       method: 'GET'
@@ -52,7 +52,7 @@ describe('app-ipc-schemas', () => {
     expect(payload.path).toBe('/v1/runtime/tools')
   })
 
-  it('accepts Kun supply-chain audit endpoints', () => {
+  it('accepts Rcode supply-chain audit endpoints', () => {
     expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/supply-chain/audit',
       method: 'POST',
@@ -65,7 +65,7 @@ describe('app-ipc-schemas', () => {
     }).path).toBe('/v1/supply-chain/update-check')
   })
 
-  it('accepts Kun MCP OAuth status and token reset endpoints', () => {
+  it('accepts Rcode MCP OAuth status and token reset endpoints', () => {
     expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/mcp/oauth',
       method: 'GET'
@@ -76,7 +76,7 @@ describe('app-ipc-schemas', () => {
     }).path).toBe('/v1/mcp/oauth/google_drive')
   })
 
-  it('accepts the Kun skills endpoint', () => {
+  it('accepts the Rcode skills endpoint', () => {
     const payload = runtimeRequestPayloadSchema.parse({
       path: '/v1/skills',
       method: 'GET'
@@ -85,7 +85,7 @@ describe('app-ipc-schemas', () => {
     expect(payload.path).toBe('/v1/skills')
   })
 
-  it('accepts Kun attachment and memory endpoints', () => {
+  it('accepts Rcode attachment and memory endpoints', () => {
     expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/attachments',
       method: 'POST',
@@ -142,7 +142,7 @@ describe('app-ipc-schemas', () => {
     expect(skillListPayloadSchema.parse({})).toEqual({})
   })
 
-  it('accepts Kun thread goal endpoints', () => {
+  it('accepts Rcode thread goal endpoints', () => {
     expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/threads/thr_1/goal',
       method: 'GET'
@@ -158,7 +158,7 @@ describe('app-ipc-schemas', () => {
     }).path).toBe('/v1/threads/thr_1/goal')
   })
 
-  it('accepts the Kun thread review endpoint', () => {
+  it('accepts the Rcode thread review endpoint', () => {
     expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/threads/thr_1/review',
       method: 'POST',
@@ -166,7 +166,7 @@ describe('app-ipc-schemas', () => {
     }).path).toBe('/v1/threads/thr_1/review')
   })
 
-  it('accepts the read-only Kun turn status endpoint', () => {
+  it('accepts the read-only Rcode turn status endpoint', () => {
     expect(runtimeRequestPayloadSchema.parse({
       path: '/v1/threads/thr_1/turns/turn_1',
       method: 'GET'
@@ -184,7 +184,7 @@ describe('app-ipc-schemas', () => {
     }).path).toBe('/v1/debug/llm-rounds')
   })
 
-  it('rejects runtime request paths outside the modeled Kun API surface', () => {
+  it('rejects runtime request paths outside the modeled Rcode API surface', () => {
     expect(() =>
       runtimeRequestPayloadSchema.parse({
         path: '/v1/runtime/secrets',
@@ -232,11 +232,11 @@ describe('app-ipc-schemas', () => {
     }
   })
 
-  it('accepts a valid settings patch for kun and write settings', () => {
+  it('accepts a valid settings patch for Rcode and write settings', () => {
     const payload = settingsPatchSchema.parse({
       theme: 'dark',
       agents: {
-        kun: {
+        Rcode: {
           port: 19000,
           model: 'deepseek-chat',
           modelProfiles: {
@@ -289,14 +289,14 @@ describe('app-ipc-schemas', () => {
       disabledSkillIds: ['test-skill-08']
     })
 
-    expect(payload.agents?.kun?.port).toBe(19000)
-    expect(payload.agents?.kun?.modelProfiles?.['custom-vision-model']?.inputModalities).toEqual(['text', 'image'])
-    expect(payload.agents?.kun?.modelProfiles?.['custom-vision-model']?.maxOutputTokens).toBe(32000)
-    expect(payload.agents?.kun?.tokenEconomy?.enabled).toBe(true)
-    expect(payload.agents?.kun?.tokenEconomy?.historyHygiene?.maxToolResultTokens).toBe(4000)
-    expect(payload.agents?.kun?.toolOutputLimits?.maxLines).toBe(30000)
-    expect(payload.agents?.kun?.toolOutputLimits?.maxBytes).toBe(1048576)
-    expect(payload.agents?.kun?.subagents).toEqual({ maxParallel: 5 })
+    expect(payload.agents?.Rcode?.port).toBe(19000)
+    expect(payload.agents?.Rcode?.modelProfiles?.['custom-vision-model']?.inputModalities).toEqual(['text', 'image'])
+    expect(payload.agents?.Rcode?.modelProfiles?.['custom-vision-model']?.maxOutputTokens).toBe(32000)
+    expect(payload.agents?.Rcode?.tokenEconomy?.enabled).toBe(true)
+    expect(payload.agents?.Rcode?.tokenEconomy?.historyHygiene?.maxToolResultTokens).toBe(4000)
+    expect(payload.agents?.Rcode?.toolOutputLimits?.maxLines).toBe(30000)
+    expect(payload.agents?.Rcode?.toolOutputLimits?.maxBytes).toBe(1048576)
+    expect(payload.agents?.Rcode?.subagents).toEqual({ maxParallel: 5 })
     expect(payload.write?.autoSaveEnabled).toBe(false)
     expect(payload.write?.autoSaveDelayMs).toBe(180000)
     expect(payload.write?.inlineCompletion?.model).toBe('deepseek-v4-pro')
@@ -309,7 +309,7 @@ describe('app-ipc-schemas', () => {
 
   it('rejects low local service ports', () => {
     expect(() => settingsPatchSchema.parse({
-      agents: { kun: { port: 9999 } }
+      agents: { Rcode: { port: 9999 } }
     })).toThrow()
     expect(() => settingsPatchSchema.parse({
       claw: { im: { port: 9999 } }
@@ -356,7 +356,7 @@ describe('app-ipc-schemas', () => {
         }]
       },
       agents: {
-        kun: {
+        Rcode: {
           textToSpeech: {
             enabled: true,
             providerId: 'minimax',
@@ -389,9 +389,9 @@ describe('app-ipc-schemas', () => {
     })
 
     expect(payload.provider?.providers?.[0]?.textToSpeech?.models).toEqual(['speech-2.8-hd'])
-    expect(payload.agents?.kun?.textToSpeech?.enabled).toBe(true)
-    expect(payload.agents?.kun?.musicGeneration?.model).toBe('music-2.6')
-    expect(payload.agents?.kun?.videoGeneration?.defaultResolution).toBe('1080P')
+    expect(payload.agents?.Rcode?.textToSpeech?.enabled).toBe(true)
+    expect(payload.agents?.Rcode?.musicGeneration?.model).toBe('music-2.6')
+    expect(payload.agents?.Rcode?.videoGeneration?.defaultResolution).toBe('1080P')
   })
 
   it('accepts provider and resolved runtime retry settings', () => {
@@ -413,7 +413,7 @@ describe('app-ipc-schemas', () => {
         }]
       },
       agents: {
-        kun: {
+        Rcode: {
           retry: {
             maxAttempts: 3,
             initialDelayMs: 3000,
@@ -424,7 +424,7 @@ describe('app-ipc-schemas', () => {
     })
 
     expect(payload.provider?.providers?.[0]?.retry?.maxAttempts).toBe(3)
-    expect(payload.agents?.kun?.retry?.httpStatusCodes).toEqual([429, 503])
+    expect(payload.agents?.Rcode?.retry?.httpStatusCodes).toEqual([429, 503])
   })
 
   it('accepts long provider model ids imported from upstream catalogs', () => {
@@ -454,7 +454,7 @@ describe('app-ipc-schemas', () => {
         }]
       },
       agents: {
-        kun: {
+        Rcode: {
           model: longModelId,
           modelProfiles: {
             [longModelId]: {
@@ -478,13 +478,13 @@ describe('app-ipc-schemas', () => {
     })
 
     expect(payload.provider?.providers?.[0]?.models).toEqual([longModelId])
-    expect(payload.agents?.kun?.model).toBe(longModelId)
-    expect(payload.agents?.kun?.imageGeneration?.defaultResolution).toBe('2K')
-    expect(payload.agents?.kun?.imageGeneration?.quality).toBe('high')
+    expect(payload.agents?.Rcode?.model).toBe(longModelId)
+    expect(payload.agents?.Rcode?.imageGeneration?.defaultResolution).toBe('2K')
+    expect(payload.agents?.Rcode?.imageGeneration?.quality).toBe('high')
     expect(payload.schedule?.model).toBe(longModelId)
     expect(payload.workflow?.model).toBe(longModelId)
     expect(() => settingsPatchSchema.parse({
-      agents: { kun: { imageGeneration: { defaultResolution: '4K' } } }
+      agents: { Rcode: { imageGeneration: { defaultResolution: '4K' } } }
     })).toThrow()
   })
 
@@ -579,7 +579,7 @@ describe('app-ipc-schemas', () => {
         }]
       },
       agents: {
-        kun: {
+        Rcode: {
           port: 19001,
           imageRecognition: { enabled: true }
         },
@@ -594,8 +594,8 @@ describe('app-ipc-schemas', () => {
 
     expect(payload.locale).toBe('zh')
     expect(payload.provider?.providers?.[0]?.imageRecognition).toEqual({ enabled: true })
-    expect(payload.agents?.kun?.port).toBe(19001)
-    expect(payload.agents?.kun?.imageRecognition).toEqual({ enabled: true })
+    expect(payload.agents?.Rcode?.port).toBe(19001)
+    expect(payload.agents?.Rcode?.imageRecognition).toEqual({ enabled: true })
     expect(payload.disabledSkillIds).toEqual(['legacy-skill'])
     expect('reasonix' in payload).toBe(false)
     expect('quickChat' in payload).toBe(false)
@@ -695,7 +695,7 @@ describe('app-ipc-schemas', () => {
   it('accepts a configurable stream idle timeout in runtime tuning patches', () => {
     const payload = settingsPatchSchema.parse({
       agents: {
-        kun: {
+        Rcode: {
           runtimeTuning: {
             streamIdleTimeoutMs: 300000
           }
@@ -703,13 +703,13 @@ describe('app-ipc-schemas', () => {
       }
     })
 
-    expect(payload.agents?.kun?.runtimeTuning?.streamIdleTimeoutMs).toBe(300000)
+    expect(payload.agents?.Rcode?.runtimeTuning?.streamIdleTimeoutMs).toBe(300000)
   })
 
   it('accepts a configurable maximum turn duration in runtime tuning patches', () => {
     const payload = settingsPatchSchema.parse({
       agents: {
-        kun: {
+        Rcode: {
           runtimeTuning: {
             maxWallTimeMs: 7_200_000
           }
@@ -717,13 +717,13 @@ describe('app-ipc-schemas', () => {
       }
     })
 
-    expect(payload.agents?.kun?.runtimeTuning?.maxWallTimeMs).toBe(7_200_000)
+    expect(payload.agents?.Rcode?.runtimeTuning?.maxWallTimeMs).toBe(7_200_000)
   })
 
   it('rejects an out-of-range maximum turn duration', () => {
     expect(() =>
       settingsPatchSchema.parse({
-        agents: { kun: { runtimeTuning: { maxWallTimeMs: 86_400_001 } } }
+        agents: { Rcode: { runtimeTuning: { maxWallTimeMs: 86_400_001 } } }
       })
     ).toThrow()
   })
@@ -731,7 +731,7 @@ describe('app-ipc-schemas', () => {
   it('rejects an out-of-range stream idle timeout', () => {
     expect(() =>
       settingsPatchSchema.parse({
-        agents: { kun: { runtimeTuning: { streamIdleTimeoutMs: -1 } } }
+        agents: { Rcode: { runtimeTuning: { streamIdleTimeoutMs: -1 } } }
       })
     ).toThrow()
   })
@@ -739,7 +739,7 @@ describe('app-ipc-schemas', () => {
   it('rejects out-of-range tool output limits', () => {
     expect(() =>
       settingsPatchSchema.parse({
-        agents: { kun: { toolOutputLimits: { maxBytes: 128 * 1024 * 1024 } } }
+        agents: { Rcode: { toolOutputLimits: { maxBytes: 128 * 1024 * 1024 } } }
       })
     ).toThrow()
   })
@@ -748,7 +748,7 @@ describe('app-ipc-schemas', () => {
     expect(() =>
       settingsPatchSchema.parse({
         agents: {
-          kun: {
+          Rcode: {
             mysteryFlag: true
           }
         }
@@ -937,13 +937,13 @@ describe('app-ipc-schemas', () => {
 
   it('accepts content-only export payloads', () => {
     const payload = writeExportPayloadSchema.parse({
-      title: 'Kun answer',
+      title: 'Rcode answer',
       workspaceRoot: '/tmp/workspace',
       format: 'png',
       content: '# Answer'
     })
 
-    expect(payload.title).toBe('Kun answer')
+    expect(payload.title).toBe('Rcode answer')
     expect(payload.format).toBe('png')
   })
 
@@ -981,11 +981,11 @@ describe('app-ipc-schemas', () => {
   it('accepts workspace image pick payloads and rejects extra fields', () => {
     const payload = workspaceImagePickPayloadSchema.parse({
       workspaceRoot: '/tmp/workspace',
-      currentFilePath: '/tmp/workspace/.kun-design/abc/v1.html',
+      currentFilePath: '/tmp/workspace/.Rcode-design/abc/v1.html',
       imageDirectory: 'img'
     })
     expect(payload.workspaceRoot).toBe('/tmp/workspace')
-    expect(payload.currentFilePath).toBe('/tmp/workspace/.kun-design/abc/v1.html')
+    expect(payload.currentFilePath).toBe('/tmp/workspace/.Rcode-design/abc/v1.html')
     expect(payload.imageDirectory).toBe('img')
     expect(
       workspaceImagePickPayloadSchema.parse({

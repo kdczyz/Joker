@@ -68,11 +68,6 @@ import {
 } from '../../write/write-document-context'
 import { enqueueWriteWorkspaceFileTask } from '../../write/write-save-coordinator'
 import {
-  isWriteFocusModeFormControl,
-  writeFocusModeFloatingLayerClassName,
-  writeFocusModeShellClassName
-} from '../../write/write-focus-mode'
-import {
   getWriteOnboardingDecision,
   readWriteOnboardingComplete,
   writeWriteOnboardingComplete
@@ -232,7 +227,6 @@ export function WriteWorkspaceView({
   const [inlineEditInFlight, setInlineEditInFlight] = useState(false)
   const [modeMenuOpen, setModeMenuOpen] = useState(false)
   const [exportMenuOpen, setExportMenuOpen] = useState(false)
-  const [documentFocusMode, setDocumentFocusMode] = useState(false)
   const [exportingFormat, setExportingFormat] = useState<WriteExportFormat | typeof WRITE_RICH_CLIPBOARD_ACTION | null>(null)
   const [exportNotice, setExportNotice] = useState<WriteNotice | null>(null)
   const [presentationInFlight, setPresentationInFlight] = useState(false)
@@ -259,7 +253,6 @@ export function WriteWorkspaceView({
       if (
         !activeFileIsText ||
         renderSafety.readOnly ||
-        isWriteFocusModeFormControl(event.target) ||
         !isInlineCompletionToggleShortcut(event)
       ) return
       event.preventDefault()
@@ -412,12 +405,12 @@ export function WriteWorkspaceView({
         showExportNotice({ tone: 'error', message: t('writePptSaveFailed') })
         return
       }
-      if (typeof window.kunGui?.ensurePptMaster !== 'function') {
+      if (typeof window.RcodeGui?.ensurePptMaster !== 'function') {
         showExportNotice({ tone: 'error', message: t('writePptUnavailable') })
         return
       }
 
-      const ensured = await window.kunGui.ensurePptMaster()
+      const ensured = await window.RcodeGui.ensurePptMaster()
       if (!ensured.ok) {
         showExportNotice({
           tone: 'error',
@@ -546,7 +539,7 @@ export function WriteWorkspaceView({
       setFileError(t(selection.ranges.length > 1 ? 'writeInlineEditMultiSelection' : 'writeInlineEditNoSelection'))
       return
     }
-    if (typeof window.kunGui?.requestWriteInlineCompletion !== 'function') {
+    if (typeof window.RcodeGui?.requestWriteInlineCompletion !== 'function') {
       setFileError(t('writeInlineEditUnavailable'))
       return
     }
@@ -570,7 +563,7 @@ export function WriteWorkspaceView({
 
     setInlineEditInFlight(true)
     try {
-      const result = await window.kunGui.requestWriteInlineCompletion(
+      const result = await window.RcodeGui.requestWriteInlineCompletion(
         buildWriteInlineEditCompletionRequest(draft.request)
       )
       if (!writeDocumentContextMatches(useWriteWorkspaceStore.getState(), operationContext)) return
@@ -691,7 +684,7 @@ export function WriteWorkspaceView({
       setFileError(t('writeInlineEditNoSelection'))
       return
     }
-    if (typeof window.kunGui?.generateWriteInfographic !== 'function') {
+    if (typeof window.RcodeGui?.generateWriteInfographic !== 'function') {
       setFileError(t('writeInfographicUnavailable'))
       return
     }
@@ -759,7 +752,7 @@ export function WriteWorkspaceView({
     let replacementMarkdown: string | null = null
     let failureMessage: string | null = null
     try {
-      const result = await window.kunGui.generateWriteInfographic({
+      const result = await window.RcodeGui.generateWriteInfographic({
         text: job.text,
         filePath: job.filePath,
         workspaceRoot: job.context.workspaceRoot
@@ -832,8 +825,8 @@ export function WriteWorkspaceView({
     // The document was switched away mid-generation; opening another file
     // flushed it to disk with the placeholder inside, so patch it on disk.
     if (
-      typeof window.kunGui?.readWorkspaceFile !== 'function' ||
-      typeof window.kunGui?.writeWorkspaceFile !== 'function'
+      typeof window.RcodeGui?.readWorkspaceFile !== 'function' ||
+      typeof window.RcodeGui?.writeWorkspaceFile !== 'function'
     ) {
       return false
     }
@@ -842,7 +835,7 @@ export function WriteWorkspaceView({
         job.context.workspaceRoot,
         job.filePath,
         async () => {
-          const file = await window.kunGui.readWorkspaceFile({
+          const file = await window.RcodeGui.readWorkspaceFile({
             path: job.filePath,
             workspaceRoot: job.context.workspaceRoot
           })
@@ -853,7 +846,7 @@ export function WriteWorkspaceView({
             replacementMarkdown
           )
           if (next === null) return false
-          const written = await window.kunGui.writeWorkspaceFile({
+          const written = await window.RcodeGui.writeWorkspaceFile({
             path: job.filePath,
             workspaceRoot: job.context.workspaceRoot,
             content: next
@@ -869,10 +862,10 @@ export function WriteWorkspaceView({
   const pickWriteWorkspace = async (): Promise<void> => {
     try {
       setFileError(null)
-      if (typeof window.kunGui?.pickWorkspaceDirectory !== 'function') {
+      if (typeof window.RcodeGui?.pickWorkspaceDirectory !== 'function') {
         throw new Error('workspace:pick-directory unavailable')
       }
-      const picked = await window.kunGui.pickWorkspaceDirectory(workspaceRoot || undefined)
+      const picked = await window.RcodeGui.pickWorkspaceDirectory(workspaceRoot || undefined)
       if (!picked.canceled && picked.path) {
         await addWriteWorkspace(picked.path)
         if (pathsEqual(useWriteWorkspaceStore.getState().workspaceRoot, picked.path)) {
@@ -888,7 +881,7 @@ export function WriteWorkspaceView({
   const exportCurrentFile = async (format: WriteExportFormat): Promise<void> => {
     if (!activeFilePath) return
     if (!activeFileIsText) return
-    if (typeof window.kunGui?.exportWriteDocument !== 'function') {
+    if (typeof window.RcodeGui?.exportWriteDocument !== 'function') {
       showExportNotice({ tone: 'error', message: t('writeExportUnavailable') })
       return
     }
@@ -896,7 +889,7 @@ export function WriteWorkspaceView({
     setExportMenuOpen(false)
     setExportingFormat(format)
     try {
-      const result = await window.kunGui.exportWriteDocument({
+      const result = await window.RcodeGui.exportWriteDocument({
         path: activeFilePath,
         workspaceRoot,
         format,
@@ -934,7 +927,7 @@ export function WriteWorkspaceView({
   const copyCurrentFileAsRichText = async (): Promise<void> => {
     if (!activeFilePath) return
     if (!activeFileIsText) return
-    if (typeof window.kunGui?.copyWriteDocumentAsRichText !== 'function') {
+    if (typeof window.RcodeGui?.copyWriteDocumentAsRichText !== 'function') {
       showExportNotice({ tone: 'error', message: t('writeCopyRichTextUnavailable') })
       return
     }
@@ -942,7 +935,7 @@ export function WriteWorkspaceView({
     setExportMenuOpen(false)
     setExportingFormat(WRITE_RICH_CLIPBOARD_ACTION)
     try {
-      const result = await window.kunGui.copyWriteDocumentAsRichText({
+      const result = await window.RcodeGui.copyWriteDocumentAsRichText({
         path: activeFilePath,
         workspaceRoot,
         content: fileContent
@@ -1139,7 +1132,7 @@ export function WriteWorkspaceView({
   ]
 
   return (
-    <div className={`write-workspace-view ds-no-drag flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-3 sm:px-4 md:px-6 lg:px-8 ${documentFocusMode ? 'is-focus-mode' : ''}`}>
+    <div className="write-workspace-view ds-no-drag flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden px-3 sm:px-4 md:px-6 lg:px-8">
       <WriteWorkspaceToolbar
         activeFileIsImage={activeFileIsImage}
         activeFileIsPdf={activeFileIsPdf}
@@ -1180,7 +1173,7 @@ export function WriteWorkspaceView({
         onToggleLeftSidebar={onToggleLeftSidebar}
       />
       <div className="flex min-h-0 min-w-0 flex-1 gap-3 overflow-hidden pb-3 pt-3">
-        <div className={writeFocusModeShellClassName(documentFocusMode)}>
+        <div className="write-document-shell min-w-0 flex-1 overflow-hidden rounded-2xl border border-ds-border-muted bg-ds-card/92 shadow-[0_12px_32px_rgba(20,47,95,0.04)] backdrop-blur-xl">
           <WriteWorkspaceDocumentPane
             activeFilePath={activeFilePath}
             documentEpoch={documentEpoch}
@@ -1211,8 +1204,6 @@ export function WriteWorkspaceView({
             richHandleRef={richHandleRef}
             markdownHandleRef={markdownHandleRef}
             onMarkdownReviewStateChange={setReviewActive}
-            focusMode={documentFocusMode}
-            onFocusModeChange={setDocumentFocusMode}
             onboarding={onboardingDecision === 'show'}
             workspaceLoading={
               onboardingDecision === 'pending' && !settingsError && !treeError
@@ -1271,18 +1262,17 @@ export function WriteWorkspaceView({
           onGenerateInfographic={generateInfographic}
           onTextareaFocus={handleInlineAgentFocus}
           onTextareaBlur={handleInlineAgentBlur}
-          focusMode={documentFocusMode}
         />
       ) : null}
 
       {fileError ? (
-        <div className={`pointer-events-none fixed bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-red-200/70 bg-red-50/92 px-4 py-2 text-[13px] text-red-700 shadow-[0_14px_32px_rgba(20,47,95,0.12)] dark:border-red-900/60 dark:bg-red-950/84 dark:text-red-200 ${writeFocusModeFloatingLayerClassName(documentFocusMode, 'z-40')}`}>
+        <div className="pointer-events-none fixed bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-red-200/70 bg-red-50/92 px-4 py-2 text-[13px] text-red-700 shadow-[0_14px_32px_rgba(20,47,95,0.12)] dark:border-red-900/60 dark:bg-red-950/84 dark:text-red-200 z-40">
           {fileError}
         </div>
       ) : null}
       {exportNotice ? (
         <div
-          className={`pointer-events-none fixed left-1/2 -translate-x-1/2 rounded-full border px-4 py-2 text-[13px] shadow-[0_14px_32px_rgba(20,47,95,0.12)] ${writeFocusModeFloatingLayerClassName(documentFocusMode, 'z-40')} ${
+          className={`pointer-events-none fixed left-1/2 -translate-x-1/2 rounded-full border px-4 py-2 text-[13px] shadow-[0_14px_32px_rgba(20,47,95,0.12)] z-40 ${
             exportNotice.tone === 'error'
               ? 'border-red-200/70 bg-red-50/92 text-red-700 dark:border-red-900/60 dark:bg-red-950/84 dark:text-red-200'
               : 'border-emerald-200/80 bg-emerald-50/92 text-emerald-700 dark:border-emerald-900/60 dark:bg-emerald-950/84 dark:text-emerald-200'

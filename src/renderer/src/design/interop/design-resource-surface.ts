@@ -16,7 +16,7 @@ import {
 } from '../design-mode/design-mode-surface'
 import { buildCanvasMotionSummary } from '../canvas/canvas-motion-summary'
 
-export const DESIGN_RESOURCE_SURFACE_PATH = '.kun-design/design-resources.json'
+export const DESIGN_RESOURCE_SURFACE_PATH = '.Rcode-design/design-resources.json'
 
 export type DesignResourceKind = 'board' | 'frame' | 'asset' | 'token' | 'component' | 'direction' | 'tool' | 'mode'
 
@@ -30,8 +30,8 @@ export type DesignResourceDescriptor = {
 
 export type DesignResourceSurface = {
   version: 1
-  kind: 'kun.design.resources'
-  source: 'kun-design-mode'
+  kind: 'Rcode.design.resources'
+  source: 'Rcode-design-mode'
   updatedAt: string
   document: { id: string; title: string }
   counts: Record<DesignResourceKind, number>
@@ -47,7 +47,7 @@ export type BuildDesignResourceSurfaceOptions = {
 }
 
 function resourceUri(documentId: string, kind: DesignResourceKind, id: string): string {
-  return `kun-design://documents/${encodeURIComponent(documentId)}/${kind}s/${encodeURIComponent(id)}`
+  return `Rcode-design://documents/${encodeURIComponent(documentId)}/${kind}s/${encodeURIComponent(id)}`
 }
 
 function jsonText(value: unknown): string {
@@ -281,8 +281,8 @@ function resourceCounts(resources: readonly DesignResourceDescriptor[]): Record<
 }
 
 export function buildDesignResourceSurface(options: BuildDesignResourceSurfaceOptions): DesignResourceSurface {
-  const documentId = options.document?.id ?? options.canvasDocument.graph?.projectId ?? 'kun-design'
-  const title = options.document?.title ?? 'Kun design project'
+  const documentId = options.document?.id ?? options.canvasDocument.graph?.projectId ?? 'Rcode-design'
+  const title = options.document?.title ?? 'Rcode design project'
   const withoutBoard = [
     ...buildFrameResources(options, documentId),
     ...buildAssetResources(options.canvasDocument, documentId),
@@ -296,8 +296,8 @@ export function buildDesignResourceSurface(options: BuildDesignResourceSurfaceOp
   const resources = [buildBoardResource(options, documentId, title, { ...counts, board: 1 }), ...withoutBoard]
   return {
     version: 1,
-    kind: 'kun.design.resources',
-    source: 'kun-design-mode',
+    kind: 'Rcode.design.resources',
+    source: 'Rcode-design-mode',
     updatedAt: options.updatedAt ?? new Date().toISOString(),
     document: { id: documentId, title },
     counts: resourceCounts(resources),

@@ -43,6 +43,25 @@ function nextMessage(socket: WebSocket, type: string): Promise<JsonMessage> {
   });
 }
 
+function expectNoMessage(socket: WebSocket, type: string, ms = 500): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      socket.removeEventListener("message", onMessage);
+      resolve();
+    }, ms);
+    const onMessage = (event: MessageEvent) => {
+      let value: unknown;
+      try { value = JSON.parse(String(event.data)); } catch { return; }
+      if (typeof value === "object" && value !== null && !Array.isArray(value) && (value as JsonMessage).type === type) {
+        clearTimeout(timeout);
+        socket.removeEventListener("message", onMessage);
+        reject(new Error(`Unexpected ${type} message received`));
+      }
+    };
+    socket.addEventListener("message", onMessage);
+  });
+}
+
 describe("Rcode remote server", () => {
   it("distinguishes direct image requests from image-related questions", () => {
     expect(shouldGenerateWorkImage("生成一个安静的湖边夜景")).toBe(true);
@@ -360,5 +379,78 @@ describe("Rcode remote server", () => {
 
     agent.close(1000, "done");
     controller.close(1000, "done");
+  });
+
+  it("relays config.sync only to the same user's other connections", async () => {
+    const registerA = await call("/v1/auth/register", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email: "sync-a@example.com",
+        username: "sync_a",
+        displayName: "Sync A",
+        password: "StrongPass123"
+      })
+    });
+    expect(registerA.status).toBe(201);
+    const sessionA = await responseJson(registerA);
+    const authorizationA = { authorization: `Bearer ${String(sessionA.token)}`, "content-type": "application/json" };
+
+    const registerB = await call("/v1/auth/register", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        email: "sync-b@example.com",
+        username: "sync_b",
+        displayName: "Sync B",
+        password: "StrongPass123"
+      })
+    });
+    expect(registerB.status).toBe(201);
+    const sessionB = await responseJson(registerB);
+    const authorizationB = { authorization: `Bearer ${String(sessionB.token)}`, "content-type": "application/json" };
+
+    const controllerATicket = await responseJson(await call("/v1/remote/ticket", {
+      method: "POST", headers: authorizationA, body: JSON.stringify({ role: "controller" })
+    }));
+    const controllerA = await connectTicket(String(controllerATicket.url));
+    await nextMessage(controllerA, "remote.ready");
+
+    const agentASnapshotPromise = nextMessage(controllerA, "remote.snapshot");
+    const agentATicket = await responseJson(await call("/v1/remote/ticket", {
+      method: "POST",
+      headers: authorizationA,
+      body: JSON.stringify({ role: "agent", device: { id: "mac-sync-a", name: "Mac A", platform: "darwin", ready: true } })
+    }));
+    const agentA = await connectTicket(String(agentATicket.url));
+    await nextMessage(agentA, "remote.ready");
+    await agentASnapshotPromise;
+
+    const controllerBTicket = await responseJson(await call("/v1/remote/ticket", {
+      method: "POST", headers: authorizationB, body: JSON.stringify({ role: "controller" })
+    }));
+    const controllerB = await connectTicket(String(controllerBTicket.url));
+    await nextMessage(controllerB, "remote.ready");
+
+    // controller sends config.sync -> only user A's agent receives it
+    const agentSyncPromise = nextMessage(agentA, "config.sync");
+    controllerA.send(JSON.stringify({ type: "config.sync" }));
+    const agentSync = await agentSyncPromise;
+    expect(agentSync).toMatchObject({ type: "config.sync", source: "controller" });
+    expect(typeof (agentSync.at as number)).toBe("number");
+
+    // sender must not receive an echo; other user must not receive it either
+    await expectNoMessage(controllerA, "config.sync");
+    await expectNoMessage(controllerB, "config.sync");
+
+    // agent can also trigger config.sync -> controller A receives it with the device id
+    const controllerSyncPromise = nextMessage(controllerA, "config.sync");
+    agentA.send(JSON.stringify({ type: "config.sync" }));
+    const controllerSync = await controllerSyncPromise;
+    expect(controllerSync).toMatchObject({ type: "config.sync", source: "mac-sync-a" });
+
+    agentA.close(1000, "done");
+    controllerA.close(1000, "done");
+    controllerB.close(1000, "done");
   });
 });

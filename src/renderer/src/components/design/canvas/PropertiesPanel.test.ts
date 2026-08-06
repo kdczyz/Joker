@@ -16,7 +16,7 @@ import type { DesignArtifact, DesignDocument } from '../../../design/design-type
 const createdAt = '2026-06-20T00:00:00.000Z'
 
 function artifact(id: string): DesignArtifact {
-  const relativePath = `.kun-design/doc/${id}/v1.html`
+  const relativePath = `.Rcode-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',
@@ -70,7 +70,7 @@ function installHtmlFrame(): string {
 
 beforeEach(() => {
   vi.stubGlobal('window', {
-    kunGui: {
+    RcodeGui: {
       writeWorkspaceFile: vi.fn(async () => ({ ok: true as const }))
     }
   })

@@ -1,6 +1,6 @@
 import {
-  resolveKunImageGenerationSettings,
-  resolveKunRuntimeSettings,
+  resolveRcodeImageGenerationSettings,
+  resolveRcodeRuntimeSettings,
   resolveWriteInlineCompletionApiKey
 } from '@shared/app-settings'
 import { rendererRuntimeClient } from '../agent/runtime-client'
@@ -31,8 +31,8 @@ function applyWriteSettingsState(
   settings: Awaited<ReturnType<typeof rendererRuntimeClient.getSettings>>
 ): ReturnType<typeof withResolvedInlineCompletionSettings> {
   const write = withResolvedInlineCompletionSettings(normalizeWriteSettings(settings.write), settings)
-  const imageGeneration = resolveKunImageGenerationSettings(settings)
-  const runtime = resolveKunRuntimeSettings(settings)
+  const imageGeneration = resolveRcodeImageGenerationSettings(settings)
+  const runtime = resolveRcodeRuntimeSettings(settings)
   set({
     defaultWorkspaceRoot: write.defaultWorkspaceRoot,
     workspaceRoots: write.workspaces,

@@ -404,9 +404,9 @@ html[data-theme='dark'] .ds-markdown .ds-code-block-html > pre span {
 }
 
 html[data-theme='dark'] .ds-code-sidebar {
-  --ds-code-sidebar-editor-bg: #151c2e;
-  --ds-code-sidebar-gutter-bg: #1b2338;
-  --ds-code-sidebar-active-line-bg: rgba(111, 176, 232, 0.18);
+  --ds-code-sidebar-editor-bg: #141417;
+  --ds-code-sidebar-gutter-bg: #19191d;
+  --ds-code-sidebar-active-line-bg: rgba(255, 255, 255, 0.08);
 }
 
 .ds-code-sidebar-topbar {
@@ -545,7 +545,7 @@ html[data-theme='dark'] .ds-code-sidebar {
   align-items: center;
   justify-content: center;
   border-radius: 5px;
-  background: #1b2338;
+  background: #19191d;
   padding: 0 0.3rem;
   color: #ffffff;
   font-family: 'SF Mono', 'JetBrains Mono', 'IBM Plex Mono', monospace;

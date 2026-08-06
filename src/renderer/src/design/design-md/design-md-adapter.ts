@@ -71,7 +71,7 @@ export function resolveDesignMdReference(root: UnknownRecord, value: unknown): u
 
 function safetyDiagnostics(value: unknown, path = ''): DesignMdDiagnostic[] {
   if (typeof value === 'string' && UNSAFE_CSS_RE.test(value)) {
-    return [{ severity: 'error', message: 'Unsafe CSS value is not allowed.', path, source: 'kun' }]
+    return [{ severity: 'error', message: 'Unsafe CSS value is not allowed.', path, source: 'Rcode' }]
   }
   if (!isRecord(value)) return []
   return Object.entries(value).flatMap(([key, child]) => safetyDiagnostics(child, path ? `${path}.${key}` : key))
@@ -82,28 +82,28 @@ export function parseProjectDesignMd(content: string, options?: {
   officialLint?: ProjectDesignMdOfficialLintResult | null
 }): ProjectDesignMdParseResult {
   const diagnostics: DesignMdDiagnostic[] = []
-  if (options?.truncated) diagnostics.push({ severity: 'error', message: 'DESIGN.md read was truncated.', source: 'kun' })
+  if (options?.truncated) diagnostics.push({ severity: 'error', message: 'DESIGN.md read was truncated.', source: 'Rcode' })
   if (new TextEncoder().encode(content).byteLength > PROJECT_DESIGN_MD_MAX_BYTES) {
-    diagnostics.push({ severity: 'error', message: 'DESIGN.md exceeds the 512 KiB limit.', source: 'kun' })
+    diagnostics.push({ severity: 'error', message: 'DESIGN.md exceeds the 512 KiB limit.', source: 'Rcode' })
   }
   const source = splitSource(content)
   if (!source) {
-    diagnostics.push({ severity: 'error', message: 'DESIGN.md must start with a closed YAML front matter fence.', source: 'kun' })
+    diagnostics.push({ severity: 'error', message: 'DESIGN.md must start with a closed YAML front matter fence.', source: 'Rcode' })
     return { ok: false, document: null, diagnostics }
   }
 
   const yamlDocument = parseDocument(source.yaml, { strict: true, uniqueKeys: true })
-  diagnostics.push(...yamlDocument.errors.map((error) => ({ severity: 'error' as const, message: error.message, source: 'kun' as const })))
+  diagnostics.push(...yamlDocument.errors.map((error) => ({ severity: 'error' as const, message: error.message, source: 'Rcode' as const })))
   const root = yamlDocument.toJS() as unknown
   if (!isRecord(root)) {
-    diagnostics.push({ severity: 'error', message: 'YAML front matter must be a mapping.', source: 'kun' })
+    diagnostics.push({ severity: 'error', message: 'YAML front matter must be a mapping.', source: 'Rcode' })
     return { ok: false, document: null, diagnostics }
   }
   if (typeof root.name !== 'string' || !root.name.trim()) {
-    diagnostics.push({ severity: 'error', message: 'Google-compatible DESIGN.md requires a non-empty top-level name.', path: 'name', source: 'kun' })
+    diagnostics.push({ severity: 'error', message: 'Google-compatible DESIGN.md requires a non-empty top-level name.', path: 'name', source: 'Rcode' })
   }
   if (!['colors', 'typography', 'rounded', 'spacing', 'components'].some((key) => isRecord(root[key]) && Object.keys(root[key] as UnknownRecord).length > 0)) {
-    diagnostics.push({ severity: 'error', message: 'DESIGN.md has no recognized Google design token sections.', source: 'kun' })
+    diagnostics.push({ severity: 'error', message: 'DESIGN.md has no recognized Google design token sections.', source: 'Rcode' })
   }
 
   const official = options?.officialLint
@@ -116,13 +116,13 @@ export function parseProjectDesignMd(content: string, options?: {
 
   const sections = parseSections(source.markdown)
   const duplicateHeadings = sections.map((section) => section.heading.toLowerCase()).filter((heading, index, all) => all.indexOf(heading) !== index)
-  diagnostics.push(...duplicateHeadings.map((heading) => ({ severity: 'error' as const, message: `Duplicate Markdown section: ${heading}`, source: 'kun' as const })))
+  diagnostics.push(...duplicateHeadings.map((heading) => ({ severity: 'error' as const, message: `Duplicate Markdown section: ${heading}`, source: 'Rcode' as const })))
 
   for (const [sectionName, section] of Object.entries(root)) {
     if (!isRecord(section)) continue
     for (const [key, raw] of Object.entries(section)) {
       try { resolveDesignMdReference(root, raw) } catch (error) {
-        diagnostics.push({ severity: 'error', message: error instanceof Error ? error.message : 'Invalid reference.', path: `${sectionName}.${key}`, source: 'kun' })
+        diagnostics.push({ severity: 'error', message: error instanceof Error ? error.message : 'Invalid reference.', path: `${sectionName}.${key}`, source: 'Rcode' })
       }
     }
   }
@@ -182,8 +182,8 @@ export async function parseProjectDesignMdWithOfficialLint(
   options?: { truncated?: boolean }
 ): Promise<ProjectDesignMdParseResult> {
   const local = parseProjectDesignMd(content, options)
-  if (!local.document || typeof window === 'undefined' || typeof window.kunGui?.lintProjectDesignMd !== 'function') return local
-  const officialLint = await window.kunGui.lintProjectDesignMd(content).catch((error: unknown): ProjectDesignMdOfficialLintResult => ({
+  if (!local.document || typeof window === 'undefined' || typeof window.RcodeGui?.lintProjectDesignMd !== 'function') return local
+  const officialLint = await window.RcodeGui.lintProjectDesignMd(content).catch((error: unknown): ProjectDesignMdOfficialLintResult => ({
     ok: false,
     message: error instanceof Error ? error.message : String(error)
   }))

@@ -3,8 +3,8 @@ import {
   DEFAULT_DEEPSEEK_BASE_URL,
   defaultClawSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
-  defaultMiniMaxMediaGenerationKunPatch,
+  defaultRcodeRuntimeSettings,
+  defaultMiniMaxMediaGenerationRcodePatch,
   defaultModelProviderSettings,
   getModelProviderPreset,
   isComposerChatModelId,
@@ -30,14 +30,14 @@ import {
   modelSupportsImageInput,
   defaultDesignSettings,
   normalizeModelProviderSettings,
-  resolveKunImageGenerationSettings,
-  resolveKunMusicGenerationSettings,
+  resolveRcodeImageGenerationSettings,
+  resolveRcodeMusicGenerationSettings,
   resolveModelProviderBaseUrl,
   resolveModelProviderProxyUrl,
-  resolveKunRuntimeSettings,
-  resolveKunSpeechToTextSettings,
-  resolveKunTextToSpeechSettings,
-  resolveKunVideoGenerationSettings,
+  resolveRcodeRuntimeSettings,
+  resolveRcodeSpeechToTextSettings,
+  resolveRcodeTextToSpeechSettings,
+  resolveRcodeVideoGenerationSettings,
   type AppSettingsV1,
   type ModelProviderModelProfileV1
 } from './app-settings'
@@ -149,14 +149,14 @@ function settings(): AppSettingsV1 {
       ]
     },
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
+      Rcode: {
+        ...defaultRcodeRuntimeSettings(),
         providerId: 'custom',
         model: 'custom-model'
       }
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -175,11 +175,11 @@ function settings(): AppSettingsV1 {
 }
 
 describe('model provider settings', () => {
-  it('resolves Kun runtime credentials from the selected provider', () => {
+  it('resolves Rcode runtime credentials from the selected provider', () => {
     const state = settings()
-    state.agents.kun.apiKey = 'sk-stale-runtime'
-    state.agents.kun.baseUrl = 'https://stale-runtime.example/v1'
-    const runtime = resolveKunRuntimeSettings(state)
+    state.agents.Rcode.apiKey = 'sk-stale-runtime'
+    state.agents.Rcode.baseUrl = 'https://stale-runtime.example/v1'
+    const runtime = resolveRcodeRuntimeSettings(state)
 
     expect(runtime.apiKey).toBe('sk-custom')
     expect(runtime.baseUrl).toBe('https://custom.example/v1')
@@ -247,12 +247,12 @@ describe('model provider settings', () => {
     expect(resolveModelProviderProxyUrl(noPort)).toBe('http://proxy.lan/')
   })
 
-  it('keeps legacy Kun runtime credential overrides only when no provider is selected', () => {
+  it('keeps legacy Rcode runtime credential overrides only when no provider is selected', () => {
     const state = settings()
-    state.agents.kun.providerId = ''
-    state.agents.kun.apiKey = 'sk-legacy-runtime'
-    state.agents.kun.baseUrl = 'https://legacy-runtime.example/v1'
-    const runtime = resolveKunRuntimeSettings(state)
+    state.agents.Rcode.providerId = ''
+    state.agents.Rcode.apiKey = 'sk-legacy-runtime'
+    state.agents.Rcode.baseUrl = 'https://legacy-runtime.example/v1'
+    const runtime = resolveRcodeRuntimeSettings(state)
 
     expect(runtime.apiKey).toBe('sk-legacy-runtime')
     expect(runtime.baseUrl).toBe('https://legacy-runtime.example/v1')
@@ -263,9 +263,9 @@ describe('model provider settings', () => {
     state.provider.providers = state.provider.providers.map((provider) =>
       provider.id === 'custom' ? { ...provider, apiKey: '' } : provider
     )
-    state.agents.kun.providerId = 'custom'
-    state.agents.kun.apiKey = 'sk-runtime-fallback'
-    const runtime = resolveKunRuntimeSettings(state)
+    state.agents.Rcode.providerId = 'custom'
+    state.agents.Rcode.apiKey = 'sk-runtime-fallback'
+    const runtime = resolveRcodeRuntimeSettings(state)
 
     // The keyless provider must not erase a configured key — otherwise the
     // settings-apply gate reads "no API key" and strands a healthy runtime.
@@ -319,7 +319,7 @@ describe('model provider settings', () => {
     expect(custom?.modelProfiles.writer.maxOutputTokens).toBe(32_000)
   })
 
-  it('creates Xiaomi and MiniMax provider presets for Kun runtime profiles', () => {
+  it('creates Xiaomi and MiniMax provider presets for Rcode runtime profiles', () => {
     const xiaomi = getModelProviderPreset('xiaomi')
     const minimax = getModelProviderPreset('minimax')
 
@@ -338,9 +338,6 @@ describe('model provider settings', () => {
             defaultEffort: 'high',
             requestProtocol: 'mimo-chat-completions'
           })
-        }),
-        'mimo-v2-omni': expect.objectContaining({
-          inputModalities: expect.arrayContaining(['image'])
         })
       }
     })
@@ -399,7 +396,7 @@ describe('model provider settings', () => {
     const minimax = getModelProviderPreset('minimax')
     expect(minimax).not.toBeNull()
     const minimaxProfile = modelProviderPresetProfile(minimax!, 'sk-minimax')
-    const resolved = resolveKunRuntimeSettings({
+    const resolved = resolveRcodeRuntimeSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -409,8 +406,8 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           providerId: minimaxProfile.id,
           model: minimaxProfile.models[0]
         }
@@ -439,12 +436,12 @@ describe('model provider settings', () => {
     const minimax = getModelProviderPreset('minimax')
     expect(minimax).not.toBeNull()
     const minimaxProfile = modelProviderPresetProfile(minimax!, 'sk-minimax')
-    const patch = defaultMiniMaxMediaGenerationKunPatch({
+    const patch = defaultMiniMaxMediaGenerationRcodePatch({
       providers: [
         ...defaultModelProviderSettings().providers,
         minimaxProfile
       ],
-      currentKun: defaultKunRuntimeSettings()
+      currentRcode: defaultRcodeRuntimeSettings()
     })
 
     expect(patch).toEqual(expect.objectContaining({
@@ -475,14 +472,14 @@ describe('model provider settings', () => {
     const minimaxProfile = modelProviderPresetProfile(minimax!, 'sk-minimax')
     const tokenPlanProfile = modelProviderTokenPlanProfile(minimax!, 'sk-cp-minimax')
     expect(tokenPlanProfile).not.toBeNull()
-    const patch = defaultMiniMaxMediaGenerationKunPatch({
+    const patch = defaultMiniMaxMediaGenerationRcodePatch({
       providers: [
         ...defaultModelProviderSettings().providers,
         minimaxProfile,
         tokenPlanProfile!
       ],
-      currentKun: {
-        ...defaultKunRuntimeSettings(),
+      currentRcode: {
+        ...defaultRcodeRuntimeSettings(),
         providerId: tokenPlanProfile!.id
       }
     })
@@ -504,19 +501,19 @@ describe('model provider settings', () => {
       models: ['MiniMax-M3'],
       modelProfiles: {}
     }
-    const patch = defaultMiniMaxMediaGenerationKunPatch({
+    const patch = defaultMiniMaxMediaGenerationRcodePatch({
       providers: [
         ...defaultModelProviderSettings().providers,
         staleMiniMax
       ],
-      currentKun: {
-        ...defaultKunRuntimeSettings(),
+      currentRcode: {
+        ...defaultRcodeRuntimeSettings(),
         textToSpeech: {
-          ...defaultKunRuntimeSettings().textToSpeech,
+          ...defaultRcodeRuntimeSettings().textToSpeech,
           providerId: 'voice-lab'
         }
       },
-      kunPatch: {
+      RcodePatch: {
         musicGeneration: { enabled: false }
       }
     })
@@ -551,20 +548,20 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           textToSpeech: {
-            ...defaultKunRuntimeSettings().textToSpeech,
+            ...defaultRcodeRuntimeSettings().textToSpeech,
             enabled: true,
             providerId: 'minimax'
           },
           musicGeneration: {
-            ...defaultKunRuntimeSettings().musicGeneration,
+            ...defaultRcodeRuntimeSettings().musicGeneration,
             enabled: true,
             providerId: 'minimax'
           },
           videoGeneration: {
-            ...defaultKunRuntimeSettings().videoGeneration,
+            ...defaultRcodeRuntimeSettings().videoGeneration,
             enabled: true,
             providerId: 'minimax'
           }
@@ -573,17 +570,17 @@ describe('model provider settings', () => {
     }
 
     expect(listTextToSpeechProviderProfiles(state).map((profile) => profile.id)).toContain('minimax')
-    expect(resolveKunTextToSpeechSettings(state)).toEqual(expect.objectContaining({
+    expect(resolveRcodeTextToSpeechSettings(state)).toEqual(expect.objectContaining({
       baseUrl: 'https://api.minimax.io',
       apiKey: 'sk-minimax',
       model: 'speech-2.8-hd'
     }))
-    expect(resolveKunMusicGenerationSettings(state)).toEqual(expect.objectContaining({
+    expect(resolveRcodeMusicGenerationSettings(state)).toEqual(expect.objectContaining({
       baseUrl: 'https://api.minimax.io',
       apiKey: 'sk-minimax',
       model: 'music-2.6'
     }))
-    expect(resolveKunVideoGenerationSettings(state)).toEqual(expect.objectContaining({
+    expect(resolveRcodeVideoGenerationSettings(state)).toEqual(expect.objectContaining({
       baseUrl: 'https://api.minimax.io',
       apiKey: 'sk-minimax',
       model: 'MiniMax-Hailuo-2.3'
@@ -594,7 +591,7 @@ describe('model provider settings', () => {
     const minimax = getModelProviderPreset('minimax')
     expect(minimax).not.toBeNull()
     const minimaxProfile = modelProviderPresetProfile(minimax!, 'sk-minimax')
-    const resolved = resolveKunImageGenerationSettings({
+    const resolved = resolveRcodeImageGenerationSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -604,10 +601,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           imageGeneration: {
-            ...defaultKunRuntimeSettings().imageGeneration,
+            ...defaultRcodeRuntimeSettings().imageGeneration,
             enabled: true,
             providerId: minimaxProfile.id,
             baseUrl: 'https://stale-image.example/v1',
@@ -640,7 +637,7 @@ describe('model provider settings', () => {
         models: ['image-01', 'image-01-live']
       }
     })
-    const resolved = resolveKunImageGenerationSettings({
+    const resolved = resolveRcodeImageGenerationSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -650,10 +647,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           imageGeneration: {
-            ...defaultKunRuntimeSettings().imageGeneration,
+            ...defaultRcodeRuntimeSettings().imageGeneration,
             enabled: true,
             providerId: minimaxTokenPlanProfile!.id
           }
@@ -692,7 +689,7 @@ describe('model provider settings', () => {
       }
     })
 
-    const resolved = resolveKunImageGenerationSettings({
+    const resolved = resolveRcodeImageGenerationSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -702,10 +699,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           imageGeneration: {
-            ...defaultKunRuntimeSettings().imageGeneration,
+            ...defaultRcodeRuntimeSettings().imageGeneration,
             enabled: true,
             providerId: codexProfile.id
           }
@@ -733,7 +730,7 @@ describe('model provider settings', () => {
       }))
     }
 
-    const resolved = resolveKunRuntimeSettings({
+    const resolved = resolveRcodeRuntimeSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -743,8 +740,8 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           providerId: codexProfile.id,
           model: 'gpt-5.5'
         }
@@ -789,25 +786,25 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           imageGeneration: {
-            ...defaultKunRuntimeSettings().imageGeneration,
+            ...defaultRcodeRuntimeSettings().imageGeneration,
             enabled: true,
             providerId: staleGlobalCapabilityOnCnProfile.id
           },
           textToSpeech: {
-            ...defaultKunRuntimeSettings().textToSpeech,
+            ...defaultRcodeRuntimeSettings().textToSpeech,
             enabled: true,
             providerId: staleGlobalCapabilityOnCnProfile.id
           },
           musicGeneration: {
-            ...defaultKunRuntimeSettings().musicGeneration,
+            ...defaultRcodeRuntimeSettings().musicGeneration,
             enabled: true,
             providerId: staleGlobalCapabilityOnCnProfile.id
           },
           videoGeneration: {
-            ...defaultKunRuntimeSettings().videoGeneration,
+            ...defaultRcodeRuntimeSettings().videoGeneration,
             enabled: true,
             providerId: staleGlobalCapabilityOnCnProfile.id
           }
@@ -815,10 +812,10 @@ describe('model provider settings', () => {
       }
     }
 
-    expect(resolveKunImageGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
-    expect(resolveKunTextToSpeechSettings(state).baseUrl).toBe('https://api.minimaxi.com')
-    expect(resolveKunMusicGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
-    expect(resolveKunVideoGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
+    expect(resolveRcodeImageGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
+    expect(resolveRcodeTextToSpeechSettings(state).baseUrl).toBe('https://api.minimaxi.com')
+    expect(resolveRcodeMusicGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
+    expect(resolveRcodeVideoGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
   })
 
   it('exposes the Xiaomi preset speech capability', () => {
@@ -934,7 +931,7 @@ describe('model provider settings', () => {
 
   it('backfills preset model capabilities for stale stored providers', () => {
     const base = settings()
-    const resolved = resolveKunRuntimeSettings({
+    const resolved = resolveRcodeRuntimeSettings({
       ...base,
       provider: {
         ...base.provider,
@@ -946,7 +943,7 @@ describe('model provider settings', () => {
             apiKey: 'tp-key',
             baseUrl: 'https://token-plan-cn.xiaomimimo.com/v1',
             endpointFormat: 'chat_completions',
-            models: ['mimo-v2-omni', 'mimo-v2.5', 'mimo-v2.5-pro'],
+            models: ['mimo-v2.5', 'mimo-v2.5-pro'],
             modelProfiles: {}
           }
         ]
@@ -954,8 +951,41 @@ describe('model provider settings', () => {
     })
 
     expect(modelSupportsImageInput(resolved.modelProfiles['mimo-v2.5'])).toBe(true)
-    expect(modelSupportsImageInput(resolved.modelProfiles['mimo-v2-omni'])).toBe(true)
     expect(resolved.modelProfiles['mimo-v2.5-pro']).toBeDefined()
+  })
+
+  it('removes deprecated Xiaomi models from stored provider configs', () => {
+    const normalized = normalizeModelProviderSettings({
+      providers: [
+        {
+          id: 'xiaomi',
+          name: 'Xiaomi',
+          apiKey: 'sk-xiaomi',
+          baseUrl: 'https://api.xiaomimimo.com/v1',
+          endpointFormat: 'chat_completions',
+          models: ['mimo-v2.5-pro', 'mimo-v2-omni', 'mimo-v2-pro', 'mimo-v2.5'],
+          modelProfiles: {}
+        },
+        {
+          id: 'xiaomi-token-plan',
+          name: 'Xiaomi Token Plan',
+          apiKey: 'tp-key',
+          baseUrl: 'https://token-plan-cn.xiaomimimo.com/v1',
+          endpointFormat: 'chat_completions',
+          models: ['mimo-v2-omni', 'mimo-v2.5'],
+          modelProfiles: {}
+        }
+      ]
+    })
+
+    const xiaomi = normalized.providers.find((p) => p.id === 'xiaomi')!
+    expect(xiaomi.models).toEqual(['mimo-v2.5', 'mimo-v2.5-pro'])
+    expect(xiaomi.models).not.toContain('mimo-v2-omni')
+    expect(xiaomi.models).not.toContain('mimo-v2-pro')
+
+    const tokenPlan = normalized.providers.find((p) => p.id === 'xiaomi-token-plan')!
+    expect(tokenPlan.models).toEqual(['mimo-v2.5'])
+    expect(tokenPlan.models).not.toContain('mimo-v2-omni')
   })
 
   it('preserves user-edited profiles for preset provider models', () => {
@@ -970,7 +1000,7 @@ describe('model provider settings', () => {
       supportsToolCalling: false,
       messageParts: ['text']
     }
-    const resolved = resolveKunRuntimeSettings({
+    const resolved = resolveRcodeRuntimeSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -986,8 +1016,8 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           providerId: codexProfile.id,
           model: 'gpt-5.5'
         }
@@ -1011,10 +1041,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           speechToText: {
-            ...defaultKunRuntimeSettings().speechToText,
+            ...defaultRcodeRuntimeSettings().speechToText,
             enabled: true,
             providerId: xiaomiProfile.id
           }
@@ -1023,7 +1053,7 @@ describe('model provider settings', () => {
     }
 
     expect(listSpeechToTextProviderProfiles(base).map((profile) => profile.id)).toEqual(['xiaomi'])
-    expect(resolveKunSpeechToTextSettings(base)).toEqual(expect.objectContaining({
+    expect(resolveRcodeSpeechToTextSettings(base)).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'xiaomi',
       protocol: 'mimo-asr',
@@ -1051,10 +1081,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           textToSpeech: {
-            ...defaultKunRuntimeSettings().textToSpeech,
+            ...defaultRcodeRuntimeSettings().textToSpeech,
             enabled: true,
             providerId: minimaxProfile.id,
             baseUrl: 'https://stale-tts.example/v1',
@@ -1062,7 +1092,7 @@ describe('model provider settings', () => {
             model: 'stale-voice-model'
           },
           musicGeneration: {
-            ...defaultKunRuntimeSettings().musicGeneration,
+            ...defaultRcodeRuntimeSettings().musicGeneration,
             enabled: true,
             providerId: minimaxProfile.id,
             baseUrl: 'https://stale-music.example/v1',
@@ -1070,7 +1100,7 @@ describe('model provider settings', () => {
             model: 'stale-music-model'
           },
           videoGeneration: {
-            ...defaultKunRuntimeSettings().videoGeneration,
+            ...defaultRcodeRuntimeSettings().videoGeneration,
             enabled: true,
             providerId: minimaxProfile.id,
             baseUrl: 'https://stale-video.example/v1',
@@ -1084,7 +1114,7 @@ describe('model provider settings', () => {
     expect(listTextToSpeechProviderProfiles(base).map((profile) => profile.id)).toEqual(['minimax', 'xiaomi'])
     expect(listMusicGenerationProviderProfiles(base).map((profile) => profile.id)).toEqual(['minimax'])
     expect(listVideoGenerationProviderProfiles(base).map((profile) => profile.id)).toEqual(['minimax'])
-    expect(resolveKunTextToSpeechSettings(base)).toEqual(expect.objectContaining({
+    expect(resolveRcodeTextToSpeechSettings(base)).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-t2a',
@@ -1092,7 +1122,7 @@ describe('model provider settings', () => {
       apiKey: 'sk-minimax',
       model: 'speech-2.8-hd'
     }))
-    expect(resolveKunMusicGenerationSettings(base)).toEqual(expect.objectContaining({
+    expect(resolveRcodeMusicGenerationSettings(base)).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-music',
@@ -1100,7 +1130,7 @@ describe('model provider settings', () => {
       apiKey: 'sk-minimax',
       model: 'music-2.6'
     }))
-    expect(resolveKunVideoGenerationSettings(base)).toEqual(expect.objectContaining({
+    expect(resolveRcodeVideoGenerationSettings(base)).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-video',
@@ -1122,7 +1152,7 @@ describe('model provider settings', () => {
         baseUrl: 'https://api.xiaomimimo.com/v1'
       }
     }
-    const resolved = resolveKunSpeechToTextSettings({
+    const resolved = resolveRcodeSpeechToTextSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -1132,10 +1162,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           speechToText: {
-            ...defaultKunRuntimeSettings().speechToText,
+            ...defaultRcodeRuntimeSettings().speechToText,
             enabled: true,
             providerId: staleTokenPlanProfile.id,
             model: 'mimo-v2.5-tts'
@@ -1155,13 +1185,13 @@ describe('model provider settings', () => {
   })
 
   it('keeps custom speech-to-text settings when no provider is selected', () => {
-    const resolved = resolveKunSpeechToTextSettings({
+    const resolved = resolveRcodeSpeechToTextSettings({
       ...settings(),
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           speechToText: {
-            ...defaultKunRuntimeSettings().speechToText,
+            ...defaultRcodeRuntimeSettings().speechToText,
             enabled: true,
             providerId: '',
             protocol: 'openai-transcriptions',
@@ -1374,7 +1404,7 @@ describe('provider presets', () => {
       const preset = getModelProviderPreset(presetId)
       expect(preset).not.toBeNull()
       const profile = modelProviderPresetProfile(preset!, `sk-${presetId}`)
-      const resolved = resolveKunRuntimeSettings({
+      const resolved = resolveRcodeRuntimeSettings({
         ...settings(),
         provider: {
           ...defaultModelProviderSettings(),
@@ -1384,8 +1414,8 @@ describe('provider presets', () => {
           ]
         },
         agents: {
-          kun: {
-            ...defaultKunRuntimeSettings(),
+          Rcode: {
+            ...defaultRcodeRuntimeSettings(),
             providerId: profile.id,
             model
           }
@@ -1416,14 +1446,14 @@ describe('provider presets', () => {
     expect(profile.modelProfiles['kimi-k2.7'].endpointFormat).toBeUndefined()
 
     // The override survives the full settings normalization round-trip.
-    const resolved = resolveKunRuntimeSettings({
+    const resolved = resolveRcodeRuntimeSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
         providers: [...defaultModelProviderSettings().providers, profile]
       },
       agents: {
-        kun: { ...defaultKunRuntimeSettings(), providerId: profile.id, model: 'minimax-m3' }
+        Rcode: { ...defaultRcodeRuntimeSettings(), providerId: profile.id, model: 'minimax-m3' }
       }
     })
     expect(resolved.modelProfiles['minimax-m3'].endpointFormat).toBe('messages')
@@ -1446,14 +1476,14 @@ describe('provider presets', () => {
       })
     }
 
-    const resolved = resolveKunRuntimeSettings({
+    const resolved = resolveRcodeRuntimeSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
         providers: [...defaultModelProviderSettings().providers, profile]
       },
       agents: {
-        kun: { ...defaultKunRuntimeSettings(), providerId: profile.id, model: 'deepseek-v4-pro' }
+        Rcode: { ...defaultRcodeRuntimeSettings(), providerId: profile.id, model: 'deepseek-v4-pro' }
       }
     })
     expect(resolved.modelProfiles['deepseek-v4-pro']).toEqual(profile.modelProfiles['deepseek-v4-pro'])

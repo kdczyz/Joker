@@ -11,7 +11,7 @@ import { artifact, installDesignDocument } from './design-board.test-helpers'
 describe('design board screen frame creation', () => {
   beforeEach(() => {
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         writeWorkspaceFile: vi.fn(async () => ({ ok: true as const }))
       }
     })
@@ -44,7 +44,7 @@ describe('design board screen frame creation', () => {
     expect(created).toMatchObject({
       kind: 'html',
       title: 'Design an onboarding screen',
-      relativePath: expect.stringMatching(/^\.kun-design\/doc\/.+\/v1\.html$/),
+      relativePath: expect.stringMatching(/^\.Rcode-design\/doc\/.+\/v1\.html$/),
       previewStatus: 'pending',
       node: {
         x: -640,

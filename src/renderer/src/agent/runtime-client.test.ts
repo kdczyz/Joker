@@ -3,7 +3,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -22,13 +22,13 @@ function settings(apiKey: string): AppSettingsV1 {
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
+      Rcode: {
+        ...defaultRcodeRuntimeSettings(),
         apiKey
       }
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -55,7 +55,7 @@ describe('rendererRuntimeClient', () => {
   it('caches settings reads until invalidated', async () => {
     const getSettings = vi.fn(async () => settings('sk-1'))
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings,
         setSettings: vi.fn(),
         runtimeRequest: vi.fn(),
@@ -71,8 +71,8 @@ describe('rendererRuntimeClient', () => {
     const first = await rendererRuntimeClient.getSettings()
     const second = await rendererRuntimeClient.getSettings()
 
-    expect(first.agents.kun.apiKey).toBe('sk-1')
-    expect(second.agents.kun.apiKey).toBe('sk-1')
+    expect(first.agents.Rcode.apiKey).toBe('sk-1')
+    expect(second.agents.Rcode.apiKey).toBe('sk-1')
     expect(getSettings).toHaveBeenCalledTimes(1)
   })
 
@@ -80,7 +80,7 @@ describe('rendererRuntimeClient', () => {
     const getSettings = vi.fn(async () => settings('sk-1'))
     const setSettings = vi.fn(async () => settings('sk-2'))
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings,
         setSettings,
         runtimeRequest: vi.fn(),
@@ -97,8 +97,8 @@ describe('rendererRuntimeClient', () => {
     const next = await rendererRuntimeClient.setSettings({ workspaceRoot: '/tmp/next' })
     const cached = await rendererRuntimeClient.getSettings()
 
-    expect(next.agents.kun.apiKey).toBe('sk-2')
-    expect(cached.agents.kun.apiKey).toBe('sk-2')
+    expect(next.agents.Rcode.apiKey).toBe('sk-2')
+    expect(cached.agents.Rcode.apiKey).toBe('sk-2')
     expect(getSettings).toHaveBeenCalledTimes(1)
     expect(setSettings).toHaveBeenCalledTimes(1)
   })
@@ -106,7 +106,7 @@ describe('rendererRuntimeClient', () => {
   it('forwards explicit runtime restarts through the preload bridge', async () => {
     const restartRuntime = vi.fn(async () => undefined)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(),
         setSettings: vi.fn(),
         runtimeRequest: vi.fn(),

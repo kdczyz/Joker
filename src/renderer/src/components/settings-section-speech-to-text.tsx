@@ -3,7 +3,7 @@ import {
   CUSTOM_SPEECH_TO_TEXT_PROVIDER_ID,
   DEFAULT_SPEECH_TO_TEXT_PROTOCOL,
   SPEECH_TO_TEXT_PROTOCOLS,
-  resolveKunSpeechToTextSettings
+  resolveRcodeSpeechToTextSettings
 } from '@shared/app-settings'
 import {
   LOCAL_WHISPER_MODELS,
@@ -138,16 +138,16 @@ export function SpeechToTextSettingsSection({ ctx }: { ctx: Record<string, any> 
     t,
     form,
     provider,
-    kun,
+    Rcode,
     selectControlClass,
-    updateKun
+    updateRcode
   } = ctx
   const speechToText = {
     ...DEFAULT_SPEECH_TO_TEXT,
-    ...(kun.speechToText ?? {})
+    ...(Rcode.speechToText ?? {})
   }
   const effectiveSpeechToText = form
-    ? resolveKunSpeechToTextSettings(form)
+    ? resolveRcodeSpeechToTextSettings(form)
     : speechToText
   const speechProviders = (provider?.providers ?? []).filter((item: {
     speech?: unknown
@@ -178,7 +178,7 @@ export function SpeechToTextSettingsSection({ ctx }: { ctx: Record<string, any> 
   const [localWhisperSourceCheckBusy, setLocalWhisperSourceCheckBusy] = useState(false)
   const localWhisperStatus = localWhisperStatuses[selectedLocalWhisperModelId] ?? null
   const updateSpeechToText = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateRcode({
       speechToText: {
         ...speechToText,
         ...patch
@@ -196,15 +196,15 @@ export function SpeechToTextSettingsSection({ ctx }: { ctx: Record<string, any> 
   const refreshLocalWhisperStatus = useCallback(async (
     modelId: LocalWhisperModelId = selectedLocalWhisperModelId
   ): Promise<void> => {
-    if (typeof window.kunGui?.getLocalWhisperModelStatus !== 'function') return
-    const status = await window.kunGui.getLocalWhisperModelStatus(modelId)
+    if (typeof window.RcodeGui?.getLocalWhisperModelStatus !== 'function') return
+    const status = await window.RcodeGui.getLocalWhisperModelStatus(modelId)
     setLocalWhisperModelStatus(status)
   }, [selectedLocalWhisperModelId, setLocalWhisperModelStatus])
 
   const refreshLocalWhisperModelStatuses = useCallback(async (): Promise<void> => {
-    if (typeof window.kunGui?.getLocalWhisperModelStatus !== 'function') return
+    if (typeof window.RcodeGui?.getLocalWhisperModelStatus !== 'function') return
     const statuses = await Promise.all(
-      LOCAL_WHISPER_MODELS.map((model) => window.kunGui.getLocalWhisperModelStatus(model.id))
+      LOCAL_WHISPER_MODELS.map((model) => window.RcodeGui.getLocalWhisperModelStatus(model.id))
     )
     setLocalWhisperStatuses((current) => {
       const next = { ...current }
@@ -214,11 +214,11 @@ export function SpeechToTextSettingsSection({ ctx }: { ctx: Record<string, any> 
   }, [])
 
   const refreshLocalWhisperSourceStatuses = useCallback(async (): Promise<void> => {
-    if (typeof window.kunGui?.checkLocalWhisperDownloadSources !== 'function') return
+    if (typeof window.RcodeGui?.checkLocalWhisperDownloadSources !== 'function') return
     setLocalWhisperSourceStatuses(null)
     setLocalWhisperSourceCheckBusy(true)
     try {
-      const result = await window.kunGui.checkLocalWhisperDownloadSources({ modelId: selectedLocalWhisperModelId })
+      const result = await window.RcodeGui.checkLocalWhisperDownloadSources({ modelId: selectedLocalWhisperModelId })
       setLocalWhisperSourceStatuses(result.sources)
     } finally {
       setLocalWhisperSourceCheckBusy(false)
@@ -229,8 +229,8 @@ export function SpeechToTextSettingsSection({ ctx }: { ctx: Record<string, any> 
     if (!usingLocalWhisper) return
     void refreshLocalWhisperModelStatuses().catch(() => undefined)
     void refreshLocalWhisperSourceStatuses().catch(() => undefined)
-    if (typeof window.kunGui?.onLocalWhisperModelProgress !== 'function') return
-    return window.kunGui.onLocalWhisperModelProgress((progress) => {
+    if (typeof window.RcodeGui?.onLocalWhisperModelProgress !== 'function') return
+    return window.RcodeGui.onLocalWhisperModelProgress((progress) => {
       const model = localWhisperModelById(progress.modelId)
       setLocalWhisperStatuses((current) => {
         const existing = current[progress.modelId]
@@ -266,11 +266,11 @@ export function SpeechToTextSettingsSection({ ctx }: { ctx: Record<string, any> 
   }, [refreshLocalWhisperStatus, selectedLocalWhisperModelId, usingLocalWhisper])
 
   const downloadLocalWhisper = async (): Promise<void> => {
-    if (typeof window.kunGui?.downloadLocalWhisperModel !== 'function') return
+    if (typeof window.RcodeGui?.downloadLocalWhisperModel !== 'function') return
     setLocalWhisperNotice(null)
     setLocalWhisperBusy('download')
     try {
-      const result = await window.kunGui.downloadLocalWhisperModel({
+      const result = await window.RcodeGui.downloadLocalWhisperModel({
         modelId: selectedLocalWhisperModelId,
         sourceId: speechToText.localWhisperDownloadSource
       })
@@ -284,11 +284,11 @@ export function SpeechToTextSettingsSection({ ctx }: { ctx: Record<string, any> 
   }
 
   const cancelLocalWhisper = async (): Promise<void> => {
-    if (typeof window.kunGui?.cancelLocalWhisperModel !== 'function') return
+    if (typeof window.RcodeGui?.cancelLocalWhisperModel !== 'function') return
     setLocalWhisperNotice(null)
     setLocalWhisperBusy('cancel')
     try {
-      const result = await window.kunGui.cancelLocalWhisperModel(selectedLocalWhisperModelId)
+      const result = await window.RcodeGui.cancelLocalWhisperModel(selectedLocalWhisperModelId)
       if (result.status) setLocalWhisperModelStatus(result.status)
       if (!result.ok) {
         setLocalWhisperNotice({ tone: 'error', message: t('speechToTextLocalCancelFailed', { message: result.message }) })
@@ -299,12 +299,12 @@ export function SpeechToTextSettingsSection({ ctx }: { ctx: Record<string, any> 
   }
 
   const deleteLocalWhisper = async (): Promise<void> => {
-    if (typeof window.kunGui?.deleteLocalWhisperModel !== 'function') return
+    if (typeof window.RcodeGui?.deleteLocalWhisperModel !== 'function') return
     if (!window.confirm(t('speechToTextLocalDeleteConfirm', { model: selectedLocalWhisperModel.shortName }))) return
     setLocalWhisperNotice(null)
     setLocalWhisperBusy('delete')
     try {
-      const result = await window.kunGui.deleteLocalWhisperModel(selectedLocalWhisperModelId)
+      const result = await window.RcodeGui.deleteLocalWhisperModel(selectedLocalWhisperModelId)
       if (result.status) setLocalWhisperModelStatus(result.status)
       if (!result.ok) {
         setLocalWhisperNotice({ tone: 'error', message: t('speechToTextLocalDeleteFailed', { message: result.message }) })
@@ -315,10 +315,10 @@ export function SpeechToTextSettingsSection({ ctx }: { ctx: Record<string, any> 
   }
 
   const runSpeechTest = async (): Promise<void> => {
-    if (typeof window.kunGui?.transcribeSpeech !== 'function') return
+    if (typeof window.RcodeGui?.transcribeSpeech !== 'function') return
     setTestState('busy')
     try {
-      const result = await window.kunGui.transcribeSpeech({
+      const result = await window.RcodeGui.transcribeSpeech({
         audioBase64: buildTestToneWavBase64(),
         mimeType: 'audio/wav',
         durationMs: 500,

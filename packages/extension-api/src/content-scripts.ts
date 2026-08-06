@@ -31,8 +31,8 @@ export const HostContentScriptDiagnosticSchema = z.strictObject({
 })
 export type HostContentScriptDiagnostic = z.input<typeof HostContentScriptDiagnosticSchema>
 
-export interface KunHostContentScriptApi {
-  /** Returns immutable identity/surface metadata derived by Kun, never by the script. */
+export interface RcodeHostContentScriptApi {
+  /** Returns immutable identity/surface metadata derived by Rcode, never by the script. */
   getContext(): HostContentScriptContext
   /** Emits one bounded, extension-attributed diagnostic through Electron Main. */
   reportDiagnostic(diagnostic: HostContentScriptDiagnostic): Promise<void>

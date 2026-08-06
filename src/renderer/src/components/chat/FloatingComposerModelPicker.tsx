@@ -29,7 +29,7 @@ import {
   type ModelProviderModelProfileV1
 } from '@shared/app-settings'
 import { DEFAULT_COMPOSER_MODEL_IDS } from '@shared/default-composer-models'
-import type { ModelProviderModelGroup } from '@shared/kun-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
 
 export type ComposerReasoningEffort = ModelReasoningEffort
 

@@ -1,11 +1,11 @@
 import type { ReactElement } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useAuth } from '../../auth/AuthGate'
 import {
   ChevronRight,
   Clock3,
   FileQuestion,
-  Focus,
   LayoutGrid,
   Moon,
   Plus,
@@ -25,7 +25,6 @@ import {
 } from './SidebarClaw'
 import type { ClawImDialogMode } from './SidebarClawDialogHelpers'
 import { ClawAddImDialog } from './SidebarClawDialog'
-import { SidebarMascot } from './AnimatedWorkLogo'
 import { ConnectPhoneSidebarPanel } from './ConnectPhoneView'
 import { SidebarProjectsSection } from './SidebarProjectsSection'
 import { SidebarConversationsSection } from './SidebarConversationsSection'
@@ -62,8 +61,6 @@ type Props = {
   onOpenPlugins: () => void
   onOpenExtensions: () => void
   onToggleTheme: () => void
-  focusModeEnabled: boolean
-  onFocusModeChange: (enabled: boolean) => void
   onToggleConnectPhone: () => void
   onCodeOpen: () => void
   onWriteOpen: () => void
@@ -98,8 +95,6 @@ export function Sidebar({
   onOpenPlugins,
   onOpenExtensions,
   onToggleTheme,
-  focusModeEnabled,
-  onFocusModeChange,
   onToggleConnectPhone,
   onCodeOpen,
   onWriteOpen,
@@ -109,11 +104,12 @@ export function Sidebar({
   onNewConversation
 }: Props): ReactElement {
   const { t, i18n } = useTranslation('common')
+  const auth = useAuth()
   const [isDarkMode, setIsDarkMode] = useState(
     () => typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark'
   )
-  const [accountDisplayName, setAccountDisplayName] = useState(() => readAccountDisplayName())
-  const [accountInitials, setAccountInitials] = useState(() => readAccountInitials())
+  const accountDisplayName = auth.user.displayName
+  const accountInitials = auth.user.displayName.slice(0, 2).toUpperCase()
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
@@ -151,21 +147,6 @@ export function Sidebar({
       title={t('appName')}
       footer={
         <div className="space-y-1">
-          <div className="ds-sidebar-focus-row flex min-h-[42px] items-center justify-center gap-2.5 pb-1">
-            {!focusModeEnabled ? (
-              <span className="ds-sidebar-mascot-slot flex h-[46px] w-[56px] shrink-0 items-center justify-center">
-                <SidebarMascot />
-              </span>
-            ) : null}
-            <FocusModeToggle
-              enabled={focusModeEnabled}
-              onToggle={() => onFocusModeChange(!focusModeEnabled)}
-              label={t('focusMode')}
-              status={focusModeEnabled ? t('switchOn') : t('switchOff')}
-              title={t('focusModeToggleTitle')}
-              ariaLabel={t('focusModeToggleLabel')}
-            />
-          </div>
           <div className="flex items-center gap-1">
             <AccountButton
               displayName={accountDisplayName}
@@ -380,38 +361,6 @@ export function Sidebar({
   )
 }
 
-function readAccountDisplayName(): string {
-  try {
-    const guest = localStorage.getItem('rcode.auth.guest-session.v1')
-    if (guest) {
-      const session = JSON.parse(guest)
-      if (session?.user?.displayName) return session.user.displayName
-    }
-    const auth = localStorage.getItem('rcode.auth.session.v1')
-    if (auth) {
-      const session = JSON.parse(auth)
-      if (session?.user?.displayName) return session.user.displayName
-    }
-  } catch { /* ignore */ }
-  return '本地账号'
-}
-
-function readAccountInitials(): string {
-  try {
-    const guest = localStorage.getItem('rcode.auth.guest-session.v1')
-    if (guest) {
-      const session = JSON.parse(guest)
-      if (session?.user?.displayName) return session.user.displayName.slice(0, 2).toUpperCase()
-    }
-    const auth = localStorage.getItem('rcode.auth.session.v1')
-    if (auth) {
-      const session = JSON.parse(auth)
-      if (session?.user?.displayName) return session.user.displayName.slice(0, 2).toUpperCase()
-    }
-  } catch { /* ignore */ }
-  return 'RC'
-}
-
 function AccountButton({
   displayName,
   initials,
@@ -444,58 +393,6 @@ function AccountButton({
         </small>
       </span>
       <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#9aa5b5] transition group-hover:translate-x-0.5 group-hover:text-[#1f1f1f] dark:text-white/35 dark:group-hover:text-white" strokeWidth={1.8} />
-    </button>
-  )
-}
-
-function FocusModeToggle({
-  enabled,
-  onToggle,
-  label,
-  status,
-  title,
-  ariaLabel
-}: {
-  enabled: boolean
-  onToggle: () => void
-  label: string
-  status: string
-  title: string
-  ariaLabel: string
-}): ReactElement {
-  return (
-    <button
-      type="button"
-      data-cursor-spotlight-target
-      role="switch"
-      aria-checked={enabled}
-      aria-label={ariaLabel}
-      title={`${title} · ${status}`}
-      onClick={onToggle}
-      className={`ds-focus-mode-toggle group inline-flex h-8 w-[112px] shrink-0 items-center justify-between overflow-hidden rounded-[10px] border px-2.5 text-[12px] font-medium outline-none transition focus-visible:ring-2 focus-visible:ring-accent/25 ${
-        enabled
-          ? 'border-accent/35 bg-[var(--ds-sidebar-row-active)] text-[#1f1f1f] shadow-[0_1px_3px_rgba(20,47,95,0.07),inset_0_0_0_1px_var(--ds-sidebar-row-ring),inset_0_1px_0_rgba(255,255,255,0.72)] dark:text-white'
-          : 'border-[var(--ds-sidebar-divider)] bg-[var(--ds-sidebar-field-bg)] text-[#5c6675] shadow-[inset_0_1px_0_rgba(255,255,255,0.46)] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f2733] dark:text-white/62 dark:shadow-none dark:hover:text-white'
-      }`}
-    >
-      <span className="flex min-w-0 items-center gap-1.5">
-        <Focus className="h-3.5 w-3.5 shrink-0" strokeWidth={1.8} aria-hidden="true" />
-        <span className="min-w-0 truncate">{label}</span>
-      </span>
-      <span
-        className={`ds-focus-mode-toggle-track relative h-4 w-7 shrink-0 rounded-full transition ${
-          enabled
-            ? 'bg-accent/80 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)]'
-            : 'bg-slate-300/75 shadow-[inset_0_0_0_1px_rgba(100,116,139,0.16)] dark:bg-white/[0.14] dark:shadow-[inset_0_0_0_1px_rgba(255,255,255,0.06)]'
-        }`}
-        aria-hidden="true"
-      >
-        <span
-          className={`ds-focus-mode-toggle-thumb absolute left-0.5 top-0.5 h-3 w-3 rounded-full bg-white shadow-[0_1px_3px_rgba(20,47,95,0.24)] transition-transform ${
-            enabled ? 'translate-x-3' : 'translate-x-0'
-          }`}
-        />
-      </span>
     </button>
   )
 }

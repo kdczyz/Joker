@@ -12,9 +12,9 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { AttachmentReference, RuntimeConnectionStatus, ChatBlock } from '../../agent/types'
-import type { CoreRuntimeSkillJson } from '../../agent/kun-contract'
+import type { CoreRuntimeSkillJson } from '../../agent/Rcode-contract'
 import type { QueuedUserMessage } from '../../store/chat-store-types'
-import type { ModelProviderModelGroup } from '@shared/kun-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
 import {
   useWriteWorkspaceStore,
   writeRelativeToWorkspace

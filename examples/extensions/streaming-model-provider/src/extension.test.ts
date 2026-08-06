@@ -5,12 +5,12 @@ import type {
   CancellationToken,
   ModelProviderRequest,
   ModelProviderStreamEvent
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 import { DemoStreamingAdapter } from './extension.js'
 
 const account: Account = {
   id: 'account-1',
-  providerId: 'kun-examples.echo-api-key',
+  providerId: 'Rcode-examples.echo-api-key',
   label: 'Local test account',
   authenticationType: 'api-key',
   status: 'connected',

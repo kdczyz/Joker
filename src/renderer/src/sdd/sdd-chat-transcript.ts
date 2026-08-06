@@ -114,8 +114,8 @@ async function writeSddChatMeta(input: {
   const chatDir = sddUnitChatDir(input.draftRelativePath)
   if (!chatDir) return
   if (
-    typeof window.kunGui?.writeWorkspaceFile !== 'function' ||
-    typeof window.kunGui?.readWorkspaceFile !== 'function'
+    typeof window.RcodeGui?.writeWorkspaceFile !== 'function' ||
+    typeof window.RcodeGui?.readWorkspaceFile !== 'function'
   ) {
     return
   }
@@ -129,7 +129,7 @@ async function writeSddChatMeta(input: {
 
   let previous: SddChatMeta | null = null
   try {
-    const existing = await window.kunGui.readWorkspaceFile({
+    const existing = await window.RcodeGui.readWorkspaceFile({
       workspaceRoot: input.workspaceRoot,
       path: metaPath
     })
@@ -148,7 +148,7 @@ async function writeSddChatMeta(input: {
       return { id, ...(updatedAt ? { updatedAt } : {}) }
     })
   }
-  await window.kunGui.writeWorkspaceFile({
+  await window.RcodeGui.writeWorkspaceFile({
     workspaceRoot: input.workspaceRoot,
     path: metaPath,
     content: `${JSON.stringify(meta, null, 2)}\n`
@@ -161,11 +161,11 @@ export async function writeSddChatTranscriptForThread(input: {
   threadId: string
   blocks: ChatBlock[]
 }): Promise<boolean> {
-  if (typeof window.kunGui?.writeWorkspaceFile !== 'function') return false
+  if (typeof window.RcodeGui?.writeWorkspaceFile !== 'function') return false
   const transcriptPath = sddChatTranscriptRelativePath(input.draftRelativePath, input.threadId)
   if (!transcriptPath) return false
   try {
-    const written = await window.kunGui.writeWorkspaceFile({
+    const written = await window.RcodeGui.writeWorkspaceFile({
       workspaceRoot: input.workspaceRoot,
       path: transcriptPath,
       content: serializeSddChatTranscript(input.blocks, { threadId: input.threadId })

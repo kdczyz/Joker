@@ -104,7 +104,7 @@ export function SessionExportMenu({
   }
 
   const exportFormat = async (format: ConversationExportFormat): Promise<void> => {
-    if (typeof window.kunGui?.exportConversation !== 'function') {
+    if (typeof window.RcodeGui?.exportConversation !== 'function') {
       setError(t('conversationExportUnavailable'))
       return
     }
@@ -128,7 +128,7 @@ export function SessionExportMenu({
     setError('')
     setExportingFormat(format)
     try {
-      const result = await window.kunGui.exportConversation({
+      const result = await window.RcodeGui.exportConversation({
         title,
         format,
         markdown: document.markdown,

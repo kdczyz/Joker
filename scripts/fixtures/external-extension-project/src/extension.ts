@@ -5,7 +5,7 @@ import type {
   ModelProviderRequest,
   ModelProviderStreamEvent,
   ProviderModel
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 
 const models: ProviderModel[] = [
   {
@@ -67,7 +67,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
     await context.tools.registerTool(
       {
         id: 'release-echo',
-        description: 'Echo a value through the public Kun tool contract.',
+        description: 'Echo a value through the public Rcode tool contract.',
         inputSchema: { type: 'object' },
         sideEffects: 'none',
         idempotent: true

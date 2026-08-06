@@ -22,11 +22,11 @@ import {
   workspaceFilesToZipEntries
 } from './export-inventory'
 import {
-  createKunpackPackage,
-  serializeKunpackJson,
-  type KunpackCatalogInput
-} from './kunpack-container'
-import type { Zip64ArchiveEntryInput } from './kunpack-zip'
+  createRcodepackPackage,
+  serializeRcodepackJson,
+  type RcodepackCatalogInput
+} from './Rcodepack-container'
+import type { Zip64ArchiveEntryInput } from './Rcodepack-zip'
 
 export type RuntimeThreadForMigration = {
   id: string
@@ -41,7 +41,7 @@ export type RuntimeThreadForMigration = {
   updatedAt: string
 }
 
-export interface KunMigrationSnapshotClient {
+export interface RcodeMigrationSnapshotClient {
   create(input: {
     threadIds: string[]
     includeAttachments: boolean
@@ -87,7 +87,7 @@ export type DataMigrationExportResult = {
 }
 
 export class DataMigrationExportOrchestrator {
-  constructor(private readonly runtime: KunMigrationSnapshotClient) {}
+  constructor(private readonly runtime: RcodeMigrationSnapshotClient) {}
 
   async estimate(input: Pick<
     DataMigrationExportRequest,
@@ -151,7 +151,7 @@ export class DataMigrationExportOrchestrator {
     assertMigrationOutputOutsideWorkspaces(input.outputPath, selectedWorkspaces)
     const packageId = `pkg_${randomUUID().replaceAll('-', '')}`
     const startedAt = new Date().toISOString()
-    const temporaryRoot = join(dirname(input.outputPath), `.kun-migration-staging-${input.operationId}-${randomUUID()}`)
+    const temporaryRoot = join(dirname(input.outputPath), `.Rcode-migration-staging-${input.operationId}-${randomUUID()}`)
     const runtimeSnapshotPath = join(temporaryRoot, 'runtime-snapshot.jsonl')
     let runtimeSnapshotId: string | undefined
     let omittedThreadIds: string[] = []
@@ -199,7 +199,7 @@ export class DataMigrationExportOrchestrator {
       const exportedThreadSet = new Set(exportedThreadIds)
       const exportedThreads = input.runtimeThreads.filter((thread) => exportedThreadSet.has(thread.id))
 
-      const catalogs: KunpackCatalogInput[] = [
+      const catalogs: RcodepackCatalogInput[] = [
         {
           path: parsePackageRelativePath('catalog/workspaces.json'),
           value: inventory.estimate.workspaces
@@ -252,7 +252,7 @@ export class DataMigrationExportOrchestrator {
         memories: runtimeContentCounts.memories
       })
       this.progress(input, 'packaging', 0, inventory.estimate.logicalBytes, true)
-      await createKunpackPackage({
+      await createRcodepackPackage({
         outputPath: input.outputPath,
         manifest,
         catalogs,
@@ -364,7 +364,7 @@ function normalizeMigrationId(value: string): string {
 }
 
 function sha256Json(value: unknown): string {
-  return createHash('sha256').update(serializeKunpackJson(value)).digest('hex')
+  return createHash('sha256').update(serializeRcodepackJson(value)).digest('hex')
 }
 
 function safeProgressPath(value: string) {

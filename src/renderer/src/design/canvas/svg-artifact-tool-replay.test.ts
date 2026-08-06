@@ -25,7 +25,7 @@ function blocks(extra: ChatBlock[] = []): ChatBlock[] {
 }
 
 function svgArtifact(previewStatus: 'pending' | 'ready' = 'pending'): DesignArtifact {
-  const relativePath = `.kun-design/doc/${artifactId}/v1.svg`
+  const relativePath = `.Rcode-design/doc/${artifactId}/v1.svg`
   return {
     id: artifactId,
     kind: 'svg',

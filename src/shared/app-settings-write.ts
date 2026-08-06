@@ -36,7 +36,7 @@ import {
   type WriteSettingsV1,
   type WriteTypographySettingsV1
 } from './app-settings-types'
-import { getActiveAgentApiKey, getKunRuntimeSettings } from './app-settings-kun'
+import { getActiveAgentApiKey, getRcodeRuntimeSettings } from './app-settings-Rcode'
 import { getModelProviderProfile, resolveModelProviderBaseUrl } from './app-settings-provider'
 import { compactStrings } from './app-settings-normalizers'
 
@@ -50,7 +50,7 @@ export const WRITE_QUICK_ACTION_BUILTIN_IDS = [
   'critique'
 ] as const
 
-/** Managed seed file created in Kun's default writing space. */
+/** Managed seed file created in Rcode's default writing space. */
 export const DEFAULT_WRITE_WELCOME_FILE_NAME = 'welcome.md'
 
 // Retired built-ins: pristine stored rows (label and prompt empty, i.e. "use
@@ -414,7 +414,7 @@ export function resolveWriteInlineCompletionProviderId(settings: AppSettingsV1):
   if (!inlineCompletion.inheritProvider && inlineCompletion.providerId.trim()) {
     return inlineCompletion.providerId.trim()
   }
-  return getKunRuntimeSettings(settings).providerId?.trim() || DEFAULT_MODEL_PROVIDER_ID
+  return getRcodeRuntimeSettings(settings).providerId?.trim() || DEFAULT_MODEL_PROVIDER_ID
 }
 
 export function resolveWriteInlineCompletionProviderProfile(settings: AppSettingsV1): ModelProviderProfileV1 {
@@ -436,7 +436,7 @@ export function resolveWriteInlineCompletionModel(
     const providerModel = resolveWriteInlineCompletionProviderProfile(settings).models[0]?.trim()
     if (providerModel) return providerModel
   }
-  const runtimeModel = getKunRuntimeSettings(settings).model?.trim() ?? ''
+  const runtimeModel = getRcodeRuntimeSettings(settings).model?.trim() ?? ''
   if (runtimeModel) return runtimeModel
   return normalizeWriteInlineCompletionModel(configured)
 }

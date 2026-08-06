@@ -21,11 +21,11 @@ import {
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const fixture = join(root, 'scripts/fixtures/external-extension-project')
 const expectedApiMajor = readExpectedApiMajor(process.argv.slice(2))
-const temporaryRoot = await mkdtemp(join(tmpdir(), 'kun-extension-external-release-'))
+const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-extension-external-release-'))
 const artifactsDirectory = join(temporaryRoot, 'artifacts')
 const projectDirectory = join(temporaryRoot, 'project')
 const profileDirectory = join(temporaryRoot, 'profile')
-const archivePath = join(temporaryRoot, 'kun-release-fixtures.external-release-1.0.0.kunx')
+const archivePath = join(temporaryRoot, 'Rcode-release-fixtures.external-release-1.0.0.Rcodex')
 
 assertPathOutsideSourceTree(root, temporaryRoot)
 
@@ -40,15 +40,15 @@ try {
     'packages/extension-api',
     'packages/extension-test',
     'packages/extension-react',
-    'packages/create-kun-extension'
+    'packages/create-Rcode-extension'
   ]) {
     const manifest = JSON.parse(await readFile(join(root, packagePath, 'package.json'), 'utf8'))
     assertPublishableManifest(manifest, manifest.name)
     artifacts.set(manifest.name, await packPackage(join(root, packagePath), artifactsDirectory, manifest.name))
   }
 
-  const kunArtifact = await packPublishableKunCli(artifactsDirectory)
-  artifacts.set('kun', kunArtifact)
+  const RcodeArtifact = await packPublishableRcodeCli(artifactsDirectory)
+  artifacts.set('Rcode', RcodeArtifact)
 
   const template = JSON.parse(await readFile(join(projectDirectory, 'package.template.json'), 'utf8'))
   const rootLock = JSON.parse(await readFile(join(root, 'package-lock.json'), 'utf8'))
@@ -95,14 +95,14 @@ try {
     cwd: projectDirectory
   })
 
-  const cliEntry = join(projectDirectory, 'node_modules/kun/dist/cli/serve-entry.js')
-  const validateSource = runKunCli(cliEntry, ['validate', '.', '--json'])
-  assertJsonValue(validateSource.stdout, ['result', 'id'], 'kun-release-fixtures.external-release')
-  const packed = runKunCli(cliEntry, ['pack', '.', '--output', archivePath, '--json'])
-  assertJsonValue(packed.stdout, ['result', 'id'], 'kun-release-fixtures.external-release')
-  const validateArchive = runKunCli(cliEntry, ['validate', archivePath, '--json'])
-  assertJsonValue(validateArchive.stdout, ['result', 'id'], 'kun-release-fixtures.external-release')
-  const installed = runKunCli(cliEntry, [
+  const cliEntry = join(projectDirectory, 'node_modules/Rcode/dist/cli/serve-entry.js')
+  const validateSource = runRcodeCli(cliEntry, ['validate', '.', '--json'])
+  assertJsonValue(validateSource.stdout, ['result', 'id'], 'Rcode-release-fixtures.external-release')
+  const packed = runRcodeCli(cliEntry, ['pack', '.', '--output', archivePath, '--json'])
+  assertJsonValue(packed.stdout, ['result', 'id'], 'Rcode-release-fixtures.external-release')
+  const validateArchive = runRcodeCli(cliEntry, ['validate', archivePath, '--json'])
+  assertJsonValue(validateArchive.stdout, ['result', 'id'], 'Rcode-release-fixtures.external-release')
+  const installed = runRcodeCli(cliEntry, [
     'install',
     archivePath,
     '--data-dir',
@@ -110,23 +110,23 @@ try {
     '--accept-permissions',
     '--json'
   ])
-  assertJsonValue(installed.stdout, ['result', 'id'], 'kun-release-fixtures.external-release')
-  const listed = runKunCli(cliEntry, ['list', '--data-dir', profileDirectory, '--json'])
+  assertJsonValue(installed.stdout, ['result', 'id'], 'Rcode-release-fixtures.external-release')
+  const listed = runRcodeCli(cliEntry, ['list', '--data-dir', profileDirectory, '--json'])
   const listResult = JSON.parse(listed.stdout)
   if (listResult.extensions?.length !== 1) {
     throw new Error(`External CLI list expected one extension, got ${String(listResult.extensions?.length)}`)
   }
-  const doctor = runKunCli(cliEntry, [
+  const doctor = runRcodeCli(cliEntry, [
     'doctor',
-    'kun-release-fixtures.external-release',
+    'Rcode-release-fixtures.external-release',
     '--data-dir',
     profileDirectory,
     '--json'
   ])
   assertJsonValue(doctor.stdout, ['healthy'], true)
-  const uninstalled = runKunCli(cliEntry, [
+  const uninstalled = runRcodeCli(cliEntry, [
     'uninstall',
-    'kun-release-fixtures.external-release',
+    'Rcode-release-fixtures.external-release',
     '--data-dir',
     profileDirectory,
     '--json'
@@ -134,11 +134,11 @@ try {
   assertJsonValue(
     uninstalled.stdout,
     ['result', 'extensionId'],
-    'kun-release-fixtures.external-release'
+    'Rcode-release-fixtures.external-release'
   )
 
   const installedApi = JSON.parse(
-    await readFile(join(projectDirectory, 'node_modules/@kun/extension-api/package.json'), 'utf8')
+    await readFile(join(projectDirectory, 'node_modules/@Rcode/extension-api/package.json'), 'utf8')
   )
   const installedApiMajor = Number(String(installedApi.version).split('.')[0])
   if (installedApiMajor !== expectedApiMajor) {
@@ -152,7 +152,7 @@ try {
     'clean typecheck, Agent/tool/provider behavior, validate/pack/install/list/doctor/uninstall.\n'
   )
 } finally {
-  if (process.env.KUN_KEEP_EXTERNAL_RELEASE_PROJECT === '1') {
+  if (process.env.RCODE_KEEP_EXTERNAL_RELEASE_PROJECT === '1') {
     process.stdout.write(`Retained external release project: ${temporaryRoot}\n`)
   } else {
     await rm(temporaryRoot, { recursive: true, force: true })
@@ -186,17 +186,17 @@ async function packPackage(packageDirectory, destination, label) {
   return join(destination, filename)
 }
 
-async function packPublishableKunCli(destination) {
-  const sourceManifest = JSON.parse(await readFile(join(root, 'kun/package.json'), 'utf8'))
+async function packPublishableRcodeCli(destination) {
+  const sourceManifest = JSON.parse(await readFile(join(root, 'Rcode/package.json'), 'utf8'))
   const apiManifest = JSON.parse(await readFile(join(root, 'packages/extension-api/package.json'), 'utf8'))
   const scaffoldManifest = JSON.parse(
-    await readFile(join(root, 'packages/create-kun-extension/package.json'), 'utf8')
+    await readFile(join(root, 'packages/create-Rcode-extension/package.json'), 'utf8')
   )
-  const stage = join(temporaryRoot, 'kun-cli-package')
+  const stage = join(temporaryRoot, 'Rcode-cli-package')
   await mkdir(stage, { recursive: true })
   await Promise.all([
-    cp(join(root, 'kun/dist'), join(stage, 'dist'), { recursive: true }),
-    cp(join(root, 'kun/README.md'), join(stage, 'README.md'))
+    cp(join(root, 'Rcode/dist'), join(stage, 'dist'), { recursive: true }),
+    cp(join(root, 'Rcode/README.md'), join(stage, 'README.md'))
   ])
   const manifest = {
     ...sourceManifest,
@@ -204,18 +204,18 @@ async function packPublishableKunCli(destination) {
     files: ['dist', 'README.md'],
     dependencies: {
       ...sourceManifest.dependencies,
-      '@kun/extension-api': apiManifest.version,
-      'create-kun-extension': scaffoldManifest.version
+      '@Rcode/extension-api': apiManifest.version,
+      'create-Rcode-extension': scaffoldManifest.version
     }
   }
-  assertPublishableManifest(manifest, 'kun packaged CLI')
+  assertPublishableManifest(manifest, 'Rcode packaged CLI')
   await writeFile(join(stage, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`)
-  return packPackage(stage, destination, 'kun packaged CLI')
+  return packPackage(stage, destination, 'Rcode packaged CLI')
 }
 
 function localTarballSpecifier(project, tarball) {
   const path = relative(project, tarball).split(sep).join('/')
-  if (!path.endsWith('.tgz')) throw new Error(`Kun dependency is not a tarball: ${tarball}`)
+  if (!path.endsWith('.tgz')) throw new Error(`Rcode dependency is not a tarball: ${tarball}`)
   return `file:${path.startsWith('.') ? path : `./${path}`}`
 }
 
@@ -244,15 +244,15 @@ async function assertExternalLockfile(project) {
   const lockText = await readFile(lockPath, 'utf8')
   const normalizedRoot = (await realpath(root)).split(sep).join('/')
   if (lockText.split('\\').join('/').includes(normalizedRoot)) {
-    throw new Error('External project lockfile references the Kun source tree')
+    throw new Error('External project lockfile references the Rcode source tree')
   }
   const lock = JSON.parse(lockText)
   for (const name of [
-    '@kun/extension-api',
-    '@kun/extension-test',
-    '@kun/extension-react',
-    'create-kun-extension',
-    'kun'
+    '@Rcode/extension-api',
+    '@Rcode/extension-test',
+    '@Rcode/extension-react',
+    'create-Rcode-extension',
+    'Rcode'
   ]) {
     const entry = lock.packages?.[`node_modules/${name}`]
     if (typeof entry?.resolved !== 'string' || !entry.resolved.endsWith('.tgz')) {
@@ -261,14 +261,14 @@ async function assertExternalLockfile(project) {
   }
 }
 
-function runKunCli(cliEntry, args) {
+function runRcodeCli(cliEntry, args) {
   return runRequiredCommand({
-    label: `packaged CLI: kun extension ${args[0]}`,
+    label: `packaged CLI: Rcode extension ${args[0]}`,
     command: process.execPath,
     args: [cliEntry, 'extension', ...args],
     cwd: projectDirectory,
     capture: true,
-    env: { KUN_DATA_DIR: profileDirectory }
+    env: { RCODE_DATA_DIR: profileDirectory }
   })
 }
 

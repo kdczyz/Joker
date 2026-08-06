@@ -7,7 +7,7 @@
  */
 
 export const MAX_WORKTREE_POOL_SIZE = 3
-export const WORKTREE_BRANCH_PREFIX = 'kun-pool'
+export const WORKTREE_BRANCH_PREFIX = 'Rcode-pool'
 
 export interface WorktreeInfo {
   poolIndex: number

@@ -15,42 +15,42 @@ import {
 } from './lib/extension-release-execution.mjs'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const requireKun = createRequire(join(root, 'kun', 'package.json'))
+const requireRcode = createRequire(join(root, 'Rcode', 'package.json'))
 
-test('clean postinstall delegates to the canonical Extension API then Kun bootstrap', async () => {
+test('clean postinstall delegates to the canonical Extension API then Rcode bootstrap', async () => {
   const manifest = JSON.parse(await readFile(join(root, 'package.json'), 'utf8'))
-  const buildKun = manifest.scripts?.['build:kun'] ?? ''
+  const buildRcode = manifest.scripts?.['build:Rcode'] ?? ''
   let priorIndex = -1
   for (const command of [
-    'npm run build --workspace @kun/extension-api',
-    'node ./scripts/ensure-kun-install.cjs',
-    'npm --prefix kun run build'
+    'npm run build --workspace @Rcode/extension-api',
+    'node ./scripts/ensure-Rcode-install.cjs',
+    'npm --prefix Rcode run build'
   ]) {
-    const index = buildKun.indexOf(command, priorIndex + 1)
-    assert.notEqual(index, -1, `build:kun bootstrap is missing or reordered: ${command}`)
+    const index = buildRcode.indexOf(command, priorIndex + 1)
+    assert.notEqual(index, -1, `build:Rcode bootstrap is missing or reordered: ${command}`)
     priorIndex = index
   }
 
   const postinstall = await readFile(join(root, 'scripts', 'postinstall.cjs'), 'utf8')
-  const canonicalBuild = "run('npm', ['run', 'build:kun'])"
-  assert.ok(postinstall.includes(canonicalBuild), 'postinstall must delegate to build:kun')
-  assert.doesNotMatch(postinstall, /require\(['"]\.\/ensure-kun-install\.cjs['"]\)/)
+  const canonicalBuild = "run('npm', ['run', 'build:Rcode'])"
+  assert.ok(postinstall.includes(canonicalBuild), 'postinstall must delegate to build:Rcode')
+  assert.doesNotMatch(postinstall, /require\(['"]\.\/ensure-Rcode-install\.cjs['"]\)/)
   assert.ok(
     postinstall.indexOf(canonicalBuild) < postinstall.indexOf("require('electron/package.json')"),
     'clean bootstrap must finish before native dependency rebuilds'
   )
 
-  const kunLock = JSON.parse(await readFile(join(root, 'kun', 'package-lock.json'), 'utf8'))
-  const semver = requireKun('semver')
-  const wasmRuntime = kunLock.packages?.['node_modules/@napi-rs/wasm-runtime']
+  const RcodeLock = JSON.parse(await readFile(join(root, 'Rcode', 'package-lock.json'), 'utf8'))
+  const semver = requireRcode('semver')
+  const wasmRuntime = RcodeLock.packages?.['node_modules/@napi-rs/wasm-runtime']
   for (const dependency of ['@emnapi/core', '@emnapi/runtime']) {
-    const version = kunLock.packages?.[`node_modules/${dependency}`]?.version
+    const version = RcodeLock.packages?.[`node_modules/${dependency}`]?.version
     const peerRange = wasmRuntime?.peerDependencies?.[dependency]
-    assert.ok(semver.valid(version), `Kun lock must contain top-level ${dependency} with a valid SemVer`)
+    assert.ok(semver.valid(version), `Rcode lock must contain top-level ${dependency} with a valid SemVer`)
     assert.equal(typeof peerRange, 'string', `@napi-rs/wasm-runtime must declare ${dependency} peer range`)
     assert.ok(
       semver.satisfies(version, peerRange),
-      `Kun lock ${dependency}@${version} must satisfy @napi-rs/wasm-runtime ${peerRange}`
+      `Rcode lock ${dependency}@${version} must satisfy @napi-rs/wasm-runtime ${peerRange}`
     )
   }
 })
@@ -94,7 +94,7 @@ test('release commands propagate a non-zero child exit', () => {
 })
 
 test('windows npm invocation avoids spawning npm.cmd when npm cli is discoverable', async () => {
-  const install = await mkdtemp(join(tmpdir(), 'kun-node-install-'))
+  const install = await mkdtemp(join(tmpdir(), 'Rcode-node-install-'))
   try {
     const node = join(install, 'node.exe')
     const npmCli = join(install, 'node_modules', 'npm', 'bin', 'npm-cli.js')
@@ -135,20 +135,20 @@ test('npm invocation prefers the active npm cli from the environment', () => {
 test('publishable artifacts reject repository-local dependency aliases', () => {
   assert.throws(
     () => assertPublishableManifest({
-      name: 'kun',
-      dependencies: { '@kun/extension-api': 'file:../packages/extension-api' }
+      name: 'Rcode',
+      dependencies: { '@Rcode/extension-api': 'file:../packages/extension-api' }
     }),
     /must use a publishable version/
   )
   assert.doesNotThrow(() => assertPublishableManifest({
-    name: 'kun',
-    dependencies: { '@kun/extension-api': '1.0.0' }
+    name: 'Rcode',
+    dependencies: { '@Rcode/extension-api': '1.0.0' }
   }))
 })
 
 test('external acceptance projects cannot run inside the repository tree', async () => {
-  const source = await mkdtemp(join(tmpdir(), 'kun-release-source-'))
-  const external = await mkdtemp(join(tmpdir(), 'kun-release-external-'))
+  const source = await mkdtemp(join(tmpdir(), 'Rcode-release-source-'))
+  const external = await mkdtemp(join(tmpdir(), 'Rcode-release-external-'))
   try {
     assert.throws(() => assertPathOutsideSourceTree(source, join(source, 'fixture')), /outside/)
     assert.throws(() => assertPathOutsideSourceTree(source, join(source, '..fixture')), /outside/)

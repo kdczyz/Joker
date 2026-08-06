@@ -53,8 +53,8 @@ export function WriteImagePreview({
     setDimensions(null)
   }, [src, filePath])
   const openImage = (): void => {
-    if (typeof window.kunGui?.openEditorPath !== 'function') return
-    void window.kunGui.openEditorPath({ path: filePath, workspaceRoot, editorId: 'system' }).catch(() => undefined)
+    if (typeof window.RcodeGui?.openEditorPath !== 'function') return
+    void window.RcodeGui.openEditorPath({ path: filePath, workspaceRoot, editorId: 'system' }).catch(() => undefined)
   }
 
   return (

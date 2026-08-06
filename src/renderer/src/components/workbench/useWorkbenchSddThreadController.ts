@@ -309,7 +309,7 @@ export function useWorkbenchSddThreadController({
     const suggestedWorkspace = resolveSddRequirementWorkspace(codeThreads, activeThreadId, workspaceRoot)
     let targetWorkspace = ''
     try {
-      const picked = await window.kunGui.pickWorkspaceDirectory(suggestedWorkspace || undefined)
+      const picked = await window.RcodeGui.pickWorkspaceDirectory(suggestedWorkspace || undefined)
       if (picked.canceled || !picked.path) return
       targetWorkspace = normalizeWorkspaceRoot(picked.path)
     } catch (error) {
@@ -339,7 +339,7 @@ export function useWorkbenchSddThreadController({
       `## ${t('sddTemplateAcceptance')}`,
       ''
     ].join('\n')
-    const result = await window.kunGui.createWorkspaceFile({
+    const result = await window.RcodeGui.createWorkspaceFile({
       workspaceRoot: targetWorkspace,
       path: draft.relativePath,
       content: initialContent
@@ -369,7 +369,7 @@ export function useWorkbenchSddThreadController({
     }
     const restored = await restoreSddDraft({
       draft,
-      readWorkspaceFile: window.kunGui.readWorkspaceFile
+      readWorkspaceFile: window.RcodeGui.readWorkspaceFile
     })
     if (restored.kind !== 'restored') {
       setError(restored.kind === 'unreadable' ? restored.message : t('sddDraftHistoryOpenFailed'))
@@ -393,8 +393,8 @@ export function useWorkbenchSddThreadController({
     }
 
     if (thread && !isEmptySddAssistantThreadCandidate(thread)) return null
-    const listWorkspaceDirectory = window.kunGui?.listWorkspaceDirectory
-    const readWorkspaceFile = window.kunGui?.readWorkspaceFile
+    const listWorkspaceDirectory = window.RcodeGui?.listWorkspaceDirectory
+    const readWorkspaceFile = window.RcodeGui?.readWorkspaceFile
     if (typeof listWorkspaceDirectory !== 'function' || typeof readWorkspaceFile !== 'function') {
       return null
     }

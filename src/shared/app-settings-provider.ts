@@ -20,13 +20,13 @@ import {
   CUSTOM_VIDEO_GENERATION_PROVIDER_ID,
   type AppSettingsV1,
   type ImageGenerationProtocol,
-  type KunImageGenerationSettingsV1,
-  type KunMusicGenerationSettingsV1,
-  type KunRuntimeSettingsV1,
-  type KunRuntimeSettingsPatchV1,
-  type KunSpeechToTextSettingsV1,
-  type KunTextToSpeechSettingsV1,
-  type KunVideoGenerationSettingsV1,
+  type RcodeImageGenerationSettingsV1,
+  type RcodeMusicGenerationSettingsV1,
+  type RcodeRuntimeSettingsV1,
+  type RcodeRuntimeSettingsPatchV1,
+  type RcodeSpeechToTextSettingsV1,
+  type RcodeTextToSpeechSettingsV1,
+  type RcodeVideoGenerationSettingsV1,
   type MusicGenerationProtocol,
   type ModelProviderImageCapabilityPatchV1,
   type ModelProviderImageCapabilityV1,
@@ -53,8 +53,8 @@ import {
   type TextToSpeechProtocol,
   type VideoGenerationProtocol
 } from './app-settings-types'
-import { normalizeModelEndpointFormat, type ModelEndpointFormat } from '../../kun/src/contracts/model-endpoint-format.js'
-import { getKunRuntimeSettings } from './app-settings-kun'
+import { normalizeModelEndpointFormat, type ModelEndpointFormat } from '../../Rcode/src/contracts/model-endpoint-format.js'
+import { getRcodeRuntimeSettings } from './app-settings-Rcode'
 import { normalizeDeepseekBaseUrl } from './app-settings-normalizers'
 import { DEFAULT_COMPOSER_MODEL_IDS } from './default-composer-models'
 import {
@@ -72,6 +72,9 @@ import {
 
 const DEFAULT_MODEL_PROVIDER_NAME = 'DeepSeek'
 const DEFAULT_PROVIDER_CONTEXT_WINDOW_TOKENS = 256_000
+
+const XIAOMI_PROVIDER_IDS = new Set(['xiaomi', `xiaomi${TOKEN_PLAN_PROVIDER_ID_SUFFIX}`])
+const DEPRECATED_XIAOMI_MODEL_IDS = new Set(['mimo-v2-pro', 'mimo-v2-omni', 'mimo-v2-flash', 'mimo-v2-tts'])
 const DEFAULT_TEXT_MODEL_PROFILE: ModelProviderModelProfileV1 = {
   inputModalities: ['text'],
   outputModalities: ['text'],
@@ -393,7 +396,7 @@ type TokenPlanCapabilityWithOptionalBaseUrl = {
   models: readonly string[]
 }
 
-type KunMediaSettingCore = Partial<{
+type RcodeMediaSettingCore = Partial<{
   enabled: boolean
   providerId: string
   baseUrl: string
@@ -404,14 +407,14 @@ type KunMediaSettingCore = Partial<{
 const MINIMAX_PROVIDER_ID = 'minimax'
 const MINIMAX_TOKEN_PLAN_PROVIDER_ID = `${MINIMAX_PROVIDER_ID}${TOKEN_PLAN_PROVIDER_ID_SUFFIX}`
 
-export function defaultMiniMaxMediaGenerationKunPatch(input: {
+export function defaultMiniMaxMediaGenerationRcodePatch(input: {
   providers: readonly ModelProviderProfileV1[]
-  currentKun?: Partial<KunRuntimeSettingsV1>
-  kunPatch?: KunRuntimeSettingsPatchV1
-}): KunRuntimeSettingsPatchV1 | undefined {
-  const patch: KunRuntimeSettingsPatchV1 = {}
-  if (!input.kunPatch?.textToSpeech && isBlankKunMediaSetting(input.currentKun?.textToSpeech)) {
-    const match = configuredMiniMaxMediaCapability(input.providers, 'textToSpeech', input.currentKun?.providerId)
+  currentRcode?: Partial<RcodeRuntimeSettingsV1>
+  RcodePatch?: RcodeRuntimeSettingsPatchV1
+}): RcodeRuntimeSettingsPatchV1 | undefined {
+  const patch: RcodeRuntimeSettingsPatchV1 = {}
+  if (!input.RcodePatch?.textToSpeech && isBlankRcodeMediaSetting(input.currentRcode?.textToSpeech)) {
+    const match = configuredMiniMaxMediaCapability(input.providers, 'textToSpeech', input.currentRcode?.providerId)
     if (match) {
       patch.textToSpeech = {
         enabled: true,
@@ -423,8 +426,8 @@ export function defaultMiniMaxMediaGenerationKunPatch(input: {
       }
     }
   }
-  if (!input.kunPatch?.musicGeneration && isBlankKunMediaSetting(input.currentKun?.musicGeneration)) {
-    const match = configuredMiniMaxMediaCapability(input.providers, 'music', input.currentKun?.providerId)
+  if (!input.RcodePatch?.musicGeneration && isBlankRcodeMediaSetting(input.currentRcode?.musicGeneration)) {
+    const match = configuredMiniMaxMediaCapability(input.providers, 'music', input.currentRcode?.providerId)
     if (match) {
       patch.musicGeneration = {
         enabled: true,
@@ -436,8 +439,8 @@ export function defaultMiniMaxMediaGenerationKunPatch(input: {
       }
     }
   }
-  if (!input.kunPatch?.videoGeneration && isBlankKunMediaSetting(input.currentKun?.videoGeneration)) {
-    const match = configuredMiniMaxMediaCapability(input.providers, 'video', input.currentKun?.providerId)
+  if (!input.RcodePatch?.videoGeneration && isBlankRcodeMediaSetting(input.currentRcode?.videoGeneration)) {
+    const match = configuredMiniMaxMediaCapability(input.providers, 'video', input.currentRcode?.providerId)
     if (match) {
       patch.videoGeneration = {
         enabled: true,
@@ -452,7 +455,7 @@ export function defaultMiniMaxMediaGenerationKunPatch(input: {
   return Object.keys(patch).length > 0 ? patch : undefined
 }
 
-function isBlankKunMediaSetting(setting: KunMediaSettingCore | undefined): boolean {
+function isBlankRcodeMediaSetting(setting: RcodeMediaSettingCore | undefined): boolean {
   return setting?.enabled !== true &&
     !setting?.providerId?.trim() &&
     !setting?.baseUrl?.trim() &&
@@ -529,8 +532,8 @@ function firstCapabilityModel(models: readonly string[]): string {
   return models.map((model) => model.trim()).find(Boolean) ?? ''
 }
 
-export function resolveKunSpeechToTextSettings(settings: AppSettingsV1): KunSpeechToTextSettingsV1 {
-  const runtime = getKunRuntimeSettings(settings)
+export function resolveRcodeSpeechToTextSettings(settings: AppSettingsV1): RcodeSpeechToTextSettingsV1 {
+  const runtime = getRcodeRuntimeSettings(settings)
   const speechToText = runtime.speechToText
   const providerId = normalizeModelProviderId(speechToText.providerId)
   if (!providerId || providerId === CUSTOM_SPEECH_TO_TEXT_PROVIDER_ID) {
@@ -696,8 +699,8 @@ function resolveProviderSpeechModel(configuredModel: string, providerModels: rea
   return TEXT_TO_SPEECH_MODEL_PATTERN.test(model) ? providerModels[0] ?? model : model
 }
 
-export function resolveKunTextToSpeechSettings(settings: AppSettingsV1): KunTextToSpeechSettingsV1 {
-  const runtime = getKunRuntimeSettings(settings)
+export function resolveRcodeTextToSpeechSettings(settings: AppSettingsV1): RcodeTextToSpeechSettingsV1 {
+  const runtime = getRcodeRuntimeSettings(settings)
   const textToSpeech = runtime.textToSpeech
   const providerId = normalizeModelProviderId(textToSpeech.providerId)
   if (!providerId || providerId === CUSTOM_TEXT_TO_SPEECH_PROVIDER_ID) {
@@ -726,8 +729,8 @@ export function resolveKunTextToSpeechSettings(settings: AppSettingsV1): KunText
   }
 }
 
-export function resolveKunMusicGenerationSettings(settings: AppSettingsV1): KunMusicGenerationSettingsV1 {
-  const runtime = getKunRuntimeSettings(settings)
+export function resolveRcodeMusicGenerationSettings(settings: AppSettingsV1): RcodeMusicGenerationSettingsV1 {
+  const runtime = getRcodeRuntimeSettings(settings)
   const musicGeneration = runtime.musicGeneration
   const providerId = normalizeModelProviderId(musicGeneration.providerId)
   if (!providerId || providerId === CUSTOM_MUSIC_GENERATION_PROVIDER_ID) {
@@ -756,8 +759,8 @@ export function resolveKunMusicGenerationSettings(settings: AppSettingsV1): KunM
   }
 }
 
-export function resolveKunVideoGenerationSettings(settings: AppSettingsV1): KunVideoGenerationSettingsV1 {
-  const runtime = getKunRuntimeSettings(settings)
+export function resolveRcodeVideoGenerationSettings(settings: AppSettingsV1): RcodeVideoGenerationSettingsV1 {
+  const runtime = getRcodeRuntimeSettings(settings)
   const videoGeneration = runtime.videoGeneration
   const providerId = normalizeModelProviderId(videoGeneration.providerId)
   if (!providerId || providerId === CUSTOM_VIDEO_GENERATION_PROVIDER_ID) {
@@ -786,8 +789,8 @@ export function resolveKunVideoGenerationSettings(settings: AppSettingsV1): KunV
   }
 }
 
-export function resolveKunMemoryEnabled(settings: AppSettingsV1): boolean {
-  const runtime = getKunRuntimeSettings(settings)
+export function resolveRcodeMemoryEnabled(settings: AppSettingsV1): boolean {
+  const runtime = getRcodeRuntimeSettings(settings)
   return runtime.memoryEnabled ?? false
 }
 
@@ -832,8 +835,8 @@ function canonicalBaseUrl(value: string): string {
   return value.trim().replace(/\/+$/, '')
 }
 
-export function resolveKunImageGenerationSettings(settings: AppSettingsV1): KunImageGenerationSettingsV1 {
-  const runtime = getKunRuntimeSettings(settings)
+export function resolveRcodeImageGenerationSettings(settings: AppSettingsV1): RcodeImageGenerationSettingsV1 {
+  const runtime = getRcodeRuntimeSettings(settings)
   const imageGeneration = runtime.imageGeneration
   const providerId = normalizeModelProviderId(imageGeneration.providerId)
   if (!providerId || providerId === CUSTOM_IMAGE_GENERATION_PROVIDER_ID) {
@@ -862,8 +865,8 @@ export function resolveKunImageGenerationSettings(settings: AppSettingsV1): KunI
   }
 }
 
-export function resolveKunRuntimeSettings(settings: AppSettingsV1): KunRuntimeSettingsV1 {
-  const runtime = getKunRuntimeSettings(settings)
+export function resolveRcodeRuntimeSettings(settings: AppSettingsV1): RcodeRuntimeSettingsV1 {
+  const runtime = getRcodeRuntimeSettings(settings)
   const provider = getModelProviderProfile(settings, runtime.providerId)
   const providerId = normalizeModelProviderId(runtime.providerId)
   const runtimeApiKey = runtime.apiKey?.trim() ?? ''
@@ -877,7 +880,7 @@ export function resolveKunRuntimeSettings(settings: AppSettingsV1): KunRuntimeSe
     // to the agent's own runtime.apiKey if the profile happens to be keyless.
     // A providerId pointing at a keyless profile must NOT resolve to an empty
     // key (issue #329) — that briefly reads as "no API key" and the
-    // settings-apply gate then stops a perfectly healthy Kun runtime.
+    // settings-apply gate then stops a perfectly healthy Rcode runtime.
     apiKey: useProviderCredentials
       ? provider.apiKey.trim() || runtimeApiKey
       : runtimeApiKey || provider.apiKey.trim(),
@@ -887,13 +890,13 @@ export function resolveKunRuntimeSettings(settings: AppSettingsV1): KunRuntimeSe
         : normalizeDeepseekBaseUrl(providerBaseUrl),
     endpointFormat: provider.endpointFormat,
     retry: provider.retry ?? defaultModelRequestRetrySettings(),
-    imageGeneration: resolveKunImageGenerationSettings(settings),
-    speechToText: resolveKunSpeechToTextSettings(settings),
-    textToSpeech: resolveKunTextToSpeechSettings(settings),
-    musicGeneration: resolveKunMusicGenerationSettings(settings),
-    videoGeneration: resolveKunVideoGenerationSettings(settings),
+    imageGeneration: resolveRcodeImageGenerationSettings(settings),
+    speechToText: resolveRcodeSpeechToTextSettings(settings),
+    textToSpeech: resolveRcodeTextToSpeechSettings(settings),
+    musicGeneration: resolveRcodeMusicGenerationSettings(settings),
+    videoGeneration: resolveRcodeVideoGenerationSettings(settings),
     modelProfiles: modelProviderModelProfilesForSettings(settings),
-    memoryEnabled: resolveKunMemoryEnabled(settings)
+    memoryEnabled: resolveRcodeMemoryEnabled(settings)
   }
 }
 
@@ -925,10 +928,11 @@ function normalizeModelProviderProfile(
   const baseUrl = normalizeModelProviderBaseUrl(input?.baseUrl)
   const rawModels = normalizeProviderModels(input?.models)
   const { name, models } = migrateChatGptSubscriptionProfile(id, rawName, rawModels)
+  const filteredModels = migrateXiaomiDeprecatedModels(id, models)
   const modelProfiles = withPresetModelProfiles(
     id,
-    models,
-    normalizeModelProviderModelProfiles(input?.modelProfiles, models)
+    filteredModels,
+    normalizeModelProviderModelProfiles(input?.modelProfiles, filteredModels)
   )
   const image = normalizeModelProviderImageCapability(input?.image)
   const speech = normalizeModelProviderSpeechCapability(input?.speech)
@@ -943,7 +947,7 @@ function normalizeModelProviderProfile(
     endpointFormat: normalizeModelEndpointFormat(input?.endpointFormat),
     retry: normalizeModelRequestRetrySettings(input?.retry),
     ...(input?.kind === 'agent-sdk' ? { kind: 'agent-sdk' as const } : {}),
-    models,
+    models: filteredModels,
     modelProfiles,
     ...(image ? { image } : {}),
     ...(speech ? { speech } : {}),
@@ -967,6 +971,12 @@ function migrateChatGptSubscriptionProfile(
       ? [...CHATGPT_SUBSCRIPTION_MODEL_IDS]
       : models
   }
+}
+
+function migrateXiaomiDeprecatedModels(id: string, models: string[]): string[] {
+  if (!XIAOMI_PROVIDER_IDS.has(id)) return models
+  const filtered = models.filter((model) => !DEPRECATED_XIAOMI_MODEL_IDS.has(model))
+  return filtered.length > 0 ? filtered : models
 }
 
 export function defaultModelRequestRetrySettings(): ModelRequestRetrySettingsV1 {

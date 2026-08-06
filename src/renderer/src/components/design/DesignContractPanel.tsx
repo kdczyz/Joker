@@ -81,7 +81,7 @@ export function DesignContractPanel({ workspaceRoot, document, onSeedPrompt }: P
 
   const exportContract = async (): Promise<void> => {
     if (!model.canExport || exportState.status === 'exporting') return
-    if (typeof window.kunGui?.writeWorkspaceFile !== 'function') {
+    if (typeof window.RcodeGui?.writeWorkspaceFile !== 'function') {
       setExportState({ status: 'error', message: t('designContractUnavailable') })
       return
     }

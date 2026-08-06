@@ -24,10 +24,10 @@ const boardArtifact: DesignArtifact & { kind: 'canvas' } = {
   id: 'board',
   kind: 'canvas',
   title: 'Design board',
-  relativePath: '.kun-design/doc/board/canvas.json',
+  relativePath: '.Rcode-design/doc/board/canvas.json',
   createdAt: now,
   updatedAt: now,
-  versions: [{ id: 'board-v1', relativePath: '.kun-design/doc/board/canvas.json', createdAt: now, summary: '' }]
+  versions: [{ id: 'board-v1', relativePath: '.Rcode-design/doc/board/canvas.json', createdAt: now, summary: '' }]
 }
 
 const attachment: AttachmentReference = {

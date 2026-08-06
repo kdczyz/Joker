@@ -6,17 +6,17 @@ import type {
   SandboxMode
 } from '../shared/app-settings'
 
-export type KunExecutionSecuritySettings = {
+export type RcodeExecutionSecuritySettings = {
   approvalPolicy: ApprovalPolicy
   sandboxMode: SandboxMode
 }
 
-export type KunExecutionSettingsChange = {
-  current: KunExecutionSecuritySettings
-  next: KunExecutionSecuritySettings
+export type RcodeExecutionSettingsChange = {
+  current: RcodeExecutionSecuritySettings
+  next: RcodeExecutionSecuritySettings
 }
 
-export type KunExecutionSettingsConsentAction = KunExecutionSettingsChange & {
+export type RcodeExecutionSettingsConsentAction = RcodeExecutionSettingsChange & {
   senderId: number
   senderProcessId: number
   senderRoutingId: number
@@ -31,26 +31,26 @@ const CONSENT_LIFETIME_MS = 30_000
 const MAX_PENDING_CONSENTS = 32
 
 /**
- * Detect a renderer request that would change Kun's approval/sandbox boundary.
+ * Detect a renderer request that would change Rcode's approval/sandbox boundary.
  * Full settings snapshots are common, so equal values are deliberately ignored.
  */
-export function kunExecutionSettingsChange(
+export function RcodeExecutionSettingsChange(
   current: AppSettingsV1,
   patch: AppSettingsPatch
-): KunExecutionSettingsChange | undefined {
-  const kunPatch = patch.agents?.kun
-  if (!kunPatch || (
-    !Object.prototype.hasOwnProperty.call(kunPatch, 'approvalPolicy') &&
-    !Object.prototype.hasOwnProperty.call(kunPatch, 'sandboxMode')
+): RcodeExecutionSettingsChange | undefined {
+  const RcodePatch = patch.agents?.Rcode
+  if (!RcodePatch || (
+    !Object.prototype.hasOwnProperty.call(RcodePatch, 'approvalPolicy') &&
+    !Object.prototype.hasOwnProperty.call(RcodePatch, 'sandboxMode')
   )) return undefined
 
-  const currentSettings: KunExecutionSecuritySettings = {
-    approvalPolicy: current.agents.kun.approvalPolicy,
-    sandboxMode: current.agents.kun.sandboxMode
+  const currentSettings: RcodeExecutionSecuritySettings = {
+    approvalPolicy: current.agents.Rcode.approvalPolicy,
+    sandboxMode: current.agents.Rcode.sandboxMode
   }
-  const next: KunExecutionSecuritySettings = {
-    approvalPolicy: kunPatch.approvalPolicy ?? currentSettings.approvalPolicy,
-    sandboxMode: kunPatch.sandboxMode ?? currentSettings.sandboxMode
+  const next: RcodeExecutionSecuritySettings = {
+    approvalPolicy: RcodePatch.approvalPolicy ?? currentSettings.approvalPolicy,
+    sandboxMode: RcodePatch.sandboxMode ?? currentSettings.sandboxMode
   }
   return executionSettingsEqual(currentSettings, next)
     ? undefined
@@ -58,8 +58,8 @@ export function kunExecutionSettingsChange(
 }
 
 export function executionSettingsEqual(
-  left: KunExecutionSecuritySettings,
-  right: KunExecutionSecuritySettings
+  left: RcodeExecutionSecuritySettings,
+  right: RcodeExecutionSecuritySettings
 ): boolean {
   return left.approvalPolicy === right.approvalPolicy && left.sandboxMode === right.sandboxMode
 }
@@ -69,7 +69,7 @@ export function executionSettingsEqual(
  * preload; it makes the native decision a required input to the persistence
  * call instead of treating a renderer settings payload as authorization.
  */
-export class KunExecutionSettingsConsentService {
+export class RcodeExecutionSettingsConsentService {
   private readonly pending = new Map<string, ConsentRecord>()
 
   constructor(
@@ -77,7 +77,7 @@ export class KunExecutionSettingsConsentService {
     private readonly randomToken: () => string = () => randomBytes(32).toString('base64url')
   ) {}
 
-  issue(action: KunExecutionSettingsConsentAction): string {
+  issue(action: RcodeExecutionSettingsConsentAction): string {
     const now = this.now()
     this.prune(now)
     if (this.pending.size >= MAX_PENDING_CONSENTS) {
@@ -91,7 +91,7 @@ export class KunExecutionSettingsConsentService {
     return token
   }
 
-  consume(token: string, action: KunExecutionSettingsConsentAction): boolean {
+  consume(token: string, action: RcodeExecutionSettingsConsentAction): boolean {
     const record = this.pending.get(token)
     // A presented token is consumed even when its binding is wrong.
     this.pending.delete(token)
@@ -106,7 +106,7 @@ export class KunExecutionSettingsConsentService {
   }
 }
 
-function actionKey(action: KunExecutionSettingsConsentAction): string {
+function actionKey(action: RcodeExecutionSettingsConsentAction): string {
   return JSON.stringify([
     action.current.approvalPolicy,
     action.current.sandboxMode,

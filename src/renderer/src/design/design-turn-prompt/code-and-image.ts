@@ -70,7 +70,7 @@ export type DesignImageNodeOptions = {
  */
 export function buildDesignImageNodePrompt(options: DesignImageNodeOptions): string {
   const lines = [
-    'Kun is asking you to generate an IMAGE for a design node.',
+    'Rcode is asking you to generate an IMAGE for a design node.',
     `Workspace: ${options.workspaceRoot}`,
     `Reserved output file: ${options.outputRelativePath}`,
     ...formatDesignTargetAssetLines(options.designContext),

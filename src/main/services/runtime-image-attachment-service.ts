@@ -5,7 +5,7 @@ import { basename, join } from 'node:path'
 import { clipboard } from 'electron'
 import sharp from 'sharp'
 import { z } from 'zod'
-import type { RuntimeRequestResult } from '../../shared/kun-gui-api'
+import type { RuntimeRequestResult } from '../../shared/Rcode-gui-api'
 import type {
   RuntimeImageAttachmentMetadata,
   RuntimeImageAttachmentSource,
@@ -245,7 +245,7 @@ async function defaultClipboardSource(): Promise<LoadedImageSource> {
   const data = image.toPNG()
   if (!data.length) throw new Error('Clipboard image could not be encoded as PNG.')
   assertSourceByteLength(data.byteLength)
-  const directory = join(tmpdir(), 'kun')
+  const directory = join(tmpdir(), 'Rcode')
   const localFilePath = join(directory, `clipboard-${Date.now()}-${randomUUID()}.png`)
   await mkdir(directory, { recursive: true })
   await writeFile(localFilePath, data)

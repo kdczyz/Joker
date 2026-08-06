@@ -59,7 +59,7 @@ function verifyPackagedMacosNativeArchitecture({ resourcesDir, arch, inspect }) 
   assertTargetManifest(join(libvipsPackage, 'package.json'), arch, 'Sharp libvips')
   assertTargetManifest(join(canvasPackage, 'package.json'), arch, 'Canvas binding')
 
-  const mainExecutable = requirePath(join(contents, 'MacOS', 'Kun'), 'main executable')
+  const mainExecutable = requirePath(join(contents, 'MacOS', 'Rcode'), 'main executable')
   const binding = requirePath(
     join(bindingPackage, 'lib', `sharp-darwin-${arch}.node`),
     'Sharp native binding'

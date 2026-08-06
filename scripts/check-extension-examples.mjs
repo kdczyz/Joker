@@ -14,7 +14,7 @@ const expected = [
   'agent-assistant',
   'direct-dom',
   'hello-sidebar',
-  'kun-video-editor',
+  'Rcode-video-editor',
   'presentation-studio',
   'social-media-sidebar',
   'streaming-model-provider',
@@ -26,20 +26,20 @@ if (JSON.stringify(examples) !== JSON.stringify(expected)) {
 }
 
 run('npm', ['run', 'build:extensions'])
-run('npm', ['run', 'build:kun'])
-run('node', ['--test', join(examplesRoot, 'run-repository-kun-cli.test.mjs')])
+run('npm', ['run', 'build:Rcode'])
+run('node', ['--test', join(examplesRoot, 'run-repository-Rcode-cli.test.mjs')])
 
-for (const packageName of ['@kun/extension-api', '@kun/extension-react', '@kun/extension-test']) {
+for (const packageName of ['@Rcode/extension-api', '@Rcode/extension-react', '@Rcode/extension-test']) {
   await import(packageName)
 }
-await import(pathToFileURL(join(root, 'packages', 'create-kun-extension', 'src', 'scaffold.mjs')).href)
+await import(pathToFileURL(join(root, 'packages', 'create-Rcode-extension', 'src', 'scaffold.mjs')).href)
 
-const temporary = await mkdtemp(join(tmpdir(), 'kun-extension-examples-'))
+const temporary = await mkdtemp(join(tmpdir(), 'Rcode-extension-examples-'))
 try {
   for (const name of examples) {
     const directory = join(examplesRoot, name)
     const packageJson = JSON.parse(await readFile(join(directory, 'package.json'), 'utf8'))
-    const manifest = JSON.parse(await readFile(join(directory, 'kun-extension.json'), 'utf8'))
+    const manifest = JSON.parse(await readFile(join(directory, 'Rcode-extension.json'), 'utf8'))
     run('npm', ['--prefix', directory, 'run', 'typecheck'])
     run('npm', ['--prefix', directory, 'run', 'build'])
     if (manifest.main !== undefined) {
@@ -48,12 +48,12 @@ try {
     if (manifest.browser !== undefined) {
       await assertBrowserBuild(directory, manifest.browser)
     }
-    run('node', [join(examplesRoot, 'validate-manifest.mjs'), join(directory, 'kun-extension.json')])
+    run('node', [join(examplesRoot, 'validate-manifest.mjs'), join(directory, 'Rcode-extension.json')])
     if (packageJson.scripts?.test) run('npm', ['--prefix', directory, 'run', 'test'])
     run('npm', ['--prefix', directory, 'run', 'validate', '--', '--json'])
     run('npm', [
       '--prefix', directory, 'run', 'pack', '--',
-      '--output', join(temporary, `${name}.kunx`), '--overwrite', '--json'
+      '--output', join(temporary, `${name}.Rcodex`), '--overwrite', '--json'
     ])
   }
 } finally {
@@ -72,8 +72,8 @@ async function assertBrowserBuild(directory, browserEntry) {
   const htmlPath = resolve(directory, browserEntry)
   assertInside(outputRoot, htmlPath, 'browser entry')
   const html = await readFile(htmlPath, 'utf8')
-  if (html.includes('@kun/extension-api')) {
-    throw new Error(`${relative(root, htmlPath)} contains a bare @kun/extension-api reference`)
+  if (html.includes('@Rcode/extension-api')) {
+    throw new Error(`${relative(root, htmlPath)} contains a bare @Rcode/extension-api reference`)
   }
 
   const scriptSources = [...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)]
@@ -97,8 +97,8 @@ async function assertBrowserBuild(directory, browserEntry) {
   }
   for (const path of javascriptFiles) {
     const source = await readFile(path, 'utf8')
-    if (source.includes('@kun/extension-api')) {
-      throw new Error(`${relative(root, path)} contains a bare @kun/extension-api reference`)
+    if (source.includes('@Rcode/extension-api')) {
+      throw new Error(`${relative(root, path)} contains a bare @Rcode/extension-api reference`)
     }
     for (const specifier of moduleSpecifiers(source)) {
       if (!specifier.startsWith('.')) {

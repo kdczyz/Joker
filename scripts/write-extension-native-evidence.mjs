@@ -11,9 +11,9 @@ const VERSION_PART = '[0-9A-Za-z][0-9A-Za-z._-]*'
 
 export const ARTIFACT_RULES = {
   darwin: {
-    platformLike: /^Kun-.*-mac-/i,
-    pattern: new RegExp(`^Kun-${VERSION_PART}-mac-(arm64|x64)\\.(dmg|zip)$`),
-    ancillary: new RegExp(`^Kun-${VERSION_PART}-mac-(arm64|x64)\\.(dmg|zip)\\.blockmap$`),
+    platformLike: /^Rcode-.*-mac-/i,
+    pattern: new RegExp(`^Rcode-${VERSION_PART}-mac-(arm64|x64)\\.(dmg|zip)$`),
+    ancillary: new RegExp(`^Rcode-${VERSION_PART}-mac-(arm64|x64)\\.(dmg|zip)\\.blockmap$`),
     required: [
       /-mac-arm64\.dmg$/,
       /-mac-arm64\.zip$/,
@@ -22,15 +22,15 @@ export const ARTIFACT_RULES = {
     ]
   },
   win32: {
-    platformLike: /^Kun-.*-win-/i,
-    pattern: new RegExp(`^Kun-${VERSION_PART}-win-x64\\.exe$`),
-    ancillary: new RegExp(`^Kun-${VERSION_PART}-win-x64\\.exe\\.blockmap$`),
+    platformLike: /^Rcode-.*-win-/i,
+    pattern: new RegExp(`^Rcode-${VERSION_PART}-win-x64\\.exe$`),
+    ancillary: new RegExp(`^Rcode-${VERSION_PART}-win-x64\\.exe\\.blockmap$`),
     required: [/-win-x64\.exe$/]
   },
   linux: {
-    platformLike: /^Kun-.*-linux-/i,
-    pattern: new RegExp(`^Kun-${VERSION_PART}-linux-x86_64\\.AppImage$`),
-    ancillary: new RegExp(`^Kun-${VERSION_PART}-linux-x86_64\\.AppImage\\.blockmap$`),
+    platformLike: /^Rcode-.*-linux-/i,
+    pattern: new RegExp(`^Rcode-${VERSION_PART}-linux-x86_64\\.AppImage$`),
+    ancillary: new RegExp(`^Rcode-${VERSION_PART}-linux-x86_64\\.AppImage\\.blockmap$`),
     required: [/-linux-x86_64\.AppImage$/]
   }
 }
@@ -123,8 +123,8 @@ export function inspectMediaToolchain({
   environment = process.env,
   execute = executeMediaTool
 } = {}) {
-  const ffmpeg = optionalString(environment.KUN_FFMPEG_PATH) ?? 'ffmpeg'
-  const ffprobe = optionalString(environment.KUN_FFPROBE_PATH) ?? 'ffprobe'
+  const ffmpeg = optionalString(environment.RCODE_FFMPEG_PATH) ?? 'ffmpeg'
+  const ffprobe = optionalString(environment.RCODE_FFPROBE_PATH) ?? 'ffprobe'
   const ffmpegVersion = firstVersionLine('ffmpeg', execute(ffmpeg, ['-version']))
   const ffprobeVersion = firstVersionLine('ffprobe', execute(ffprobe, ['-version']))
   const encoders = execute(ffmpeg, ['-hide_banner', '-encoders'])
@@ -196,7 +196,7 @@ export function resolveEvidenceCommit({
   if (!/^[0-9a-f]{40}$/i.test(actual)) {
     throw new Error(`Native evidence cannot identify the checked-out commit: ${actual}`)
   }
-  const expected = optionalString(environment.KUN_EVIDENCE_COMMIT) ??
+  const expected = optionalString(environment.RCODE_EVIDENCE_COMMIT) ??
     optionalString(environment.GITHUB_SHA)
   if (expected !== undefined && expected.toLowerCase() !== actual.toLowerCase()) {
     throw new Error(

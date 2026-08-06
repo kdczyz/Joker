@@ -1,8 +1,8 @@
 # Social Media Sidebar
 
-Product-owned browser-only Kun extension for viewing Douyin, Bilibili, and Xiaohongshu in the Code right sidebar.
+Product-owned browser-only Rcode extension for viewing Douyin, Bilibili, and Xiaohongshu in the Code right sidebar.
 
-The local shell owns platform switching and browser controls. Remote pages run in a separate sandboxed Webview without the Kun extension preload. Main restricts top-level navigation to the reviewed `network:*` grants, denies device permissions and downloads, and stores cookies only in an extension-specific partition.
+The local shell owns platform switching and browser controls. Remote pages run in a separate sandboxed Webview without the Rcode extension preload. Main restricts top-level navigation to the reviewed `network:*` grants, denies device permissions and downloads, and stores cookies only in an extension-specific partition.
 
 ```bash
 npm run typecheck

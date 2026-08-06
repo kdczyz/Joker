@@ -16,16 +16,16 @@ describe('tray session menu', () => {
     const menu = buildTrayMenuTemplate({
       locale: 'en',
       threads: [
-        thread('run', 'running', '2026-06-02T00:00:00.000Z', 'Fix tests', 'C:\\work\\Kun'),
+        thread('run', 'running', '2026-06-02T00:00:00.000Z', 'Fix tests', 'C:\\work\\Rcode'),
         thread('recent', 'idle', '2026-06-01T00:00:00.000Z', 'Review PR', '/work/Docs')
       ],
       actions
     })
 
     expect(menu.map((item) => item.label).filter(Boolean)).toEqual([
-      'Running', 'Fix tests', 'Recent', 'Review PR', 'New Chat', 'Open Kun', 'Exit'
+      'Running', 'Fix tests', 'Recent', 'Review PR', 'New Chat', 'Open Rcode', 'Exit'
     ])
-    expect(menu.find((item) => item.label === 'Fix tests')?.sublabel).toBe('Kun')
+    expect(menu.find((item) => item.label === 'Fix tests')?.sublabel).toBe('Rcode')
     expect(menu.find((item) => item.label === 'Review PR')?.sublabel).toBe('Docs')
     menu.find((item) => item.label === 'Fix tests')?.click?.({} as never, undefined, {} as never)
     expect(actions.openThread).toHaveBeenCalledWith('run')
@@ -49,7 +49,7 @@ describe('tray session menu', () => {
       'thread-4',
       '更多',
       '新建会话',
-      '打开 Kun',
+      '打开 Rcode',
       '退出'
     ])
   })

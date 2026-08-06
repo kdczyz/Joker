@@ -6,12 +6,12 @@ import {
 } from './sdd-chat-transcript'
 
 const UUID = '123e4567-e89b-12d3-a456-426614174000'
-const DRAFT = `.kunsdd/requirements/${UUID}/requirement.md`
+const DRAFT = `.Rcodesdd/requirements/${UUID}/requirement.md`
 
 describe('sddChatTranscriptRelativePath', () => {
   it('builds the chat file path inside the requirement unit', () => {
     expect(sddChatTranscriptRelativePath(DRAFT, 'thr_abc-123')).toBe(
-      `.kunsdd/requirements/${UUID}/chat/thr_abc-123.md`
+      `.Rcodesdd/requirements/${UUID}/chat/thr_abc-123.md`
     )
   })
 
@@ -19,7 +19,7 @@ describe('sddChatTranscriptRelativePath', () => {
     expect(sddChatTranscriptRelativePath(DRAFT, '../escape')).toBeNull()
     expect(sddChatTranscriptRelativePath(DRAFT, 'a/b')).toBeNull()
     expect(sddChatTranscriptRelativePath(DRAFT, '  ')).toBeNull()
-    expect(sddChatTranscriptRelativePath('.kunsdd/draft/x/requirement.md', 'thr_1')).toBeNull()
+    expect(sddChatTranscriptRelativePath('.Rcodesdd/draft/x/requirement.md', 'thr_1')).toBeNull()
   })
 })
 
@@ -29,7 +29,7 @@ describe('serializeSddChatTranscript', () => {
       {
         kind: 'user',
         id: 'u1',
-        text: 'Kun is asking… full draft markdown inlined …',
+        text: 'Rcode is asking… full draft markdown inlined …',
         meta: { displayText: '帮我澄清需求' }
       },
       { kind: 'reasoning', id: 'r1', text: '思考过程不应出现' },

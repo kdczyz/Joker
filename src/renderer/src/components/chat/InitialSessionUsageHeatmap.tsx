@@ -16,7 +16,6 @@ import {
   type ModelUsageState,
   useModelUsageState
 } from '../../hooks/use-model-usage'
-import { KunHeroStage } from './KunHeroStage'
 
 type CalendarCell = DailyUsageBucket | null
 type CalendarWeek = {
@@ -695,9 +694,6 @@ function UsageHeroSection({
 }): ReactElement {
   return (
     <div className="flex w-full min-w-0 flex-col items-center text-center">
-      <div>
-        <KunHeroStage />
-      </div>
       {showText ? (
         <>
           <h1 className="max-w-[620px] text-[28px] font-semibold leading-tight tracking-[0] text-ds-ink sm:text-[32px]">
@@ -815,10 +811,10 @@ export function InitialSessionUsageHeatmapView({
 
   useEffect(() => {
     let cancelled = false
-    if (typeof window === 'undefined' || typeof window.kunGui?.getSettings !== 'function') return
-    void window.kunGui.getSettings()
+    if (typeof window === 'undefined' || typeof window.RcodeGui?.getSettings !== 'function') return
+    void window.RcodeGui.getSettings()
       .then((settings) => {
-        if (!cancelled) setModelLabel(settings.agents.kun.model.trim())
+        if (!cancelled) setModelLabel(settings.agents.Rcode.model.trim())
       })
       .catch(() => {
         if (!cancelled) setModelLabel('')

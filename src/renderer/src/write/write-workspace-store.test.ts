@@ -13,9 +13,9 @@ function deferred<T>(): {
   return { promise, resolve }
 }
 
-function installDsGui(overrides: Partial<Window['kunGui']>): void {
+function installDsGui(overrides: Partial<Window['RcodeGui']>): void {
   vi.stubGlobal('window', {
-    kunGui: overrides
+    RcodeGui: overrides
   })
 }
 

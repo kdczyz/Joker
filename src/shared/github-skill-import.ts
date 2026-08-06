@@ -36,13 +36,13 @@ export type ParsedSkillFrontmatter = {
   body: string
 }
 
-export type BuiltKunSkill = {
+export type BuiltRcodeSkill = {
   manifest: ImportedSkillManifest
   entryContent: string
   dirName: string
 }
 
-export type ImportedSkill = BuiltKunSkill & {
+export type ImportedSkill = BuiltRcodeSkill & {
   sourcePath: string
   sourceUrl: string
 }
@@ -172,14 +172,14 @@ export function mapAllowedTools(rawTools: string[]): string[] {
   return [...new Set(mapped)]
 }
 
-export function buildKunSkill(
+export function buildRcodeSkill(
   parsed: ParsedSkillFrontmatter,
   meta: {
     defaultName: string
     suggestedDirName?: string
     usedDirNames?: Set<string>
   }
-): BuiltKunSkill {
+): BuiltRcodeSkill {
   const name = (parsed.frontmatter.name?.trim() || meta.defaultName.trim() || 'Imported Skill')
   const description = parsed.frontmatter.description?.trim() || firstMarkdownParagraph(parsed.body)
   const dirBase = slug(meta.suggestedDirName || parsed.frontmatter.id || name)
@@ -217,7 +217,7 @@ export async function importSkillsFromGitHub(
   }
   const usedDirNames = new Set<string>()
   return files.map((file) => {
-    const built = buildKunSkill(parseSkillFrontmatter(file.content), {
+    const built = buildRcodeSkill(parseSkillFrontmatter(file.content), {
       defaultName: titleCase(file.name.replace(/\.md$/i, '')),
       suggestedDirName: suggestedDirNameFromFile(file.path, file.name),
       usedDirNames

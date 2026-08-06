@@ -26,7 +26,7 @@ describe('CodeRightPanelTabs', () => {
         state,
         domIdPrefix: 'test-tabs',
         titles: {
-          [BUILTIN_RIGHT_PANEL_IDS.browser]: 'Kun docs',
+          [BUILTIN_RIGHT_PANEL_IDS.browser]: 'Rcode docs',
           [BUILTIN_RIGHT_PANEL_IDS.file]: 'README.md'
         },
         sideConversationCount: 2,
@@ -39,7 +39,7 @@ describe('CodeRightPanelTabs', () => {
     })
 
     const tabs = renderer!.root.findAll((node) => node.props.role === 'tab')
-    expect(tabs.map(textContent)).toEqual(['Kun docs', 'README.md'])
+    expect(tabs.map(textContent)).toEqual(['Rcode docs', 'README.md'])
 
     act(() => tabs[0].props.onKeyDown({ key: 'End', preventDefault: vi.fn() }))
     expect(onActivate).toHaveBeenLastCalledWith(BUILTIN_RIGHT_PANEL_IDS.file)

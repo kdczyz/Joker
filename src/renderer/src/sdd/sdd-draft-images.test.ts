@@ -6,7 +6,7 @@ import {
 } from './sdd-draft-images'
 
 const UUID = '123e4567-e89b-12d3-a456-426614174000'
-const UNIT_DIR = `.kunsdd/requirements/${UUID}`
+const UNIT_DIR = `.Rcodesdd/requirements/${UUID}`
 const DRAFT_PATH = `${UNIT_DIR}/requirement.md`
 
 describe('sdd draft image parsing', () => {

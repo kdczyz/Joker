@@ -9,8 +9,8 @@ import {
   resolveClawScheduleMcpCommand,
   resolveClawScheduleMcpNodeEntryPath,
   resolveDeepseekConfigPath,
-  resolveKunConfigPath,
-  resolveKunMcpJsonPath,
+  resolveRcodeConfigPath,
+  resolveRcodeMcpJsonPath,
   syncClawScheduleMcpConfig,
   type ClawScheduleMcpLaunchConfig
 } from './claw-schedule-mcp-config'
@@ -18,7 +18,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -38,10 +38,10 @@ function createSettings(patch: Partial<AppSettingsV1['schedule']['internal']> = 
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: defaultKunRuntimeSettings()
+      Rcode: defaultRcodeRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: {
       enabled: true,
       retentionDays: 2
@@ -82,19 +82,19 @@ function createSettings(patch: Partial<AppSettingsV1['schedule']['internal']> = 
 }
 
 const launch: ClawScheduleMcpLaunchConfig = {
-  appPath: '/Applications/Kun.app',
-  execPath: '/Applications/Kun.app/Contents/MacOS/Kun',
+  appPath: '/Applications/Rcode.app',
+  execPath: '/Applications/Rcode.app/Contents/MacOS/Rcode',
   isPackaged: false
 }
 
 describe('claw schedule MCP config', () => {
-  it('uses Kun config files by default', () => {
-    expect(resolveKunConfigPath()).toBe(join(homedir(), '.kun', 'config.toml'))
-    expect(resolveKunMcpJsonPath()).toBe(join(homedir(), '.kun', 'mcp.json'))
-    expect(resolveDeepseekConfigPath()).toBe(resolveKunConfigPath())
+  it('uses Rcode config files by default', () => {
+    expect(resolveRcodeConfigPath()).toBe(join(homedir(), '.Rcode', 'config.toml'))
+    expect(resolveRcodeMcpJsonPath()).toBe(join(homedir(), '.Rcode', 'mcp.json'))
+    expect(resolveDeepseekConfigPath()).toBe(resolveRcodeConfigPath())
   })
 
-  it('writes the gui_schedule server to the Kun MCP JSON config shape', () => {
+  it('writes the gui_schedule server to the Rcode MCP JSON config shape', () => {
     const settings = createSettings({ port: 19787, secret: 'top-secret' })
     const synced = buildSyncedClawScheduleMcpJson(
       {
@@ -140,7 +140,7 @@ describe('claw schedule MCP config', () => {
 
   it('uses the macOS Electron helper for real app bundle paths', () => {
     expect(resolveClawScheduleMcpCommand(launch, 'darwin')).toBe(
-      '/Applications/Kun.app/Contents/Frameworks/Kun Helper.app/Contents/MacOS/Kun Helper'
+      '/Applications/Rcode.app/Contents/Frameworks/Rcode Helper.app/Contents/MacOS/Rcode Helper'
     )
     expect(resolveClawScheduleMcpCommand({
       appPath: '/tmp/deepseek-gui-test-app',
@@ -193,10 +193,10 @@ describe('claw schedule MCP config', () => {
 
   it('syncs mcp.json and cleans the old config.toml entry on disk', async () => {
     const root = await mkdtemp(join(tmpdir(), 'ds-gui-mcp-'))
-    const kunDir = join(root, '.kun')
-    const configTomlPath = join(kunDir, 'config.toml')
-    const mcpJsonPath = join(kunDir, 'mcp.json')
-    await mkdir(kunDir, { recursive: true })
+    const RcodeDir = join(root, '.Rcode')
+    const configTomlPath = join(RcodeDir, 'config.toml')
+    const mcpJsonPath = join(RcodeDir, 'mcp.json')
+    await mkdir(RcodeDir, { recursive: true })
     await writeFile(
       configTomlPath,
       [

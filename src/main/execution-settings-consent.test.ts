@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
-  KunExecutionSettingsConsentService,
-  kunExecutionSettingsChange,
-  type KunExecutionSettingsConsentAction
+  RcodeExecutionSettingsConsentService,
+  RcodeExecutionSettingsChange,
+  type RcodeExecutionSettingsConsentAction
 } from './execution-settings-consent'
 import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultTerminalSettings,
@@ -25,9 +25,9 @@ function settings(): AppSettingsV1 {
     uiFontScale: 0.82,
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
-    agents: { kun: defaultKunRuntimeSettings() },
+    agents: { Rcode: defaultRcodeRuntimeSettings() },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -45,17 +45,17 @@ function settings(): AppSettingsV1 {
   }
 }
 
-describe('protected Kun execution settings consent', () => {
+describe('protected Rcode execution settings consent', () => {
   it('detects changed execution security settings but ignores equal snapshots', () => {
     const current = settings()
-    expect(kunExecutionSettingsChange(current, {
-      agents: { kun: {
-        approvalPolicy: current.agents.kun.approvalPolicy,
-        sandboxMode: current.agents.kun.sandboxMode
+    expect(RcodeExecutionSettingsChange(current, {
+      agents: { Rcode: {
+        approvalPolicy: current.agents.Rcode.approvalPolicy,
+        sandboxMode: current.agents.Rcode.sandboxMode
       } }
     })).toBeUndefined()
-    expect(kunExecutionSettingsChange(current, {
-      agents: { kun: { approvalPolicy: 'auto', sandboxMode: 'danger-full-access' } }
+    expect(RcodeExecutionSettingsChange(current, {
+      agents: { Rcode: { approvalPolicy: 'auto', sandboxMode: 'danger-full-access' } }
     })).toEqual({
       current: { approvalPolicy: 'on-request', sandboxMode: 'workspace-write' },
       next: { approvalPolicy: 'auto', sandboxMode: 'danger-full-access' }
@@ -65,11 +65,11 @@ describe('protected Kun execution settings consent', () => {
   it('binds a short-lived token to one exact sender and settings transition', () => {
     let now = 1_000
     let tokenNumber = 0
-    const service = new KunExecutionSettingsConsentService(
+    const service = new RcodeExecutionSettingsConsentService(
       () => now,
       () => `token-${++tokenNumber}`
     )
-    const action: KunExecutionSettingsConsentAction = {
+    const action: RcodeExecutionSettingsConsentAction = {
       current: { approvalPolicy: 'on-request', sandboxMode: 'workspace-write' },
       next: { approvalPolicy: 'auto', sandboxMode: 'danger-full-access' },
       senderId: 7,

@@ -2,9 +2,7 @@ import { Fragment, useState, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Bot, CornerUpLeft, GitFork, RefreshCw, Settings } from 'lucide-react'
 import type { ClawImChannelV1 } from '@shared/app-settings'
-import { KunStateFigure } from './AnimatedWorkLogo'
 import { InitialSessionUsageHeatmap } from './InitialSessionUsageHeatmap'
-import { KunHeroStage } from './KunHeroStage'
 
 /**
  * Empty / hero states rendered by `MessageTimeline` when there is no
@@ -46,10 +44,6 @@ function ClawEmptyHero({
     <div className="ds-no-drag flex justify-center px-4 pb-6 pt-12 md:px-8 md:pt-16">
       <div className="w-full ds-chat-content-max-width rounded-[32px] border border-ds-border-muted bg-ds-card/78 px-8 py-10 text-center shadow-[0_16px_40px_rgba(20,47,95,0.06)] backdrop-blur md:px-12 md:py-14">
         <div className="mx-auto max-w-[720px]">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[24px] border border-ds-border-muted bg-ds-main/55 text-accent">
-            <KunStateFigure kind="greet" className="h-14 w-14" />
-          </div>
-
           <h1 className="mt-6 text-[34px] font-semibold tracking-[-0.055em] text-ds-ink md:text-[48px]">
             {t('clawEmptyHeroTitle', { name: agentName })}
           </h1>
@@ -86,8 +80,6 @@ function RuntimeWakeHero({
   return (
     <div className="ds-runtime-wake-hero ds-no-drag px-6 pb-8 pt-12 text-center md:pt-16">
       {/* 报错时关掉「唤醒中」动效,沿用 #78 的原则:错误不该看起来像还在加载 */}
-      <KunHeroStage waking={!hasError} />
-
       <p className="text-[12px] font-semibold uppercase tracking-[0] text-accent">
         {t('runtimeOfflineHeroKicker')}
       </p>
@@ -129,7 +121,6 @@ export function MessageTimelineEmptyHero({
   onRetry,
   onOpenSettings,
   onSelectSuggestion,
-  focusModeEnabled = false
 }: {
   route: 'chat' | 'claw'
   ready: boolean
@@ -140,7 +131,6 @@ export function MessageTimelineEmptyHero({
   onRetry: () => void
   onOpenSettings: () => void
   onSelectSuggestion?: (prompt: string) => void
-  focusModeEnabled?: boolean
 }): ReactElement {
   const { t } = useTranslation('common')
 
@@ -151,7 +141,6 @@ export function MessageTimelineEmptyHero({
   if (!hasWorkspace) {
     return (
       <div className="ds-no-drag flex flex-col items-center justify-center px-6 py-24 text-center">
-        <KunStateFigure kind="sit" className="mb-4 h-16 w-16" />
         <h1 className="text-[24px] font-semibold tracking-[-0.02em] text-ds-ink">
           {t('selectWorkspace')}
         </h1>
@@ -178,7 +167,7 @@ export function MessageTimelineEmptyHero({
     )
   }
 
-  return <InitialSessionUsageHeatmap hideHero={focusModeEnabled} />
+  return <InitialSessionUsageHeatmap />
 }
 
 export function ThreadForkBanner({ parentTitle }: { parentTitle: string }): ReactElement {

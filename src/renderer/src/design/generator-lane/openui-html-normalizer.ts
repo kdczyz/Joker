@@ -1,7 +1,7 @@
 import type { DesignTokenKind } from '../canvas/design-system-types'
 import type { DesignArtifact } from '../design-types'
 
-export const OPENUI_NORMALIZATION_REPORT_PATH = '.kun-design/openui-normalization.json'
+export const OPENUI_NORMALIZATION_REPORT_PATH = '.Rcode-design/openui-normalization.json'
 
 export type OpenUiNormalizedToken = {
   name: string
@@ -32,8 +32,8 @@ export type OpenUiNormalizedScreen = {
 
 export type OpenUiNormalizationReport = {
   version: 1
-  kind: 'kun.openui.normalization'
-  source: 'kun-design-mode'
+  kind: 'Rcode.openui.normalization'
+  source: 'Rcode-design-mode'
   updatedAt: string
   screens: OpenUiNormalizedScreen[]
   tokens: OpenUiNormalizedToken[]
@@ -230,8 +230,8 @@ export function buildOpenUiNormalizationReport(
   const normalized = options.items.map((item) => normalizeOpenUiHtmlArtifact(item.artifact, item.html))
   return {
     version: 1,
-    kind: 'kun.openui.normalization',
-    source: 'kun-design-mode',
+    kind: 'Rcode.openui.normalization',
+    source: 'Rcode-design-mode',
     updatedAt: options.updatedAt ?? new Date().toISOString(),
     screens: normalized.map((item) => item.screen),
     tokens: normalized.flatMap((item) => item.tokens),

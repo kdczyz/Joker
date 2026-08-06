@@ -14,7 +14,7 @@ import { basename, dirname, extname, isAbsolute, join, resolve } from 'node:path
 import { access, copyFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { z } from 'zod'
 import {
-  getKunRuntimeSettings,
+  getRcodeRuntimeSettings,
   type AppSettingsPatch,
   type AppSettingsV1,
   type ClawRunResult,
@@ -38,9 +38,8 @@ import type {
   TurnCompleteNotificationPayload,
   UpstreamModelsResult,
   WorkspacePickResult
-} from '../../shared/kun-gui-api'
+} from '../../shared/Rcode-gui-api'
 import type { WorkspaceFileSaveAsResult } from '../../shared/workspace-file'
-import type { GuiUpdateDownloadResult, GuiUpdateInfo, GuiUpdateInstallResult, GuiUpdateState } from '../../shared/gui-update'
 import {
   clawMirrorPayloadSchema,
   clawImInstallPollPayloadSchema,
@@ -57,7 +56,6 @@ import {
   gitCheckpointCreatePayloadSchema,
   gitCheckpointRestorePayloadSchema,
   gitWorktreeRemoveSchema,
-  guiUpdateChannelSchema,
   localPdfTextTargetPayloadSchema,
   logErrorPayloadSchema,
   notificationPayloadSchema,
@@ -76,10 +74,10 @@ import {
   worktreePathSchema,
   runtimeRequestPayloadSchema,
   runtimeImageAttachmentUploadPayloadSchema,
-  kunProtectedApprovalPayloadSchema,
-  kunProjectConfigTrustPayloadSchema,
-  kunProjectConfigWorkspacePayloadSchema,
-  kunProjectConfigWritePayloadSchema,
+  RcodeProtectedApprovalPayloadSchema,
+  RcodeProjectConfigTrustPayloadSchema,
+  RcodeProjectConfigWorkspacePayloadSchema,
+  RcodeProjectConfigWritePayloadSchema,
   scheduleTaskFromTextPayloadSchema,
   shellOpenExternalUrlSchema,
   skillGithubImportPayloadSchema,
@@ -122,17 +120,17 @@ import {
 import { uploadRuntimeImageAttachment } from '../services/runtime-image-attachment-service'
 import {
   createApprovalConsentToken,
-  KUN_APPROVAL_CONSENT_HEADER
+  RCODE_APPROVAL_CONSENT_HEADER
 } from '../approval-consent'
 import {
-  KunExecutionSettingsConsentService,
+  RcodeExecutionSettingsConsentService,
   executionSettingsEqual,
-  kunExecutionSettingsChange,
-  type KunExecutionSettingsConsentAction
+  RcodeExecutionSettingsChange,
+  type RcodeExecutionSettingsConsentAction
 } from '../execution-settings-consent'
 import {
-  DEFAULT_KUN_DATA_DIR,
-  resolveKunRuntimeSettings,
+  DEFAULT_RCODE_DATA_DIR,
+  resolveRcodeRuntimeSettings,
   resolveModelProviderProxyUrl
 } from '../../shared/app-settings'
 import { detectLegacySessions, importLegacySessions } from '../services/legacy-session-import-service'
@@ -255,14 +253,12 @@ import {
   normalizeSkillRootPath
 } from '../services/skill-service'
 import {
-  ensureKunProjectConfigDirectory,
-  loadKunProjectConfig,
-  readKunProjectConfigSource,
-  writeKunProjectConfig
-} from '../../../kun/src/config/project-config.js'
+  ensureRcodeProjectConfigDirectory,
+  loadRcodeProjectConfig,
+  readRcodeProjectConfigSource,
+  writeRcodeProjectConfig
+} from '../../../Rcode/src/config/project-config.js'
 import { readProjectConfigState } from '../services/project-config-service'
-
-type GuiUpdaterModule = typeof import('../gui-updater')
 
 const extensionArtifactActionSchema = z.strictObject({
   artifactId: z.string().min(16).max(512).regex(/^[A-Za-z0-9_-]+$/),
@@ -312,15 +308,13 @@ type RegisterAppIpcHandlersOptions = {
   pollFeishuInstall: (deviceCode: string) => Promise<ClawImInstallPollResult>
   startWeixinInstallQrcode: (weixinBridgeUrl?: string) => Promise<ClawImInstallQrResult>
   pollWeixinInstall: (deviceCode: string, weixinBridgeUrl?: string) => Promise<ClawImInstallPollResult>
-  resolveKunConfigPath: () => string
-  onKunMcpConfigWritten?: (path: string, content: string) => Promise<void> | void
-  onKunProjectConfigChanged?: (path: string, content: string) => Promise<void> | void
+  resolveRcodeConfigPath: () => string
+  onRcodeMcpConfigWritten?: (path: string, content: string) => Promise<void> | void
+  onRcodeProjectConfigChanged?: (path: string, content: string) => Promise<void> | void
   showTurnCompleteNotification: (
     payload: TurnCompleteNotificationPayload
   ) => Promise<SystemNotificationResult>
   getAppVersion: () => string
-  readGuiUpdateState: () => Promise<GuiUpdateState>
-  loadGuiUpdaterModule: () => Promise<GuiUpdaterModule>
   resolveLogDirectory: () => string
   logError: (category: string, message: string, detail?: unknown) => void
 }
@@ -333,15 +327,15 @@ function parseIpcPayload<T>(channel: string, schema: z.ZodType<T>, payload: unkn
 }
 
 function withoutRendererProjectConfigGrants(partial: AppSettingsPatch): AppSettingsPatch {
-  const kun = partial.agents?.kun
-  if (!kun || kun.projectConfig === undefined) return partial
-  const { projectConfig: _projectConfig, ...safeKun } = kun
+  const Rcode = partial.agents?.Rcode
+  if (!Rcode || Rcode.projectConfig === undefined) return partial
+  const { projectConfig: _projectConfig, ...safeRcode } = Rcode
   void _projectConfig
   return {
     ...partial,
     agents: {
       ...partial.agents,
-      kun: safeKun
+      Rcode: safeRcode
     }
   }
 }
@@ -527,8 +521,8 @@ function runDesktopCommand(
 }
 
 export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): void {
-  // Seed the built-in "design system & craft" skill into ~/.kun/skills/ once.
-  void ensureBundledSkills(join(homedir(), '.kun'))
+  // Seed the built-in "design system & craft" skill into ~/.Rcode/skills/ once.
+  void ensureBundledSkills(join(homedir(), '.Rcode'))
   const {
     store,
     getMainWindow,
@@ -544,13 +538,11 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     pollFeishuInstall,
     startWeixinInstallQrcode,
     pollWeixinInstall,
-    resolveKunConfigPath,
-    onKunMcpConfigWritten,
-    onKunProjectConfigChanged,
+    resolveRcodeConfigPath,
+    onRcodeMcpConfigWritten,
+    onRcodeProjectConfigChanged,
     showTurnCompleteNotification,
     getAppVersion,
-    readGuiUpdateState,
-    loadGuiUpdaterModule,
     resolveLogDirectory,
     logError
   } = options
@@ -559,7 +551,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   })
   const workspaceFileWatchers = new Map<string, WorkspaceFileWatchRecord>()
   const workspaceFileWatchSenders = new Map<number, WorkspaceFileWatchSenderRecord>()
-  const executionSettingsConsents = new KunExecutionSettingsConsentService()
+  const executionSettingsConsents = new RcodeExecutionSettingsConsentService()
   const uiPluginThemeController = new UiPluginCdpThemeController({
     getWebContents: () => {
       const window = getMainWindow()
@@ -587,7 +579,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     persist: (patch: AppSettingsPatch) => Promise<AppSettingsV1>
   ): Promise<AppSettingsV1> => {
     const current = await store.load()
-    const change = kunExecutionSettingsChange(current, partial)
+    const change = RcodeExecutionSettingsChange(current, partial)
     if (!change) return persist(partial)
 
     assertTrustedWorkbenchSender(event, getMainWindow)
@@ -598,7 +590,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
     const confirmation = await dialog.showMessageBox(parent, {
       type: 'warning',
-      title: 'Change Kun execution permissions',
+      title: 'Change Rcode execution permissions',
       message: 'Apply this tool approval and sandbox configuration?',
       detail: [
         `Current approval policy: ${change.current.approvalPolicy}`,
@@ -621,14 +613,14 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     // when the dialog eventually closes.
     const latest = await store.load()
     const latestExecution = {
-      approvalPolicy: latest.agents.kun.approvalPolicy,
-      sandboxMode: latest.agents.kun.sandboxMode
+      approvalPolicy: latest.agents.Rcode.approvalPolicy,
+      sandboxMode: latest.agents.Rcode.sandboxMode
     }
     if (!executionSettingsEqual(latestExecution, change.current)) {
-      throw new Error('Kun execution settings changed while confirmation was open; retry the change.')
+      throw new Error('Rcode execution settings changed while confirmation was open; retry the change.')
     }
 
-    const action: KunExecutionSettingsConsentAction = {
+    const action: RcodeExecutionSettingsConsentAction = {
       ...change,
       senderId: event.sender.id,
       senderProcessId: senderFrame.processId,
@@ -750,16 +742,16 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   // OAuth; we only detect it / capture the setup-token).
   ipcMain.handle('claude-subscription:status', async () => claudeSubscriptionStatus())
   // The Claude Code binary (~222MB) is NOT bundled — it's downloaded on demand
-  // into userData/agent-sdk and resolved from there (or kun/node_modules in dev).
-  const claudeSubKunDirs = (): string[] =>
+  // into userData/agent-sdk and resolved from there (or Rcode/node_modules in dev).
+  const claudeSubRcodeDirs = (): string[] =>
     [
       app.isPackaged ? app.getAppPath().replace(/app\.asar$/, 'app.asar.unpacked') : app.getAppPath(),
       process.cwd()
-    ].map((root) => join(root, 'kun'))
+    ].map((root) => join(root, 'Rcode'))
   const claudeSubBinary = (): string | undefined =>
-    resolveClaudeBinary(app.getPath('userData'), claudeSubKunDirs())
+    resolveClaudeBinary(app.getPath('userData'), claudeSubRcodeDirs())
   ipcMain.handle('claude-subscription:sdk-status', async () => ({
-    ...agentSdkStatus(app.getPath('userData'), claudeSubKunDirs()),
+    ...agentSdkStatus(app.getPath('userData'), claudeSubRcodeDirs()),
     download: agentSdkDownloadState()
   }))
   ipcMain.handle('claude-subscription:sdk-install', async () =>
@@ -774,7 +766,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   ipcMain.handle('claude-subscription:models', async (_event, token: unknown) =>
     fetchSdkModels({
       token: typeof token === 'string' ? token : undefined,
-      kunRoots: claudeSubKunDirs(),
+      RcodeRoots: claudeSubRcodeDirs(),
       binaryPath: claudeSubBinary()
     })
   )
@@ -814,7 +806,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     assertTrustedWorkbenchSender(event, getMainWindow)
     const request = parseIpcPayload(
       'approval:decide',
-      kunProtectedApprovalPayloadSchema,
+      RcodeProtectedApprovalPayloadSchema,
       payload
     )
     if (request.source === 'user') {
@@ -825,8 +817,8 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
         type: 'warning',
         title: allow ? 'Approve tool action' : 'Deny tool action',
         message: allow
-          ? 'Allow this pending Kun tool action once?'
-          : 'Deny this pending Kun tool action?',
+          ? 'Allow this pending Rcode tool action once?'
+          : 'Deny this pending Rcode tool action?',
         detail: `Approval: ${request.approvalId}\n\nThis protected native prompt cannot be controlled by extension Webviews or Direct DOM content scripts.`,
         buttons: [allow ? 'Allow once' : 'Deny', 'Cancel'],
         defaultId: 1,
@@ -838,7 +830,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
 
     const settings = await store.load()
-    const runtimeToken = getKunRuntimeSettings(settings).runtimeToken.trim()
+    const runtimeToken = getRcodeRuntimeSettings(settings).runtimeToken.trim()
     const consentToken = createApprovalConsentToken({
       runtimeToken,
       approvalId: request.approvalId,
@@ -849,7 +841,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       `/v1/approvals/${encodeURIComponent(request.approvalId)}`,
       'POST',
       JSON.stringify({ decision: request.decision }),
-      { [KUN_APPROVAL_CONSENT_HEADER]: consentToken }
+      { [RCODE_APPROVAL_CONSENT_HEADER]: consentToken }
     )
     return { confirmed: true as const, response }
   })
@@ -1249,11 +1241,11 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     if (isManagedPptMasterSkillRootDisabled(settings)) {
       return {
         ok: false as const,
-        message: 'PPT Master uses ~/.kun/skills, which is disabled in Settings → Agents → Skills. Enable that skill directory, then try again.'
+        message: 'PPT Master uses ~/.Rcode/skills, which is disabled in Settings → Agents → Skills. Enable that skill directory, then try again.'
       }
     }
     const result = await ensurePptMaster({
-      kunHomeDir: join(homedir(), '.kun'),
+      RcodeHomeDir: join(homedir(), '.Rcode'),
       proxyUrl: resolveModelProviderProxyUrl(settings)
     })
     if (!result.ok) return result
@@ -1266,7 +1258,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     } catch (error) {
       return {
         ok: false as const,
-        message: `PPT Master installed, but Kun could not restart: ${error instanceof Error ? error.message : String(error)}`
+        message: `PPT Master installed, but Rcode could not restart: ${error instanceof Error ? error.message : String(error)}`
       }
     }
   })
@@ -1302,9 +1294,9 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 
   ipcMain.handle('ui-plugin:list', async (event) => {
     assertTrustedWorkbenchSender(event, getMainWindow)
-    const kunHomeDir = join(homedir(), '.kun')
-    await ensureBundledUiPlugins(kunHomeDir)
-    return { plugins: await listUiPlugins(kunHomeDir) }
+    const RcodeHomeDir = join(homedir(), '.Rcode')
+    await ensureBundledUiPlugins(RcodeHomeDir)
+    return { plugins: await listUiPlugins(RcodeHomeDir) }
   })
 
   ipcMain.handle('ui-plugin:install', async (event) => {
@@ -1322,7 +1314,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       return { canceled: true as const }
     }
     const result = await enqueueUiPluginOperation(() =>
-      installUiPluginFromDirectory(join(homedir(), '.kun'), sourceDir)
+      installUiPluginFromDirectory(join(homedir(), '.Rcode'), sourceDir)
     )
     if (!result.ok) {
       return { canceled: false as const, ok: false as const, errors: result.errors }
@@ -1345,16 +1337,16 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
           return { ok: false }
         }
       }
-      return { ok: await removeUiPlugin(join(homedir(), '.kun'), request.id) }
+      return { ok: await removeUiPlugin(join(homedir(), '.Rcode'), request.id) }
     })
   })
 
   ipcMain.handle('ui-plugin:load', async (event, payload: unknown) => {
     assertTrustedWorkbenchSender(event, getMainWindow)
     const request = parseIpcPayload('ui-plugin:load', uiPluginIdPayloadSchema, payload)
-    const kunHomeDir = join(homedir(), '.kun')
-    await ensureBundledUiPlugins(kunHomeDir)
-    return loadUiPluginFigures(kunHomeDir, request.id)
+    const RcodeHomeDir = join(homedir(), '.Rcode')
+    await ensureBundledUiPlugins(RcodeHomeDir)
+    return loadUiPluginFigures(RcodeHomeDir, request.id)
   })
 
   ipcMain.handle('ui-plugin:theme:activate', async (event, payload: unknown) => {
@@ -1365,9 +1357,9 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       payload
     )
     return enqueueUiPluginOperation(async () => {
-      const kunHomeDir = join(homedir(), '.kun')
-      await ensureBundledUiPlugins(kunHomeDir)
-      const loaded = await loadUiPluginFigures(kunHomeDir, request.id)
+      const RcodeHomeDir = join(homedir(), '.Rcode')
+      await ensureBundledUiPlugins(RcodeHomeDir)
+      const loaded = await loadUiPluginFigures(RcodeHomeDir, request.id)
       if (!loaded.ok) return { ok: false as const, error: loaded.error }
 
       // Only normalized manifest fields and main-validated image data reach the
@@ -1413,8 +1405,8 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     })
   })
 
-  ipcMain.handle('kun:config:read', async () => {
-    const path = resolveKunConfigPath()
+  ipcMain.handle('Rcode:config:read', async () => {
+    const path = resolveRcodeConfigPath()
     try {
       const content = await readFile(path, 'utf8')
       return { path, content, exists: true as const }
@@ -1426,18 +1418,18 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
   })
 
-  ipcMain.handle('kun:config:write', async (_, content: unknown) => {
+  ipcMain.handle('Rcode:config:write', async (_, content: unknown) => {
     const validatedContent = parseIpcPayload(
-      'kun:config:write',
+      'Rcode:config:write',
       deepseekConfigContentSchema,
       content
     )
-    const path = resolveKunConfigPath()
+    const path = resolveRcodeConfigPath()
     validateMcpConfigContent(validatedContent)
     await mkdir(dirname(path), { recursive: true })
     await writeFile(path, validatedContent, 'utf8')
     try {
-      await onKunMcpConfigWritten?.(path, validatedContent)
+      await onRcodeMcpConfigWritten?.(path, validatedContent)
     } catch (error: unknown) {
       logError('mcp-config', 'Failed to apply MCP config change after write', {
         path,
@@ -1447,9 +1439,9 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     return { ok: true as const, path }
   })
 
-  ipcMain.handle('kun:config:open-dir', async () => {
+  ipcMain.handle('Rcode:config:open-dir', async () => {
     try {
-      const path = resolveKunConfigPath()
+      const path = resolveRcodeConfigPath()
       const dirPath = dirname(path)
       await mkdir(dirPath, { recursive: true })
       return openPathWithShell(dirPath)
@@ -1467,7 +1459,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   ) => {
     const settings = settingsOverride ?? await store.load()
     const state = await readProjectConfigState(settings, workspaceRoot)
-    const source = await readKunProjectConfigSource(workspaceRoot).catch(() => null)
+    const source = await readRcodeProjectConfigSource(workspaceRoot).catch(() => null)
     return {
       ...state,
       content: source?.content ?? '',
@@ -1475,24 +1467,24 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
   }
 
-  ipcMain.handle('kun:project-config:read', async (_, payload: unknown) => {
+  ipcMain.handle('Rcode:project-config:read', async (_, payload: unknown) => {
     const request = parseIpcPayload(
-      'kun:project-config:read',
-      kunProjectConfigWorkspacePayloadSchema,
+      'Rcode:project-config:read',
+      RcodeProjectConfigWorkspacePayloadSchema,
       payload
     )
     return projectConfigFileResult(request.workspaceRoot)
   })
 
-  ipcMain.handle('kun:project-config:write', async (_, payload: unknown) => {
+  ipcMain.handle('Rcode:project-config:write', async (_, payload: unknown) => {
     const request = parseIpcPayload(
-      'kun:project-config:write',
-      kunProjectConfigWritePayloadSchema,
+      'Rcode:project-config:write',
+      RcodeProjectConfigWritePayloadSchema,
       payload
     )
-    const written = await writeKunProjectConfig(request.workspaceRoot, request.content)
+    const written = await writeRcodeProjectConfig(request.workspaceRoot, request.content)
     try {
-      await onKunProjectConfigChanged?.(written.path, request.content)
+      await onRcodeProjectConfigChanged?.(written.path, request.content)
     } catch (error) {
       logError('project-config', 'Failed to apply project config change after write', {
         path: written.path,
@@ -1502,14 +1494,14 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     return projectConfigFileResult(written.workspaceRoot)
   })
 
-  ipcMain.handle('kun:project-config:trust', async (_, payload: unknown) => {
+  ipcMain.handle('Rcode:project-config:trust', async (_, payload: unknown) => {
     const request = parseIpcPayload(
-      'kun:project-config:trust',
-      kunProjectConfigTrustPayloadSchema,
+      'Rcode:project-config:trust',
+      RcodeProjectConfigTrustPayloadSchema,
       payload
     )
     const current = await store.load()
-    const loaded = await loadKunProjectConfig(request.workspaceRoot)
+    const loaded = await loadRcodeProjectConfig(request.workspaceRoot)
     if (request.trusted && loaded.status !== 'valid') {
       throw new Error(
         loaded.status === 'invalid'
@@ -1534,8 +1526,8 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
             : isChinese ? '（无）' : '(none)',
           loaded.status === 'valid' ? `SHA-256: ${loaded.digest}` : '',
           isChinese
-            ? '仅批准你已审查且信任的项目配置。批准后，Kun 可以启动其中声明的命令。'
-            : 'Approve only a project configuration you reviewed and trust. Kun may start its declared commands.'
+            ? '仅批准你已审查且信任的项目配置。批准后，Rcode 可以启动其中声明的命令。'
+            : 'Approve only a project configuration you reviewed and trust. Rcode may start its declared commands.'
         ].filter(Boolean).join('\n\n')
       : isChinese
         ? `工作区：${canonicalRoot}\n\n撤销后，项目 MCP 将在下一次配置应用时被移除。`
@@ -1565,7 +1557,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
     let confirmedDigest: string | undefined
     if (request.trusted) {
-      const confirmed = await loadKunProjectConfig(canonicalRoot)
+      const confirmed = await loadRcodeProjectConfig(canonicalRoot)
       if (confirmed.status !== 'valid' ||
         !sameProjectWorkspace(confirmed.workspaceRoot, canonicalRoot) ||
         confirmed.digest !== request.expectedDigest.toLowerCase()) {
@@ -1573,26 +1565,26 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       }
       confirmedDigest = confirmed.digest
     }
-    const grants = getKunRuntimeSettings(current).projectConfig.grants.filter((grant) =>
+    const grants = getRcodeRuntimeSettings(current).projectConfig.grants.filter((grant) =>
       !sameProjectWorkspace(grant.workspaceRoot, canonicalRoot)
     )
     if (request.trusted && confirmedDigest) {
       grants.push({ workspaceRoot: canonicalRoot, configDigest: confirmedDigest })
     }
     const saved = await applySettingsPatch({
-      agents: { kun: { projectConfig: { grants } } }
+      agents: { Rcode: { projectConfig: { grants } } }
     })
     return projectConfigFileResult(canonicalRoot, saved)
   })
 
-  ipcMain.handle('kun:project-config:open-dir', async (_, payload: unknown) => {
+  ipcMain.handle('Rcode:project-config:open-dir', async (_, payload: unknown) => {
     const request = parseIpcPayload(
-      'kun:project-config:open-dir',
-      kunProjectConfigWorkspacePayloadSchema,
+      'Rcode:project-config:open-dir',
+      RcodeProjectConfigWorkspacePayloadSchema,
       payload
     )
     try {
-      const directory = await ensureKunProjectConfigDirectory(request.workspaceRoot)
+      const directory = await ensureRcodeProjectConfigDirectory(request.workspaceRoot)
       return openPathWithShell(directory)
     } catch (error) {
       return {
@@ -1602,10 +1594,10 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
   })
 
-  const resolveKunThreadsDataDir = async (): Promise<string> => {
+  const resolveRcodeThreadsDataDir = async (): Promise<string> => {
     const settings = await store.load()
-    const runtime = resolveKunRuntimeSettings(settings)
-    return expandHomePath(runtime.dataDir?.trim() || DEFAULT_KUN_DATA_DIR)
+    const runtime = resolveRcodeRuntimeSettings(settings)
+    return expandHomePath(runtime.dataDir?.trim() || DEFAULT_RCODE_DATA_DIR)
   }
 
   // Map the user's checkpoint settings (issue #651) to the service storage
@@ -1618,16 +1610,16 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     ...(cfg.maxPerThread !== undefined ? { maxPerThread: cfg.maxPerThread } : {})
   })
 
-  ipcMain.handle('kun:sessions:detect-legacy', async () =>
-    detectLegacySessions({ homeDir: homedir(), destDataDir: await resolveKunThreadsDataDir() })
+  ipcMain.handle('Rcode:sessions:detect-legacy', async () =>
+    detectLegacySessions({ homeDir: homedir(), destDataDir: await resolveRcodeThreadsDataDir() })
   )
 
-  ipcMain.handle('kun:sessions:import-legacy', async (_, payload: unknown) => {
-    const request = parseIpcPayload('kun:sessions:import-legacy', legacySessionImportPayloadSchema, payload)
+  ipcMain.handle('Rcode:sessions:import-legacy', async (_, payload: unknown) => {
+    const request = parseIpcPayload('Rcode:sessions:import-legacy', legacySessionImportPayloadSchema, payload)
     try {
       const summary = await importLegacySessions({
         homeDir: homedir(),
-        destDataDir: await resolveKunThreadsDataDir(),
+        destDataDir: await resolveRcodeThreadsDataDir(),
         ...(request.sourceDir ? { sourceDir: request.sourceDir } : {}),
         log: (message, detail) => logError('legacy-session-import', message, detail)
       })
@@ -1640,7 +1632,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
   })
 
-  ipcMain.handle('kun:sessions:pick-source-dir', async (): Promise<WorkspacePickResult> => {
+  ipcMain.handle('Rcode:sessions:pick-source-dir', async (): Promise<WorkspacePickResult> => {
     const options: Electron.OpenDialogOptions = {
       title: 'Select a folder containing previous conversations',
       properties: ['openDirectory', 'dontAddToRecent']
@@ -1680,7 +1672,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     const request = parseIpcPayload('git:checkpoint:create', gitCheckpointCreatePayloadSchema, payload)
     const settings = await store.load()
     return createGitCheckpoint({
-      dataDir: await resolveKunThreadsDataDir(),
+      dataDir: await resolveRcodeThreadsDataDir(),
       workspaceRoot: request.workspaceRoot,
       threadId: request.threadId,
       storage: resolveCheckpointStorageOptions(settings.checkpointCleanup)
@@ -1690,7 +1682,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     const request = parseIpcPayload('git:checkpoint:restore', gitCheckpointRestorePayloadSchema, payload)
     const settings = await store.load()
     return restoreGitCheckpoint({
-      dataDir: await resolveKunThreadsDataDir(),
+      dataDir: await resolveRcodeThreadsDataDir(),
       checkpointId: request.checkpointId,
       ...(request.allowPartialRestore ? { allowPartialRestore: true } : {}),
       ...(request.expectedThreadId ? { expectedThreadId: request.expectedThreadId } : {}),
@@ -2149,31 +2141,6 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     )
   )
   ipcMain.handle('app:version', async () => getAppVersion())
-  ipcMain.handle('gui:update-state', async () => readGuiUpdateState())
-  ipcMain.handle('gui:update-check', async (_, channel: unknown): Promise<GuiUpdateInfo> => {
-    const module = await loadGuiUpdaterModule()
-    return module.checkGuiUpdate(
-      parseIpcPayload(
-        'gui:update-check',
-        z.object({ channel: guiUpdateChannelSchema }).strict(),
-        { channel }
-      ).channel
-    )
-  })
-  ipcMain.handle('gui:update-download', async (_, channel: unknown): Promise<GuiUpdateDownloadResult> => {
-    const module = await loadGuiUpdaterModule()
-    return module.downloadGuiUpdate(
-      parseIpcPayload(
-        'gui:update-download',
-        z.object({ channel: guiUpdateChannelSchema }).strict(),
-        { channel }
-      ).channel
-    )
-  })
-  ipcMain.handle('gui:update-install', async (): Promise<GuiUpdateInstallResult> => {
-    const module = await loadGuiUpdaterModule()
-    return module.installGuiUpdate()
-  })
 
   ipcMain.handle('log:error', async (_, payload: unknown) => {
     const request = parseIpcPayload('log:error', logErrorPayloadSchema, payload)
@@ -2195,7 +2162,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 }
 
 function isManagedPptMasterSkillRootDisabled(settings: AppSettingsV1): boolean {
-  const target = comparableSkillRootPath(join(homedir(), '.kun', 'skills'))
+  const target = comparableSkillRootPath(join(homedir(), '.Rcode', 'skills'))
   const disabledDirectories = [
     ...settings.claw.skills.disabledDirs,
     ...settings.schedule.skills.disabledDirs

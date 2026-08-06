@@ -1,4 +1,4 @@
-import type { SkillListItem } from '@shared/kun-gui-api'
+import type { SkillListItem } from '@shared/Rcode-gui-api'
 
 export type McpSkillsScope = 'project' | 'global'
 export type McpSkillsCategory = 'mcp' | 'skills'

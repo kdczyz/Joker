@@ -10,7 +10,7 @@
 
 export const UI_PLUGIN_MANIFEST_FILENAME = 'manifest.json'
 
-/** 形象槽位:缺失的槽位回退默认 Kun 美术(允许"半皮肤") */
+/** 形象槽位:缺失的槽位回退默认 Rcode 美术(允许"半皮肤") */
 export const UI_PLUGIN_FIGURE_SLOTS = [
   'portrait',
   'swim',
@@ -370,7 +370,7 @@ export const UI_PLUGIN_LIMITS = {
 
 const UI_PLUGIN_ID_PATTERN = /^[a-z0-9][a-z0-9-]{1,39}$/
 /** 与内置模式、DOM 属性值保留字互斥。 */
-const UI_PLUGIN_RESERVED_IDS = new Set(['default', 'kun', 'on', 'off', 'none'])
+const UI_PLUGIN_RESERVED_IDS = new Set(['default', 'Rcode', 'on', 'off', 'none'])
 
 const UI_PLUGIN_VERSION_PATTERN = /^\d+\.\d+\.\d+(?:[-+][\w.-]{0,40})?$/
 const UI_PLUGIN_ASSET_PATH_PATTERN = /^[\w][\w./-]{0,200}$/
@@ -1300,9 +1300,9 @@ export function buildUiPluginPresentationCss(manifest: UiPluginManifestV1): stri
 
   return (
     `html[data-ui-plugin='${manifest.id}'] {\n` +
-    `  --kun-ui-plugin-character-offset-x: ${presentation.character.offsetX}%;\n` +
-    `  --kun-ui-plugin-character-offset-y: ${presentation.character.offsetY}%;\n` +
-    `  --kun-ui-plugin-character-opacity: ${formatCssNumber(presentation.character.opacity)};\n` +
+    `  --Rcode-ui-plugin-character-offset-x: ${presentation.character.offsetX}%;\n` +
+    `  --Rcode-ui-plugin-character-offset-y: ${presentation.character.offsetY}%;\n` +
+    `  --Rcode-ui-plugin-character-opacity: ${formatCssNumber(presentation.character.opacity)};\n` +
     `}`
   )
 }
@@ -1331,9 +1331,9 @@ export function buildUiPluginSceneCss(manifest: UiPluginManifestV1): string {
   }
 
   const declarations = [
-    `  --kun-ui-plugin-scene-character-offset-x: ${scene.character.offsetX}%;`,
-    `  --kun-ui-plugin-scene-character-offset-y: ${scene.character.offsetY}%;`,
-    `  --kun-ui-plugin-scene-character-opacity: ${formatCssNumber(scene.character.opacity)};`
+    `  --Rcode-ui-plugin-scene-character-offset-x: ${scene.character.offsetX}%;`,
+    `  --Rcode-ui-plugin-scene-character-offset-y: ${scene.character.offsetY}%;`,
+    `  --Rcode-ui-plugin-scene-character-opacity: ${formatCssNumber(scene.character.opacity)};`
   ]
   for (const slot of UI_PLUGIN_SCENE_ARTWORK_SLOTS) {
     const layer = scene.artwork[slot]
@@ -1352,9 +1352,9 @@ export function buildUiPluginSceneCss(manifest: UiPluginManifestV1): string {
       return ''
     }
     declarations.push(
-      `  --kun-ui-plugin-scene-${slot}-offset-x: ${layer.offsetX}%;`,
-      `  --kun-ui-plugin-scene-${slot}-offset-y: ${layer.offsetY}%;`,
-      `  --kun-ui-plugin-scene-${slot}-opacity: ${formatCssNumber(layer.opacity)};`
+      `  --Rcode-ui-plugin-scene-${slot}-offset-x: ${layer.offsetX}%;`,
+      `  --Rcode-ui-plugin-scene-${slot}-offset-y: ${layer.offsetY}%;`,
+      `  --Rcode-ui-plugin-scene-${slot}-opacity: ${formatCssNumber(layer.opacity)};`
     )
   }
   return `html[data-ui-plugin='${manifest.id}'] {\n${declarations.join('\n')}\n}`
@@ -1484,7 +1484,7 @@ export function buildUiPluginBackgroundCss(
       if (!isSafeUiPluginBackgroundDataUrl(dataUrl)) continue
       let variable = assetVariables.get(dataUrl)
       if (!variable) {
-        variable = `--kun-ui-plugin-background-${assetVariables.size}`
+        variable = `--Rcode-ui-plugin-background-${assetVariables.size}`
         assetVariables.set(dataUrl, variable)
       }
       layerVariables.set(`${theme}.${slot}`, variable)

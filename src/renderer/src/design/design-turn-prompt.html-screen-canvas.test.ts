@@ -16,23 +16,23 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
     it('builds a parallel page fanout prompt with one delegate_task per artifact', () => {
       const prompt = buildParallelDesignPagesPrompt({
         workspaceRoot: '/workspace',
-        projectBrief: 'IKUN community site',
+        projectBrief: 'IRCODE community site',
         jobs: [
           {
             artifactId: 'landing',
             title: 'Landing',
-            relativePath: '.kun-design/doc/landing/v1.html',
-            designMdPath: '.kun-design/doc/landing/DESIGN.md',
+            relativePath: '.Rcode-design/doc/landing/v1.html',
+            designMdPath: '.Rcode-design/doc/landing/DESIGN.md',
             brief: 'Hero, featured movies, footer',
             screenManifest: []
           },
           {
             artifactId: 'community',
             title: 'Community',
-            relativePath: '.kun-design/doc/community/v1.html',
-            designMdPath: '.kun-design/doc/community/DESIGN.md',
+            relativePath: '.Rcode-design/doc/community/v1.html',
+            designMdPath: '.Rcode-design/doc/community/DESIGN.md',
             brief: 'Community feed and member stories',
-            screenManifest: [{ name: 'Design system', htmlPath: '.kun-design/doc/system/v1.html', role: 'design-system' }]
+            screenManifest: [{ name: 'Design system', htmlPath: '.Rcode-design/doc/system/v1.html', role: 'design-system' }]
           }
         ]
       })
@@ -47,8 +47,8 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
       expect(prompt).toContain('real content, concrete states, and a clear primary action')
       expect(prompt).toContain('Design target: Web')
       expect(prompt).toContain('1280x800 desktop web')
-      expect(prompt).toContain('Modify ONLY `.kun-design/doc/landing/v1.html` and `.kun-design/doc/landing/DESIGN.md`')
-      expect(prompt).toContain('Modify ONLY `.kun-design/doc/community/v1.html` and `.kun-design/doc/community/DESIGN.md`')
+      expect(prompt).toContain('Modify ONLY `.Rcode-design/doc/landing/v1.html` and `.Rcode-design/doc/landing/DESIGN.md`')
+      expect(prompt).toContain('Modify ONLY `.Rcode-design/doc/community/v1.html` and `.Rcode-design/doc/community/DESIGN.md`')
       expect(prompt).toContain('Design delivery checklist')
       expect(prompt).toContain('Do NOT modify sibling files')
     })
@@ -61,8 +61,8 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
           {
             artifactId: 'home',
             title: 'Today',
-            relativePath: '.kun-design/doc/today/v1.html',
-            designMdPath: '.kun-design/doc/today/DESIGN.md',
+            relativePath: '.Rcode-design/doc/today/v1.html',
+            designMdPath: '.Rcode-design/doc/today/DESIGN.md',
             brief: 'Today screen with habit streaks and check-ins',
             screenManifest: []
           }
@@ -81,16 +81,16 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'html',
         mode: 'text',
         text: 'Create a polished hero page',
-        artifactRelativePath: '.kun-design/screen/v1.html',
-        designNotesPath: '.kun-design/screen/DESIGN.md',
+        artifactRelativePath: '.Rcode-design/screen/v1.html',
+        designNotesPath: '.Rcode-design/screen/DESIGN.md',
         workspaceRoot: '/workspace'
       })
   
-      expect(prompt).toContain('Design notes file: .kun-design/screen/DESIGN.md')
+      expect(prompt).toContain('Design notes file: .Rcode-design/screen/DESIGN.md')
       expect(prompt).toContain('Design target: Web')
       expect(prompt).toContain('1280x800 desktop web')
       expect(prompt).toContain(
-        'Modify ONLY `.kun-design/screen/v1.html` and `.kun-design/screen/DESIGN.md`'
+        'Modify ONLY `.Rcode-design/screen/v1.html` and `.Rcode-design/screen/DESIGN.md`'
       )
       expect(prompt).toContain('it has already been pre-created')
       expect(prompt).toContain('responsive to arbitrary canvas frame sizes')
@@ -124,7 +124,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'screen',
         mode: 'text',
         text: 'Create a habit detail screen',
-        artifactRelativePath: '.kun-design/habit/v1.html',
+        artifactRelativePath: '.Rcode-design/habit/v1.html',
         workspaceRoot: '/workspace',
         screenName: 'Habit Detail',
         screenManifest: [],
@@ -141,9 +141,9 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'screen',
         mode: 'text',
         text: 'Make this a login page',
-        artifactRelativePath: '.kun-design/screen/v2.html',
-        designNotesPath: '.kun-design/screen/DESIGN.md',
-        basePath: '.kun-design/screen/v1.html',
+        artifactRelativePath: '.Rcode-design/screen/v2.html',
+        designNotesPath: '.Rcode-design/screen/DESIGN.md',
+        basePath: '.Rcode-design/screen/v1.html',
         workspaceRoot: '/workspace',
         screenName: 'Login',
         screenWidth: 420,
@@ -154,7 +154,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
             name: 'Home',
             width: 1280,
             height: 720,
-            htmlPath: '.kun-design/home/v1.html'
+            htmlPath: '.Rcode-design/home/v1.html'
           }
         ]
       }
@@ -164,21 +164,21 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
       expect(prompt).toContain('Canvas frame context: "Login"')
       expect(prompt).toContain('420x340 canvas pixels, sizeMode: manual')
       expect(prompt).toContain('Treat the selected frame size above as the real webview viewport')
-      expect(prompt).toContain('Design notes file: .kun-design/screen/DESIGN.md')
-      expect(prompt).toContain('Modify ONLY `.kun-design/screen/v2.html` and `.kun-design/screen/DESIGN.md`')
+      expect(prompt).toContain('Design notes file: .Rcode-design/screen/DESIGN.md')
+      expect(prompt).toContain('Modify ONLY `.Rcode-design/screen/v2.html` and `.Rcode-design/screen/DESIGN.md`')
       expect(prompt).toContain('responsive to arbitrary selected frame sizes')
       expect(prompt).toContain('arbitrary resized frame sizes')
       expect(prompt).toContain('"Home" (1280x720)')
-      expect(prompt).toContain('.kun-design/home/v1.html')
+      expect(prompt).toContain('.Rcode-design/home/v1.html')
     })
     it('injects real frame dimensions into HTML iteration prompts', () => {
       const prompt = buildDesignTurnPrompt({
         target: 'html',
         mode: 'text',
         text: 'Continue the design system page',
-        artifactRelativePath: '.kun-design/system/v2.html',
-        designNotesPath: '.kun-design/system/DESIGN.md',
-        basePath: '.kun-design/system/v1.html',
+        artifactRelativePath: '.Rcode-design/system/v2.html',
+        designNotesPath: '.Rcode-design/system/DESIGN.md',
+        basePath: '.Rcode-design/system/v1.html',
         workspaceRoot: '/workspace',
         frameContext: {
           name: 'Design system',
@@ -198,17 +198,17 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'html',
         mode: 'text',
         text: 'Design a settings page',
-        artifactRelativePath: '.kun-design/settings/v1.html',
+        artifactRelativePath: '.Rcode-design/settings/v1.html',
         workspaceRoot: '/workspace',
         screenManifest: [
-          { name: 'Home', htmlPath: '.kun-design/home/v1.html', summary: 'Landing page' },
-          { name: 'Chat', width: 420, height: 720, htmlPath: '.kun-design/chat/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/home/v1.html', summary: 'Landing page' },
+          { name: 'Chat', width: 420, height: 720, htmlPath: '.Rcode-design/chat/v1.html' }
         ]
       })
   
       expect(prompt).toContain('Other pages already in this project')
-      expect(prompt).toContain('"Home" → .kun-design/home/v1.html (prototype href: ../home/v1.html) — Landing page')
-      expect(prompt).toContain('"Chat" (420x720) → .kun-design/chat/v1.html (prototype href: ../chat/v1.html)')
+      expect(prompt).toContain('"Home" → .Rcode-design/home/v1.html (prototype href: ../home/v1.html) — Landing page')
+      expect(prompt).toContain('"Chat" (420x720) → .Rcode-design/chat/v1.html (prototype href: ../chat/v1.html)')
       expect(prompt).toContain('Prototype link markup contract')
       expect(prompt).toContain('Use `<a href="...">` for navigation items')
       expect(prompt).toContain('data-prototype-href')
@@ -222,23 +222,23 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
       expect(prompt).toContain('Do NOT modify sibling files')
     })
     it('computes local prototype hrefs between generated HTML artifacts', () => {
-      expect(buildPrototypeHref('.kun-design/doc/settings/v1.html', '.kun-design/doc/home/v1.html')).toBe('../home/v1.html')
-      expect(buildPrototypeHref('.kun-design/doc/a/b/v1.html', '.kun-design/doc/c/v1.html')).toBe('../../c/v1.html')
-      expect(buildPrototypeHref(undefined, '.kun-design/doc/home/v1.html')).toBe('.kun-design/doc/home/v1.html')
+      expect(buildPrototypeHref('.Rcode-design/doc/settings/v1.html', '.Rcode-design/doc/home/v1.html')).toBe('../home/v1.html')
+      expect(buildPrototypeHref('.Rcode-design/doc/a/b/v1.html', '.Rcode-design/doc/c/v1.html')).toBe('../../c/v1.html')
+      expect(buildPrototypeHref(undefined, '.Rcode-design/doc/home/v1.html')).toBe('.Rcode-design/doc/home/v1.html')
     })
     it('includes selected HTML element context for focused edits', () => {
       const prompt = buildDesignTurnPrompt({
         target: 'html',
         mode: 'text',
         text: 'Change this to a warmer headline',
-        artifactRelativePath: '.kun-design/screen/v2.html',
-        designNotesPath: '.kun-design/screen/DESIGN.md',
-        basePath: '.kun-design/screen/v1.html',
+        artifactRelativePath: '.Rcode-design/screen/v2.html',
+        designNotesPath: '.Rcode-design/screen/DESIGN.md',
+        basePath: '.Rcode-design/screen/v1.html',
         workspaceRoot: '/workspace',
         htmlElementContext: {
           artifactId: 'screen',
           artifactTitle: 'Welcome page',
-          artifactRelativePath: '.kun-design/screen/v1.html',
+          artifactRelativePath: '.Rcode-design/screen/v1.html',
           selector: 'body > main:nth-of-type(1) > h1:nth-of-type(1)',
           tagName: 'H1',
           text: 'Hello World',
@@ -265,8 +265,8 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'screen',
         mode: 'text',
         text: 'Tighten the pricing card spacing',
-        artifactRelativePath: '.kun-design/pricing/v2.html',
-        basePath: '.kun-design/pricing/v1.html',
+        artifactRelativePath: '.Rcode-design/pricing/v2.html',
+        basePath: '.Rcode-design/pricing/v1.html',
         workspaceRoot: '/workspace',
         screenName: 'Pricing',
         screenManifest: []
@@ -284,8 +284,8 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'html',
         mode: 'text',
         text: 'Polish the page',
-        artifactRelativePath: '.kun-design/screen/v2.html',
-        basePath: '.kun-design/screen/v1.html',
+        artifactRelativePath: '.Rcode-design/screen/v2.html',
+        basePath: '.Rcode-design/screen/v1.html',
         workspaceRoot: '/workspace',
         qualityFindings: [
           {
@@ -306,14 +306,14 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'html',
         mode: 'text',
         text: 'Match this page to the canvas',
-        artifactRelativePath: '.kun-design/board/settings/v1.html',
+        artifactRelativePath: '.Rcode-design/board/settings/v1.html',
         workspaceRoot: '/workspace',
         contextLocations: [
           {
             title: 'Settings',
             kind: 'html',
-            path: '.kun-design/board/settings/v1.html',
-            directory: '.kun-design/board/settings'
+            path: '.Rcode-design/board/settings/v1.html',
+            directory: '.Rcode-design/board/settings'
           },
           {
             title: 'Hero',
@@ -326,7 +326,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
   
       expect(prompt).toContain('Selected on the canvas (the user is pointing at these)')
       expect(prompt).toContain('do not inline them wholesale')
-      expect(prompt).toContain('Settings [html] → `.kun-design/board/settings/v1.html` (directory: `.kun-design/board/settings`)')
+      expect(prompt).toContain('Settings [html] → `.Rcode-design/board/settings/v1.html` (directory: `.Rcode-design/board/settings`)')
       expect(prompt).toContain('Hero [image] → `.deepseekgui-images/hero.png` (directory: `.deepseekgui-images`)')
     })
     it('renders per-sibling accent + font + summary in the screen manifest', () => {
@@ -334,12 +334,12 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'html',
         mode: 'text',
         text: 'a settings page',
-        artifactRelativePath: '.kun-design/doc/p/v1.html',
+        artifactRelativePath: '.Rcode-design/doc/p/v1.html',
         workspaceRoot: '/ws',
         screenManifest: [
           {
             name: 'Home',
-            htmlPath: '.kun-design/doc/home/v1.html',
+            htmlPath: '.Rcode-design/doc/home/v1.html',
             summary: 'A teal landing page',
             accent: '#3b82d8',
             fontFamily: 'Inter'
@@ -355,7 +355,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'html',
         mode: 'text',
         text: 'a pricing page',
-        artifactRelativePath: '.kun-design/doc/p/v1.html',
+        artifactRelativePath: '.Rcode-design/doc/p/v1.html',
         workspaceRoot: '/ws',
         derivedTokens: {
           extracted: { colors: [], fonts: [], radii: [], spacing: [], typeScale: [], sampledColors: [], title: '' },
@@ -386,7 +386,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'canvas',
         mode: 'text',
         text: '把这张图改成夜晚风格',
-        artifactRelativePath: '.kun-design/board/canvas.json',
+        artifactRelativePath: '.Rcode-design/board/canvas.json',
         workspaceRoot: '/workspace',
         canvasSnapshot
       })
@@ -416,7 +416,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'canvas',
         mode: 'text',
         text: '把我的设计改成task',
-        artifactRelativePath: '.kun-design/board/canvas.json',
+        artifactRelativePath: '.Rcode-design/board/canvas.json',
         workspaceRoot: '/workspace',
         canvasSnapshot
       })
@@ -457,7 +457,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'canvas',
         mode: 'text',
         text: 'do something',
-        artifactRelativePath: '.kun-design/board/canvas.json',
+        artifactRelativePath: '.Rcode-design/board/canvas.json',
         workspaceRoot: '/workspace',
         canvasSnapshot
       })
@@ -478,7 +478,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'canvas',
         mode: 'text',
         text: '设计一个介绍页面',
-        artifactRelativePath: '.kun-design/board/canvas.json',
+        artifactRelativePath: '.Rcode-design/board/canvas.json',
         workspaceRoot: '/workspace',
         canvasSnapshot
       })
@@ -503,7 +503,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'canvas',
         mode: 'text',
         text: 'align these',
-        artifactRelativePath: '.kun-design/board/canvas.json',
+        artifactRelativePath: '.Rcode-design/board/canvas.json',
         workspaceRoot: '/ws',
         canvasSnapshot
       })
@@ -524,7 +524,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'canvas',
         mode: 'text',
         text: 'smooth this stroke',
-        artifactRelativePath: '.kun-design/board/canvas.json',
+        artifactRelativePath: '.Rcode-design/board/canvas.json',
         workspaceRoot: '/ws',
         canvasSnapshot
       })
@@ -546,7 +546,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'canvas',
         mode: 'text',
         text: 'fix critique findings',
-        artifactRelativePath: '.kun-design/board/canvas.json',
+        artifactRelativePath: '.Rcode-design/board/canvas.json',
         workspaceRoot: '/ws'
       })
   
@@ -558,7 +558,7 @@ describe("design turn prompt HTML, screen, and canvas guidance", () => {
         target: 'canvas',
         mode: 'text',
         text: 'another turn',
-        artifactRelativePath: '.kun-design/board/canvas.json',
+        artifactRelativePath: '.Rcode-design/board/canvas.json',
         workspaceRoot: '/ws'
       })
       expect(nextPrompt).not.toContain('Design-system lint flagged')

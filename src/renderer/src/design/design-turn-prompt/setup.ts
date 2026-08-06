@@ -34,9 +34,9 @@ export type PrepareDesignTurnFilesOptions = {
 
 function currentSetupApi(api?: DesignTurnSetupApi): DesignTurnSetupApi | undefined {
   if (api) return api
-  if (typeof window === 'undefined' || !window.kunGui) return undefined
+  if (typeof window === 'undefined' || !window.RcodeGui) return undefined
   return {
-    readWorkspaceFile: window.kunGui.readWorkspaceFile,
+    readWorkspaceFile: window.RcodeGui.readWorkspaceFile,
     writeWorkspaceFile: (payload) => writeDesignWorkspaceFile(payload)
   }
 }

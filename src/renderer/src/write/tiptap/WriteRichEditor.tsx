@@ -397,8 +397,8 @@ export function WriteRichEditor({
         isEnabled: () => completionEnabledRef.current && !readOnlyRef.current,
         getFilePath: () => filePathRef.current,
         requestCompletion: async (context, mode) => {
-          if (typeof window.kunGui?.requestWriteInlineCompletion !== 'function') return null
-          const result = await window.kunGui.requestWriteInlineCompletion(
+          if (typeof window.RcodeGui?.requestWriteInlineCompletion !== 'function') return null
+          const result = await window.RcodeGui.requestWriteInlineCompletion(
             buildInlineCompletionPayload(context, {
               model: completionModelRef.current,
               workspaceRoot: workspaceRootRef.current,

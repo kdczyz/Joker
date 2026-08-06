@@ -41,7 +41,6 @@ import { WRITE_BLOCK_TYPES, type WriteBlockType } from '../../write/block-type'
 import type { WriteInlineFormatKind } from '../../write/inline-format'
 import type { ResolvedWriteQuickAction } from '../../write/quick-actions'
 import type { ResolvedWriteAgentPreset } from '../../write/agent-presets'
-import { writeFocusModeFloatingLayerClassName } from '../../write/write-focus-mode'
 import {
   inlineAgentPlacement,
   type WriteInlineAgentPlacement,
@@ -92,8 +91,6 @@ type Props = {
   onTextareaFocus?: () => void
   /** Called when the AI-edit textarea loses focus so the parent can unfreeze. */
   onTextareaBlur?: () => void
-  /** Raises the selection surface above Write's distraction-free shell. */
-  focusMode?: boolean
 }
 
 /**
@@ -200,7 +197,6 @@ export function WriteInlineAgent({
   imageMode = false,
   onTextareaFocus,
   onTextareaBlur,
-  focusMode = false
 }: Props): ReactElement {
   const { t } = useTranslation('common')
   const menuRef = useRef<HTMLDivElement | null>(null)
@@ -298,7 +294,7 @@ export function WriteInlineAgent({
 
   return (
     <div
-      className={`write-inline-agent fixed ${writeFocusModeFloatingLayerClassName(focusMode, 'z-50')}`}
+      className="write-inline-agent fixed z-50"
       data-origin={placement?.origin ?? 'top-center'}
       data-selection-ignore="true"
       style={{

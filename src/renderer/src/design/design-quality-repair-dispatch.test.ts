@@ -19,7 +19,7 @@ const finding: DesignHtmlQualityFinding = {
 
 const payload: DesignRuntimeQualityPayload = {
   artifactId: 'screen_home',
-  artifactRelativePath: '.kun-design/doc/screen_home/v1.html',
+  artifactRelativePath: '.Rcode-design/doc/screen_home/v1.html',
   shapeId: 'frame_home',
   findings: [finding]
 }
@@ -28,7 +28,7 @@ const boardArtifact: DesignArtifact = {
   id: 'board',
   kind: 'canvas',
   title: 'Board',
-  relativePath: '.kun-design/doc/board/canvas.json',
+  relativePath: '.Rcode-design/doc/board/canvas.json',
   createdAt: '2026-07-02T00:00:00.000Z',
   updatedAt: '2026-07-02T00:00:00.000Z',
   versions: []
@@ -59,8 +59,8 @@ describe('design quality repair dispatch', () => {
     expect(designAutoRepairPayloadKey({
       ...payload,
       artifactId: '',
-      artifactRelativePath: ' .kun-design/page.html '
-    })).toBe('path:.kun-design/page.html')
+      artifactRelativePath: ' .Rcode-design/page.html '
+    })).toBe('path:.Rcode-design/page.html')
     expect(designAutoRepairPayloadKey({
       ...payload,
       artifactId: '',

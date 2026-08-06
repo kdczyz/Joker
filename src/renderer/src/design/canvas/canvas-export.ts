@@ -59,7 +59,7 @@ export function canvasRasterScale(bounds: Pick<Rect, 'width' | 'height'>): numbe
 
 function safeFileName(value: string): string {
   const normalized = value.replace(/[^a-z0-9._-]+/gi, '-').replace(/^-+|-+$/g, '')
-  return normalized || 'kun-whiteboard'
+  return normalized || 'Rcode-whiteboard'
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -310,11 +310,11 @@ export async function exportCanvasToWorkspace(options: {
   const mimeType = request.format === 'png' ? 'image/png' : 'image/svg+xml'
   let absolutePath: string | undefined
 
-  if (typeof window.kunGui?.saveWorkspaceImageBytes !== 'function') {
+  if (typeof window.RcodeGui?.saveWorkspaceImageBytes !== 'function') {
     throw new Error('Workspace image export is unavailable')
   }
   const directory = request.relativePath.slice(0, request.relativePath.lastIndexOf('/'))
-  const saved = await window.kunGui.saveWorkspaceImageBytes({
+  const saved = await window.RcodeGui.saveWorkspaceImageBytes({
     workspaceRoot: options.workspaceRoot,
     dataBase64,
     mimeType,
@@ -391,6 +391,6 @@ export async function exportCanvasFromSvg(options: {
     backgroundColor: options.backgroundColor || '#ffffff',
     workspaceRoot: options.workspaceRoot
   })
-  const filename = `${safeFileName(options.filename || 'kun-whiteboard')}.${options.format}`
+  const filename = `${safeFileName(options.filename || 'Rcode-whiteboard')}.${options.format}`
   triggerDownload(blob, filename)
 }

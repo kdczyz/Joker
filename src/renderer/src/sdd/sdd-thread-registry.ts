@@ -2,12 +2,12 @@ import type { NormalizedThread } from '../agent/types'
 import { browserStorage, type BrowserStorageLike } from '../lib/browser-storage'
 import type { SddDraft } from './sdd-draft-store'
 
-const SDD_THREAD_REGISTRY_KEY = 'kun.sdd.threadRegistry.v1'
+const SDD_THREAD_REGISTRY_KEY = 'Rcode.sdd.threadRegistry.v1'
 const MAX_SDD_THREAD_RECORDS = 100
 const MAX_SDD_THREAD_IDS_PER_DRAFT = 20
-// Both layouts: retired pre-unit drafts (.kunsdd/draft/) still have threads
+// Both layouts: retired pre-unit drafts (.Rcodesdd/draft/) still have threads
 // in the runtime and must stay hidden from the chat sidebar.
-const SDD_DRAFT_PATH_FRAGMENTS = ['.kunsdd/draft/', '.kunsdd/requirements/']
+const SDD_DRAFT_PATH_FRAGMENTS = ['.Rcodesdd/draft/', '.Rcodesdd/requirements/']
 
 export type SddThreadRecord = {
   draftId: string

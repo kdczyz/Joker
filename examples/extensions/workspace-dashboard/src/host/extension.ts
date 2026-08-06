@@ -1,4 +1,4 @@
-import type { ExtensionContext, JsonObject } from '@kun/extension-api'
+import type { ExtensionContext, JsonObject } from '@Rcode/extension-api'
 
 function displayName(entry: JsonObject): string {
   const candidate = entry.name ?? entry.path ?? entry.uri
@@ -27,5 +27,5 @@ export async function activate(context: ExtensionContext): Promise<void> {
 }
 
 export async function deactivate(): Promise<void> {
-  // Kun disposes context.subscriptions before the Extension Host exits.
+  // Rcode disposes context.subscriptions before the Extension Host exits.
 }

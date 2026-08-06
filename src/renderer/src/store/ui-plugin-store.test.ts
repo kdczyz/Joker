@@ -73,7 +73,7 @@ describe('UI plugin CDP theme activation', () => {
     const listUiPlugins = vi.fn(async () => ({ plugins: [] }))
     vi.stubGlobal('window', {
       localStorage,
-      kunGui: { deactivateUiPluginTheme, listUiPlugins }
+      RcodeGui: { deactivateUiPluginTheme, listUiPlugins }
     })
 
     await useUiPluginStore.getState().initUiPlugins()
@@ -104,7 +104,7 @@ describe('UI plugin CDP theme activation', () => {
     })
     vi.stubGlobal('window', {
       localStorage,
-      kunGui: {
+      RcodeGui: {
         activateUiPluginTheme,
         deactivateUiPluginTheme: vi.fn(async () => ({ ok: true as const }))
       }
@@ -167,7 +167,7 @@ describe('UI plugin CDP theme activation', () => {
     }))
     vi.stubGlobal('window', {
       localStorage,
-      kunGui: {
+      RcodeGui: {
         activateUiPluginTheme,
         deactivateUiPluginTheme: vi.fn(async () => ({ ok: true as const }))
       }
@@ -296,7 +296,7 @@ describe('UI plugin CDP theme activation', () => {
     })
     vi.stubGlobal('window', {
       localStorage,
-      kunGui: {
+      RcodeGui: {
         activateUiPluginTheme,
         deactivateUiPluginTheme: vi.fn(async () => ({ ok: true as const }))
       }
@@ -366,7 +366,7 @@ describe('UI plugin CDP theme activation', () => {
     const listUiPlugins = vi.fn(async () => ({ plugins: [] }))
     vi.stubGlobal('window', {
       localStorage,
-      kunGui: {
+      RcodeGui: {
         activateUiPluginTheme,
         deactivateUiPluginTheme,
         removeUiPlugin,
@@ -478,7 +478,7 @@ describe('UI plugin CDP theme activation', () => {
     }))
     vi.stubGlobal('window', {
       localStorage,
-      kunGui: { installUiPlugin, listUiPlugins, activateUiPluginTheme }
+      RcodeGui: { installUiPlugin, listUiPlugins, activateUiPluginTheme }
     })
     useUiPluginStore.setState({
       uiMode: 'scene-theme',
@@ -508,7 +508,7 @@ describe('UI plugin CDP theme activation', () => {
     const { localStorage } = createDomFixture()
     const removeUiPlugin = vi.fn(async () => ({ ok: false }))
     const listUiPlugins = vi.fn(async () => ({ plugins: [] }))
-    vi.stubGlobal('window', { localStorage, kunGui: { removeUiPlugin, listUiPlugins } })
+    vi.stubGlobal('window', { localStorage, RcodeGui: { removeUiPlugin, listUiPlugins } })
 
     await useUiPluginStore.getState().removeUiPluginById('alpha-theme')
 

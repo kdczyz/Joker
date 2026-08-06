@@ -4,13 +4,13 @@ import { SDD_VERIFY_INTRO, buildSddVerifyPrompt, isSddVerifyPrompt } from './sdd
 describe('buildSddVerifyPrompt', () => {
   const prompt = buildSddVerifyPrompt({
     workspaceRoot: '/tmp/ws',
-    draftRelativePath: '.kunsdd/requirements/abc/requirement.md',
-    planRelativePath: '.kunsdd/plan/sdd-abc.md'
+    draftRelativePath: '.Rcodesdd/requirements/abc/requirement.md',
+    planRelativePath: '.Rcodesdd/plan/sdd-abc.md'
   })
 
   it('keeps the intro and core in-place verification instructions', () => {
     expect(prompt).toContain(SDD_VERIFY_INTRO)
-    expect(prompt).toContain('Requirement file: .kunsdd/requirements/abc/requirement.md')
+    expect(prompt).toContain('Requirement file: .Rcodesdd/requirements/abc/requirement.md')
     expect(prompt).toContain('change `- [ ]` to `- [x]`')
     expect(prompt).toContain('{verified}')
   })

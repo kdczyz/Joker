@@ -69,7 +69,7 @@ describe('MediaGenerationSettingsSection', () => {
       ctx: {
         t,
         selectControlClass: 'select',
-        updateKun: vi.fn(),
+        updateRcode: vi.fn(),
         provider: {
           providers: [{
             id: 'minimax',
@@ -92,7 +92,7 @@ describe('MediaGenerationSettingsSection', () => {
             }
           }]
         },
-        kun: {
+        Rcode: {
           textToSpeech: {
             enabled: true,
             providerId: 'minimax',

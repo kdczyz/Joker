@@ -91,7 +91,7 @@ function buildHarness(overrides?: {
     applyI18nFromSettings,
     busy: false,
     clawChannels: [],
-    codeWorkspaceRoots: ['~/.kun/default_workspace'],
+    codeWorkspaceRoots: ['~/.Rcode/default_workspace'],
     composerPickList: [],
     createThread,
     currentTurnId: null,
@@ -110,13 +110,13 @@ function buildHarness(overrides?: {
       thread({
         id: 'thr_default',
         title: 'Only default thread',
-        workspace: '~/.kun/default_workspace'
+        workspace: '~/.Rcode/default_workspace'
       })
     ],
     unreadThreadIds: {},
     watchTurnCompletion: {},
     workspaceLabel: 'default_workspace',
-    workspaceRoot: '~/.kun/default_workspace'
+    workspaceRoot: '~/.Rcode/default_workspace'
   } as unknown as ChatState
 
   const set: ChatStoreSet = (partial) => {
@@ -165,7 +165,7 @@ describe('chat-store navigation workspace selection', () => {
       workspaceRoot: '/Users/zxy/new-project'
     }))
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         pickWorkspaceDirectory,
         setSettings
       }
@@ -174,18 +174,18 @@ describe('chat-store navigation workspace selection', () => {
 
     await expect(harness.actions.chooseWorkspace()).resolves.toBe('/Users/zxy/new-project')
 
-    expect(pickWorkspaceDirectory).toHaveBeenCalledWith('~/.kun/default_workspace')
+    expect(pickWorkspaceDirectory).toHaveBeenCalledWith('~/.Rcode/default_workspace')
     expect(setSettings).toHaveBeenCalledWith({ workspaceRoot: '/Users/zxy/new-project' })
     expect(provider.updateThreadWorkspace).not.toHaveBeenCalled()
     expect(harness.state.threads.find((item) => item.id === 'thr_default')?.workspace)
-      .toBe('~/.kun/default_workspace')
+      .toBe('~/.Rcode/default_workspace')
     expect(harness.createThread).toHaveBeenCalledWith({ workspaceRoot: '/Users/zxy/new-project' })
     expect(harness.selectThread).not.toHaveBeenCalled()
   })
 
   it('selectWorkspaceRoot persists the directory and lands on a clean new conversation', async () => {
     const setSettings = vi.fn(async () => ({ workspaceRoot: '/Users/zxy/new-project' }))
-    vi.stubGlobal('window', { kunGui: { setSettings } })
+    vi.stubGlobal('window', { RcodeGui: { setSettings } })
     const harness = buildHarness()
 
     await expect(harness.actions.selectWorkspaceRoot('/Users/zxy/new-project'))
@@ -206,7 +206,7 @@ describe('chat-store navigation workspace selection', () => {
 
   it('selectWorkspaceRoot ignores an empty path', async () => {
     const setSettings = vi.fn(async () => ({ workspaceRoot: '' }))
-    vi.stubGlobal('window', { kunGui: { setSettings } })
+    vi.stubGlobal('window', { RcodeGui: { setSettings } })
     const harness = buildHarness()
 
     await expect(harness.actions.selectWorkspaceRoot('   ')).resolves.toBeNull()
@@ -219,7 +219,7 @@ describe('chat-store navigation workspace selection', () => {
     const alertDialog = vi.fn(async () => undefined)
     const workspaceDirectoryExists = vi.fn(async () => false)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         setSettings,
         workspaceDirectoryExists,
         alertDialog
@@ -241,12 +241,12 @@ describe('chat-store navigation workspace selection', () => {
     const workspaceDirectoryExists = vi.fn(async () => false)
     const setSettings = vi.fn()
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({
           workspaceRoot: 'E:\\missing-project',
           write: {
-            defaultWorkspaceRoot: '~/.kun/write_workspace',
-            activeWorkspaceRoot: '~/.kun/write_workspace',
+            defaultWorkspaceRoot: '~/.Rcode/write_workspace',
+            activeWorkspaceRoot: '~/.Rcode/write_workspace',
             workspaces: []
           },
           claw: { channels: [] },
@@ -254,7 +254,7 @@ describe('chat-store navigation workspace selection', () => {
           uiFontScale: 1,
           chatContentMaxWidthPx: 896,
           locale: 'en',
-          agents: { kun: { apiKey: 'test-key', model: 'deepseek-v4-pro', baseUrl: '' } },
+          agents: { Rcode: { apiKey: 'test-key', model: 'deepseek-v4-pro', baseUrl: '' } },
           disabledSkillIds: []
         })),
         setSettings,
@@ -276,7 +276,7 @@ describe('chat-store navigation workspace selection', () => {
   it('warns when creating Write or Design threads for a missing workspace', async () => {
     const alertDialog = vi.fn(async () => undefined)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         workspaceDirectoryExists: vi.fn(async () => false),
         alertDialog
       }
@@ -329,7 +329,7 @@ describe('chat-store navigation workspace selection', () => {
   it('openCode does not keep a legacy design assistant thread active in Code mode', async () => {
     const storage = new MemoryStorage()
     storage.setItem(
-      'kun.design-assistant.threadRegistry.v1',
+      'Rcode.design-assistant.threadRegistry.v1',
       JSON.stringify({ '/Users/zxy/project': 'thr_legacy_design' })
     )
     vi.stubGlobal('window', { localStorage: storage })
@@ -369,7 +369,7 @@ describe('chat-store navigation workspace selection', () => {
       thread({
         id: 'thr_design',
         title: 'Design Assistant',
-        workspace: '/Users/zxy/.kun/design-workspace',
+        workspace: '/Users/zxy/.Rcode/design-workspace',
         updatedAt: '2026-06-12T10:00:00.000Z'
       })
     ]
@@ -521,7 +521,7 @@ describe('onClawChannelActivity routes through subscribeThreadEventsLive (not se
     const selectThread = vi.fn(async () => undefined)
     const recoverActiveTurn = vi.fn(async () => true)
 
-    // Capture the callback registered via window.kunGui.onClawChannelActivity
+    // Capture the callback registered via window.RcodeGui.onClawChannelActivity
     let capturedClawActivityCallback: ((payload: { channelId: string; threadId: string }) => void) | null = null
     const onClawChannelActivity = vi.fn((cb: (payload: { channelId: string; threadId: string }) => void) => {
       capturedClawActivityCallback = cb
@@ -534,10 +534,10 @@ describe('onClawChannelActivity routes through subscribeThreadEventsLive (not se
       return () => {}
     })
     const getSettings = vi.fn(async () => ({
-      workspaceRoot: '~/.kun/default_workspace',
+      workspaceRoot: '~/.Rcode/default_workspace',
       write: {
-        defaultWorkspaceRoot: '~/.kun/default_workspace',
-        activeWorkspaceRoot: '~/.kun/default_workspace',
+        defaultWorkspaceRoot: '~/.Rcode/default_workspace',
+        activeWorkspaceRoot: '~/.Rcode/default_workspace',
         workspaces: []
       },
       claw: {
@@ -549,11 +549,11 @@ describe('onClawChannelActivity routes through subscribeThreadEventsLive (not se
       uiFontScale: 1,
     chatContentMaxWidthPx: 896,
       locale: 'en',
-      agents: { kun: { apiKey: 'test-key', model: 'deepseek-v4-pro', baseUrl: '' } },
+      agents: { Rcode: { apiKey: 'test-key', model: 'deepseek-v4-pro', baseUrl: '' } },
       disabledSkillIds: []
     }))
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings,
         onClawChannelActivity,
         onTrayAction,

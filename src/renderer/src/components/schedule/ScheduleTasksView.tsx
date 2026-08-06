@@ -23,7 +23,7 @@ import {
   DEFAULT_SCHEDULE_MODEL,
   DEFAULT_SCHEDULE_REASONING_EFFORT,
   SCHEDULE_REASONING_EFFORT_IDS,
-  getKunRuntimeSettings,
+  getRcodeRuntimeSettings,
   getModelProviderSettings,
   isComposerChatModelId,
   listNonTextModelIds,
@@ -143,7 +143,7 @@ function preferredScheduleProviderId(
 ): string {
   const configured = configuredProviderId?.trim() ?? ''
   if (providers.some((provider) => provider.providerId === configured)) return configured
-  const runtimeProviderId = getKunRuntimeSettings(settings).providerId.trim()
+  const runtimeProviderId = getRcodeRuntimeSettings(settings).providerId.trim()
   if (providers.some((provider) => provider.providerId === runtimeProviderId)) return runtimeProviderId
   return providers[0]?.providerId ?? ''
 }
@@ -404,8 +404,8 @@ export function ScheduleTasksView({
     try {
       const [nextSettings, nextStatus] = await Promise.all([
         rendererRuntimeClient.getSettings({ forceRefresh: true }),
-        typeof window.kunGui?.getScheduleStatus === 'function'
-          ? window.kunGui.getScheduleStatus()
+        typeof window.RcodeGui?.getScheduleStatus === 'function'
+          ? window.RcodeGui.getScheduleStatus()
           : Promise.resolve(null)
       ])
       if (!refreshCoordinator.isCurrent(ticket)) return
@@ -449,8 +449,8 @@ export function ScheduleTasksView({
       const saved = await rendererRuntimeClient.setSettings({ schedule: nextSchedule })
       if (!refreshCoordinator.isCurrent(ticket)) return
       setSettings(saved)
-      if (typeof window.kunGui?.getScheduleStatus === 'function') {
-        const nextStatus = await window.kunGui.getScheduleStatus()
+      if (typeof window.RcodeGui?.getScheduleStatus === 'function') {
+        const nextStatus = await window.RcodeGui.getScheduleStatus()
         if (refreshCoordinator.isCurrent(ticket)) setStatus(nextStatus)
       }
     } finally {
@@ -505,10 +505,10 @@ export function ScheduleTasksView({
   const pickDialogWorkspace = async (): Promise<void> => {
     if (!dialog) return
     try {
-      if (typeof window.kunGui?.pickWorkspaceDirectory !== 'function') {
+      if (typeof window.RcodeGui?.pickWorkspaceDirectory !== 'function') {
         throw new Error(t('workspacePickerUnavailable'))
       }
-      const picked = await window.kunGui.pickWorkspaceDirectory(
+      const picked = await window.RcodeGui.pickWorkspaceDirectory(
         expandHomePathForSettingsUse(resolveDialogWorkspaceRoot(dialog.draft.workspaceRoot)) || undefined
       )
       if (picked.canceled || !picked.path) return
@@ -597,8 +597,8 @@ export function ScheduleTasksView({
   }
 
   const runTask = async (taskId: string): Promise<void> => {
-    if (typeof window.kunGui?.runScheduleTask !== 'function') return
-    const result = await window.kunGui.runScheduleTask(taskId)
+    if (typeof window.RcodeGui?.runScheduleTask !== 'function') return
+    const result = await window.RcodeGui.runScheduleTask(taskId)
     if (!result.ok) {
       setError(result.message)
       return

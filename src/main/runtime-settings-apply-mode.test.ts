@@ -3,7 +3,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultTerminalSettings,
@@ -12,7 +12,7 @@ import {
   type AppSettingsV1,
   type ModelProviderProfileV1
 } from '../shared/app-settings'
-import { kunRuntimeConfigChanged, runtimeSettingsApplyMode } from './runtime-settings-apply-mode'
+import { RcodeRuntimeConfigChanged, runtimeSettingsApplyMode } from './runtime-settings-apply-mode'
 
 function settings(): AppSettingsV1 {
   return {
@@ -23,10 +23,10 @@ function settings(): AppSettingsV1 {
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: defaultKunRuntimeSettings()
+      Rcode: defaultRcodeRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -78,8 +78,8 @@ function multiProviderSettings(): AppSettingsV1 {
       providers: [deepseek, codex, minimax]
     },
     agents: {
-      kun: {
-        ...base.agents.kun,
+      Rcode: {
+        ...base.agents.Rcode,
         providerId: codex.id,
         model: codex.models[0]!
       }
@@ -115,7 +115,7 @@ describe('runtimeSettingsApplyMode', () => {
     const prev = settings()
     const withModel = {
       ...prev,
-      agents: { kun: { ...prev.agents.kun, model: 'deepseek-reasoner' } }
+      agents: { Rcode: { ...prev.agents.Rcode, model: 'deepseek-reasoner' } }
     }
     const withProviderKey = {
       ...prev,
@@ -123,15 +123,15 @@ describe('runtimeSettingsApplyMode', () => {
     }
     const withApproval = {
       ...prev,
-      agents: { kun: { ...prev.agents.kun, approvalPolicy: 'never' as const, sandboxMode: 'read-only' as const } }
+      agents: { Rcode: { ...prev.agents.Rcode, approvalPolicy: 'never' as const, sandboxMode: 'read-only' as const } }
     }
     const withMedia = {
       ...prev,
       agents: {
-        kun: {
-          ...prev.agents.kun,
+        Rcode: {
+          ...prev.agents.Rcode,
           imageGeneration: {
-            ...prev.agents.kun.imageGeneration,
+            ...prev.agents.Rcode.imageGeneration,
             enabled: true,
             providerId: 'deepseek',
             model: 'image-model'
@@ -142,10 +142,10 @@ describe('runtimeSettingsApplyMode', () => {
     const withImageResolution = {
       ...prev,
       agents: {
-        kun: {
-          ...prev.agents.kun,
+        Rcode: {
+          ...prev.agents.Rcode,
           imageGeneration: {
-            ...prev.agents.kun.imageGeneration,
+            ...prev.agents.Rcode.imageGeneration,
             defaultResolution: '2K' as const
           }
         }
@@ -161,8 +161,8 @@ describe('runtimeSettingsApplyMode', () => {
     const withProjectGrant = {
       ...prev,
       agents: {
-        kun: {
-          ...prev.agents.kun,
+        Rcode: {
+          ...prev.agents.Rcode,
           projectConfig: {
             grants: [{ workspaceRoot: '/workspace/project', configDigest: 'a'.repeat(64) }]
           }
@@ -171,13 +171,13 @@ describe('runtimeSettingsApplyMode', () => {
     }
     const withMemory = {
       ...prev,
-      agents: { kun: { ...prev.agents.kun, memoryEnabled: true } }
+      agents: { Rcode: { ...prev.agents.Rcode, memoryEnabled: true } }
     }
     const withSubagents = {
       ...prev,
       agents: {
-        kun: {
-          ...prev.agents.kun,
+        Rcode: {
+          ...prev.agents.Rcode,
           subagents: {
             enabled: true,
             maxParallel: 5,
@@ -210,7 +210,7 @@ describe('runtimeSettingsApplyMode', () => {
     const next = updateProvider(prev, 'deepseek', { apiKey: 'sk-deepseek-new' })
     next.provider.apiKey = 'sk-deepseek-new'
 
-    expect(kunRuntimeConfigChanged(prev, next)).toBe(false)
+    expect(RcodeRuntimeConfigChanged(prev, next)).toBe(false)
     expect(runtimeSettingsApplyMode(prev, next)).toBe('hot')
   })
 
@@ -282,22 +282,22 @@ describe('runtimeSettingsApplyMode', () => {
 
     expect(runtimeSettingsApplyMode(prev, {
       ...prev,
-      agents: { kun: { ...prev.agents.kun, port: prev.agents.kun.port + 1 } }
+      agents: { Rcode: { ...prev.agents.Rcode, port: prev.agents.Rcode.port + 1 } }
     })).toBe('restart')
     expect(runtimeSettingsApplyMode(prev, {
       ...prev,
-      agents: { kun: { ...prev.agents.kun, dataDir: '/tmp/kun-next' } }
+      agents: { Rcode: { ...prev.agents.Rcode, dataDir: '/tmp/Rcode-next' } }
     })).toBe('restart')
     expect(runtimeSettingsApplyMode(prev, {
       ...prev,
-      agents: { kun: { ...prev.agents.kun, runtimeToken: 'tok-next' } }
+      agents: { Rcode: { ...prev.agents.Rcode, runtimeToken: 'tok-next' } }
     })).toBe('restart')
     expect(runtimeSettingsApplyMode(prev, {
       ...prev,
       agents: {
-        kun: {
-          ...prev.agents.kun,
-          storage: { ...prev.agents.kun.storage, backend: 'file' as const }
+        Rcode: {
+          ...prev.agents.Rcode,
+          storage: { ...prev.agents.Rcode.storage, backend: 'file' as const }
         }
       }
     })).toBe('restart')

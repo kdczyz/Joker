@@ -2,10 +2,10 @@ import type { IpcMain, WebContents } from 'electron'
 import { randomUUID } from 'node:crypto'
 import { URL } from 'node:url'
 import type { AppSettingsV1 } from '../shared/app-settings'
-import { kunThreadEventsPath } from '../shared/kun-endpoints'
+import { RcodeThreadEventsPath } from '../shared/Rcode-endpoints'
 import { sseAckPayloadSchema, sseStartPayloadSchema, streamIdSchema } from './ipc/app-ipc-schemas'
 import type { JsonSettingsStore } from './settings-store'
-import { getRuntimeBaseUrlForSettings, runtimeAuthHeaders } from './runtime/kun-adapter'
+import { getRuntimeBaseUrlForSettings, runtimeAuthHeaders } from './runtime/Rcode-adapter'
 
 type SseControllerState = {
   controller: AbortController
@@ -212,7 +212,7 @@ export function registerRuntimeSseIpc(options: {
       let reconnectDelayMs = SSE_RECONNECT_BASE_MS
       try {
         while (!state.stoppedByClient && !ac.signal.aborted) {
-          const url = new URL(`${base}${kunThreadEventsPath(request.threadId)}`)
+          const url = new URL(`${base}${RcodeThreadEventsPath(request.threadId)}`)
           url.searchParams.set('since_seq', String(nextSinceSeq))
           const requestHeaders = { ...headers }
           if (nextSinceSeq > 0) {

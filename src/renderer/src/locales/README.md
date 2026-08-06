@@ -1,6 +1,6 @@
 # Application locales
 
-Kun registers `en`, `zh`, `ru`, `hi`, `th`, `ja`, and `ko` as selectable
+Rcode registers `en`, `zh`, `ru`, `hi`, `th`, `ja`, and `ko` as selectable
 application locales. English remains the fallback language.
 
 Every active locale mirrors the complete English `common` and `settings` key

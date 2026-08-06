@@ -11,7 +11,7 @@ function artifact(id: string, kind: DesignArtifact['kind']): DesignArtifact {
     id,
     kind,
     title: id,
-    relativePath: `.kun-design/doc/${id}/${kind === 'html' ? 'v1.html' : 'canvas.json'}`,
+    relativePath: `.Rcode-design/doc/${id}/${kind === 'html' ? 'v1.html' : 'canvas.json'}`,
     createdAt: now,
     updatedAt: now,
     versions: []

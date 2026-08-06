@@ -1,9 +1,9 @@
 {
   "id": "starlight",
-  "name": "星夜 Kun",
+  "name": "星夜 Rcode",
   "version": "1.1.0",
-  "author": "Kun Team",
-  "description": "官方示例插件:深紫星夜配色的 Kun 形象,含舞台背景、主题色与进行中文案。",
+  "author": "Rcode Team",
+  "description": "官方示例插件:深紫星夜配色的 Rcode 形象,含舞台背景、主题色与进行中文案。",
   "figures": {
     "swim": "img/bird.png",
     "surf": "img/surf.png",

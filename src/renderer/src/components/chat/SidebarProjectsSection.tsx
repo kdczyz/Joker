@@ -293,8 +293,8 @@ export function SidebarProjectsSection({
   useEffect(() => {
     if (
       typeof window === 'undefined' ||
-      typeof window.kunGui?.listWorkspaceDirectory !== 'function' ||
-      typeof window.kunGui?.readWorkspaceFile !== 'function'
+      typeof window.RcodeGui?.listWorkspaceDirectory !== 'function' ||
+      typeof window.RcodeGui?.readWorkspaceFile !== 'function'
     ) {
       setDraftHistoryByWorkspace({})
       return
@@ -309,8 +309,8 @@ export function SidebarProjectsSection({
       workspacePaths.map(async (path) => {
         const history = await listSddDraftHistory({
           workspaceRoot: path,
-          listWorkspaceDirectory: window.kunGui.listWorkspaceDirectory,
-          readWorkspaceFile: window.kunGui.readWorkspaceFile,
+          listWorkspaceDirectory: window.RcodeGui.listWorkspaceDirectory,
+          readWorkspaceFile: window.RcodeGui.readWorkspaceFile,
           limit: SDD_DRAFT_HISTORY_LOAD_LIMIT
         }).catch(() => [])
         return [path, history] as const
@@ -887,8 +887,8 @@ export function SidebarProjectsSection({
   const closeThreadPreview = (): void => {}
 
   const openWorkspaceInSystem = async (workspacePath: string): Promise<void> => {
-    if (typeof window === 'undefined' || typeof window.kunGui?.openEditorPath !== 'function') return
-    await window.kunGui.openEditorPath({
+    if (typeof window === 'undefined' || typeof window.RcodeGui?.openEditorPath !== 'function') return
+    await window.RcodeGui.openEditorPath({
       path: workspacePath,
       workspaceRoot: workspacePath,
       editorId: 'system'

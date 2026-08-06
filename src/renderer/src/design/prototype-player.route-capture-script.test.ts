@@ -24,7 +24,7 @@ import type { DesignArtifact } from './design-types'
 const now = '2026-06-29T00:00:00.000Z'
 
 function artifact(id: string, title: string, extra: Partial<DesignArtifact> = {}): DesignArtifact {
-  const relativePath = `.kun-design/doc/${id}/v1.html`
+  const relativePath = `.Rcode-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',
@@ -121,8 +121,8 @@ describe("prototype-player route capture script", () => {
   
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#kun-proto-nav=Settings',
-          'file:///workspace/.kun-design/doc/home/v1.html',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#Rcode-proto-nav=Settings',
+          'file:///workspace/.Rcode-design/doc/home/v1.html',
           links
         )
       ).toBeNull()
@@ -134,18 +134,18 @@ describe("prototype-player route capture script", () => {
         artifact('stats', 'Weekly Stats'),
         artifact('settings', 'Account Settings')
       ])
-      const currentFileUrl = 'file:///workspace/.kun-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
   
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#kun-proto-nav=Stats',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#Rcode-proto-nav=Stats',
           currentFileUrl,
           links
         )?.targetArtifactId
       ).toBe('stats')
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#kun-proto-nav=Account',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#Rcode-proto-nav=Account',
           currentFileUrl,
           links
         )?.targetArtifactId
@@ -161,8 +161,8 @@ describe("prototype-player route capture script", () => {
   
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#kun-proto-nav=Stats',
-          'file:///workspace/.kun-design/doc/home/v1.html',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#Rcode-proto-nav=Stats',
+          'file:///workspace/.Rcode-design/doc/home/v1.html',
           links
         )
       ).toBeNull()
@@ -170,24 +170,24 @@ describe("prototype-player route capture script", () => {
     it('resolves route-style prototype href slugs to unique sibling pages', () => {
       const home = artifact('home', 'Home')
       const settings = artifact('settings', 'Account Settings', {
-        relativePath: '.kun-design/doc/account-settings/v1.html'
+        relativePath: '.Rcode-design/doc/account-settings/v1.html'
       })
       const stats = artifact('weekly-stats', 'Weekly Stats', {
-        relativePath: '.kun-design/doc/weekly-stats/v1.html'
+        relativePath: '.Rcode-design/doc/weekly-stats/v1.html'
       })
       const links = resolvePrototypeLinks(home, [home, settings, stats])
-      const currentFileUrl = 'file:///workspace/.kun-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
   
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#kun-proto-nav=%2Fsettings',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#Rcode-proto-nav=%2Fsettings',
           currentFileUrl,
           links
         )?.targetArtifactId
       ).toBe('settings')
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#kun-proto-nav=..%2Faccount-settings%2F',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#Rcode-proto-nav=..%2Faccount-settings%2F',
           currentFileUrl,
           links
         )?.targetArtifactId
@@ -197,14 +197,14 @@ describe("prototype-player route capture script", () => {
       ).toBe('weekly-stats')
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#/settings',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#/settings',
           currentFileUrl,
           links
         )?.targetArtifactId
       ).toBe('settings')
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#kun-proto-nav=%23%2Fweekly-stats',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#Rcode-proto-nav=%23%2Fweekly-stats',
           currentFileUrl,
           links
         )?.targetArtifactId
@@ -220,57 +220,57 @@ describe("prototype-player route capture script", () => {
   
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#kun-proto-nav=%2Fsettings',
-          'file:///workspace/.kun-design/doc/home/v1.html',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#Rcode-proto-nav=%2Fsettings',
+          'file:///workspace/.Rcode-design/doc/home/v1.html',
           links
         )
       ).toBeNull()
     })
     it('does not resolve ambiguous bare filenames to sibling prototype pages', () => {
-      const home = artifact('home', 'Home', { relativePath: '.kun-design/doc/home/v1.html' })
-      const signup = artifact('signup', 'Signup', { relativePath: '.kun-design/doc/signup/v1.html' })
-      const settings = artifact('settings', 'Settings', { relativePath: '.kun-design/doc/settings/v1.html' })
+      const home = artifact('home', 'Home', { relativePath: '.Rcode-design/doc/home/v1.html' })
+      const signup = artifact('signup', 'Signup', { relativePath: '.Rcode-design/doc/signup/v1.html' })
+      const settings = artifact('settings', 'Settings', { relativePath: '.Rcode-design/doc/settings/v1.html' })
       const links = resolvePrototypeLinks(home, [home, signup, settings])
   
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#kun-proto-nav=v1.html',
-          'file:///workspace/.kun-design/doc/home/v1.html',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#Rcode-proto-nav=v1.html',
+          'file:///workspace/.Rcode-design/doc/home/v1.html',
           links
         )
       ).toBeNull()
     })
     it('does not resolve ambiguous short relative paths to the first matching page', () => {
-      const home = artifact('home', 'Home', { relativePath: '.kun-design/doc/home/v1.html' })
+      const home = artifact('home', 'Home', { relativePath: '.Rcode-design/doc/home/v1.html' })
       const accountSettings = artifact('account-settings', 'Account Settings', {
-        relativePath: '.kun-design/doc/account/settings/v1.html'
+        relativePath: '.Rcode-design/doc/account/settings/v1.html'
       })
       const projectSettings = artifact('project-settings', 'Project Settings', {
-        relativePath: '.kun-design/doc/project/settings/v1.html'
+        relativePath: '.Rcode-design/doc/project/settings/v1.html'
       })
       const links = resolvePrototypeLinks(home, [home, accountSettings, projectSettings])
   
       expect(
         resolvePrototypeNavigationTarget(
-          'file:///workspace/.kun-design/doc/home/v1.html#kun-proto-nav=settings%2Fv1.html',
-          'file:///workspace/.kun-design/doc/home/v1.html',
+          'file:///workspace/.Rcode-design/doc/home/v1.html#Rcode-proto-nav=settings%2Fv1.html',
+          'file:///workspace/.Rcode-design/doc/home/v1.html',
           links
         )
       ).toBeNull()
     })
     it('extracts captured prototype hrefs and leaves ordinary hashes alone', () => {
-      expect(extractPrototypeNavigationHref('#kun-proto-nav=..%2Fsignup%2Fv1.html')).toBe('../signup/v1.html')
+      expect(extractPrototypeNavigationHref('#Rcode-proto-nav=..%2Fsignup%2Fv1.html')).toBe('../signup/v1.html')
       expect(extractPrototypeNavigationHref('file:///x.html#section')).toBeNull()
     })
     it('detects captured prototype back navigation signals', () => {
-      expect(isPrototypeBackNavigation('#kun-proto-back=123')).toBe(true)
-      expect(isPrototypeBackNavigation('file:///workspace/home.html#kun-proto-back=123')).toBe(true)
-      expect(isPrototypeBackNavigation('#kun-proto-nav=..%2Fsignup%2Fv1.html')).toBe(false)
+      expect(isPrototypeBackNavigation('#Rcode-proto-back=123')).toBe(true)
+      expect(isPrototypeBackNavigation('file:///workspace/home.html#Rcode-proto-back=123')).toBe(true)
+      expect(isPrototypeBackNavigation('#Rcode-proto-nav=..%2Fsignup%2Fv1.html')).toBe(false)
       expect(isPrototypeBackNavigation('#/settings')).toBe(false)
-      expect(prototypeBackNavigationSteps('#kun-proto-back=123')).toBe(1)
-      expect(prototypeBackNavigationSteps('#kun-proto-back=steps%3D2%26t%3D99')).toBe(2)
-      expect(prototypeBackNavigationSteps('file:///workspace/home.html#kun-proto-back=steps%3D3%26t%3D99')).toBe(3)
-      expect(prototypeBackNavigationSteps('#kun-proto-nav=..%2Fsignup%2Fv1.html')).toBeNull()
+      expect(prototypeBackNavigationSteps('#Rcode-proto-back=123')).toBe(1)
+      expect(prototypeBackNavigationSteps('#Rcode-proto-back=steps%3D2%26t%3D99')).toBe(2)
+      expect(prototypeBackNavigationSteps('file:///workspace/home.html#Rcode-proto-back=steps%3D3%26t%3D99')).toBe(3)
+      expect(prototypeBackNavigationSteps('#Rcode-proto-nav=..%2Fsignup%2Fv1.html')).toBeNull()
     })
     it('extracts hash-route prototype hrefs without treating plain anchors as routes', () => {
       expect(extractPrototypeHashRouteHref('#/settings')).toBe('/settings')
@@ -279,10 +279,10 @@ describe("prototype-player route capture script", () => {
       expect(extractPrototypeHashRouteHref('file:///workspace/home.html#/settings')).toBe('/settings')
       expect(extractPrototypeHashRouteHref('#settings')).toBeNull()
       expect(extractPrototypeHashRouteHref('#/assets/logo.png')).toBeNull()
-      expect(extractPrototypeHashRouteHref('#kun-proto-nav=..%2Fsettings%2Fv1.html')).toBeNull()
+      expect(extractPrototypeHashRouteHref('#Rcode-proto-nav=..%2Fsettings%2Fv1.html')).toBeNull()
     })
     it('captures unknown local prototype hrefs but lets anchors and external links behave normally', () => {
-      const base = 'file:///workspace/.kun-design/doc/home/v1.html'
+      const base = 'file:///workspace/.Rcode-design/doc/home/v1.html'
   
       expect(shouldCapturePrototypeNavigationHref('../billing/v1.html', base)).toBe(true)
       expect(shouldCapturePrototypeNavigationHref('/settings', base)).toBe(true)
@@ -310,11 +310,11 @@ describe("prototype-player route capture script", () => {
       ])
   
       expect(script).toContain('../signup/v1.html')
-      expect(script).toContain('kun-proto-nav=')
+      expect(script).toContain('Rcode-proto-nav=')
       expect(script).toContain('allowed.add')
       expect(script).toContain('const currentAllowed')
       expect(script).toContain('window[key] instanceof Set')
-      expect(script).toContain('__kunPrototypeNavCaptureTitles')
+      expect(script).toContain('__RcodePrototypeNavCaptureTitles')
       expect(script).toContain('targetTitles')
       expect(script).toContain('fuzzyTitleMatch')
       expect(script).toContain('hasUniqueFuzzyTargetTitle')
@@ -324,16 +324,16 @@ describe("prototype-player route capture script", () => {
       expect(script).toContain('shouldNavigateElement')
       expect(script).toContain('const liveAllowed = currentAllowed()')
       expect(script).toContain('liveAllowed.has(raw)')
-      expect(script).toContain('__kunPrototypeOriginalOpen')
-      expect(script).toContain('__kunPrototypeWindowOpenPatched')
+      expect(script).toContain('__RcodePrototypeOriginalOpen')
+      expect(script).toContain('__RcodePrototypeWindowOpenPatched')
       expect(script).toContain('window.open = function(url, target, features)')
       expect(script).toContain("navigate(raw, { preventDefault() {}, stopPropagation() {} })")
-      expect(script).toContain('__kunPrototypeOriginalPushState')
-      expect(script).toContain('__kunPrototypePushStatePatched')
+      expect(script).toContain('__RcodePrototypeOriginalPushState')
+      expect(script).toContain('__RcodePrototypePushStatePatched')
       expect(script).toContain("patchHistoryMethod('pushState'")
       expect(script).toContain("patchHistoryMethod('replaceState'")
-      expect(script).toContain('kun-proto-back=')
-      expect(script).toContain('__kunPrototypeBackPatched')
+      expect(script).toContain('Rcode-proto-back=')
+      expect(script).toContain('__RcodePrototypeBackPatched')
       expect(script).toContain('window.history.back = function()')
       expect(script).toContain('window.history.go = function(delta)')
       expect(script).toContain('backStepsFromInlineHandler')
@@ -366,7 +366,7 @@ describe("prototype-player route capture script", () => {
       expect(script).toContain('event.submitter')
     })
     it('captures history.pushState prototype navigation from scripted routers', () => {
-      const currentFileUrl = 'file:///workspace/.kun-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const checkout = artifact('checkout', 'Checkout')
       const links = resolvePrototypeLinks(home, [home, checkout])
@@ -376,7 +376,7 @@ describe("prototype-player route capture script", () => {
         ({ fakeWindow }) => {
           fakeWindow.history.pushState({}, '', '../checkout/v1.html')
   
-          expect(fakeWindow.location.hash).toBe('kun-proto-nav=..%2Fcheckout%2Fv1.html')
+          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=..%2Fcheckout%2Fv1.html')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,
@@ -390,18 +390,18 @@ describe("prototype-player route capture script", () => {
     it('captures history.back and history.go(-1) prototype navigation from scripted routers', () => {
       withInjectedPrototypeCapture(
         buildPrototypeNavigationCaptureScript([]),
-        'file:///workspace/.kun-design/doc/settings/v1.html',
+        'file:///workspace/.Rcode-design/doc/settings/v1.html',
         ({ fakeWindow }) => {
           fakeWindow.history.back()
-          expect(fakeWindow.location.hash).toMatch(/^kun-proto-back=/)
+          expect(fakeWindow.location.hash).toMatch(/^Rcode-proto-back=/)
   
           fakeWindow.location.hash = ''
           fakeWindow.history.go(-1)
-          expect(fakeWindow.location.hash).toMatch(/^kun-proto-back=steps%3D1%26t%3D/)
+          expect(fakeWindow.location.hash).toMatch(/^Rcode-proto-back=steps%3D1%26t%3D/)
   
           fakeWindow.location.hash = ''
           fakeWindow.history.go(-2)
-          expect(fakeWindow.location.hash).toMatch(/^kun-proto-back=steps%3D2%26t%3D/)
+          expect(fakeWindow.location.hash).toMatch(/^Rcode-proto-back=steps%3D2%26t%3D/)
   
           fakeWindow.location.hash = ''
           fakeWindow.history.go(1)
@@ -414,7 +414,7 @@ describe("prototype-player route capture script", () => {
         buildPrototypeNavigationCaptureScript([
           { targetTitle: 'Signup', targetArtifactId: 'signup', href: '../signup/v1.html' }
         ]),
-        'file:///workspace/.kun-design/doc/home/v1.html',
+        'file:///workspace/.Rcode-design/doc/home/v1.html',
         ({ fakeWindow, listeners }) => {
           const button = {
             nodeType: 1,
@@ -442,12 +442,12 @@ describe("prototype-player route capture script", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('kun-proto-nav=%2Fsignup')
+          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=%2Fsignup')
         }
       )
     })
     it('captures plain hash links when they uniquely match a prototype screen', () => {
-      const currentFileUrl = 'file:///workspace/.kun-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const checkout = artifact('checkout', 'Checkout')
       const links = resolvePrototypeLinks(home, [home, checkout])
@@ -481,7 +481,7 @@ describe("prototype-player route capture script", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('kun-proto-nav=Checkout')
+          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=Checkout')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,
@@ -493,7 +493,7 @@ describe("prototype-player route capture script", () => {
       )
     })
     it('lets real same-page hash anchors behave normally in the injected navigation script', () => {
-      const currentFileUrl = 'file:///workspace/.kun-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const checkout = artifact('checkout', 'Checkout')
       const links = resolvePrototypeLinks(home, [home, checkout])

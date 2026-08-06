@@ -11,9 +11,9 @@ import {
   type DataMigrationWorkspaceConflictStrategy,
   type PackageRelativePath
 } from '../../shared/data-migration'
-import { validateKunpackLinkMetadata } from './archive-security'
+import { validateRcodepackLinkMetadata } from './archive-security'
 import { stableImportedSiblingPath } from './import-planner'
-import { extractZip64ArchiveEntries } from './kunpack-zip'
+import { extractZip64ArchiveEntries } from './Rcodepack-zip'
 
 export type StagedWorkspaceFile = {
   entry: DataMigrationPackageEntry
@@ -57,8 +57,8 @@ export async function stageWorkspaceImport(input: {
   onProgress?: (value: { path: PackageRelativePath; bytes: number; entries: number }) => void
 }): Promise<StagedWorkspace> {
   const destinationRoot = resolve(input.destinationRoot)
-  const stagingRoot = join(dirname(destinationRoot), `.kun-migration-staging-${input.operationId}-${input.workspaceId}`)
-  const backupRoot = join(dirname(destinationRoot), '.kun-migration-backup', input.operationId, input.workspaceId)
+  const stagingRoot = join(dirname(destinationRoot), `.Rcode-migration-staging-${input.operationId}-${input.workspaceId}`)
+  const backupRoot = join(dirname(destinationRoot), '.Rcode-migration-backup', input.operationId, input.workspaceId)
   if (await exists(stagingRoot)) throw new Error(`migration staging root already exists: ${stagingRoot}`)
   const files: StagedWorkspaceFile[] = []
   for (const entry of input.entries) {
@@ -72,7 +72,7 @@ export async function stageWorkspaceImport(input: {
     assertBelow(stagingRoot, stagedPath)
     files.push({ entry, relativePath, stagedPath, ordinal: files.length * 2 })
   }
-  validateKunpackLinkMetadata(files.map((file) => file.entry), { allowLinks: input.supportsSymbolicLinks })
+  validateRcodepackLinkMetadata(files.map((file) => file.entry), { allowLinks: input.supportsSymbolicLinks })
   try {
     await extractZip64ArchiveEntries({
       archivePath: input.archivePath,
@@ -109,8 +109,8 @@ export function reconstructStagedWorkspace(input: {
   destinationRoot: string
 }): StagedWorkspace {
   const destinationRoot = resolve(input.destinationRoot)
-  const stagingRoot = join(dirname(destinationRoot), `.kun-migration-staging-${input.operationId}-${input.workspaceId}`)
-  const backupRoot = join(dirname(destinationRoot), '.kun-migration-backup', input.operationId, input.workspaceId)
+  const stagingRoot = join(dirname(destinationRoot), `.Rcode-migration-staging-${input.operationId}-${input.workspaceId}`)
+  const backupRoot = join(dirname(destinationRoot), '.Rcode-migration-backup', input.operationId, input.workspaceId)
   const files: StagedWorkspaceFile[] = []
   for (const entry of input.entries) {
     const relativePath = workspaceEntryRelativePath(entry.path, input.workspaceId)

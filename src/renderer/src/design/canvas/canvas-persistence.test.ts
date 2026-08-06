@@ -15,8 +15,8 @@ import { createRunningAppFrameShape } from './running-app-frame'
 
 describe('canvas-persistence round-trip', () => {
   it('builds a stable document key from workspace and canvas path', () => {
-    expect(canvasDocumentKey('/workspace', 'code-thread-1', '.kun-canvas')).toBe(
-      `/workspace\0${canvasDocPath('code-thread-1', '.kun-canvas')}`
+    expect(canvasDocumentKey('/workspace', 'code-thread-1', '.Rcode-canvas')).toBe(
+      `/workspace\0${canvasDocPath('code-thread-1', '.Rcode-canvas')}`
     )
   })
 
@@ -346,13 +346,13 @@ describe('persistCanvasDocument debounce', () => {
   it('does not let one canvas save cancel another canvas save', () => {
     vi.useFakeTimers()
     const writeWorkspaceFile = vi.fn(async () => ({ ok: true as const }))
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
 
     const designDoc = createEmptyDocument()
     const codeDoc = createEmptyDocument()
 
     persistCanvasDocument('/workspace', 'design-board', designDoc)
-    persistCanvasDocument('/workspace', 'code-thread-1', codeDoc, '.kun-canvas')
+    persistCanvasDocument('/workspace', 'code-thread-1', codeDoc, '.Rcode-canvas')
     vi.advanceTimersByTime(600)
 
     expect(writeWorkspaceFile).toHaveBeenCalledTimes(2)
@@ -362,7 +362,7 @@ describe('persistCanvasDocument debounce', () => {
       content: serializeCanvasDocument(designDoc)
     })
     expect(writeWorkspaceFile).toHaveBeenCalledWith({
-      path: canvasDocPath('code-thread-1', '.kun-canvas'),
+      path: canvasDocPath('code-thread-1', '.Rcode-canvas'),
       workspaceRoot: '/workspace',
       content: serializeCanvasDocument(codeDoc)
     })
@@ -371,7 +371,7 @@ describe('persistCanvasDocument debounce', () => {
   it('keeps debouncing repeated saves for the same canvas', () => {
     vi.useFakeTimers()
     const writeWorkspaceFile = vi.fn(async () => ({ ok: true as const }))
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
 
     const firstDoc = createEmptyDocument()
     const latestDoc = createEmptyDocument()
@@ -381,13 +381,13 @@ describe('persistCanvasDocument debounce', () => {
     latestDoc.objects[rect.id] = { ...rect, parentId: latestDoc.rootId }
     latestDoc.objects[latestDoc.rootId] = { ...root, children: [rect.id] }
 
-    persistCanvasDocument('/workspace', 'code-thread-1', firstDoc, '.kun-canvas')
-    persistCanvasDocument('/workspace', 'code-thread-1', latestDoc, '.kun-canvas')
+    persistCanvasDocument('/workspace', 'code-thread-1', firstDoc, '.Rcode-canvas')
+    persistCanvasDocument('/workspace', 'code-thread-1', latestDoc, '.Rcode-canvas')
     vi.advanceTimersByTime(600)
 
     expect(writeWorkspaceFile).toHaveBeenCalledTimes(1)
     expect(writeWorkspaceFile).toHaveBeenCalledWith({
-      path: canvasDocPath('code-thread-1', '.kun-canvas'),
+      path: canvasDocPath('code-thread-1', '.Rcode-canvas'),
       workspaceRoot: '/workspace',
       content: serializeCanvasDocument(latestDoc)
     })
@@ -400,7 +400,7 @@ describe('persistCanvasDocument debounce', () => {
       path,
       savedAt: 'now'
     }))
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
     const latestDoc = createEmptyDocument()
     const rect = createDefaultShape('rect', 12, 24)
     latestDoc.objects[rect.id] = { ...rect, parentId: latestDoc.rootId }

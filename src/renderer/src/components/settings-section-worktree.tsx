@@ -25,7 +25,7 @@ export function WorktreeSettingsSection({ ctx }: { ctx: Record<string, any> }): 
   const worktreeRoot = ctx.form?.worktreeRootPath
     ? expandHomePath(String(ctx.form.worktreeRootPath))
     : undefined
-  const projectPath = expandHomePath(String(ctx.form?.workspaceRoot || ctx.kun?.workspaceRoot || '')).trim()
+  const projectPath = expandHomePath(String(ctx.form?.workspaceRoot || ctx.Rcode?.workspaceRoot || '')).trim()
   const [result, setResult] = useState<GitBranchWorktreesResult | null>(null)
   const [loading, setLoading] = useState(false)
   const [busyPath, setBusyPath] = useState<string | null>(null)
@@ -36,7 +36,7 @@ export function WorktreeSettingsSection({ ctx }: { ctx: Record<string, any> }): 
     setLoading(true)
     setError(null)
     try {
-      const next = await window.kunGui.listGitBranchWorktrees({
+      const next = await window.RcodeGui.listGitBranchWorktrees({
         projectPath,
         worktreeRoot
       })
@@ -86,7 +86,7 @@ export function WorktreeSettingsSection({ ctx }: { ctx: Record<string, any> }): 
     setBusyPath(path)
     setError(null)
     try {
-      await window.kunGui.removeGitBranchWorktree({
+      await window.RcodeGui.removeGitBranchWorktree({
         workspaceRoot: projectPath,
         worktreePath: path
       })

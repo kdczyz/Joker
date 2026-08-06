@@ -32,9 +32,9 @@ export type WorkbenchFileTreeControllerOptions = {
   closeRightPanelTab?: (mode: Exclude<RightPanelMode, null>) => void
 }
 
-export const PINNED_FILE_PREVIEW_TARGETS_KEY = 'kun.filePreview.pinnedTargets'
-export const PRESERVE_FILE_PREVIEW_TARGETS_KEY = 'kun.filePreview.preserveAcrossThreads'
-export const LEGACY_PINNED_FILE_PREVIEW_TARGETS_KEY = 'kun.issue781.pinnedPreviewTabs'
+export const PINNED_FILE_PREVIEW_TARGETS_KEY = 'Rcode.filePreview.pinnedTargets'
+export const PRESERVE_FILE_PREVIEW_TARGETS_KEY = 'Rcode.filePreview.preserveAcrossThreads'
+export const LEGACY_PINNED_FILE_PREVIEW_TARGETS_KEY = 'Rcode.issue781.pinnedPreviewTabs'
 const MAX_PINNED_FILE_PREVIEW_TARGETS = 200
 
 export { workspaceFileTargetKey } from '../../lib/workspace-file-target-key'
@@ -122,7 +122,7 @@ export function migrateLegacyPinnedFilePreviewTargetKeys(raw: string | null, pla
 }
 
 function readStoredPinnedTargetKeys(): string[] {
-  const platform = typeof window !== 'undefined' ? window.kunGui?.platform ?? '' : ''
+  const platform = typeof window !== 'undefined' ? window.RcodeGui?.platform ?? '' : ''
   const stored = readBrowserStorageItem(PINNED_FILE_PREVIEW_TARGETS_KEY)
   if (stored !== null) return parsePinnedFilePreviewTargetKeys(stored, platform)
 
@@ -193,7 +193,7 @@ export function useWorkbenchFileTreeController({
   }
 
   async function pickComposerFileReferences(): Promise<void> {
-    const result = await window.kunGui.pickLocalFiles(activeSkillWorkspace || undefined)
+    const result = await window.RcodeGui.pickLocalFiles(activeSkillWorkspace || undefined)
     if (result.canceled) return
     for (const path of result.paths) {
       addComposerFileReference(composerFileReferenceFromPath(path, activeSkillWorkspace))

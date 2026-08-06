@@ -3,7 +3,7 @@ import { readBrowserStorageItem, writeBrowserStorageItem } from './browser-stora
 /**
  * 形象模式偏好:'default' | 'retroma' | <UI 插件 id>。
  */
-export const UI_MODE_STORAGE_KEY = 'kun.uiMode'
+export const UI_MODE_STORAGE_KEY = 'Rcode.uiMode'
 
 export const UI_MODE_DEFAULT = 'default'
 /** Retroma 羊皮纸浅色配色模式:纯配色(无吉祥物),仅浅色生效 */

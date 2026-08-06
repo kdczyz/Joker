@@ -57,7 +57,7 @@ export async function syncActiveSddDraftFromDisk(snapshot: SddDraftDiskSnapshot)
 
   let content = snapshot.content
   if (typeof content !== 'string') {
-    const result = await window.kunGui.readWorkspaceFile({
+    const result = await window.RcodeGui.readWorkspaceFile({
       workspaceRoot: draft.workspaceRoot,
       path: draft.relativePath
     })
@@ -84,7 +84,7 @@ export async function saveActiveSddDraftToDisk(): Promise<boolean> {
 
   useSddDraftStore.getState().setSaveStatus('saving')
   try {
-    const result = await window.kunGui.writeWorkspaceFile({
+    const result = await window.RcodeGui.writeWorkspaceFile({
       workspaceRoot: draft.workspaceRoot,
       path: draft.relativePath,
       content: snapshot.content
@@ -112,12 +112,12 @@ export async function deleteSddDraft(draft: SddDraft): Promise<DeleteSddDraftRes
   // prototypes and chat records with it in one pass.
   const folderPath = sddRequirementUnitDir(draft.relativePath)
   if (!folderPath) return { ok: false, message: 'Invalid requirement draft path.' }
-  if (typeof window.kunGui?.deleteWorkspaceEntry !== 'function') {
+  if (typeof window.RcodeGui?.deleteWorkspaceEntry !== 'function') {
     return { ok: false, message: 'Deleting requirement drafts is not available.' }
   }
 
   try {
-    const result = await window.kunGui.deleteWorkspaceEntry({
+    const result = await window.RcodeGui.deleteWorkspaceEntry({
       workspaceRoot: draft.workspaceRoot,
       path: folderPath
     })

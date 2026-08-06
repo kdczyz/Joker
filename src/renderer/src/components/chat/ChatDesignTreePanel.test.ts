@@ -6,8 +6,8 @@ const createdAt = '2026-06-20T00:00:00.000Z'
 
 function artifact(id: string, kind: DesignArtifact['kind']): DesignArtifact {
   const relativePath = kind === 'canvas'
-    ? `.kun-design/doc_1/${id}/canvas.json`
-    : `.kun-design/doc_1/${id}/v1.html`
+    ? `.Rcode-design/doc_1/${id}/canvas.json`
+    : `.Rcode-design/doc_1/${id}/v1.html`
   return {
     id,
     kind,
@@ -30,8 +30,8 @@ describe('ChatDesignTreePanel helpers', () => {
 
   it('creates directory references for individual design artifacts', () => {
     expect(designArtifactDirectoryReference(artifact('home', 'html'), '/workspace')).toMatchObject({
-      path: '/workspace/.kun-design/doc_1/home',
-      relativePath: '.kun-design/doc_1/home',
+      path: '/workspace/.Rcode-design/doc_1/home',
+      relativePath: '.Rcode-design/doc_1/home',
       type: 'directory',
       workspaceRoot: '/workspace'
     })

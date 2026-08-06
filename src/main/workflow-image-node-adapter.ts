@@ -2,11 +2,11 @@ import { randomBytes } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { isAbsolute, join, resolve } from 'node:path'
 import type { AppSettingsV1, WorkflowNodeV1 } from '../shared/app-settings'
-import { resolveKunImageGenerationSettings } from '../shared/app-settings'
+import { resolveRcodeImageGenerationSettings } from '../shared/app-settings'
 import {
   createImageGenClient,
   mapImageSize
-} from '../../kun/src/adapters/tool/image-gen-tool-provider.js'
+} from '../../Rcode/src/adapters/tool/image-gen-tool-provider.js'
 import { resolveCodexOAuthApiKey } from './codex-auth'
 import { interpolate, type InterpScope, type WorkflowPayload } from './workflow-expression'
 import type { WorkflowNodeOutcome } from './workflow-core-node-adapter'
@@ -16,15 +16,15 @@ type ImageNode = Extract<WorkflowNodeV1, { type: 'generate-image' }>
 function resolveImageSettings(settings: AppSettingsV1, providerRaw: string, modelRaw: string) {
   const providerId = providerRaw.trim()
   const model = modelRaw.trim()
-  if (!providerId && !model) return resolveKunImageGenerationSettings(settings)
-  return resolveKunImageGenerationSettings({
+  if (!providerId && !model) return resolveRcodeImageGenerationSettings(settings)
+  return resolveRcodeImageGenerationSettings({
     ...settings,
     agents: {
       ...settings.agents,
-      kun: {
-        ...settings.agents.kun,
+      Rcode: {
+        ...settings.agents.Rcode,
         imageGeneration: {
-          ...settings.agents.kun.imageGeneration,
+          ...settings.agents.Rcode.imageGeneration,
           ...(providerId ? { providerId } : {}),
           ...(model ? { model } : {})
         }

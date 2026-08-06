@@ -10,10 +10,10 @@ import {
 
 describe('project design system v1', () => {
   it('uses one canonical project-level path and round-trips an empty document', () => {
-    expect(PROJECT_DESIGN_SYSTEM_PATH).toBe('.kun-design/design-system.json')
-    const document = createProjectDesignSystem('Kun Product')
+    expect(PROJECT_DESIGN_SYSTEM_PATH).toBe('.Rcode-design/design-system.json')
+    const document = createProjectDesignSystem('Rcode Product')
     const parsed = parseProjectDesignSystem(serializeProjectDesignSystem(document))
-    expect(parsed).toMatchObject({ ok: true, document: { schemaVersion: 1, meta: { name: 'Kun Product' } } })
+    expect(parsed).toMatchObject({ ok: true, document: { schemaVersion: 1, meta: { name: 'Rcode Product' } } })
   })
 
   it('accepts a normalized full component tree with variant overrides', () => {

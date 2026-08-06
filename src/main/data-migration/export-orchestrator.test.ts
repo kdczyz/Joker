@@ -7,7 +7,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultTerminalSettings,
@@ -17,9 +17,9 @@ import {
 } from '../../shared/app-settings'
 import {
   DataMigrationExportOrchestrator,
-  type KunMigrationSnapshotClient
+  type RcodeMigrationSnapshotClient
 } from './export-orchestrator'
-import { verifyKunpackPackage } from './kunpack-container'
+import { verifyRcodepackPackage } from './Rcodepack-container'
 
 const roots: string[] = []
 
@@ -36,7 +36,7 @@ function settings(workspaceRoot: string): AppSettingsV1 {
     uiFontScale: 1,
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
-    agents: { kun: defaultKunRuntimeSettings() },
+    agents: { Rcode: defaultRcodeRuntimeSettings() },
     workspaceRoot,
     conversationWorkspaceRoot: workspaceRoot,
     log: { enabled: false, retentionDays: 7 },
@@ -58,7 +58,7 @@ function settings(workspaceRoot: string): AppSettingsV1 {
 
 function runtimeClient(contents = '{"schemaVersion":1,"type":"metadata","value":{}}\n') {
   const release = vi.fn(async () => undefined)
-  const client: KunMigrationSnapshotClient = {
+  const client: RcodeMigrationSnapshotClient = {
     create: vi.fn(async (input) => ({
       snapshotId: 'migexp_test',
       exportedThreadIds: input.threadIds,
@@ -79,10 +79,10 @@ function runtimeClient(contents = '{"schemaVersion":1,"type":"metadata","value":
 
 describe('DataMigrationExportOrchestrator', () => {
   it('packages workspace files, runtime history, semantic settings, and a reportable verified archive', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-export-orchestrator-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-export-orchestrator-'))
     roots.push(root)
     const workspace = join(root, 'workspace')
-    const output = join(root, 'exports', 'portable.kunpack')
+    const output = join(root, 'exports', 'portable.Rcodepack')
     await mkdir(workspace, { recursive: true })
     await writeFile(join(workspace, 'README.md'), '# Project\n')
     const runtime = runtimeClient()
@@ -115,7 +115,7 @@ describe('DataMigrationExportOrchestrator', () => {
     expect(result.report.counts).toMatchObject({ attachments: 2, artifacts: 1, memories: 3 })
     expect(runtime.release).toHaveBeenCalledWith('migexp_test')
     expect(progress).toContain('completed')
-    const verified = await verifyKunpackPackage({
+    const verified = await verifyRcodepackPackage({
       packagePath: output,
       materializedZipPath: join(root, 'verify.zip')
     })
@@ -129,7 +129,7 @@ describe('DataMigrationExportOrchestrator', () => {
   })
 
   it('requires explicit acknowledgement for plaintext and sensitive workspace files', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-export-policy-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-export-policy-'))
     roots.push(root)
     const workspace = join(root, 'workspace')
     await mkdir(workspace, { recursive: true })
@@ -137,7 +137,7 @@ describe('DataMigrationExportOrchestrator', () => {
     const orchestrator = new DataMigrationExportOrchestrator(runtimeClient().client)
     const base = {
       operationId: 'export_policy',
-      outputPath: join(root, 'portable.kunpack'),
+      outputPath: join(root, 'portable.Rcodepack'),
       settings: settings(workspace),
       runtimeThreads: [],
       selectedWorkspaceIds: [],
@@ -161,10 +161,10 @@ describe('DataMigrationExportOrchestrator', () => {
   })
 
   it('cleans a partially downloaded runtime snapshot and never publishes on failure', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-export-cleanup-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-export-cleanup-'))
     roots.push(root)
     const workspace = join(root, 'workspace')
-    const output = join(root, 'portable.kunpack')
+    const output = join(root, 'portable.Rcodepack')
     await mkdir(workspace, { recursive: true })
     const runtime = runtimeClient()
     runtime.client.download = vi.fn(async (_id, destinationPath) => {
@@ -184,14 +184,14 @@ describe('DataMigrationExportOrchestrator', () => {
   })
 
   it('treats an empty thread selection as all runtime histories when history is included', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-export-all-threads-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-export-all-threads-'))
     roots.push(root)
     const workspace = join(root, 'workspace')
     await mkdir(workspace, { recursive: true })
     const runtime = runtimeClient()
     const orchestrator = new DataMigrationExportOrchestrator(runtime.client)
     await orchestrator.export({
-      operationId: 'export_all_threads', outputPath: join(root, 'all.kunpack'), settings: settings(workspace),
+      operationId: 'export_all_threads', outputPath: join(root, 'all.Rcodepack'), settings: settings(workspace),
       runtimeThreads: [
         { id: 'thread_one', title: 'One', workspace, createdAt: 't0', updatedAt: 't1' },
         { id: 'thread_two', title: 'Two', workspace, createdAt: 't0', updatedAt: 't1' }
@@ -206,7 +206,7 @@ describe('DataMigrationExportOrchestrator', () => {
   })
 
   it('limits automatic history selection to the explicitly selected workspaces', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-export-related-threads-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-export-related-threads-'))
     roots.push(root)
     const firstWorkspace = join(root, 'first')
     const secondWorkspace = join(root, 'second')
@@ -226,7 +226,7 @@ describe('DataMigrationExportOrchestrator', () => {
       sensitiveContentAcknowledged: false
     })
     const selectedWorkspaceId = inventory.estimate.workspaces.find((workspace) => workspace.sourcePathDisplay === firstWorkspace)!.workspaceId
-    const outputPath = join(root, 'related.kunpack')
+    const outputPath = join(root, 'related.Rcodepack')
     await orchestrator.export({
       operationId: 'export_related_threads', outputPath,
       settings: settings(firstWorkspace), runtimeThreads,
@@ -237,7 +237,7 @@ describe('DataMigrationExportOrchestrator', () => {
     expect(runtime.client.create).toHaveBeenCalledWith(expect.objectContaining({
       threadIds: ['thread_first']
     }), undefined)
-    const verified = await verifyKunpackPackage({ packagePath: outputPath, materializedZipPath: join(root, 'related.zip') })
+    const verified = await verifyRcodepackPackage({ packagePath: outputPath, materializedZipPath: join(root, 'related.zip') })
     expect(verified.manifest.selection.threadIds).toEqual(['thread_first'])
     expect(verified.manifest.counts.threads).toBe(1)
   })

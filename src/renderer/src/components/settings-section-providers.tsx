@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, type ReactElement, type ReactNode } from '
 import type {
   AppSettingsPatch,
   ImageGenerationProtocol,
-  KunRuntimeSettingsPatchV1,
-  KunRuntimeSettingsV1,
+  RcodeRuntimeSettingsPatchV1,
+  RcodeRuntimeSettingsV1,
   MusicGenerationProtocol,
   ModelEndpointFormat,
   ModelProviderImageCapabilityV1,
@@ -28,7 +28,7 @@ import {
   MODEL_ENDPOINT_FORMATS,
   MODEL_PROVIDER_PRESETS,
   TOKEN_PLAN_PROVIDER_ID_SUFFIX,
-  defaultMiniMaxMediaGenerationKunPatch,
+  defaultMiniMaxMediaGenerationRcodePatch,
   defaultModelRequestRetrySettings,
   defaultModelProviderSettings,
   getModelProviderPreset,
@@ -39,7 +39,7 @@ import {
   tokenPlanProviderId
 } from '@shared/app-settings'
 import type { ModelProviderPreset } from '@shared/model-provider-presets'
-import type { ModelProviderProbeResult } from '@shared/kun-gui-api'
+import type { ModelProviderProbeResult } from '@shared/Rcode-gui-api'
 import {
   AudioLines,
   ChevronDown,
@@ -73,6 +73,10 @@ import {
   ProviderModelImportDialog,
   type ProviderModelImportResult
 } from './provider-model-import-dialog'
+import { CloudProvidersPanel } from './settings-cloud-providers'
+import type { CloudAiProvider } from '../auth/authClient'
+import { RemoteAgentPanel } from './settings-remote-agent'
+import { useAuth } from '../auth/AuthGate'
 
 const MODEL_ENDPOINT_FORMAT_LABEL_KEYS: Record<ModelEndpointFormat, string> = {
   chat_completions: 'modelEndpointChatCompletions',
@@ -109,20 +113,20 @@ const VIDEO_GENERATION_PROTOCOL_LABEL_KEYS: Record<VideoGenerationProtocol, stri
 export function modelProvidersSettingsPatch(input: {
   provider: ModelProviderSettingsV1
   providers: ModelProviderProfileV1[]
-  kun?: KunRuntimeSettingsPatchV1
-  currentKun?: Partial<KunRuntimeSettingsV1>
+  Rcode?: RcodeRuntimeSettingsPatchV1
+  currentRcode?: Partial<RcodeRuntimeSettingsV1>
 }): AppSettingsPatch {
   const defaultProvider = input.providers.find((item) => item.id === DEFAULT_MODEL_PROVIDER_ID)
-  const miniMaxMediaDefaults = defaultMiniMaxMediaGenerationKunPatch({
+  const miniMaxMediaDefaults = defaultMiniMaxMediaGenerationRcodePatch({
     providers: input.providers,
-    currentKun: input.currentKun,
-    kunPatch: input.kun
+    currentRcode: input.currentRcode,
+    RcodePatch: input.Rcode
   })
-  const baseKunPatch = input.kun?.providerId?.trim()
-    ? { ...input.kun, apiKey: '', baseUrl: '' }
-    : input.kun ?? {}
-  const kunPatch = {
-    ...baseKunPatch,
+  const baseRcodePatch = input.Rcode?.providerId?.trim()
+    ? { ...input.Rcode, apiKey: '', baseUrl: '' }
+    : input.Rcode ?? {}
+  const RcodePatch = {
+    ...baseRcodePatch,
     ...(miniMaxMediaDefaults ?? {})
   }
   return {
@@ -132,7 +136,7 @@ export function modelProvidersSettingsPatch(input: {
       proxy: input.provider.proxy,
       providers: input.providers
     },
-    ...(Object.keys(kunPatch).length > 0 ? { agents: { kun: kunPatch } } : {})
+    ...(Object.keys(RcodePatch).length > 0 ? { agents: { Rcode: RcodePatch } } : {})
   }
 }
 
@@ -379,7 +383,7 @@ function CodexLoginSection({
     runId?: number
     fallbackNotice?: InlineNotice | null
   } = {}): Promise<void> => {
-    if (typeof window.kunGui?.startCodexAuth !== 'function') {
+    if (typeof window.RcodeGui?.startCodexAuth !== 'function') {
       if (!isCurrentLoginRun(runId)) return
       setPhase('error')
       setError('ChatGPT 订阅登录不可用，请重启应用')
@@ -390,7 +394,7 @@ function CodexLoginSection({
     setError('')
     setNotice(fallbackNotice)
     try {
-      const result = await window.kunGui.startCodexAuth()
+      const result = await window.RcodeGui.startCodexAuth()
       if (!isCurrentLoginRun(runId)) return
       if (!result.ok) {
         setPhase('error')
@@ -410,9 +414,9 @@ function CodexLoginSection({
           clearPoll()
           return
         }
-        if (typeof window.kunGui?.pollCodexAuth !== 'function') return
+        if (typeof window.RcodeGui?.pollCodexAuth !== 'function') return
         try {
-          const poll = await window.kunGui.pollCodexAuth(deviceCode, uc)
+          const poll = await window.RcodeGui.pollCodexAuth(deviceCode, uc)
           if (!isCurrentLoginRun(runId)) return
           if (poll.done) {
             clearPoll()
@@ -443,7 +447,7 @@ function CodexLoginSection({
 
   const startBrowserLogin = async (): Promise<void> => {
     const runId = beginLoginRun()
-    if (typeof window.kunGui?.startCodexBrowserAuth !== 'function') {
+    if (typeof window.RcodeGui?.startCodexBrowserAuth !== 'function') {
       setPhase('error')
       setError('ChatGPT 订阅浏览器登录不可用，请重启应用')
       setNotice(null)
@@ -453,7 +457,7 @@ function CodexLoginSection({
     setError('')
     setNotice(null)
     try {
-      const result = await window.kunGui.startCodexBrowserAuth()
+      const result = await window.RcodeGui.startCodexBrowserAuth()
       if (!isCurrentLoginRun(runId)) return
       if (result.ok) {
         setNotice(null)
@@ -499,8 +503,8 @@ function CodexLoginSection({
 
   const openVerifyUrl = (): void => {
     if (!verifyUrl) return
-    if (typeof window.kunGui?.openExternal === 'function') {
-      void window.kunGui.openExternal(verifyUrl).catch(() => {
+    if (typeof window.RcodeGui?.openExternal === 'function') {
+      void window.RcodeGui.openExternal(verifyUrl).catch(() => {
         window.open(verifyUrl, '_blank', 'noopener,noreferrer')
       })
       return
@@ -790,7 +794,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     t,
     form,
     provider: providerFromContext,
-    kun,
+    Rcode,
     update,
     showApiKey,
     setShowApiKey,
@@ -798,8 +802,72 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   } = ctx
   const provider = providerFromContext ?? defaultModelProviderSettings()
   const modelProviders = provider.providers as ModelProviderProfileV1[]
+  const { user } = useAuth()
+  const cloudAuthenticated = Boolean(user) && !user.isGuest
+  const handleImportCloudProvider = (imported: ModelProviderProfileV1): void => {
+    update({ provider: { providers: [...modelProviders, imported] } })
+  }
+
+  // Auto-merge cloud provider metadata into local (preserves local apiKey)
+  const handleAutoSyncProviders = (cloudProviders: CloudAiProvider[]): void => {
+    const localByBaseUrl = new Map(modelProviders.map((p) => [p.baseUrl, p]))
+    let changed = false
+    const merged = [...modelProviders]
+
+    for (const cloud of cloudProviders) {
+      const existing = localByBaseUrl.get(cloud.baseUrl)
+      if (existing) {
+        const idx = merged.findIndex((p) => p.baseUrl === cloud.baseUrl)
+        if (idx >= 0) {
+          const prev = merged[idx]!
+          const updated: ModelProviderProfileV1 = {
+            ...prev,
+            name: cloud.displayName || prev.name,
+            models: cloud.models.length > 0 ? cloud.models : prev.models
+          }
+          if (cloud.imageModels.length > 0) {
+            ;(updated as ModelProviderProfileV1 & { image?: { protocol: 'openai-images'; baseUrl: string; models: string[] } }).image = {
+              protocol: 'openai-images',
+              baseUrl: cloud.baseUrl,
+              models: cloud.imageModels
+            }
+          }
+          // Only update if something actually changed
+          if (updated.name !== prev.name || updated.models !== prev.models) {
+            merged[idx] = updated
+            changed = true
+          }
+        }
+      } else {
+        const id = normalizeModelProviderId(cloud.id) || normalizeModelProviderId(cloud.displayName) || `cloud-${Date.now()}`
+        const newProvider: ModelProviderProfileV1 = {
+          id,
+          name: cloud.displayName || id,
+          apiKey: '',
+          baseUrl: cloud.baseUrl,
+          endpointFormat: 'chat_completions',
+          retry: defaultModelRequestRetrySettings(),
+          models: cloud.models.length > 0 ? cloud.models : (cloud.model ? [cloud.model] : []),
+          modelProfiles: {}
+        }
+        if (cloud.imageModels.length > 0) {
+          ;(newProvider as ModelProviderProfileV1 & { image?: { protocol: 'openai-images'; baseUrl: string; models: string[] } }).image = {
+            protocol: 'openai-images',
+            baseUrl: cloud.baseUrl,
+            models: cloud.imageModels
+          }
+        }
+        merged.push(newProvider)
+        changed = true
+      }
+    }
+
+    if (changed) {
+      update({ provider: { providers: merged } })
+    }
+  }
   const [selectedProviderId, setSelectedProviderId] = useState<string>(
-    kun.providerId?.trim() || modelProviders[0]?.id || DEFAULT_MODEL_PROVIDER_ID
+    Rcode.providerId?.trim() || modelProviders[0]?.id || DEFAULT_MODEL_PROVIDER_ID
   )
   const [addMenuOpen, setAddMenuOpen] = useState(false)
   const addMenuRef = useRef<HTMLDivElement>(null)
@@ -844,7 +912,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     !getModelProviderPreset(activeProvider.id) &&
     !tokenPlanPresetForProfileId(activeProvider.id)
   )
-  const activeKunProviderId: string = kun.providerId?.trim() || DEFAULT_MODEL_PROVIDER_ID
+  const activeRcodeProviderId: string = Rcode.providerId?.trim() || DEFAULT_MODEL_PROVIDER_ID
   const providerProxy = provider.proxy ?? { enabled: false, url: '' }
 
   const updateProviderProxy = (patch: Partial<typeof providerProxy>): void => {
@@ -864,21 +932,21 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     confirmLabel?: string
     cancelLabel?: string
   }): Promise<boolean> => {
-    if (typeof window.kunGui?.confirmDialog === 'function') {
-      return window.kunGui.confirmDialog(options)
+    if (typeof window.RcodeGui?.confirmDialog === 'function') {
+      return window.RcodeGui.confirmDialog(options)
     }
     return true
   }
 
   const updateModelProviders = (
     providers: ModelProviderProfileV1[],
-    kunPatch?: KunRuntimeSettingsPatchV1
+    RcodePatch?: RcodeRuntimeSettingsPatchV1
   ): void => {
     update(modelProvidersSettingsPatch({
       provider,
       providers,
-      kun: kunPatch,
-      currentKun: kun
+      Rcode: RcodePatch,
+      currentRcode: Rcode
     }))
   }
 
@@ -1022,7 +1090,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     setSelectedProviderId(nextId)
     updateModelProviders(
       modelProviders.map((item) => item.id === id ? { ...item, id: nextId } : item),
-      kun.providerId === id ? { providerId: nextId } : undefined
+      Rcode.providerId === id ? { providerId: nextId } : undefined
     )
   }
 
@@ -1037,7 +1105,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     updateModelProviders(
       [...modelProviders, draftProvider],
       hasKey
-        ? { providerId: draftProvider.id, model: draftProvider.models[0] ?? kun.model }
+        ? { providerId: draftProvider.id, model: draftProvider.models[0] ?? Rcode.model }
         : undefined
     )
     setDraftProvider(null)
@@ -1047,7 +1115,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   const cancelProviderDraft = (): void => {
     if (!draftProvider) return
     setDraftProvider(null)
-    setSelectedProviderId(activeKunProviderId)
+    setSelectedProviderId(activeRcodeProviderId)
   }
 
   const addModelProvider = (): void => {
@@ -1116,7 +1184,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     updateModelProviders(
       nextProviders,
       nextProvider.apiKey.trim()
-        ? { providerId: nextProvider.id, model: nextProvider.models[0] ?? kun.model }
+        ? { providerId: nextProvider.id, model: nextProvider.models[0] ?? Rcode.model }
         : undefined
     )
   }
@@ -1125,12 +1193,12 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     if (id === DEFAULT_MODEL_PROVIDER_ID) return
     const target = modelProviders.find((item) => item.id === id)
     if (!target) return
-    const usedByChat = activeKunProviderId === id
-    const usedByImage = (kun.imageGeneration?.providerId ?? '').trim() === id
-    const usedBySpeech = (kun.speechToText?.providerId ?? '').trim() === id
-    const usedByTextToSpeech = (kun.textToSpeech?.providerId ?? '').trim() === id
-    const usedByMusic = (kun.musicGeneration?.providerId ?? '').trim() === id
-    const usedByVideo = (kun.videoGeneration?.providerId ?? '').trim() === id
+    const usedByChat = activeRcodeProviderId === id
+    const usedByImage = (Rcode.imageGeneration?.providerId ?? '').trim() === id
+    const usedBySpeech = (Rcode.speechToText?.providerId ?? '').trim() === id
+    const usedByTextToSpeech = (Rcode.textToSpeech?.providerId ?? '').trim() === id
+    const usedByMusic = (Rcode.musicGeneration?.providerId ?? '').trim() === id
+    const usedByVideo = (Rcode.videoGeneration?.providerId ?? '').trim() === id
     const writeInline = form?.write?.inlineCompletion
     const usedByWrite = Boolean(
       writeInline && !writeInline.inheritProvider && writeInline.providerId === id
@@ -1152,7 +1220,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     })
     if (!confirmed) return
     const nextProviders = modelProviders.filter((item) => item.id !== id)
-    const kunPatch: KunRuntimeSettingsPatchV1 | undefined =
+    const RcodePatch: RcodeRuntimeSettingsPatchV1 | undefined =
       usedByChat || usedByImage || usedBySpeech || usedByTextToSpeech || usedByMusic || usedByVideo
         ? {
             ...(usedByChat ? { providerId: DEFAULT_MODEL_PROVIDER_ID } : {}),
@@ -1166,8 +1234,8 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     const patch = modelProvidersSettingsPatch({
       provider,
       providers: nextProviders,
-      kun: kunPatch,
-      currentKun: kun
+      Rcode: RcodePatch,
+      currentRcode: Rcode
     })
     if (usedByWrite) {
       patch.write = { inlineCompletion: { inheritProvider: true, providerId: '' } }
@@ -1177,7 +1245,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   }
 
   const runProbe = async (target: ModelProviderProfileV1, mode: 'test' | 'fetch'): Promise<void> => {
-    if (typeof window.kunGui?.probeModelProvider !== 'function') return
+    if (typeof window.RcodeGui?.probeModelProvider !== 'function') return
     const fingerprint = providerConnectionFingerprint(target)
     // Subscription (agent-sdk) providers have no HTTP /models endpoint — the turn
     // is delegated to the Claude Agent SDK. "Test" reports login readiness instead
@@ -1188,7 +1256,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
         // No HTTP /models endpoint — list the subscription's models via the SDK.
         let modelIds: string[] = []
         try {
-          modelIds = await window.kunGui.claudeSubscriptionModels(target.apiKey.trim() || undefined)
+          modelIds = await window.RcodeGui.claudeSubscriptionModels(target.apiKey.trim() || undefined)
         } catch {
           modelIds = []
         }
@@ -1210,7 +1278,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
       let ready = target.apiKey.trim().length > 0
       if (!ready) {
         try {
-          ready = (await window.kunGui.claudeSubscriptionStatus()).loggedIn
+          ready = (await window.RcodeGui.claudeSubscriptionStatus()).loggedIn
         } catch {
           ready = false
         }
@@ -1238,7 +1306,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     setProbeStates((prev) => ({ ...prev, [target.id]: { fingerprint, mode, status: 'busy' } }))
     let result: ModelProviderProbeResult
     try {
-      result = await window.kunGui.probeModelProvider({
+      result = await window.RcodeGui.probeModelProvider({
         baseUrl: target.baseUrl,
         apiKey: target.apiKey,
         endpointFormat: target.endpointFormat
@@ -1397,7 +1465,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   const renderProviderButton = (item: ModelProviderProfileV1): ReactElement => {
     const selected = activeProvider?.id === item.id
     const isDraft = draftProvider?.id === item.id
-    const inUse = !isDraft && activeKunProviderId === item.id
+    const inUse = !isDraft && activeRcodeProviderId === item.id
     const missingKey = !item.apiKey.trim()
     return (
       <button
@@ -1497,6 +1565,13 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
 
   return (
     <>
+    <CloudProvidersPanel
+      onImportProvider={handleImportCloudProvider}
+      getLocalProviders={() => modelProviders}
+      authenticated={cloudAuthenticated}
+      onAutoSyncProviders={handleAutoSyncProviders}
+    />
+    <RemoteAgentPanel />
     <SettingsCard title={t('providers')}>
       <SettingRow
         title={t('providers')}

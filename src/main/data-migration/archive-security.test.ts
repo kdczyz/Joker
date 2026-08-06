@@ -4,14 +4,14 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { DataMigrationManifestV1Schema, parsePackageRelativePath } from '../../shared/data-migration'
 import {
-  DEFAULT_KUNPACK_INSPECTION_BUDGET,
-  inspectKunpackHeader,
-  inspectKunpackPackage,
-  validateKunpackArchiveDirectory,
-  validateKunpackEntryPath,
-  validateKunpackLinkMetadata
+  DEFAULT_RCODEPACK_INSPECTION_BUDGET,
+  inspectRcodepackHeader,
+  inspectRcodepackPackage,
+  validateRcodepackArchiveDirectory,
+  validateRcodepackEntryPath,
+  validateRcodepackLinkMetadata
 } from './archive-security'
-import { createKunpackPackage } from './kunpack-container'
+import { createRcodepackPackage } from './Rcodepack-container'
 
 const roots: string[] = []
 
@@ -46,12 +46,12 @@ function manifest() {
   })
 }
 
-describe('Kunpack archive security', () => {
+describe('Rcodepack archive security', () => {
   it('identifies and inspects a verified package without importing it', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kunpack-inspection-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcodepack-inspection-'))
     roots.push(root)
-    const packagePath = join(root, 'sample.kunpack')
-    await createKunpackPackage({
+    const packagePath = join(root, 'sample.Rcodepack')
+    await createRcodepackPackage({
       outputPath: packagePath,
       manifest: manifest(),
       catalogs: [{ path: parsePackageRelativePath('catalog/workspaces.json'), value: [] }],
@@ -62,10 +62,10 @@ describe('Kunpack archive security', () => {
         source: { kind: 'buffer', data: Buffer.from('portable') }
       }]
     })
-    expect(await inspectKunpackHeader(packagePath)).toMatchObject({
-      kind: 'kunpack', encrypted: false, passwordRequired: false
+    expect(await inspectRcodepackHeader(packagePath)).toMatchObject({
+      kind: 'Rcodepack', encrypted: false, passwordRequired: false
     })
-    const inspected = await inspectKunpackPackage({
+    const inspected = await inspectRcodepackPackage({
       packagePath,
       temporaryDirectory: join(root, 'inspection')
     })
@@ -79,8 +79,8 @@ describe('Kunpack archive security', () => {
       '../escape', '/absolute/file', 'C:/drive/file', '\\\\server\\share',
       'safe/file:stream', 'safe/CON.txt', 'safe/trailing. ', `safe/${'a'.repeat(256)}`
     ]
-    for (const path of malicious) expect(() => validateKunpackEntryPath(path)).toThrow()
-    expect(validateKunpackEntryPath('payload/workspaces/ws_1/files/合法-name.txt')).toBe('payload/workspaces/ws_1/files/合法-name.txt')
+    for (const path of malicious) expect(() => validateRcodepackEntryPath(path)).toThrow()
+    expect(validateRcodepackEntryPath('payload/workspaces/ws_1/files/合法-name.txt')).toBe('payload/workspaces/ws_1/files/合法-name.txt')
   })
 
   it('rejects case/Unicode aliases and compression or expanded-size bombs', () => {
@@ -94,18 +94,18 @@ describe('Kunpack archive security', () => {
       mode: 0o100600,
       modifiedAt: '2026-07-15T00:00:00.000Z'
     })
-    expect(() => validateKunpackArchiveDirectory(
+    expect(() => validateRcodepackArchiveDirectory(
       [entry('payload/File.txt'), entry('payload/file.txt')],
       []
     )).toThrow('ambiguous path collision')
-    expect(() => validateKunpackArchiveDirectory(
+    expect(() => validateRcodepackArchiveDirectory(
       [entry('payload/café.txt'), entry('payload/cafe\u0301.txt')],
       []
     )).toThrow('ambiguous path collision')
-    expect(() => validateKunpackArchiveDirectory(
+    expect(() => validateRcodepackArchiveDirectory(
       [entry('payload/bomb.bin', 20_000, 1)],
       [],
-      { ...DEFAULT_KUNPACK_INSPECTION_BUDGET, maximumCompressionRatio: 100 }
+      { ...DEFAULT_RCODEPACK_INSPECTION_BUDGET, maximumCompressionRatio: 100 }
     )).toThrow('compression ratio')
   })
 
@@ -115,12 +115,12 @@ describe('Kunpack archive security', () => {
       logicalBytes: 0,
       sha256: '0'.repeat(64)
     }
-    expect(() => validateKunpackLinkMetadata([{
+    expect(() => validateRcodepackLinkMetadata([{
       ...base,
       path: parsePackageRelativePath('payload/link'),
       linkTarget: parsePackageRelativePath('payload/missing')
     }])).toThrow('not a declared internal entry')
-    expect(() => validateKunpackLinkMetadata([
+    expect(() => validateRcodepackLinkMetadata([
       { ...base, path: parsePackageRelativePath('payload/a'), linkTarget: parsePackageRelativePath('payload/b') },
       { ...base, path: parsePackageRelativePath('payload/b'), linkTarget: parsePackageRelativePath('payload/a') }
     ])).toThrow('loop')
@@ -130,12 +130,12 @@ describe('Kunpack archive security', () => {
     const stems = ['CON', 'aux.txt', 'name:ads', '..', 'trailing.', 'trailing ']
     for (let index = 0; index < 128; index += 1) {
       const stem = stems[index % stems.length]!
-      expect(() => validateKunpackEntryPath(`payload/${index}/${stem}`)).toThrow()
+      expect(() => validateRcodepackEntryPath(`payload/${index}/${stem}`)).toThrow()
     }
   })
 
   it('rejects a million-entry small-file workload from its declared count before traversal', () => {
-    const tooMany = new Array(DEFAULT_KUNPACK_INSPECTION_BUDGET.maximumEntries + 1)
-    expect(() => validateKunpackArchiveDirectory(tooMany, [])).toThrow('entry count exceeds')
+    const tooMany = new Array(DEFAULT_RCODEPACK_INSPECTION_BUDGET.maximumEntries + 1)
+    expect(() => validateRcodepackArchiveDirectory(tooMany, [])).toThrow('entry count exceeds')
   })
 })

@@ -175,7 +175,7 @@ function readWeixinPackageInfo(): WeixinPackageInfo {
   const packageJson = resolvePackagePath('@tencent-weixin/openclaw-weixin', 'package.json')
   if (!packageJson) {
     throw new Error(
-      'Built-in WeChat login component is missing. Reinstall Kun or rebuild with @tencent-weixin/openclaw-weixin bundled.'
+      'Built-in WeChat login component is missing. Reinstall Rcode or rebuild with @tencent-weixin/openclaw-weixin bundled.'
     )
   }
   const parsed = JSON.parse(readFileSync(packageJson, 'utf8')) as JsonRecord
@@ -198,7 +198,7 @@ function buildBaseInfo(): JsonRecord {
   const info = readWeixinPackageInfo()
   return {
     channel_version: info.version,
-    bot_agent: `Kun/${app.getVersion() || '0.0.0'}`
+    bot_agent: `Rcode/${app.getVersion() || '0.0.0'}`
   }
 }
 
@@ -488,7 +488,7 @@ async function readBridgeConfig(): Promise<JsonRecord> {
 async function prepareBridgeState(port: number): Promise<void> {
   if (!resolveWeixinPluginRoot()) {
     throw new Error(
-      'Built-in WeChat login component is missing. Reinstall Kun or rebuild with @tencent-weixin/openclaw-weixin bundled.'
+      'Built-in WeChat login component is missing. Reinstall Rcode or rebuild with @tencent-weixin/openclaw-weixin bundled.'
     )
   }
   await ensureStateDirs()
@@ -634,7 +634,7 @@ async function waitForWeixinLogin(params: JsonRecord): Promise<JsonRecord> {
           alreadyConnected: true,
           accountId: normalizeAccountId(sessionKey),
           sessionKey,
-          message: '已连接过此 Kun，无需重复连接。'
+          message: '已连接过此 Rcode，无需重复连接。'
         }
       case 'scaned_but_redirect': {
         const redirectHost = recordString(status, 'redirect_host')
@@ -660,7 +660,7 @@ async function waitForWeixinLogin(params: JsonRecord): Promise<JsonRecord> {
           sessionKey,
           baseUrl,
           userId,
-          message: '已将此 Kun 连接到微信。'
+          message: '已将此 Rcode 连接到微信。'
         }
       }
     }
@@ -762,7 +762,7 @@ async function getUpdates(
 }
 
 function generateMessageId(): string {
-  return `kun-weixin-${randomUUID()}`
+  return `Rcode-weixin-${randomUUID()}`
 }
 
 async function sendMessageWeixin(params: {
@@ -943,7 +943,7 @@ async function postToDeepSeekGuiWebhook(
   if (settings.webhookSecret) {
     headers.authorization = `Bearer ${settings.webhookSecret}`
     // 同时带新旧两个 secret 头:接收端可能还是只认旧头的老版本。
-    headers['x-kun-secret'] = settings.webhookSecret
+    headers['x-Rcode-secret'] = settings.webhookSecret
     headers['x-deepseek-gui-secret'] = settings.webhookSecret
   }
   const res = await fetch(settings.webhookUrl, {
@@ -956,7 +956,7 @@ async function postToDeepSeekGuiWebhook(
   const reply = recordString(data, 'reply') || recordString(data, 'text')
   if (reply) return data
   if (!res.ok || data.ok === false) {
-    throw new Error(recordString(data, 'message') || `Kun webhook HTTP ${res.status}`)
+    throw new Error(recordString(data, 'message') || `Rcode webhook HTTP ${res.status}`)
   }
   return data
 }

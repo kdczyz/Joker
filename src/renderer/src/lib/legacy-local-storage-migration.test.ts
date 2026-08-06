@@ -20,26 +20,26 @@ function memoryStorage(seed: Record<string, string> = {}): Storage {
 }
 
 describe('legacy localStorage migration', () => {
-  it('copies legacy DeepSeek GUI keys to Kun keys without deleting the old keys', () => {
+  it('copies legacy DeepSeek GUI keys to Rcode keys without deleting the old keys', () => {
     const storage = memoryStorage({
       'deepseekgui.plan.registry.v1': '{"plans":{}}',
       'deepseekgui.turnModelLabel': '{"thread|item":"deepseek-chat"}'
     })
 
     expect(migrateLegacyLocalStorageKeys(storage)).toBe(2)
-    expect(storage.getItem('kun.plan.registry.v1')).toBe('{"plans":{}}')
-    expect(storage.getItem('kun.turnModelLabel')).toBe('{"thread|item":"deepseek-chat"}')
+    expect(storage.getItem('Rcode.plan.registry.v1')).toBe('{"plans":{}}')
+    expect(storage.getItem('Rcode.turnModelLabel')).toBe('{"thread|item":"deepseek-chat"}')
     expect(storage.getItem('deepseekgui.plan.registry.v1')).toBe('{"plans":{}}')
   })
 
-  it('does not overwrite existing Kun keys', () => {
+  it('does not overwrite existing Rcode keys', () => {
     const storage = memoryStorage({
       'deepseekgui.plan.registry.v1': 'legacy',
-      'kun.plan.registry.v1': 'current'
+      'Rcode.plan.registry.v1': 'current'
     })
 
     expect(migrateLegacyLocalStorageKeys(storage)).toBe(0)
-    expect(storage.getItem('kun.plan.registry.v1')).toBe('current')
+    expect(storage.getItem('Rcode.plan.registry.v1')).toBe('current')
     expect(storage.getItem('deepseekgui.plan.registry.v1')).toBe('legacy')
   })
 })

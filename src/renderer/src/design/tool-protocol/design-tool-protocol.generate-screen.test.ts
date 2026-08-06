@@ -116,7 +116,7 @@ describe('design.generate_screen tool executor', () => {
       path: request.path,
       savedAt: '2026-07-02T00:00:00.000Z'
     }))
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
     useDesignWorkspaceStore.setState({ workspaceRoot: '/workspace' })
 
     const result = executeDesignToolInvocation({
@@ -139,8 +139,8 @@ describe('design.generate_screen tool executor', () => {
 
     expect(output.draftWrite).toMatchObject({
       status: 'queued',
-      htmlPath: expect.stringMatching(/^\.kun-design\/.+\/.+\/v1\.html$/),
-      designMdPath: expect.stringMatching(/^\.kun-design\/.+\/.+\/DESIGN\.md$/)
+      htmlPath: expect.stringMatching(/^\.Rcode-design\/.+\/.+\/v1\.html$/),
+      designMdPath: expect.stringMatching(/^\.Rcode-design\/.+\/.+\/DESIGN\.md$/)
     })
     expect(htmlWrite).toMatchObject({
       workspaceRoot: '/workspace',

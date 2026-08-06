@@ -6,7 +6,7 @@ import { DataMigrationImportPlanSchema, parsePackageRelativePath } from '../../s
 import { DataMigrationImportTransactionCoordinator, type RuntimeMigrationTransactionClient } from './import-transaction'
 import { MigrationReportStore } from './migration-reports'
 import { MigrationJournalStore, migrationMutationId } from './transaction-journal'
-import { prepareZip64ArchiveEntries, writeZip64Archive } from './kunpack-zip'
+import { prepareZip64ArchiveEntries, writeZip64Archive } from './Rcodepack-zip'
 import { commitStagedWorkspace, stageWorkspaceImport } from './workspace-staging'
 
 const roots: string[] = []
@@ -16,7 +16,7 @@ afterEach(async () => {
 })
 
 async function fixture() {
-  const root = await mkdtemp(join(tmpdir(), 'kun-import-transaction-'))
+  const root = await mkdtemp(join(tmpdir(), 'Rcode-import-transaction-'))
   roots.push(root)
   const archivePath = join(root, 'payload.zip')
   const prepared = await prepareZip64ArchiveEntries([{

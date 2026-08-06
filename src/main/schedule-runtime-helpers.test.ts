@@ -7,13 +7,13 @@ import { runPromptViaRuntime } from './schedule-runtime-helpers'
 
 describe('runPromptViaRuntime workspace validation', () => {
   it('rejects a missing custom workspace without creating it', async () => {
-    const parent = await mkdtemp(join(tmpdir(), 'kun-schedule-workspace-'))
+    const parent = await mkdtemp(join(tmpdir(), 'Rcode-schedule-workspace-'))
     const workspaceRoot = join(parent, 'missing-project')
     const runtimeRequest = vi.fn()
     try {
       const result = await runPromptViaRuntime(
         { runtimeRequest },
-        { agents: { kun: { model: 'test-model' } } } as AppSettingsV1,
+        { agents: { Rcode: { model: 'test-model' } } } as AppSettingsV1,
         {
           prompt: 'test',
           title: 'test',

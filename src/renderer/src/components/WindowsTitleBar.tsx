@@ -1,13 +1,13 @@
 import type { ReactElement } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { DesktopCommand } from '@shared/kun-gui-api'
+import type { DesktopCommand } from '@shared/Rcode-gui-api'
 import {
   resolveKeyboardShortcutBindings,
   type KeyboardShortcutBindingsV1,
   type KeyboardShortcutCommandId
 } from '@shared/keyboard-shortcuts'
-import kunLogo from '../../../asset/img/kun.png'
+import RcodeLogo from '../../../asset/img/Rcode.png'
 import { useKeyboardShortcutSettings } from '../lib/keyboard-shortcut-settings'
 import { useChatStore } from '../store/chat-store'
 
@@ -48,21 +48,21 @@ type Props = {
 }
 
 function currentPlatform(): string {
-  return typeof window !== 'undefined' ? window.kunGui?.platform ?? 'unknown' : 'unknown'
+  return typeof window !== 'undefined' ? window.RcodeGui?.platform ?? 'unknown' : 'unknown'
 }
 
 function defaultRunDesktopCommand(command: DesktopCommand): Promise<void> {
-  if (typeof window === 'undefined' || typeof window.kunGui?.runDesktopCommand !== 'function') {
+  if (typeof window === 'undefined' || typeof window.RcodeGui?.runDesktopCommand !== 'function') {
     return Promise.resolve()
   }
-  return window.kunGui.runDesktopCommand(command)
+  return window.RcodeGui.runDesktopCommand(command)
 }
 
 function defaultOpenLogDir(): Promise<void> {
-  if (typeof window === 'undefined' || typeof window.kunGui?.openLogDir !== 'function') {
+  if (typeof window === 'undefined' || typeof window.RcodeGui?.openLogDir !== 'function') {
     return Promise.resolve()
   }
-  return window.kunGui.openLogDir().then(() => undefined)
+  return window.RcodeGui.openLogDir().then(() => undefined)
 }
 
 export function supportsDesktopTitleBar(platform: string): boolean {
@@ -197,8 +197,8 @@ export function WindowsTitleBar({ platform, actions }: Props): ReactElement | nu
     openLogDir: defaultOpenLogDir,
     showAbout: async () => {
       const version =
-        typeof window !== 'undefined' && typeof window.kunGui?.getAppVersion === 'function'
-          ? await window.kunGui.getAppVersion().catch(() => '')
+        typeof window !== 'undefined' && typeof window.RcodeGui?.getAppVersion === 'function'
+          ? await window.RcodeGui.getAppVersion().catch(() => '')
           : ''
       const message = t('windowsMenuAboutMessage', {
         version: version || t('windowsMenuUnknownVersion')
@@ -279,7 +279,7 @@ export function WindowsTitleBar({ platform, actions }: Props): ReactElement | nu
   return (
     <div ref={rootRef} data-cursor-spotlight-target className="ds-windows-titlebar ds-drag">
       <div className="ds-windows-titlebar-content">
-        <img src={kunLogo} alt="" aria-hidden="true" className="ds-windows-titlebar-icon" />
+        <img src={RcodeLogo} alt="" aria-hidden="true" className="ds-windows-titlebar-icon" />
         <nav className="ds-windows-menu ds-no-drag" aria-label={t('windowsMenuAriaLabel')}>
           {menus.map((menu) => {
             const open = activeMenuId === menu.id

@@ -23,8 +23,6 @@ export type WorkbenchLeftSidebarProps = {
   runtimeReady: boolean
   threadSearch: string
   showArchivedThreads: boolean
-  focusModeEnabled: boolean
-  onFocusModeChange: CodeSidebarProps['onFocusModeChange']
   onThreadSearchChange: CodeSidebarProps['onThreadSearchChange']
   onSelectThread: CodeSidebarProps['onSelectThread']
   onRenameThread: CodeSidebarProps['onRenameThread']
@@ -69,8 +67,6 @@ export function WorkbenchLeftSidebar({
   runtimeReady,
   threadSearch,
   showArchivedThreads,
-  focusModeEnabled,
-  onFocusModeChange,
   onThreadSearchChange,
   onSelectThread,
   onRenameThread,
@@ -151,8 +147,6 @@ export function WorkbenchLeftSidebar({
             onOpenPlugins={onOpenPlugins}
             onOpenExtensions={onOpenExtensions}
             onToggleTheme={onToggleTheme}
-            focusModeEnabled={focusModeEnabled}
-            onFocusModeChange={onFocusModeChange}
             onToggleConnectPhone={onToggleConnectPhone}
             onCodeOpen={onCodeOpen}
             onWriteOpen={onWriteOpen}

@@ -178,9 +178,9 @@ describe('UiPluginStagePresentation', () => {
     const nodeFs = 'node:fs/promises'
     const { readFile } = await import(/* @vite-ignore */ nodeFs)
     const css = await readFile(new URL('../../styles/surfaces-write.css', import.meta.url), 'utf8')
-    expect(css).toContain('--kun-ui-plugin-host-bg-color: var(--bg-app, #f3f5fc);')
-    expect(css).toContain('--kun-ui-plugin-host-surface-color: var(--surface-2, #ffffff);')
-    expect(css).toContain('var(--kun-ui-plugin-host-bg-color) 0%')
+    expect(css).toContain('--Rcode-ui-plugin-host-bg-color: var(--bg-app, #f3f5fc);')
+    expect(css).toContain('--Rcode-ui-plugin-host-surface-color: var(--surface-2, #ffffff);')
+    expect(css).toContain('var(--Rcode-ui-plugin-host-bg-color) 0%')
     expect(css).not.toMatch(/color-mix\([^;]*var\(--ds-bg-main\)/)
     expect(css).not.toMatch(/color-mix\([^;]*var\(--ds-surface-elevated\)/)
     expect(css).toContain("html[data-ui-plugin-scene-layout='rail-left']")
@@ -266,8 +266,6 @@ describe('UiPluginStagePresentation', () => {
     expect(css).toContain('height: auto;')
     expect(css).toContain('object-position: center bottom;')
     expect(css).toContain('.ds-sidebar-mascot-slot')
-    expect(css).toContain(".ds-focus-mode-toggle[aria-checked='false']")
-    expect(css).toContain(".ds-focus-mode-toggle[aria-checked='true']")
     expect(css).toContain(
       "html[data-theme='dark'][data-ui-plugin-scene-chrome-sidebar='grand-line']"
     )
@@ -294,9 +292,7 @@ describe('UiPluginStagePresentation', () => {
     expect(css).toContain(
       '.ds-message-timeline-content :is(.text-ds-ink, .text-ds-muted, .text-ds-faint)'
     )
-    expect(sidebar).toContain('ds-sidebar-focus-row')
     expect(sidebar).toContain('ds-sidebar-mascot-slot')
-    expect(sidebar).toContain('ds-focus-mode-toggle-track')
     expect(executionPicker).toContain('ds-composer-permission-menu')
     expect(executionPicker).toContain('ds-composer-permission-option')
     expect(executionPicker).toContain('data-permission-mode={mode}')

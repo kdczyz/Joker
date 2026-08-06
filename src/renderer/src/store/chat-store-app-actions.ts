@@ -1,6 +1,6 @@
 import type i18next from 'i18next'
 import type { AppSettingsV1, ModelReasoningEffort } from '@shared/app-settings'
-import type { ModelProviderModelGroup } from '@shared/kun-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
 import { rendererRuntimeClient } from '../agent/runtime-client'
 import { extensionWorkbenchClient } from '../extensions/extension-workbench-client'
 import type { ChatState, ChatStoreGet, ChatStoreSet, InitialSetupMode, PluginHostRoute, SettingsRouteSection } from './chat-store-types'
@@ -139,10 +139,10 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
         !extensionProvider &&
         trimmed &&
         trimmed.toLowerCase() !== 'auto' &&
-        typeof window.kunGui !== 'undefined'
+        typeof window.RcodeGui !== 'undefined'
       ) {
-        void window.kunGui.saveSettingsSilent({
-          agents: { kun: { model: trimmed, providerId: nextProviderId } }
+        void window.RcodeGui.saveSettingsSilent({
+          agents: { Rcode: { model: trimmed, providerId: nextProviderId } }
         })
       }
     },
@@ -163,10 +163,10 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
 
     loadComposerModels: async () => {
       if (getComposerModelLoadPromise()) return getComposerModelLoadPromise()!
-      if (typeof window.kunGui === 'undefined') return
+      if (typeof window.RcodeGui === 'undefined') return
       const task = (async () => {
         const [res, extensionProviders] = await Promise.all([
-          window.kunGui.fetchUpstreamModels(),
+          window.RcodeGui.fetchUpstreamModels(),
           extensionWorkbenchClient.listModelProviders(get().workspaceRoot || undefined).catch(() => [])
         ])
         const extensionGroups: ModelProviderModelGroup[] = extensionProviders.flatMap((provider) => {
@@ -318,7 +318,7 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
     },
 
     reloadUiSettings: async () => {
-      if (typeof window.kunGui === 'undefined') return
+      if (typeof window.RcodeGui === 'undefined') return
       const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
       const workspaceRoot = normalizeWorkspaceRoot(settings.workspaceRoot)
       applyTheme(settings.theme)

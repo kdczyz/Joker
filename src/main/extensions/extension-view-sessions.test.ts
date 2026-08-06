@@ -131,7 +131,7 @@ describe('ExtensionViewSessionRegistry', () => {
     })
   })
 
-  it('forces the Kun preload, non-persistent partition and sandbox baseline', () => {
+  it('forces the Rcode preload, non-persistent partition and sandbox baseline', () => {
     const record = new ExtensionViewSessionRegistry().create({
       sessionId: '1234567890abcdef',
       extensionId: 'acme.example',
@@ -147,17 +147,17 @@ describe('ExtensionViewSessionRegistry', () => {
       sandbox: false,
       partition: 'persist:shared'
     }
-    hardenExtensionWebPreferences(preferences as never, record, '/kun/extension-view.cjs')
+    hardenExtensionWebPreferences(preferences as never, record, '/Rcode/extension-view.cjs')
     expect(preferences).toMatchObject({
-      preload: '/kun/extension-view.cjs',
+      preload: '/Rcode/extension-view.cjs',
       nodeIntegration: false,
       contextIsolation: true,
       sandbox: true,
-      partition: expect.stringMatching(/^temp:kun-extension-/)
+      partition: expect.stringMatching(/^temp:Rcode-extension-/)
     })
     expect((preferences as unknown as { additionalArguments: string[] }).additionalArguments).toEqual([
-      '--kun-extension-view-session=1234567890abcdef',
-      expect.stringMatching(/^--kun-extension-view-nonce=.{32,}$/)
+      '--Rcode-extension-view-session=1234567890abcdef',
+      expect.stringMatching(/^--Rcode-extension-view-nonce=.{32,}$/)
     ])
     expect((preferences as unknown as { webviewTag: boolean }).webviewTag).toBe(false)
   })
@@ -187,7 +187,7 @@ describe('ExtensionViewSessionRegistry', () => {
     hardenExtensionWebPreferences(
       parentPreferences as never,
       created,
-      '/kun/extension-view.cjs'
+      '/Rcode/extension-view.cjs'
     )
     expect(parentPreferences).toMatchObject({ webviewTag: false })
 
@@ -202,7 +202,7 @@ describe('ExtensionViewSessionRegistry', () => {
     expect(preferences).toMatchObject({
       nodeIntegration: false,
       webviewTag: false,
-      partition: expect.stringMatching(/^persist:kun-external-/)
+      partition: expect.stringMatching(/^persist:Rcode-external-/)
     })
     expect('preload' in preferences).toBe(false)
 
@@ -261,8 +261,8 @@ describe('ExtensionViewSessionRegistry', () => {
 
   it('allows only navigation within the bound extension origin', () => {
     const record = { extensionId: 'acme.example' }
-    expect(isAllowedExtensionNavigation('kun-extension://acme.example/dist/app.js', record)).toBe(true)
-    expect(isAllowedExtensionNavigation('kun-extension://other.example/dist/app.js', record)).toBe(false)
+    expect(isAllowedExtensionNavigation('Rcode-extension://acme.example/dist/app.js', record)).toBe(true)
+    expect(isAllowedExtensionNavigation('Rcode-extension://other.example/dist/app.js', record)).toBe(false)
     expect(isAllowedExtensionNavigation('https://example.com', record)).toBe(false)
     expect(isAllowedExtensionNavigation('file:///tmp/secret', record)).toBe(false)
   })
@@ -270,19 +270,19 @@ describe('ExtensionViewSessionRegistry', () => {
   it('allows protected media through the Host filter without opening other network access', () => {
     const record = { extensionId: 'acme.example' }
     expect(isAllowedExtensionSubresource(
-      'kun-extension://acme.example/dist/app.js',
+      'Rcode-extension://acme.example/dist/app.js',
       record
     )).toBe(true)
     expect(isAllowedExtensionSubresource(
-      'kun-media://lease/abcdefghijklmnopqrstuvwxyzABCDEFGH123456789',
+      'Rcode-media://lease/abcdefghijklmnopqrstuvwxyzABCDEFGH123456789',
       record
     )).toBe(true)
     expect(isAllowedExtensionSubresource(
-      'kun-media://other/abcdefghijklmnopqrstuvwxyzABCDEFGH123456789',
+      'Rcode-media://other/abcdefghijklmnopqrstuvwxyzABCDEFGH123456789',
       record
     )).toBe(false)
     expect(isAllowedExtensionSubresource(
-      'kun-extension://other.example/dist/app.js',
+      'Rcode-extension://other.example/dist/app.js',
       record
     )).toBe(false)
     expect(isAllowedExtensionSubresource('https://example.com/media.mp4', record)).toBe(false)
@@ -309,7 +309,7 @@ describe('ExtensionViewSessionRegistry', () => {
         })
       } as never,
       sessions: registry,
-      extensionPreloadPath: '/kun/extension-view.cjs',
+      extensionPreloadPath: '/Rcode/extension-view.cjs',
       assertExtensionPartitionPrepared,
       isPreparedExtensionNavigation: () => false,
       isTrustedWorkbench: () => true,
@@ -342,7 +342,7 @@ describe('ExtensionViewSessionRegistry', () => {
     }))
     expect(params.partition).toBe(created.partition)
     expect(preferences).toMatchObject({
-      preload: '/kun/extension-view.cjs',
+      preload: '/Rcode/extension-view.cjs',
       partition: created.partition,
       sandbox: true
     })
@@ -368,7 +368,7 @@ describe('ExtensionViewSessionRegistry', () => {
         })
       } as never,
       sessions: registry,
-      extensionPreloadPath: '/kun/extension-view.cjs',
+      extensionPreloadPath: '/Rcode/extension-view.cjs',
       assertExtensionPartitionPrepared: () => {
         throw new Error('protocol unavailable')
       },
@@ -397,7 +397,7 @@ describe('ExtensionViewSessionRegistry', () => {
     let webContentsCreated: ((...args: never[]) => void) | undefined
     const guestListeners = new Map<string, (...args: never[]) => void>()
     const sourceUrl =
-      'kun-extension://acme.example/dist/index.html?kunViewSession=1234567890abcdef'
+      'Rcode-extension://acme.example/dist/index.html?RcodeViewSession=1234567890abcdef'
     const isPreparedExtensionNavigation = vi.fn((_contents: unknown, url: string) =>
       url === sourceUrl
     )
@@ -408,7 +408,7 @@ describe('ExtensionViewSessionRegistry', () => {
         })
       } as never,
       sessions: new ExtensionViewSessionRegistry(),
-      extensionPreloadPath: '/kun/extension-view.cjs',
+      extensionPreloadPath: '/Rcode/extension-view.cjs',
       assertExtensionPartitionPrepared: vi.fn(),
       isPreparedExtensionNavigation,
       isTrustedWorkbench: () => true,
@@ -431,7 +431,7 @@ describe('ExtensionViewSessionRegistry', () => {
     guestListeners.get('will-navigate')?.(initialEvent as never, sourceUrl as never)
     guestListeners.get('will-navigate')?.(
       foreignEvent as never,
-      'kun-extension://other.example/dist/index.html?kunViewSession=1234567890abcdef' as never
+      'Rcode-extension://other.example/dist/index.html?RcodeViewSession=1234567890abcdef' as never
     )
 
     expect(initialEvent.preventDefault).not.toHaveBeenCalled()

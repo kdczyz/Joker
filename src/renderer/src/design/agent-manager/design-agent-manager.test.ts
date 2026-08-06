@@ -8,13 +8,13 @@ const now = '2026-06-29T00:00:00.000Z'
 const emptySystem: DesignSystem = { tokens: {}, components: {} }
 
 function artifact(id: string, directionId?: string): DesignArtifact {
-  const relativePath = `.kun-design/doc/${id}/v1.html`
+  const relativePath = `.Rcode-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',
     title: id,
     relativePath,
-    designMdPath: `.kun-design/doc/${id}/DESIGN.md`,
+    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
     versions: [{ id: `${id}-v1`, relativePath, createdAt: now, summary: '' }],

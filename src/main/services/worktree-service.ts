@@ -51,7 +51,7 @@ function worktreePath(poolDir: string, poolIndex: number): string {
 
 function resolvePoolDir(projectPath: string, worktreeRoot?: string): string {
   const projectBasename = basename(projectPath) || 'project'
-  const root = worktreeRoot?.trim() || join(homedir(), '.kun')
+  const root = worktreeRoot?.trim() || join(homedir(), '.Rcode')
   return join(root, projectBasename)
 }
 
@@ -147,7 +147,7 @@ export async function releaseWorktree(params: {
   poolIndex: number
   /**
    * Optional worktree root. When provided (or omitted, falling back to the
-   * default ~/.kun layout), the slot's working tree is reset+cleaned before
+   * default ~/.Rcode layout), the slot's working tree is reset+cleaned before
    * the in-memory lease is dropped. This keeps the pool reusable for
    * scheduled-agent runs that always leave changes behind.
    *

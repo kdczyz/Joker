@@ -82,7 +82,7 @@ import {
   type Locale,
   type WorkspaceContext,
   type WorkspaceFile
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 import { createHash } from 'node:crypto'
 
 type FakeHostHandler = (
@@ -767,7 +767,7 @@ export class FakeMediaService {
         },
         {
           analysis: 'sync-features', available: true,
-          algorithm: 'kun.pcm-energy-envelope', algorithmVersion: '1.0.0',
+          algorithm: 'Rcode.pcm-energy-envelope', algorithmVersion: '1.0.0',
           local: true, networkUsed: false
         }
       ]
@@ -776,9 +776,9 @@ export class FakeMediaService {
       schemaVersion: 1,
       state: 'missing',
       descriptor: {
-        adapterId: 'kun.local.visual-features', adapterVersion: '1.0.0',
-        modelId: 'kun-visual-features', modelVersion: '1.0.0',
-        packageId: 'kun-bundled.visual-features-v1', manifestSha256: 'a'.repeat(64),
+        adapterId: 'Rcode.local.visual-features', adapterVersion: '1.0.0',
+        modelId: 'Rcode-visual-features', modelVersion: '1.0.0',
+        packageId: 'Rcode-bundled.visual-features-v1', manifestSha256: 'a'.repeat(64),
         files: [{ name: 'visual-features-v1.json', sha256: 'b'.repeat(64), byteSize: 582 }],
         embeddingDimensions: 24, execution: 'local',
         querySemantics: 'bounded-visual-features-v1'
@@ -882,7 +882,7 @@ export class FakeMediaService {
       return {
         leaseId,
         handleId: handle.handleId,
-        url: `kun-media://fake/${leaseId}`,
+        url: `Rcode-media://fake/${leaseId}`,
         mimeType: handle.mimeType ?? 'application/octet-stream',
         expiresAt: new Date(this.clock.now() + 60_000).toISOString()
       }

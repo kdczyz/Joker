@@ -320,7 +320,7 @@ describe('durable SVG create replay', () => {
     id: 'svg-aabbccddeeff',
     kind: 'svg' as const,
     title: 'Orbit',
-    relativePath: '.kun-design/doc/svg-aabbccddeeff/v1.svg',
+    relativePath: '.Rcode-design/doc/svg-aabbccddeeff/v1.svg',
     createdAt: '2026-01-01T00:00:00.000Z',
     updatedAt: '2026-01-01T00:00:00.000Z',
     versions: []
@@ -411,7 +411,7 @@ describe('generated image canvas fallback helpers', () => {
         summary: 'generate',
         status: 'success',
         meta: {
-          toolName: 'mcp__kun__generate_image',
+          toolName: 'mcp__Rcode__generate_image',
           generatedFiles: [{ relativePath: '.deepseekgui-images/new.png' }]
         }
       }
@@ -431,13 +431,13 @@ describe('generated image canvas fallback helpers', () => {
           toolName: 'generate_image',
           generatedFiles: [{
             relativePath: '.deepseekgui-images/new.png',
-            absolutePath: '/Users/zxy/.kun/default_workspace/.deepseekgui-images/new.png'
+            absolutePath: '/Users/zxy/.Rcode/default_workspace/.deepseekgui-images/new.png'
           }]
         }
       }
     ]
 
-    expect(latestGeneratedImageUrlForTurn(blocks)).toBe('/Users/zxy/.kun/default_workspace/.deepseekgui-images/new.png')
+    expect(latestGeneratedImageUrlForTurn(blocks)).toBe('/Users/zxy/.Rcode/default_workspace/.deepseekgui-images/new.png')
     expect(
       rewriteGeneratedImageUrlsForTurn(
         {
@@ -455,7 +455,7 @@ describe('generated image canvas fallback helpers', () => {
       ops: [{
         op: 'update',
         id: 'shape-1',
-        patch: { imageUrl: '/Users/zxy/.kun/default_workspace/.deepseekgui-images/new.png' }
+        patch: { imageUrl: '/Users/zxy/.Rcode/default_workspace/.deepseekgui-images/new.png' }
       }]
     })
   })

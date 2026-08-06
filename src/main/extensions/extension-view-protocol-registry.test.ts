@@ -3,14 +3,14 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { ResolvedExtensionView } from './extension-descriptor-resolver'
-import { KUN_EXTENSION_CSP } from './extension-resource-protocol'
+import { RCODE_EXTENSION_CSP } from './extension-resource-protocol'
 import { ExtensionViewProtocolRegistry } from './extension-view-protocol-registry'
 import { ExtensionViewSessionRegistry } from './extension-view-sessions'
 
 const roots: string[] = []
 
 async function viewFixture(): Promise<ResolvedExtensionView> {
-  const packageRoot = await mkdtemp(join(tmpdir(), 'kun-extension-view-protocol-'))
+  const packageRoot = await mkdtemp(join(tmpdir(), 'Rcode-extension-view-protocol-'))
   roots.push(packageRoot)
   await mkdir(join(packageRoot, 'dist', 'assets'), { recursive: true })
   await writeFile(join(packageRoot, 'dist', 'index.html'), '<p id="marker">isolated view</p>')
@@ -63,22 +63,22 @@ describe('ExtensionViewProtocolRegistry', () => {
     registry.prepare(record, view)
 
     expect(protocolForPartition).toHaveBeenCalledWith(record.partition)
-    expect(target.protocol.unhandle).toHaveBeenCalledWith('kun-extension')
-    expect(target.protocol.handle).toHaveBeenCalledWith('kun-extension', expect.any(Function))
+    expect(target.protocol.unhandle).toHaveBeenCalledWith('Rcode-extension')
+    expect(target.protocol.handle).toHaveBeenCalledWith('Rcode-extension', expect.any(Function))
     registry.assertPrepared(record)
     expect(registry.isPreparedInitialNavigation(target.protocol, record.sourceUrl)).toBe(true)
     expect(registry.isPreparedInitialNavigation(
       target.protocol,
-      'kun-extension://acme.example/dist/assets/app.js?kunViewSession=1234567890abcdef'
+      'Rcode-extension://acme.example/dist/assets/app.js?RcodeViewSession=1234567890abcdef'
     )).toBe(false)
 
     const response = await target.getHandler()!(new Request(record.sourceUrl))
     expect(response.status).toBe(200)
     expect(await response.text()).toContain('isolated view')
-    expect(response.headers.get('content-security-policy')).toBe(KUN_EXTENSION_CSP)
+    expect(response.headers.get('content-security-policy')).toBe(RCODE_EXTENSION_CSP)
 
     const deniedResponse = await target.getHandler()!(
-      new Request('kun-extension://other.example/dist/index.html')
+      new Request('Rcode-extension://other.example/dist/index.html')
     )
     expect(deniedResponse.status).toBe(404)
     expect(denied).toHaveBeenCalledWith(expect.objectContaining({
@@ -97,10 +97,10 @@ describe('ExtensionViewProtocolRegistry', () => {
     registry.prepare(record, view)
 
     await expect(target.getHandler()!(
-      new Request('kun-extension://acme.example/dist/assets/app.js')
+      new Request('Rcode-extension://acme.example/dist/assets/app.js')
     )).resolves.toMatchObject({ status: 200 })
     await expect(target.getHandler()!(
-      new Request('kun-extension://acme.example/dist/other.html')
+      new Request('Rcode-extension://acme.example/dist/other.html')
     )).resolves.toMatchObject({ status: 404 })
   })
 

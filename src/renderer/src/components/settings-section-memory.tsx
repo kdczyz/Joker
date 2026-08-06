@@ -9,7 +9,7 @@ import {
   parseMemoryProfileImport,
   type MemoryImportEntry
 } from '@shared/memory-import-export'
-import type { CoreMemoryRecordJson } from '../agent/kun-contract'
+import type { CoreMemoryRecordJson } from '../agent/Rcode-contract'
 import { confirmDialog } from '../lib/confirm-dialog'
 import { workspaceRootIdentityKey } from '../lib/workspace-path'
 import { SettingsCard, SettingRow, Toggle } from './settings-controls'
@@ -130,8 +130,8 @@ function memoryImportDedupKey(input: {
 export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): ReactElement {
   const {
     t,
-    kun,
-    updateKun,
+    Rcode,
+    updateRcode,
     expandHomePath,
     memoryRecords,
     memoryDiagnostics,
@@ -213,14 +213,14 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
       .filter(Boolean)
 
   const exportMemories = async (): Promise<void> => {
-    if (typeof window.kunGui?.exportMemoryMarkdown !== 'function') {
+    if (typeof window.RcodeGui?.exportMemoryMarkdown !== 'function') {
       setNotice(t('memoryExportUnavailable'))
       return
     }
     setExportBusy(true)
     setNotice(null)
     try {
-      const result = await window.kunGui.exportMemoryMarkdown({
+      const result = await window.RcodeGui.exportMemoryMarkdown({
         markdown: buildMemoryMarkdownExport({ records: memoryRecords ?? [] }),
         defaultFileName: defaultMemoryExportFileName()
       })
@@ -340,8 +340,8 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
         description={t('memoryEnableDesc')}
         control={
           <Toggle
-            checked={kun?.memoryEnabled ?? false}
-            onChange={(checked: boolean) => updateKun({ memoryEnabled: checked })}
+            checked={Rcode?.memoryEnabled ?? false}
+            onChange={(checked: boolean) => updateRcode({ memoryEnabled: checked })}
           />
         }
       />

@@ -48,7 +48,7 @@ describe('UiPluginCdpThemeController', () => {
   it('injects only the fixed runtime with JSON-encoded host CSS and detaches immediately', async () => {
     const { contents, controller } = controllerFixture()
     const css = `html[data-ui-plugin='starlight'] { --ds-accent: #7654d8; }\n` +
-      `/* inert even as text: '); globalThis.__kunPluginCodeRan = true; // */`
+      `/* inert even as text: '); globalThis.__RcodePluginCodeRan = true; // */`
 
     await controller.activate('starlight', css)
 
@@ -66,7 +66,7 @@ describe('UiPluginCdpThemeController', () => {
     expect(parameters.expression).toContain('style.textContent = payload.css')
     expect(parameters.expression).toContain('JSON.parse(payloadJson)')
     expect(parameters.expression).toContain('starlight')
-    expect(parameters.expression).toContain('globalThis.__kunPluginCodeRan')
+    expect(parameters.expression).toContain('globalThis.__RcodePluginCodeRan')
     expect(contents.debugger.detach).toHaveBeenCalledOnce()
     expect(contents.debugger.attached).toBe(false)
 
@@ -84,11 +84,11 @@ describe('UiPluginCdpThemeController', () => {
       getElementById: vi.fn(() => null),
       createElement: vi.fn(() => style)
     }
-    delete (globalThis as Record<string, unknown>).__kunPluginCodeRan
+    delete (globalThis as Record<string, unknown>).__RcodePluginCodeRan
     const runFixedRuntime = new Function('document', `return ${parameters.expression}`)
     expect(runFixedRuntime(documentFixture)).toBe(true)
     expect(style.textContent).toBe(css)
-    expect((globalThis as Record<string, unknown>).__kunPluginCodeRan).toBeUndefined()
+    expect((globalThis as Record<string, unknown>).__RcodePluginCodeRan).toBeUndefined()
   })
 
   it('does not attach, evaluate, or detach when DevTools owns the debugger', async () => {
@@ -138,7 +138,7 @@ describe('UiPluginCdpThemeController', () => {
     })
 
     await expect(controller.activate('starlight', 'html {}')).rejects.toThrow(
-      /Unable to detach the Kun UI theme CDP session/
+      /Unable to detach the Rcode UI theme CDP session/
     )
     expect(contents.debugger.attached).toBe(true)
     expect(backgroundErrors).toHaveBeenCalledWith('detach', expect.any(Error))
@@ -171,7 +171,7 @@ describe('UiPluginCdpThemeController', () => {
     expect(controller.activePluginId).toBeNull()
     expect(contents.debugger.sendCommand).toHaveBeenCalledTimes(2)
     const parameters = contents.debugger.sendCommand.mock.calls[1]?.[1] as { expression: string }
-    expect(parameters.expression).toContain('kun-ui-plugin-theme-cdp')
+    expect(parameters.expression).toContain('Rcode-ui-plugin-theme-cdp')
     expect(parameters.expression).toContain('clear')
     expect(contents.debugger.detach).toHaveBeenCalledTimes(2)
   })

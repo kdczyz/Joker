@@ -1,9 +1,9 @@
-import type { KunGuiApi } from '../shared/kun-gui-api'
+import type { RcodeGuiApi } from '../shared/Rcode-gui-api'
 
-export type * from '../shared/kun-gui-api'
+export type * from '../shared/Rcode-gui-api'
 
 declare global {
   interface Window {
-    kunGui: KunGuiApi
+    RcodeGui: RcodeGuiApi
   }
 }

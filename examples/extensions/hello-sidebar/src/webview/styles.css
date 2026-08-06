@@ -5,8 +5,8 @@
 
 body {
   margin: 0;
-  color: var(--kun-foreground, CanvasText);
-  background: var(--kun-background, Canvas);
+  color: var(--Rcode-foreground, CanvasText);
+  background: var(--Rcode-background, Canvas);
 }
 
 main {
@@ -17,7 +17,7 @@ main {
 
 .eyebrow {
   margin: 0;
-  color: var(--kun-mutedForeground, GrayText);
+  color: var(--Rcode-mutedForeground, GrayText);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;

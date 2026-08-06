@@ -33,8 +33,8 @@ export function buildScreenTurnPrompt(options: ScreenTurnOptions): string {
     : `\`${options.artifactRelativePath}\``
   const lines = [
     options.basePath
-      ? `Kun is asking you to ITERATE on an existing screen design: "${options.screenName}".`
-      : `Kun is asking you to design a new screen: "${options.screenName}".`,
+      ? `Rcode is asking you to ITERATE on an existing screen design: "${options.screenName}".`
+      : `Rcode is asking you to design a new screen: "${options.screenName}".`,
     `Workspace: ${options.workspaceRoot}`,
     ...formatProjectDesignSystemLines(options),
     ...formatDesignTargetFrameLines(options.designContext),
@@ -325,8 +325,8 @@ export function buildCanvasTurnPrompt(options: DesignTurnOptions): string {
   const placementFrameLabel = codeCanvasMode ? 'UI frame placeholders' : 'target screen frames'
   const lines = [
     codeCanvasMode
-      ? 'Kun is asking you to operate the Code sidebar whiteboard with the dedicated canvas tools.'
-      : 'Kun is asking you to operate the design canvas with the dedicated design tools.',
+      ? 'Rcode is asking you to operate the Code sidebar whiteboard with the dedicated canvas tools.'
+      : 'Rcode is asking you to operate the design canvas with the dedicated design tools.',
     `Workspace: ${options.workspaceRoot}`,
     ...formatProjectDesignSystemLines(options),
     ...formatCanvasTargetFrameLines(options.designContext, options.canvasSurface ?? 'design'),
@@ -351,7 +351,7 @@ export function buildCanvasTurnPrompt(options: DesignTurnOptions): string {
       ? []
       : [
           '- DESIGN FOUNDATION GUIDANCE — before building a complete product or multi-screen experience, check whether a valid root `DESIGN.md` source is listed above. If it exists, read and follow it before designing. If it is absent, normally call `design_system` with `operation: "create"` before `design_create_screen` so the screens share a real project-level foundation. This is a preferred sequence, not a hard gate: a quick exploration or an explicit user request to skip the design system may proceed directly to screens.',
-          '- DESIGN-SYSTEM CLAIMS MUST BE FACTUAL — say that screens share a unified design system only when a valid root `DESIGN.md` was already listed or a `design_system` call succeeded in this turn. Per-screen `.kun-design/.../DESIGN.md` notes and visually similar page CSS do not count as the project design system.'
+          '- DESIGN-SYSTEM CLAIMS MUST BE FACTUAL — say that screens share a unified design system only when a valid root `DESIGN.md` was already listed or a `design_system` call succeeded in this turn. Per-screen `.Rcode-design/.../DESIGN.md` notes and visually similar page CSS do not count as the project design system.'
         ]),
     '',
     'FIRST classify the request and commit to ONE primary lane:',

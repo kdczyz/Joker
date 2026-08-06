@@ -140,7 +140,7 @@ describe("auditDesignHtmlQuality systems and forms", () => {
           '<section class="profile"><div><h1>Review customer renewals</h1>',
           '<p>Mina Chen owns Acme Finance, renewal RN-2048, $84,200 ARR, due Jun 18, currently at risk after 3 delayed tasks.</p>',
           '<button onclick="document.body.classList.toggle(\'planned\')">Confirm renewal plan</button><button disabled>Syncing accounts</button></div>',
-          '<img class="portrait" src=".kun-design/assets/customer.png" alt="Portrait of Mina Chen"></section>',
+          '<img class="portrait" src=".Rcode-design/assets/customer.png" alt="Portrait of Mina Chen"></section>',
           '<section><h2>Renewal accounts</h2><table><caption>Renewals at risk this week</caption><thead>',
           '<tr><th scope="col">Account</th><th scope="col">ARR</th><th scope="col">Status</th></tr>',
           '</thead><tbody><tr><td>Acme Finance</td><td>$84,200 ARR</td><td>At risk</td></tr></tbody></table></section>',
@@ -169,7 +169,7 @@ describe("auditDesignHtmlQuality systems and forms", () => {
           '<section class="profile"><div><h1>Review customer renewals</h1>',
           '<p>Mina Chen owns Acme Finance, renewal RN-2048, $84,200 ARR, due Jun 18, currently at risk after 3 delayed tasks.</p>',
           '<button onclick="document.body.classList.toggle(\'planned\')">Confirm renewal plan</button><button disabled>Syncing accounts</button></div>',
-          '<img class="portrait" src=".kun-design/assets/customer.png" alt="Portrait of Mina Chen"></section>',
+          '<img class="portrait" src=".Rcode-design/assets/customer.png" alt="Portrait of Mina Chen"></section>',
           '<section><h2>Renewal accounts</h2><table><caption>Renewals at risk this week</caption><thead>',
           '<tr><th scope="col">Account</th><th scope="col">ARR</th><th scope="col">Status</th></tr>',
           '</thead><tbody><tr><td>Acme Finance</td><td>$84,200 ARR</td><td>At risk</td></tr></tbody></table></section>',
@@ -356,7 +356,7 @@ describe("auditDesignHtmlQuality systems and forms", () => {
           '<main id="top"><section class="hero"><div><h1>Marketing site for field dispatch software</h1>',
           '<p>FieldOps helps service teams route urgent jobs, sync crew notes, and reduce missed handoffs before the morning standup.</p>',
           '<a href="#demo" role="button">Book a dispatch demo</a></div>',
-          '<figure class="product-preview"><img src=".kun-design/assets/dispatch.png" alt="FieldOps dispatch dashboard preview">',
+          '<figure class="product-preview"><img src=".Rcode-design/assets/dispatch.png" alt="FieldOps dispatch dashboard preview">',
           '<figcaption>Dispatch dashboard preview with crew load, route risk, and service alerts.</figcaption></figure></section>',
           '<section class="feature-section"><h2>Core capabilities</h2><article class="feature-card"><h3>Live routing</h3><p>Route emergency jobs by crew capacity and SLA window.</p></article><article class="feature-card"><h3>Handoff sync</h3><p>Sync technician notes and approval history into one workflow.</p></article></section>',
           '<section class="logo-cloud" aria-label="Trusted by service teams"><span>Harbor HVAC</span><span>Northline Utilities</span><span>Civic Repair Co.</span></section>',
@@ -384,7 +384,7 @@ describe("auditDesignHtmlQuality systems and forms", () => {
           '<main id="top"><section class="hero"><div><h1>Marketing site for field dispatch software</h1>',
           '<p>FieldOps helps service teams route urgent jobs, sync crew notes, and reduce missed handoffs before the morning standup.</p>',
           '<a href="#demo" role="button">Book a dispatch demo</a></div>',
-          '<figure class="product-preview"><img src=".kun-design/assets/dispatch.png" alt="FieldOps dispatch dashboard preview">',
+          '<figure class="product-preview"><img src=".Rcode-design/assets/dispatch.png" alt="FieldOps dispatch dashboard preview">',
           '<figcaption>Dispatch dashboard preview with crew load, route risk, and service alerts.</figcaption></figure></section>',
           '<section class="feature-section"><h2>Core capabilities</h2><article class="feature-card"><h3>Live routing</h3><p>Route emergency jobs by crew capacity and SLA window.</p></article><article class="feature-card"><h3>Handoff sync</h3><p>Sync technician notes and approval history into one workflow.</p></article></section>',
           '<section class="logo-cloud" aria-label="Trusted by service teams"><span>Harbor HVAC</span><span>Northline Utilities</span><span>Civic Repair Co.</span></section>',
@@ -414,7 +414,7 @@ describe("auditDesignHtmlQuality systems and forms", () => {
           '<main id="top"><section class="hero"><div><h1>FieldOps dispatch demo</h1>',
           '<p>Book a demo to review crew handoff gaps, route risk, and SLA windows across urgent service jobs.</p>',
           '<a href="#demo" role="button">Request dispatch audit</a></div>',
-          '<figure><img src=".kun-design/assets/dispatch.png" alt="FieldOps dispatch dashboard with crew load and SLA risk"><figcaption>Dispatch dashboard preview.</figcaption></figure></section>',
+          '<figure><img src=".Rcode-design/assets/dispatch.png" alt="FieldOps dispatch dashboard with crew load and SLA risk"><figcaption>Dispatch dashboard preview.</figcaption></figure></section>',
           '<section><h2>Dispatch teams trust FieldOps</h2><p>Harbor HVAC reduced missed emergency handoffs by 18% during the first two weeks.</p></section>',
           '<section id="demo"><h2>Book a dispatch demo</h2><form class="demo-form" action="/demo">',
           '<label for="name">Name <span>Required</span></label><input id="name" name="name" required aria-describedby="name-help"><p id="name-help">Required contact field.</p>',
@@ -442,7 +442,7 @@ describe("auditDesignHtmlQuality systems and forms", () => {
           '<main id="top"><section class="hero"><div><h1>FieldOps dispatch demo</h1>',
           '<p>Book a demo to review crew handoff gaps, route risk, and SLA windows across urgent service jobs.</p>',
           '<a href="#demo" role="button">Request dispatch audit</a></div>',
-          '<figure><img src=".kun-design/assets/dispatch.png" alt="FieldOps dispatch dashboard with crew load and SLA risk"><figcaption>Dispatch dashboard preview.</figcaption></figure></section>',
+          '<figure><img src=".Rcode-design/assets/dispatch.png" alt="FieldOps dispatch dashboard with crew load and SLA risk"><figcaption>Dispatch dashboard preview.</figcaption></figure></section>',
           '<section><h2>Dispatch teams trust FieldOps</h2><p>Harbor HVAC reduced missed emergency handoffs by 18% during the first two weeks.</p></section>',
           '<section id="demo"><h2>Book a dispatch demo</h2><form class="demo-form" action="/demo">',
           '<label for="work-email">Work email <span>Required</span></label><input id="work-email" name="work_email" type="email" required aria-describedby="email-help"><p id="email-help">Use the address that receives dispatch escalation alerts.</p>',
@@ -546,7 +546,7 @@ describe("auditDesignHtmlQuality systems and forms", () => {
           '<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">',
           '<style>button:focus-visible{outline:2px solid #000}@media(max-width:640px){main{padding:16px}}</style>',
           '</head><body><main><h1>Customer profile</h1>',
-          '<img src="" alt="Account hero"><img src=".kun-design/assets/customer.png">',
+          '<img src="" alt="Account hero"><img src=".Rcode-design/assets/customer.png">',
           '<button>Review account</button><p>Loading state, empty state, error state.</p></main></body></html>'
         ].join('')
       })
@@ -561,8 +561,8 @@ describe("auditDesignHtmlQuality systems and forms", () => {
           '<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">',
           '<style>button:focus-visible{outline:2px solid #000}@media(max-width:640px){main{padding:16px}}</style>',
           '</head><body><main><h1>Customer profile</h1>',
-          '<img src=".kun-design/assets/customer.png" alt="Image">',
-          '<img src=".kun-design/assets/dashboard.png" alt="Product screenshot">',
+          '<img src=".Rcode-design/assets/customer.png" alt="Image">',
+          '<img src=".Rcode-design/assets/dashboard.png" alt="Product screenshot">',
           '<button>Review account</button><p>Loading state, empty state, error state.</p></main></body></html>'
         ].join('')
       })

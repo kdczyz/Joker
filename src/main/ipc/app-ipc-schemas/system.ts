@@ -1,6 +1,5 @@
 import { z } from 'zod'
-import { DESKTOP_COMMANDS } from '../../../shared/kun-gui-api'
-import { GUI_UPDATE_CHANNELS } from '../../../shared/gui-update'
+import { DESKTOP_COMMANDS } from '../../../shared/Rcode-gui-api'
 import { SPEECH_TRANSCRIPTION_MAX_BASE64_CHARS, SPEECH_TRANSCRIPTION_MAX_DURATION_MS } from '../../../shared/speech-to-text'
 import {
   TERMINAL_DEFAULT_COLS,
@@ -67,8 +66,6 @@ export const notificationPayloadSchema = z
     body: trimmedString(MAX_NOTIFICATION_BODY_LENGTH)
   })
   .strict()
-
-export const guiUpdateChannelSchema = z.enum(GUI_UPDATE_CHANNELS).optional()
 
 export const desktopCommandSchema = z.enum(DESKTOP_COMMANDS)
 

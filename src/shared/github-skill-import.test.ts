@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  buildKunSkill,
+  buildRcodeSkill,
   importSkillsFromGitHub,
   mapAllowedTools,
   parseGitHubSkillUrl,
@@ -76,7 +76,7 @@ describe('parseSkillFrontmatter', () => {
 })
 
 describe('mapAllowedTools', () => {
-  it('normalizes aliases into Kun tool names', () => {
+  it('normalizes aliases into Rcode tool names', () => {
     expect(mapAllowedTools(['ReadFile', 'grep', 'shell', 'unknown_tool'])).toEqual([
       'read',
       'grep',
@@ -86,7 +86,7 @@ describe('mapAllowedTools', () => {
   })
 })
 
-describe('buildKunSkill', () => {
+describe('buildRcodeSkill', () => {
   it('builds a modern skill package and de-duplicates dir names', () => {
     const used = new Set<string>()
     const parsed: ParsedSkillFrontmatter = {
@@ -98,8 +98,8 @@ describe('buildKunSkill', () => {
       body: '# Bug Hunt\n\nReproduce first.'
     }
 
-    const first = buildKunSkill(parsed, { defaultName: 'Bug Hunt', usedDirNames: used })
-    const second = buildKunSkill(parsed, { defaultName: 'Bug Hunt', usedDirNames: used })
+    const first = buildRcodeSkill(parsed, { defaultName: 'Bug Hunt', usedDirNames: used })
+    const second = buildRcodeSkill(parsed, { defaultName: 'Bug Hunt', usedDirNames: used })
 
     expect(first.manifest).toMatchObject({
       id: 'bug-hunt',

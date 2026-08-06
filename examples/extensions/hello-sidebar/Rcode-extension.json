@@ -1,0 +1,33 @@
+{
+  "$schema": "https://Rcode.dev/schemas/extensions/manifest/v1.json",
+  "manifestVersion": 1,
+  "apiVersion": "1.0.0",
+  "name": "hello-sidebar",
+  "publisher": "Rcode-examples",
+  "version": "0.1.0",
+  "displayName": "Hello Sidebar",
+  "description": "A minimal sandboxed Rcode sidebar with persisted View state.",
+  "license": "MIT",
+  "engines": {
+    "Rcode": ">=0.1.0"
+  },
+  "browser": "dist/webview/index.html",
+  "activationEvents": [
+    "onView:hello"
+  ],
+  "contributes": {
+    "views.rightSidebar": [
+      {
+        "id": "hello",
+        "title": "Hello Rcode",
+        "entry": "dist/webview/index.html",
+        "localResourceRoots": ["dist/webview"]
+      }
+    ]
+  },
+  "permissions": [
+    "ui.views",
+    "webview"
+  ],
+  "stateSchemaVersion": 1
+}

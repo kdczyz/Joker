@@ -278,7 +278,7 @@ function buildAgentContractSection(): string[] {
 }
 
 function buildGraph(options: BuildDesignProjectContractMarkdownOptions): DesignGraph {
-  const projectId = options.document?.id ?? options.canvasDocument.graph?.projectId ?? 'kun-design'
+  const projectId = options.document?.id ?? options.canvasDocument.graph?.projectId ?? 'Rcode-design'
   return buildDesignGraphFromCanvasDocument(options.canvasDocument, {
     projectId,
     artifacts: [...(options.artifacts ?? options.document?.artifacts ?? [])],
@@ -302,7 +302,7 @@ export function summarizeDesignProjectContract(
   const motion = buildCanvasMotionSummary(options.canvasDocument)
   return {
     path: STITCH_DESIGN_MD_PATH,
-    title: options.document?.title ?? 'Kun design project',
+    title: options.document?.title ?? 'Rcode design project',
     artifactCount: artifacts.length,
     screenCount: artifacts.filter((artifact) => artifact.kind === 'html').length,
     svgArtifactCount: artifacts.filter((artifact) => artifact.kind === 'svg').length,

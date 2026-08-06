@@ -10,8 +10,8 @@ const {
 } = require('./verify-packaged-macos-native-architecture.cjs')
 
 async function fixture(arch) {
-  const root = join(tmpdir(), `kun-packaged-macos-${process.pid}-${Date.now()}-${Math.random()}`)
-  const resources = join(root, 'Kun.app', 'Contents', 'Resources')
+  const root = join(tmpdir(), `Rcode-packaged-macos-${process.pid}-${Date.now()}-${Math.random()}`)
+  const resources = join(root, 'Rcode.app', 'Contents', 'Resources')
   const modules = join(resources, 'app.asar.unpacked', 'node_modules')
   const bindingPackage = join(modules, '@img', `sharp-darwin-${arch}`)
   const libvipsPackage = join(modules, '@img', `sharp-libvips-darwin-${arch}`)
@@ -20,7 +20,7 @@ async function fixture(arch) {
   await mkdir(join(bindingPackage, 'lib'), { recursive: true })
   await mkdir(join(libvipsPackage, 'lib'), { recursive: true })
   await mkdir(canvasPackage, { recursive: true })
-  await mkdir(join(root, 'Kun.app', 'Contents', 'MacOS'), { recursive: true })
+  await mkdir(join(root, 'Rcode.app', 'Contents', 'MacOS'), { recursive: true })
   await writeFile(join(resources, 'app.asar'), 'asar')
   await writeFile(join(modules, 'sharp', 'package.json'), JSON.stringify({ name: 'sharp' }))
   for (const [directory, name] of [
@@ -33,7 +33,7 @@ async function fixture(arch) {
       JSON.stringify({ name, os: ['darwin'], cpu: [arch] })
     )
   }
-  await writeFile(join(root, 'Kun.app', 'Contents', 'MacOS', 'Kun'), 'main')
+  await writeFile(join(root, 'Rcode.app', 'Contents', 'MacOS', 'Rcode'), 'main')
   await writeFile(join(bindingPackage, 'lib', `sharp-darwin-${arch}.node`), 'binding')
   await writeFile(join(libvipsPackage, 'lib', 'libvips-cpp.test.dylib'), 'libvips')
   await writeFile(join(canvasPackage, `skia.darwin-${arch}.node`), 'canvas')

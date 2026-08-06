@@ -14,7 +14,7 @@ import {
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import type { AppSettingsV1 } from '@shared/app-settings'
-import type { KunProjectConfigFileResult, SkillListItem } from '@shared/kun-gui-api'
+import type { RcodeProjectConfigFileResult, SkillListItem } from '@shared/Rcode-gui-api'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { useChatStore } from '../../store/chat-store'
 import {
@@ -61,7 +61,7 @@ export function McpSkillsPanel({ workspaceRoot = '', onOpenSettings }: Props): R
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [notice, setNotice] = useState<{ tone: 'success' | 'error'; message: string } | null>(null)
-  const [projectState, setProjectState] = useState<KunProjectConfigFileResult | null>(null)
+  const [projectState, setProjectState] = useState<RcodeProjectConfigFileResult | null>(null)
   const [skills, setSkills] = useState<SkillListItem[]>([])
   const [globalMcpText, setGlobalMcpText] = useState(EMPTY_GLOBAL_MCP)
   const [savedGlobalMcpText, setSavedGlobalMcpText] = useState(EMPTY_GLOBAL_MCP)
@@ -74,12 +74,12 @@ export function McpSkillsPanel({ workspaceRoot = '', onOpenSettings }: Props): R
     setLoading(true)
     setNotice(null)
     try {
-      const api = window.kunGui
+      const api = window.RcodeGui
       const [settings, globalConfig, listedSkills, projectConfig] = await Promise.all([
         rendererRuntimeClient.getSettings({ forceRefresh: true }),
-        api.getKunConfigFile(),
+        api.getRcodeConfigFile(),
         api.listSkills(workspaceRoot || undefined),
-        workspaceRoot ? api.getKunProjectConfigFile(workspaceRoot) : Promise.resolve(null)
+        workspaceRoot ? api.getRcodeProjectConfigFile(workspaceRoot) : Promise.resolve(null)
       ])
       const globalText = globalConfig.content.trim() ? globalConfig.content : EMPTY_GLOBAL_MCP
       const projectDraft = projectConfig?.content.trim() ? projectConfig.content : EMPTY_PROJECT_CONFIG
@@ -174,14 +174,14 @@ export function McpSkillsPanel({ workspaceRoot = '', onOpenSettings }: Props): R
     try {
       if (scope === 'project') {
         if (!workspaceRoot) throw new Error(t('mcpSkillsPanel.workspaceRequired'))
-        const result = await window.kunGui.setKunProjectConfigFile(workspaceRoot, projectText)
+        const result = await window.RcodeGui.setRcodeProjectConfigFile(workspaceRoot, projectText)
         const content = result.content.trim() ? result.content : EMPTY_PROJECT_CONFIG
         setProjectState(result)
         setProjectText(content)
         setSavedProjectText(content)
       } else {
         if (globalMcpText !== savedGlobalMcpText) {
-          await window.kunGui.setKunConfigFile(globalMcpText)
+          await window.RcodeGui.setRcodeConfigFile(globalMcpText)
           setSavedGlobalMcpText(globalMcpText)
         }
         if (globalSkillsDirty) {
@@ -206,9 +206,9 @@ export function McpSkillsPanel({ workspaceRoot = '', onOpenSettings }: Props): R
     try {
       const result = scope === 'project'
         ? workspaceRoot
-          ? await window.kunGui.openKunProjectConfigDir(workspaceRoot)
+          ? await window.RcodeGui.openRcodeProjectConfigDir(workspaceRoot)
           : { ok: false as const, message: t('mcpSkillsPanel.workspaceRequired') }
-        : await window.kunGui.openKunConfigDir()
+        : await window.RcodeGui.openRcodeConfigDir()
       if (!result.ok) throw new Error(result.message ?? t('mcpSkillsPanel.openFailed'))
     } catch (error) {
       setNotice({ tone: 'error', message: error instanceof Error ? error.message : String(error) })
@@ -253,7 +253,7 @@ export function McpSkillsPanel({ workspaceRoot = '', onOpenSettings }: Props): R
                 {scope === 'project' ? t('mcpSkillsPanel.currentWorkspace') : t('mcpSkillsPanel.globalConfig')}
               </div>
               <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
-                {scope === 'project' ? workspaceName || t('mcpSkillsPanel.noWorkspace') : '~/.kun'}
+                {scope === 'project' ? workspaceName || t('mcpSkillsPanel.noWorkspace') : '~/.Rcode'}
               </div>
             </div>
             {scope === 'project' && workspaceRoot ? (

@@ -13,7 +13,7 @@ import { artifact, installDesignDocument } from './design-board.test-helpers'
 describe('SVG artifact board synchronization', () => {
   beforeEach(() => {
     vi.stubGlobal('window', {
-      kunGui: { writeWorkspaceFile: vi.fn(async () => ({ ok: true as const })) }
+      RcodeGui: { writeWorkspaceFile: vi.fn(async () => ({ ok: true as const })) }
     })
     useCanvasViewportStore.getState().setContainerSize(1200, 800)
     useCanvasViewportStore.getState().setVbox({ x: -600, y: -400, width: 1200, height: 800 })
@@ -24,12 +24,12 @@ describe('SVG artifact board synchronization', () => {
 
   it('includes SVG version, geometry, and hidden state in the artifact sync key', () => {
     const visible = artifact('motion', 'svg', {
-      relativePath: '.kun-design/doc/motion/v1.svg',
+      relativePath: '.Rcode-design/doc/motion/v1.svg',
       node: { x: 10, y: 20, width: 320, height: 240, sizeMode: 'manual' }
     })
     const changed = {
       ...visible,
-      relativePath: '.kun-design/doc/motion/v2.svg',
+      relativePath: '.Rcode-design/doc/motion/v2.svg',
       node: { ...visible.node!, boardHidden: true }
     }
     expect(buildDesignArtifactSyncKey([visible], 'web')).not.toBe(
@@ -40,7 +40,7 @@ describe('SVG artifact board synchronization', () => {
   it('materializes a persisted SVG artifact as a first-class linked frame', () => {
     const motion = artifact('motion', 'svg', {
       title: 'Orbit loader',
-      relativePath: '.kun-design/doc/motion/v1.svg',
+      relativePath: '.Rcode-design/doc/motion/v1.svg',
       node: { x: 120, y: 80, width: 320, height: 240, sizeMode: 'manual', viewMode: 'preview' }
     })
     const synced = syncDesignArtifactsToBoardDocument(createEmptyDocument(), [motion])

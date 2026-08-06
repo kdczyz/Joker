@@ -1,4 +1,4 @@
-### Node / Electron (Kun)
+### Node / Electron (Rcode)
 node_modules/
 out/
 dist/
@@ -44,6 +44,6 @@ release.local.env
 
 ### Tool data
 .workbuddy/
-.kun-design/
-.kun-canvas/
+.Rcode-design/
+.Rcode-canvas/
 openspec/

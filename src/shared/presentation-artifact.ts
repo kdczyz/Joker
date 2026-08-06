@@ -1,4 +1,4 @@
-export const PRESENTATION_STUDIO_EXTENSION_ID = 'kun-examples.presentation-studio'
+export const PRESENTATION_STUDIO_EXTENSION_ID = 'Rcode-examples.presentation-studio'
 
 export const PRESENTATION_STUDIO_WRITE_TOOL_NAMES = [
   'presentation-create',

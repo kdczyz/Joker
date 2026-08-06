@@ -95,7 +95,7 @@ function restoreFailure(error: unknown): Extract<GitCheckpointRestoreResult, { o
 /**
  * Resolve the checkpoints root directory. A user-configured absolute path (e.g.
  * on another drive with more free space) takes precedence; otherwise the
- * default lives under the Kun data dir. Relative configured paths are resolved
+ * default lives under the Rcode data dir. Relative configured paths are resolved
  * against the data dir so a stray relative value can't escape unexpectedly.
  */
 export function resolveCheckpointsRoot(dataDir: string, configured?: string): string {

@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { QRCodeSVG } from 'qrcode.react'
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Copy, Eye, EyeOff, Loader2, QrCode, RadioTower } from 'lucide-react'
-import { MIN_KUN_LOCAL_PORT, type ClawRunMode } from '@shared/app-settings'
+import { MIN_RCODE_LOCAL_PORT, type ClawRunMode } from '@shared/app-settings'
 import { ClawProviderLogo } from './SidebarClaw'
 import {
   CLAW_AGENT_TABS,
@@ -417,7 +417,7 @@ export function ClawStepContent({ ctx }: { ctx: Record<string, any> }): ReactEle
                                 </span>
                                 <input
                                   type="number"
-                                  min={MIN_KUN_LOCAL_PORT}
+                                  min={MIN_RCODE_LOCAL_PORT}
                                   max={65535}
                                   value={imPort}
                                   onChange={(event) => {

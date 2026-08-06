@@ -18,16 +18,16 @@ const MEDIA_TOOLCHAIN = {
   drawtext: true
 }
 const ARTIFACTS = [
-  'Kun-1.2.3-mac-arm64.dmg',
-  'Kun-1.2.3-mac-arm64.zip',
-  'Kun-1.2.3-mac-x64.dmg',
-  'Kun-1.2.3-mac-x64.zip',
-  'Kun-1.2.3-win-x64.exe',
-  'Kun-1.2.3-linux-x86_64.AppImage'
+  'Rcode-1.2.3-mac-arm64.dmg',
+  'Rcode-1.2.3-mac-arm64.zip',
+  'Rcode-1.2.3-mac-x64.dmg',
+  'Rcode-1.2.3-mac-x64.zip',
+  'Rcode-1.2.3-win-x64.exe',
+  'Rcode-1.2.3-linux-x86_64.AppImage'
 ]
 
 async function fixture(t) {
-  const root = await mkdtemp(join(tmpdir(), 'kun-native-evidence-bundle-test-'))
+  const root = await mkdtemp(join(tmpdir(), 'Rcode-native-evidence-bundle-test-'))
   t.after(() => rm(root, { recursive: true, force: true }))
   for (const name of ARTIFACTS) await writeFile(join(root, name), `bytes:${name}`)
   for (const platform of ['darwin', 'win32', 'linux']) {
@@ -91,8 +91,8 @@ test('rejects stale commits, tag drift, wrong versions, sizes, and hashes', asyn
 
 test('rejects inconsistent platform versions and unproved media toolchain capabilities', async (t) => {
   const inconsistent = await fixture(t)
-  const oldLinux = join(inconsistent, 'Kun-1.2.3-linux-x86_64.AppImage')
-  const newLinux = join(inconsistent, 'Kun-1.2.4-linux-x86_64.AppImage')
+  const oldLinux = join(inconsistent, 'Rcode-1.2.3-linux-x86_64.AppImage')
+  const newLinux = join(inconsistent, 'Rcode-1.2.4-linux-x86_64.AppImage')
   await rename(oldLinux, newLinux)
   const linuxEvidence = await createNativeEvidence({
     distDirectory: inconsistent,
@@ -152,38 +152,38 @@ test('rejects missing, duplicate, and symlinked downloaded release files', async
 
 test('rejects every extra native-looking release asset outside the six-file allowlist', async (t) => {
   for (const name of [
-    'Kun-1.2.3-linux-arm64.AppImage',
-    'Kun-1.2.3-win-arm64.exe',
-    'Kun-1.2.3-win-x64.EXE',
-    'Kun-1.2.3-win-x64.MSI',
-    'Kun-1.2.3-mac-universal.dmg',
-    'Kun-1.2.3-mac-universal.zip'
+    'Rcode-1.2.3-linux-arm64.AppImage',
+    'Rcode-1.2.3-win-arm64.exe',
+    'Rcode-1.2.3-win-x64.EXE',
+    'Rcode-1.2.3-win-x64.MSI',
+    'Rcode-1.2.3-mac-universal.dmg',
+    'Rcode-1.2.3-mac-universal.zip'
   ]) {
     await t.test(name, async (t) => {
       const root = await fixture(t)
-      if (name === 'Kun-1.2.3-win-x64.EXE') {
-        await rm(join(root, 'Kun-1.2.3-win-x64.exe'))
+      if (name === 'Rcode-1.2.3-win-x64.EXE') {
+        await rm(join(root, 'Rcode-1.2.3-win-x64.exe'))
       }
       await writeFile(join(root, name), 'unbound extra native artifact')
       await assert.rejects(verifyNativeEvidenceBundle({
         directory: root,
         expectedCommit: COMMIT,
         expectedVersion: VERSION
-      }), /unexpected Kun-named asset: Kun-/i)
+      }), /unexpected Rcode-named asset: Rcode-/i)
     })
   }
 })
 
 test('allows only canonical same-version blockmaps as unrecorded ancillary assets', async (t) => {
   const root = await fixture(t)
-  await writeFile(join(root, 'Kun-1.2.3-win-x64.exe.blockmap'), 'canonical blockmap')
+  await writeFile(join(root, 'Rcode-1.2.3-win-x64.exe.blockmap'), 'canonical blockmap')
   await verifyNativeEvidenceBundle({
     directory: root,
     expectedCommit: COMMIT,
     expectedVersion: VERSION
   })
 
-  await writeFile(join(root, 'Kun-9.9.9-linux-x86_64.AppImage.blockmap'), 'stale blockmap')
+  await writeFile(join(root, 'Rcode-9.9.9-linux-x86_64.AppImage.blockmap'), 'stale blockmap')
   await assert.rejects(verifyNativeEvidenceBundle({
     directory: root,
     expectedCommit: COMMIT,

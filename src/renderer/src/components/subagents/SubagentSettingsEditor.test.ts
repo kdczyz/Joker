@@ -2,9 +2,9 @@ import { createElement } from 'react'
 import { act, create, type ReactTestRenderer } from 'react-test-renderer'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
-  defaultKunRuntimeSettings,
-  type KunRuntimeSettingsPatchV1,
-  type KunSubagentProfileV1
+  defaultRcodeRuntimeSettings,
+  type RcodeRuntimeSettingsPatchV1,
+  type RcodeSubagentProfileV1
 } from '@shared/app-settings'
 import { SubagentSettingsEditor } from './SubagentSettingsEditor'
 
@@ -42,11 +42,7 @@ vi.mock('../../lib/confirm-dialog', () => ({
   confirmDialog: vi.fn(async () => true)
 }))
 
-vi.mock('./AgentKun', () => ({
-  AgentKun: ({ id }: { id: string }) => createElement('span', { 'data-agent-id': id })
-}))
-
-function customProfile(patch: Partial<KunSubagentProfileV1> = {}): KunSubagentProfileV1 {
+function customProfile(patch: Partial<RcodeSubagentProfileV1> = {}): RcodeSubagentProfileV1 {
   return {
     id: 'researcher',
     enabled: true,
@@ -75,8 +71,8 @@ describe('SubagentSettingsEditor', () => {
   })
 
   it('renders the settings policy, built-in roster, custom profiles, and automatic roles', async () => {
-    const kun = {
-      ...defaultKunRuntimeSettings(),
+    const Rcode = {
+      ...defaultRcodeRuntimeSettings(),
       subagents: {
         enabled: true,
         maxParallel: 5,
@@ -89,7 +85,7 @@ describe('SubagentSettingsEditor', () => {
 
     await act(async () => {
       renderer = create(createElement(SubagentSettingsEditor, {
-        kun,
+        Rcode,
         onPatch: () => undefined,
         variant: 'settings'
       }))
@@ -109,8 +105,8 @@ describe('SubagentSettingsEditor', () => {
   })
 
   it('keeps the compact side-panel surface on the same shared editor', async () => {
-    const kun = {
-      ...defaultKunRuntimeSettings(),
+    const Rcode = {
+      ...defaultRcodeRuntimeSettings(),
       subagents: {
         enabled: true,
         profiles: [customProfile()]
@@ -120,7 +116,7 @@ describe('SubagentSettingsEditor', () => {
 
     await act(async () => {
       renderer = create(createElement(SubagentSettingsEditor, {
-        kun,
+        Rcode,
         onPatch: () => undefined,
         variant: 'panel'
       }))
@@ -134,10 +130,10 @@ describe('SubagentSettingsEditor', () => {
   })
 
   it('patches runtime policy without dropping the roster or sibling limits', async () => {
-    const onPatch = vi.fn<(patch: KunRuntimeSettingsPatchV1) => void>()
+    const onPatch = vi.fn<(patch: RcodeRuntimeSettingsPatchV1) => void>()
     const profile = customProfile()
-    const kun = {
-      ...defaultKunRuntimeSettings(),
+    const Rcode = {
+      ...defaultRcodeRuntimeSettings(),
       subagents: {
         enabled: true,
         maxParallel: 3,
@@ -150,7 +146,7 @@ describe('SubagentSettingsEditor', () => {
 
     await act(async () => {
       renderer = create(createElement(SubagentSettingsEditor, {
-        kun,
+        Rcode,
         onPatch,
         variant: 'settings'
       }))
@@ -177,10 +173,10 @@ describe('SubagentSettingsEditor', () => {
   })
 
   it('disables a custom profile while keeping its complete configuration', async () => {
-    const onPatch = vi.fn<(patch: KunRuntimeSettingsPatchV1) => void>()
+    const onPatch = vi.fn<(patch: RcodeRuntimeSettingsPatchV1) => void>()
     const profile = customProfile({ model: 'reasoner', providerId: 'provider-a' })
-    const kun = {
-      ...defaultKunRuntimeSettings(),
+    const Rcode = {
+      ...defaultRcodeRuntimeSettings(),
       subagents: {
         enabled: true,
         maxParallel: 4,
@@ -193,7 +189,7 @@ describe('SubagentSettingsEditor', () => {
 
     await act(async () => {
       renderer = create(createElement(SubagentSettingsEditor, {
-        kun,
+        Rcode,
         onPatch,
         variant: 'settings'
       }))
@@ -201,7 +197,7 @@ describe('SubagentSettingsEditor', () => {
 
     const disableButtons = renderer.root.findAllByType('button')
       .filter((button) => button.props.title === 'Disable')
-    // Built-ins are always installed by Kun and therefore do not expose a
+    // Built-ins are always installed by Rcode and therefore do not expose a
     // misleading power switch. Only the custom profile is toggleable here.
     expect(disableButtons).toHaveLength(1)
 
@@ -221,10 +217,10 @@ describe('SubagentSettingsEditor', () => {
   })
 
   it('saves a profile model and provider as one coherent pair', async () => {
-    const onPatch = vi.fn<(patch: KunRuntimeSettingsPatchV1) => void>()
+    const onPatch = vi.fn<(patch: RcodeRuntimeSettingsPatchV1) => void>()
     const profile = customProfile()
-    const kun = {
-      ...defaultKunRuntimeSettings(),
+    const Rcode = {
+      ...defaultRcodeRuntimeSettings(),
       subagents: {
         enabled: true,
         maxParallel: 3,
@@ -236,7 +232,7 @@ describe('SubagentSettingsEditor', () => {
 
     await act(async () => {
       renderer = create(createElement(SubagentSettingsEditor, {
-        kun,
+        Rcode,
         onPatch,
         variant: 'settings'
       }))

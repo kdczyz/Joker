@@ -1,19 +1,19 @@
 import { useEffect, useMemo, useRef } from 'react'
-import type { KunGuiApi } from '@shared/kun-gui-api'
+import type { RcodeGuiApi } from '@shared/Rcode-gui-api'
 import type { DesignArtifact } from '../design-types'
 import { useDesignWorkspaceStore } from '../design-workspace-store'
 import { svgArtifactStatusForSource } from './svg-artifact-status'
 export { svgArtifactStatusForSource } from './svg-artifact-status'
 
 export type SvgArtifactStatusTarget = { id: string; relativePath: string }
-type SvgArtifactStatusMonitorApi = Pick<KunGuiApi, 'readWorkspaceFile'> & Partial<
-  Pick<KunGuiApi, 'watchWorkspaceFile' | 'unwatchWorkspaceFile' | 'onWorkspaceFileChanged'>
+type SvgArtifactStatusMonitorApi = Pick<RcodeGuiApi, 'readWorkspaceFile'> & Partial<
+  Pick<RcodeGuiApi, 'watchWorkspaceFile' | 'unwatchWorkspaceFile' | 'onWorkspaceFileChanged'>
 >
 
 export function startSvgArtifactStatusMonitor(
   workspaceRoot: string,
   targets: readonly SvgArtifactStatusTarget[],
-  api: SvgArtifactStatusMonitorApi | undefined = typeof window !== 'undefined' ? window.kunGui : undefined
+  api: SvgArtifactStatusMonitorApi | undefined = typeof window !== 'undefined' ? window.RcodeGui : undefined
 ): () => void {
   if (!workspaceRoot || targets.length === 0 || typeof api?.readWorkspaceFile !== 'function') {
     return () => undefined

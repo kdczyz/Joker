@@ -6,7 +6,7 @@ const { createRequire } = require('node:module')
 const { join, resolve } = require('node:path')
 const { resolvePackagedRuntimeExecutable } = require('./smoke-packaged-extensions.cjs')
 
-const REEXEC_MARKER = 'KUN_PACKAGED_OCR_SMOKE_REEXEC'
+const REEXEC_MARKER = 'RCODE_PACKAGED_OCR_SMOKE_REEXEC'
 const SUCCESS_MARKER = '[packaged-ocr-smoke] OCR dependencies loaded from '
 const SMOKE_TIMEOUT_MS = 5 * 60_000
 
@@ -21,14 +21,14 @@ function firstExisting(paths) {
 
 function resolveResourcesDir({ root = process.cwd(), environment = process.env } = {}) {
   const resourcesDir = firstExisting([
-    environment.KUN_PACKAGED_RESOURCES_DIR,
+    environment.RCODE_PACKAGED_RESOURCES_DIR,
     join(root, 'dist', 'linux-unpacked', 'resources'),
     join(root, 'dist', 'win-unpacked', 'resources'),
-    join(root, 'dist', 'mac-arm64', 'Kun.app', 'Contents', 'Resources'),
-    join(root, 'dist', 'mac', 'Kun.app', 'Contents', 'Resources')
+    join(root, 'dist', 'mac-arm64', 'Rcode.app', 'Contents', 'Resources'),
+    join(root, 'dist', 'mac', 'Rcode.app', 'Contents', 'Resources')
   ].map((candidate) => candidate && resolve(root, candidate)))
   if (!resourcesDir) {
-    fail('Could not find packaged app resources. Set KUN_PACKAGED_RESOURCES_DIR or build a packaged app first.')
+    fail('Could not find packaged app resources. Set RCODE_PACKAGED_RESOURCES_DIR or build a packaged app first.')
   }
   return resourcesDir
 }
@@ -55,8 +55,8 @@ function createPackagedReexecInvocation({
       env: {
         ...environment,
         ELECTRON_RUN_AS_NODE: '1',
-        KUN_DISABLE_OS_CREDENTIAL_STORE: '1',
-        KUN_PACKAGED_RESOURCES_DIR: resolve(resourcesDir),
+        RCODE_DISABLE_OS_CREDENTIAL_STORE: '1',
+        RCODE_PACKAGED_RESOURCES_DIR: resolve(resourcesDir),
         [REEXEC_MARKER]: '1'
       },
       shell: false,

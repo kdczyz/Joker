@@ -16,7 +16,7 @@ export interface PresentationFileCandidate {
   modifiedAt: string
 }
 
-const PRESENTATION_PATH_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._ -]*\.kun-ppt\.html$/u
+const PRESENTATION_PATH_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._ -]*\.Rcode-ppt\.html$/u
 
 export function decidePresentationChange(state: PresentationChangeState): PresentationChangeAction {
   if (state.source === 'tool' && (!state.hasProject || state.changePath !== state.activePath)) {

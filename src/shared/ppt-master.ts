@@ -1,6 +1,6 @@
 /**
  * Result returned after the desktop app has made the PPT Master skill usable
- * by the local Kun runtime.
+ * by the local Rcode runtime.
  */
 export type PptMasterEnsureResult =
   | {

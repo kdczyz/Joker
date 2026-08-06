@@ -70,7 +70,7 @@ describe('design agent actions', () => {
         id: 'artifact_home',
         kind: 'html',
         title: 'Home',
-        relativePath: '.kun-design/doc_1/home/v1.html',
+        relativePath: '.Rcode-design/doc_1/home/v1.html',
         createdAt: '2026-07-02T12:00:00.000Z',
         updatedAt: '2026-07-02T12:00:00.000Z',
         versions: [],

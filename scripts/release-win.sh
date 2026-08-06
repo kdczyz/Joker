@@ -102,12 +102,12 @@ npm run smoke:packaged-extension-desktop \
   || die "Windows packaged Extension desktop Chromium smoke failed"
 
 cyan "Smoking host-native FFmpeg broker..."
-KUN_RUN_MEDIA_SMOKE=1 npm run smoke:extension-native-media \
+RCODE_RUN_MEDIA_SMOKE=1 npm run smoke:extension-native-media \
   || die "Windows host-native FFmpeg broker smoke failed"
 
-cyan "Smoking packaged Kun Video Editor native workflow..."
+cyan "Smoking packaged Rcode Video Editor native workflow..."
 npm run smoke:packaged-video-editor-native \
-  || die "Windows packaged Kun Video Editor native workflow smoke failed"
+  || die "Windows packaged Rcode Video Editor native workflow smoke failed"
 
 cyan "Recording commit-bound Windows native evidence..."
 npm run evidence:extension-native \
@@ -140,8 +140,8 @@ collect() {
   done
 }
 
-collect "Windows exe" "dist/Kun-*-win-*.exe"
-collect "Windows blockmap" "dist/Kun-*-win-*.exe.blockmap"
+collect "Windows exe" "dist/Rcode-*-win-*.exe"
+collect "Windows blockmap" "dist/Rcode-*-win-*.exe.blockmap"
 collect "Windows native evidence" "dist/extension-native-evidence-win32.json"
 
 cyan "Uploading ${#ASSETS[@]} Windows asset(s) to ${TAG_NAME}..."
@@ -175,7 +175,7 @@ if $PUBLISH; then
     || die "gh release edit --draft=false failed"
   verify_release_state 1 false "published"
 else
-  cyan "Release remains draft — publish only after macOS, Windows, Linux, evidence, and .kunx assets are ready."
+  cyan "Release remains draft — publish only after macOS, Windows, Linux, evidence, and .Rcodex assets are ready."
 fi
 
 echo

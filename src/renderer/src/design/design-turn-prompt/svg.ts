@@ -7,8 +7,8 @@ import { formatProjectDesignSystemLines } from './html-and-canvas'
 export function buildSvgTurnPrompt(options: DesignTurnOptions): string {
   const lines = [
     options.basePath
-      ? 'Kun is asking you to ITERATE on an existing standalone SVG motion artifact.'
-      : 'Kun is asking you to create a standalone SVG or SVG-motion artifact.',
+      ? 'Rcode is asking you to ITERATE on an existing standalone SVG motion artifact.'
+      : 'Rcode is asking you to create a standalone SVG or SVG-motion artifact.',
     `Workspace: ${options.workspaceRoot}`,
     `Reserved SVG file: ${options.artifactRelativePath}`,
     ...(options.basePath ? [`Previous version to preserve and improve: ${options.basePath}`] : []),

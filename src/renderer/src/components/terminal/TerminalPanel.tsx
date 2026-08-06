@@ -330,18 +330,18 @@ export function TerminalPanel({
     })
 
     // Stream PTY output → xterm.
-    const offData = window.kunGui.onTerminalData((payload) => {
+    const offData = window.RcodeGui.onTerminalData((payload) => {
       if (payload.sessionId !== sessionId) return
       term.write(payload.data)
     })
-    const offExit = window.kunGui.onTerminalExit((payload) => {
+    const offExit = window.RcodeGui.onTerminalExit((payload) => {
       if (payload.sessionId !== sessionId) return
       setExited(true)
     })
 
     // xterm input → PTY.
     const disposable = term.onData((data) => {
-      void window.kunGui.writeToTerminal({
+      void window.RcodeGui.writeToTerminal({
         sessionId,
         data
       })
@@ -363,7 +363,7 @@ export function TerminalPanel({
     const resizeObserver = new ResizeObserver(triggerFit)
     resizeObserver.observe(container)
     const onDimensionChange = (dim: { cols: number; rows: number }): void => {
-      void window.kunGui.resizeTerminal({
+      void window.RcodeGui.resizeTerminal({
         sessionId,
         cols: dim.cols,
         rows: dim.rows
@@ -374,7 +374,7 @@ export function TerminalPanel({
     // Create (or re-attach to) the PTY session. On re-attach the main process
     // replays the ring buffer before new output arrives.
     try {
-      const result = await window.kunGui.createTerminal({
+      const result = await window.RcodeGui.createTerminal({
         sessionId,
         cwd: workspaceRoot || undefined,
         cols,
@@ -389,7 +389,7 @@ export function TerminalPanel({
       // matches the visible grid.
       const dims = fit.proposeDimensions()
       if (dims) {
-        void window.kunGui.resizeTerminal({
+        void window.RcodeGui.resizeTerminal({
           sessionId,
           cols: dims.cols,
           rows: dims.rows
@@ -472,7 +472,7 @@ export function TerminalPanel({
   const handleCloseTab = useCallback((tabId: string) => {
     const closingIndex = tabs.findIndex((tab) => tab.id === tabId)
     if (closingIndex === -1) return
-    void window.kunGui.disposeTerminal(sessionIdForTab(tabId))
+    void window.RcodeGui.disposeTerminal(sessionIdForTab(tabId))
     setTabs((current) => {
       if (current.length <= 1) return current
       return current.filter((tab) => tab.id !== tabId)
@@ -540,7 +540,7 @@ export function TerminalPanel({
     const keptTab = tabs.find((tab) => tab.id === tabId)
     if (!keptTab) return
     for (const tab of tabs) {
-      if (tab.id !== tabId) void window.kunGui.disposeTerminal(sessionIdForTab(tab.id))
+      if (tab.id !== tabId) void window.RcodeGui.disposeTerminal(sessionIdForTab(tab.id))
     }
     setTabs([keptTab])
     setActiveTabId(tabId)
@@ -550,7 +550,7 @@ export function TerminalPanel({
 
   const handleCloseAllTabs = useCallback(() => {
     for (const tab of tabs) {
-      void window.kunGui.disposeTerminal(sessionIdForTab(tab.id))
+      void window.RcodeGui.disposeTerminal(sessionIdForTab(tab.id))
     }
     setContextMenu(null)
     cancelRenameTab()
@@ -564,7 +564,7 @@ export function TerminalPanel({
     if (!activeTab) return
     // Dispose the old shell then re-attach so a fresh one spawns.
     try {
-      await window.kunGui.disposeTerminal(sessionIdForTab(activeTab.id))
+      await window.RcodeGui.disposeTerminal(sessionIdForTab(activeTab.id))
     } catch {
       /* ignore */
     }

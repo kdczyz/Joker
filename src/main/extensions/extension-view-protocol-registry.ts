@@ -1,9 +1,9 @@
 import type { Protocol } from 'electron'
 import type { ResolvedExtensionView } from './extension-descriptor-resolver'
 import {
-  KUN_EXTENSION_SCHEME,
-  parseKunExtensionUrl,
-  registerKunExtensionProtocol,
+  RCODE_EXTENSION_SCHEME,
+  parseRcodeExtensionUrl,
+  registerRcodeExtensionProtocol,
   type ExtensionResourceDescriptor
 } from './extension-resource-protocol'
 import type { ExtensionViewSessionRecord } from './extension-view-sessions'
@@ -75,7 +75,7 @@ export class ExtensionViewProtocolRegistry {
     }
     const protocol = this.protocolForPartition(record.partition)
     try {
-      registerKunExtensionProtocol({
+      registerRcodeExtensionProtocol({
         protocol,
         resolveDescriptor: async (extensionId) =>
           extensionId === descriptor.extensionId ? descriptor : undefined,
@@ -84,7 +84,7 @@ export class ExtensionViewProtocolRegistry {
       this.mediaProtocols?.prepare(record)
     } catch (error) {
       try {
-        protocol.unhandle(KUN_EXTENSION_SCHEME)
+        protocol.unhandle(RCODE_EXTENSION_SCHEME)
       } catch {
         // Keep failed preparation out of the registry and permit a clean retry.
       }
@@ -119,9 +119,9 @@ export class ExtensionViewProtocolRegistry {
   }
 
   isPreparedInitialNavigation(protocol: ProtocolHandler, rawUrl: string): boolean {
-    let parsed: ReturnType<typeof parseKunExtensionUrl>
+    let parsed: ReturnType<typeof parseRcodeExtensionUrl>
     try {
-      parsed = parseKunExtensionUrl(rawUrl)
+      parsed = parseRcodeExtensionUrl(rawUrl)
     } catch {
       return false
     }
@@ -141,7 +141,7 @@ export class ExtensionViewProtocolRegistry {
     if (!prepared) return mediaDisposed
     this.registrations.delete(sessionId)
     try {
-      prepared.protocol.unhandle(KUN_EXTENSION_SCHEME)
+      prepared.protocol.unhandle(RCODE_EXTENSION_SCHEME)
     } catch {
       // The in-memory Session may already be gone during application shutdown.
     }

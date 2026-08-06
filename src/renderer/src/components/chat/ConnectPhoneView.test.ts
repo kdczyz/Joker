@@ -26,7 +26,7 @@ function channel(enabled: boolean, provider: ClawImChannelV1['provider'] = 'feis
     threadId: '',
     workspaceRoot: '',
     agentProfile: {
-      name: 'kun',
+      name: 'Rcode',
       description: '',
       identity: '',
       personality: '',
@@ -54,13 +54,13 @@ describe('ConnectPhoneView', () => {
       })
     )
 
-    expect(html).toContain('Use your phone to connect kun')
+    expect(html).toContain('Use your phone to connect Rcode')
     expect(html).toContain('Generate authorization QR')
     expect(html).toContain('max-w-[760px]')
     expect(html).toContain('grid-cols-4')
     expect(html).toContain('w-full min-w-0 items-center justify-center')
     expect(html).toContain('TELE')
-    expect(html).not.toContain('Kun usage')
+    expect(html).not.toContain('Rcode usage')
   })
 
   it('maps scan targets to the matching install API provider', () => {
@@ -85,9 +85,9 @@ describe('ConnectPhoneView', () => {
     expect(formatConnectPhoneUserCode('', 'abcd1234-rest-of-token')).toBe('ABCD-1234')
   })
 
-  it('builds the default kun channel payload after a successful scan', () => {
+  it('builds the default Rcode channel payload after a successful scan', () => {
     expect(createConnectPhoneAgentProfile()).toEqual({
-      name: 'kun',
+      name: 'Rcode',
       description: '',
       identity: '',
       personality: '',

@@ -172,7 +172,7 @@ export type DesignWorkspaceState = {
   updateDesignContext: (patch: Partial<DesignContext>) => void
   /** Hydrate workspace root + design context defaults from persisted settings. */
   loadDesignSettings: () => Promise<void>
-  /** Rebuild the artifact list from `.kun-design/` on disk (durable list). */
+  /** Rebuild the artifact list from `.Rcode-design/` on disk (durable list). */
   rehydrateArtifacts: () => Promise<void>
   /** Re-read design-system.json and refresh designSystemHash (code-drift detection). */
   refreshDesignSystemHash: () => Promise<void>

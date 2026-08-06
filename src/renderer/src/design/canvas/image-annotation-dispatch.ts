@@ -61,7 +61,7 @@ export function isCodeCanvasDocumentKey(documentKey: string | null | undefined):
 }
 
 function defaultSaveWorkspaceImageBytes(): SaveWorkspaceImageBytes | undefined {
-  return window.kunGui?.saveWorkspaceImageBytes
+  return window.RcodeGui?.saveWorkspaceImageBytes
 }
 
 function defaultSetDesignFileError(message: string): void {

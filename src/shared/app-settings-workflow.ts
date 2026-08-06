@@ -33,7 +33,7 @@ import {
   type WorkflowScheduleV1,
   type WorkflowSwitchRuleV1,
   type WorkflowWebhookMethod,
-  MIN_KUN_LOCAL_PORT,
+  MIN_RCODE_LOCAL_PORT,
   type WorkflowSettingsPatchV1,
   type WorkflowSettingsV1,
   type WorkflowTriggerScheduleKind,
@@ -86,7 +86,7 @@ function asText(value: unknown): string {
 
 function normalizeWorkflowWebhookPort(value: unknown, fallback: number): number {
   if (value === PREVIOUS_WORKFLOW_WEBHOOK_PORT) return fallback
-  return normalizePositiveInteger(value, fallback, MIN_KUN_LOCAL_PORT, 65_535)
+  return normalizePositiveInteger(value, fallback, MIN_RCODE_LOCAL_PORT, 65_535)
 }
 
 function normalizeWorkflowScheduleKind(value: unknown): WorkflowTriggerScheduleKind {

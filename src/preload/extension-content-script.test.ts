@@ -24,11 +24,11 @@ function binding(runAt: 'documentStart' | 'documentEnd'): ExtensionHostContentSc
     },
     scripts: [{
       code: 'globalThis.__ran = true',
-      url: 'kun-extension://acme.dom/dist/content.js'
+      url: 'Rcode-extension://acme.dom/dist/content.js'
     }],
     styles: [{
       css: '.badge { color: red }',
-      url: 'kun-extension://acme.dom/dist/content.css'
+      url: 'Rcode-extension://acme.dom/dist/content.css'
     }]
   }
 }
@@ -73,7 +73,7 @@ describe('Direct DOM workbench preload', () => {
   it('executes documentStart immediately in its assigned isolated world', () => {
     const state = fixture('documentStart', 'loading')
     expect(state.exposed).toHaveLength(1)
-    expect(state.exposed[0]).toMatchObject({ worldId: 18_001, apiKey: 'kunHost' })
+    expect(state.exposed[0]).toMatchObject({ worldId: 18_001, apiKey: 'RcodeHost' })
     expect(Object.keys(state.exposed[0]!.api).sort()).toEqual([
       'dispose',
       'getContext',
@@ -81,9 +81,9 @@ describe('Direct DOM workbench preload', () => {
     ])
     expect(state.execute).toHaveBeenCalledTimes(1)
     const sources = state.execute.mock.calls[0]![1]
-    expect(sources[0]!.code).toContain("['kunGui', 'require', 'module'")
+    expect(sources[0]!.code).toContain("['RcodeGui', 'require', 'module'")
     expect(sources[0]!.code).toContain("['fetch', deniedFetch]")
-    expect(sources.at(-1)!.url).toBe('kun-extension://acme.dom/dist/content.js')
+    expect(sources.at(-1)!.url).toBe('Rcode-extension://acme.dom/dist/content.js')
   })
 
   it('does not execute documentEnd before DOMContentLoaded', () => {
@@ -131,7 +131,7 @@ describe('Direct DOM workbench preload', () => {
     ;(api.dispose as () => void)()
     const source = state.execute.mock.calls.at(-1)![1][0]!.code
     expect(source).toBe(EXTENSION_CONTENT_SCRIPT_DEACTIVATION_SOURCE)
-    expect(source).toContain('globalThis.kunHost')
+    expect(source).toContain('globalThis.RcodeHost')
     expect(source).not.toContain(JSON.stringify(state.value.context.extensionId))
   })
 })

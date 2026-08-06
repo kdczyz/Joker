@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import type { CoreRuntimeInfoJson } from '../../agent/kun-contract'
+import type { CoreRuntimeInfoJson } from '../../agent/Rcode-contract'
 import type { NormalizedThread, RuntimeConnectionStatus } from '../../agent/types'
 import type { CanvasDocument } from '../../design/canvas/canvas-types'
 import { useDesignWorkspaceStore } from '../../design/design-workspace-store'

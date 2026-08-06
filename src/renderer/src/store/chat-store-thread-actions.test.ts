@@ -115,7 +115,7 @@ describe('chat-store-thread-actions queued messages', () => {
     const guiPlan: GuiPlanMessageContext = {
       operation: 'draft',
       workspaceRoot: '/workspace/deepseek-gui',
-      relativePath: '.kunsdd/plan/feature.md',
+      relativePath: '.Rcodesdd/plan/feature.md',
       planId: 'plan-1',
       sourceRequest: 'feature'
     }
@@ -130,7 +130,7 @@ describe('chat-store-thread-actions queued messages', () => {
   })
 
   it('rejects a busy Write send instead of accepting a queue that can lose file identity', async () => {
-    vi.stubGlobal('window', { kunGui: {} })
+    vi.stubGlobal('window', { RcodeGui: {} })
     useWriteWorkspaceStore.setState({
       workspaceRoot: '/workspace/deepseek-gui',
       activeFilePath: '/workspace/deepseek-gui/draft.md',
@@ -165,7 +165,7 @@ describe('chat-store-thread-actions queued messages', () => {
   })
 
   it('rejects a Write send whose captured revision is no longer active', async () => {
-    vi.stubGlobal('window', { kunGui: {} })
+    vi.stubGlobal('window', { RcodeGui: {} })
     useWriteWorkspaceStore.setState({
       workspaceRoot: '/workspace/deepseek-gui',
       activeFilePath: '/workspace/deepseek-gui/draft.md',
@@ -205,9 +205,9 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({
-          agents: { kun: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -253,7 +253,7 @@ describe('chat-store-thread-actions queued messages', () => {
   it('fails closed when another thread becomes active while the Write ensure resolves', async () => {
     const provider = { sendUserMessage: vi.fn() }
     registryMock.getProvider.mockReturnValue(provider)
-    vi.stubGlobal('window', { kunGui: {} })
+    vi.stubGlobal('window', { RcodeGui: {} })
     useWriteWorkspaceStore.setState({
       workspaceRoot: '/workspace/deepseek-gui',
       activeFilePath: '/workspace/deepseek-gui/draft.md',
@@ -295,7 +295,7 @@ describe('chat-store-thread-actions queued messages', () => {
   ])('rejects a Write send with a mismatched %s before ensuring a thread', async (_label, mismatch) => {
     const provider = { sendUserMessage: vi.fn() }
     registryMock.getProvider.mockReturnValue(provider)
-    vi.stubGlobal('window', { kunGui: {} })
+    vi.stubGlobal('window', { RcodeGui: {} })
     useWriteWorkspaceStore.setState({
       workspaceRoot: '/workspace/deepseek-gui',
       activeFilePath: '/workspace/deepseek-gui/draft.md',
@@ -344,7 +344,7 @@ describe('chat-store-thread-actions queued messages', () => {
         guiPlan: {
           operation: 'draft',
           workspaceRoot: '/workspace/deepseek-gui',
-          relativePath: '.kunsdd/plan/one.md',
+          relativePath: '.Rcodesdd/plan/one.md',
           planId: 'plan-1'
         }
       },
@@ -453,14 +453,14 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     const setSettings = vi.fn(async () => ({
-      agents: { kun: { providerId: 'xiaomi-token-plan', model: 'mimo-v2.5' } },
+      agents: { Rcode: { providerId: 'xiaomi-token-plan', model: 'mimo-v2.5' } },
       codePromptPrefix: ''
     }))
     const restartRuntime = vi.fn(async () => undefined)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({
-          agents: { kun: { providerId: 'minimax-token-plan', model: 'MiniMax-M2' } },
+          agents: { Rcode: { providerId: 'minimax-token-plan', model: 'MiniMax-M2' } },
           codePromptPrefix: ''
         })),
         setSettings,
@@ -497,9 +497,9 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({
-          agents: { kun: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -534,9 +534,9 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({
-          agents: { kun: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -568,9 +568,9 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({
-          agents: { kun: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -590,7 +590,7 @@ describe('chat-store-thread-actions queued messages', () => {
         generation: 2,
         attachmentId: `extension-context:${'a'.repeat(64)}`,
         provenance: {
-          extensionId: 'kun-examples.kun-video-editor',
+          extensionId: 'Rcode-examples.Rcode-video-editor',
           extensionVersion: '0.3.0',
           viewContributionId: 'editor',
           workspaceId: 'b'.repeat(64)
@@ -622,9 +622,9 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({
-          agents: { kun: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -641,9 +641,9 @@ describe('chat-store-thread-actions queued messages', () => {
       generation: 2,
       attachmentId: `extension-context:${'a'.repeat(64)}`,
       provenance: {
-        extensionId: 'kun-examples.kun-video-editor',
+        extensionId: 'Rcode-examples.Rcode-video-editor',
         extensionVersion: '0.3.0',
-        viewContributionId: 'extension:kun-examples.kun-video-editor/editor',
+        viewContributionId: 'extension:Rcode-examples.Rcode-video-editor/editor',
         workspaceId: 'b'.repeat(64)
       }
     }
@@ -680,14 +680,14 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     const setSettings = vi.fn(async () => ({
-      agents: { kun: { providerId: 'minimax-token-plan', model: 'MiniMax-M3' } },
+      agents: { Rcode: { providerId: 'minimax-token-plan', model: 'MiniMax-M3' } },
       codePromptPrefix: ''
     }))
     const restartRuntime = vi.fn(async () => undefined)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({
-          agents: { kun: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         setSettings,
@@ -737,10 +737,10 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({
           workspaceRoot: '/workspace/deepseek-gui',
-          agents: { kun: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -991,10 +991,10 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
     const alertDialog = vi.fn(async () => undefined)
     registryMock.getProvider.mockReturnValue({ createThread: createThreadProvider })
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({
           workspaceRoot: 'E:\\missing-project',
-          agents: { kun: { subagents: { profiles: [] } } }
+          agents: { Rcode: { subagents: { profiles: [] } } }
         })),
         workspaceDirectoryExists: vi.fn(async () => false),
         alertDialog
@@ -1017,7 +1017,7 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
     const alertDialog = vi.fn(async () => undefined)
     registryMock.getProvider.mockReturnValue({})
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         getSettings: vi.fn(async () => ({ workspaceRoot: 'E:\\missing-project' })),
         workspaceDirectoryExists: vi.fn(async () => false),
         alertDialog
@@ -1036,7 +1036,7 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
   })
 
   it('creates a conversation thread bound to the auto-created timestamped workspace', async () => {
-    const createdPath = '/home/alice/.local/share/Kun/conversations/20260626-153012'
+    const createdPath = '/home/alice/.local/share/Rcode/conversations/20260626-153012'
     const selectThread = vi.fn(async () => undefined)
     const refreshThreads = vi.fn(async () => undefined)
     const createThreadProvider = vi.fn(async () => ({
@@ -1051,7 +1051,7 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
     registryMock.getProvider.mockReturnValue({ createThread: createThreadProvider })
 
     vi.stubGlobal('window', {
-      kunGui: {
+      RcodeGui: {
         platform: 'linux',
         getSettings: vi.fn(async () => ({
           version: 1,
@@ -1060,9 +1060,9 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
           uiFontScale: 0.82,
     chatContentMaxWidthPx: 896,
           provider: { providers: [], apiKey: '', baseUrl: '', proxy: { enabled: false } },
-          agents: { kun: { model: 'deepseek-v4-pro', apiKey: 'k', baseUrl: '' } },
+          agents: { Rcode: { model: 'deepseek-v4-pro', apiKey: 'k', baseUrl: '' } },
           workspaceRoot: '/tmp/workspace',
-          conversationWorkspaceRoot: '~/.local/share/Kun/conversations',
+          conversationWorkspaceRoot: '~/.local/share/Rcode/conversations',
           log: { enabled: false, retentionDays: 7 },
           checkpointCleanup: { enabled: false, intervalDays: 3 },
           notifications: { turnComplete: true },
@@ -1087,7 +1087,7 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
 
     await actions.createThread({ conversation: true })
 
-    expect(window.kunGui.createConversationWorkspace).toHaveBeenCalled()
+    expect(window.RcodeGui.createConversationWorkspace).toHaveBeenCalled()
     expect(createThreadProvider).toHaveBeenCalledWith(expect.objectContaining({ workspace: createdPath }))
     expect(state.activeThreadId).toBe('thr_new')
     expect(selectThread).toHaveBeenCalledWith('thr_new')

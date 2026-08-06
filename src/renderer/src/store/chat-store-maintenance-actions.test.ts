@@ -267,7 +267,7 @@ describe('chat-store-maintenance-actions workspace rollback', () => {
     }))
     ;(globalThis as { window?: unknown }).window = {
       confirm: vi.fn(() => true),
-      kunGui: {
+      RcodeGui: {
         restoreGitCheckpoint
       }
     }
@@ -306,7 +306,7 @@ describe('chat-store-maintenance-actions workspace rollback', () => {
     }))
     ;(globalThis as { window?: unknown }).window = {
       confirm: vi.fn(() => true),
-      kunGui: {
+      RcodeGui: {
         restoreGitCheckpoint
       }
     }
@@ -343,7 +343,7 @@ describe('chat-store-maintenance-actions workspace rollback', () => {
         state.busy = true
         return true
       }),
-      kunGui: {
+      RcodeGui: {
         restoreGitCheckpoint
       }
     }
@@ -377,7 +377,7 @@ describe('chat-store-maintenance-actions workspace rollback', () => {
     }))
     ;(globalThis as { window?: unknown }).window = {
       confirm: vi.fn(() => true),
-      kunGui: {
+      RcodeGui: {
         restoreGitCheckpoint
       }
     }
@@ -741,7 +741,7 @@ describe('chat-store-maintenance-actions goal actions', () => {
 
   it('keeps the turn settled when the backend interrupt fails', async () => {
     ;(globalThis as { window?: unknown }).window = {
-      kunGui: {
+      RcodeGui: {
         logError: vi.fn(async () => undefined)
       }
     }

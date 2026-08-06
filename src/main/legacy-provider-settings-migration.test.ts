@@ -4,19 +4,19 @@ import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import {
   MODEL_PROVIDER_PRESETS,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   modelProviderPresetProfile,
-  resolveKunRuntimeSettings
+  resolveRcodeRuntimeSettings
 } from '../shared/app-settings'
 import { LegacyProviderSettingsMigrationCoordinator } from './legacy-provider-settings-migration'
-import { providersConfigForRuntime } from './runtime/kun-runtime-model-config'
-import { syncGuiManagedKunConfig } from './runtime/kun-runtime-config-service'
+import { providersConfigForRuntime } from './runtime/Rcode-runtime-model-config'
+import { syncGuiManagedRcodeConfig } from './runtime/Rcode-runtime-config-service'
 import { JsonSettingsStore } from './settings-store'
 
 describe('LegacyProviderSettingsMigrationCoordinator', () => {
   it('backs up and removes plaintext while keeping secure bindings readable across restarts', async () => {
-    const userDataDir = await mkdtemp(join(tmpdir(), 'kun-settings-credential-migration-'))
+    const userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-settings-credential-migration-'))
     const dataDir = join(userDataDir, 'runtime-data')
     const plainStore = new JsonSettingsStore(userDataDir)
     const defaults = await plainStore.load()
@@ -40,8 +40,8 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
         }]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           dataDir,
           providerId: 'custom-provider',
           model: 'custom-model',
@@ -55,14 +55,14 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
     const loaded = await store.load()
     expect(loaded.provider.providers.find((provider) => provider.id === 'custom-provider')?.apiKey)
       .toBe('custom-provider-secret')
-    expect(loaded.agents.kun.apiKey).toBe('distinct-runtime-secret')
+    expect(loaded.agents.Rcode.apiKey).toBe('distinct-runtime-secret')
 
-    const persisted = await readFile(join(userDataDir, 'kun-settings.json'), 'utf8')
+    const persisted = await readFile(join(userDataDir, 'Rcode-settings.json'), 'utf8')
     expect(persisted).not.toContain('default-provider-secret')
     expect(persisted).not.toContain('custom-provider-secret')
     expect(persisted).not.toContain('distinct-runtime-secret')
     const backup = await readFile(
-      join(userDataDir, 'kun-settings.pre-extension-credential-migration.json'),
+      join(userDataDir, 'Rcode-settings.pre-extension-credential-migration.json'),
       'utf8'
     )
     expect(backup).toContain('custom-provider-secret')
@@ -98,7 +98,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
     }).load()
     expect(reloaded.provider.providers.find((provider) => provider.id === 'custom-provider')?.apiKey)
       .toBe('custom-provider-secret')
-    expect(reloaded.agents.kun.apiKey).toBe('distinct-runtime-secret')
+    expect(reloaded.agents.Rcode.apiKey).toBe('distinct-runtime-secret')
 
     const runtimeProviders = providersConfigForRuntime(reloaded)
     expect(runtimeProviders['custom-provider']).toEqual(expect.objectContaining({
@@ -107,7 +107,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
     }))
     expect(JSON.stringify(runtimeProviders)).not.toContain('custom-provider-secret')
 
-    await syncGuiManagedKunConfig(dataDir, resolveKunRuntimeSettings(reloaded), {
+    await syncGuiManagedRcodeConfig(dataDir, resolveRcodeRuntimeSettings(reloaded), {
       scheduleMcp: {
         settings: reloaded,
         launch: { appPath: userDataDir, execPath: process.execPath, isPackaged: false }
@@ -123,7 +123,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
   })
 
   it('keeps the account reference stable when a user explicitly updates a migrated key', async () => {
-    const userDataDir = await mkdtemp(join(tmpdir(), 'kun-settings-credential-update-'))
+    const userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-settings-credential-update-'))
     const dataDir = join(userDataDir, 'runtime-data')
     const plainStore = new JsonSettingsStore(userDataDir)
     const defaults = await plainStore.load()
@@ -133,7 +133,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
         ...defaultModelProviderSettings(),
         apiKey: 'old-secret'
       },
-      agents: { kun: { ...defaultKunRuntimeSettings(), dataDir } }
+      agents: { Rcode: { ...defaultRcodeRuntimeSettings(), dataDir } }
     })
     const store = new JsonSettingsStore(userDataDir, {
       credentialMigration: new LegacyProviderSettingsMigrationCoordinator()
@@ -152,11 +152,11 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
     })
     expect(updated.provider.apiKey).toBe('new-secret')
     expect(await bindingAccountId(dataDir, 'settings:provider:deepseek')).toBe(before)
-    expect(await readFile(join(userDataDir, 'kun-settings.json'), 'utf8')).not.toContain('new-secret')
+    expect(await readFile(join(userDataDir, 'Rcode-settings.json'), 'utf8')).not.toContain('new-secret')
   })
 
   it('saves a new provider key when an unrelated legacy credential can no longer be decrypted', async () => {
-    const userDataDir = await mkdtemp(join(tmpdir(), 'kun-settings-stale-credential-'))
+    const userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-settings-stale-credential-'))
     const dataDir = join(userDataDir, 'runtime-data')
     const plainStore = new JsonSettingsStore(userDataDir)
     const defaults = await plainStore.load()
@@ -166,7 +166,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
         ...defaultModelProviderSettings(),
         apiKey: 'stale-deepseek-secret'
       },
-      agents: { kun: { ...defaultKunRuntimeSettings(), dataDir } }
+      agents: { Rcode: { ...defaultRcodeRuntimeSettings(), dataDir } }
     })
 
     const initialStore = new JsonSettingsStore(userDataDir, {
@@ -193,7 +193,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
         providers: [{ ...minimax, apiKey: 'fresh-minimax-secret' }]
       },
       agents: {
-        kun: {
+        Rcode: {
           providerId: 'minimax',
           model: minimax.models[0]
         }
@@ -203,14 +203,14 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
     expect(updated.provider.providers.find((provider) => provider.id === 'deepseek')?.apiKey).toBe('')
     expect(updated.provider.providers.find((provider) => provider.id === 'minimax')?.apiKey)
       .toBe('fresh-minimax-secret')
-    expect(updated.agents.kun.providerId).toBe('minimax')
-    expect(await readFile(join(userDataDir, 'kun-settings.json'), 'utf8'))
+    expect(updated.agents.Rcode.providerId).toBe('minimax')
+    expect(await readFile(join(userDataDir, 'Rcode-settings.json'), 'utf8'))
       .not.toContain('fresh-minimax-secret')
     expect(loaded.provider.apiKey).toBe('')
   })
 
   it('rolls back a secure pending migration when the ordinary settings commit fails', async () => {
-    const userDataDir = await mkdtemp(join(tmpdir(), 'kun-settings-credential-failure-'))
+    const userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-settings-credential-failure-'))
     const rollback = vi.fn(async () => undefined)
     const store = new JsonSettingsStore(userDataDir, {
       credentialMigration: {
@@ -225,21 +225,21 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
       }
     })
     const settings = await store.load()
-    await mkdir(join(userDataDir, 'kun-settings.json'))
+    await mkdir(join(userDataDir, 'Rcode-settings.json'))
 
     await expect(store.save(settings)).rejects.toBeDefined()
     expect(rollback).toHaveBeenCalledOnce()
   })
 
   it('does not migrate when an existing backup path is not a protected regular file', async () => {
-    const userDataDir = await mkdtemp(join(tmpdir(), 'kun-settings-credential-backup-'))
+    const userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-settings-credential-backup-'))
     const plainStore = new JsonSettingsStore(userDataDir)
     const settings = await plainStore.load()
     await plainStore.save({
       ...settings,
       provider: { ...settings.provider, apiKey: 'plaintext-must-remain-authoritative' }
     })
-    await mkdir(join(userDataDir, 'kun-settings.pre-extension-credential-migration.json'))
+    await mkdir(join(userDataDir, 'Rcode-settings.pre-extension-credential-migration.json'))
     const prepare = vi.fn()
 
     const loaded = await new JsonSettingsStore(userDataDir, {

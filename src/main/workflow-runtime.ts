@@ -64,7 +64,7 @@ type NodeOutcome = {
   message: string
   /** For condition nodes: which outgoing handle to follow ('true' | 'false'). */
   branch?: string
-  /** For ai-agent nodes: the Kun thread created. */
+  /** For ai-agent nodes: the Rcode thread created. */
   threadId?: string
 }
 
@@ -356,7 +356,7 @@ export class WorkflowRuntime {
       const pathname = new URL(req.url ?? '/', 'http://127.0.0.1').pathname
       const secret = settings.workflow.webhookSecret.trim()
       if (secret) {
-        const rawHeader = req.headers['x-kun-secret']
+        const rawHeader = req.headers['x-Rcode-secret']
         const headerSecret = Array.isArray(rawHeader) ? rawHeader[0] : rawHeader
         if (req.headers.authorization !== `Bearer ${secret}` && headerSecret !== secret) {
           writeJson(res, 401, { ok: false, message: 'Unauthorized.' })
@@ -364,7 +364,7 @@ export class WorkflowRuntime {
         }
       }
       // Internal endpoints used by the GUI-hosted workflow MCP server (agent tool)
-      // and the kun hook bridge.
+      // and the Rcode hook bridge.
       if (
         pathname === '/workflow/internal/list' ||
         pathname === '/workflow/internal/run' ||
@@ -456,7 +456,7 @@ export class WorkflowRuntime {
     }
     const workspaceOverride = typeof parsed.workspaceRoot === 'string' ? parsed.workspaceRoot : undefined
     if (pathname === '/workflow/internal/hook-run') {
-      // The hook payload (the kun invocation) is the workflow input; nodes read it via {{json.*}}.
+      // The hook payload (the Rcode invocation) is the workflow input; nodes read it via {{json.*}}.
       const result = await this.runForHook(idOrName, parsed.payload ?? parsed.input, workspaceOverride)
       writeJson(res, 200, result)
       return
@@ -465,7 +465,7 @@ export class WorkflowRuntime {
     writeJson(res, result.ok ? 200 : 400, result)
   }
 
-  /** Run a workflow on behalf of the Kun agent tool: resolve by id/name, await it, return its output. */
+  /** Run a workflow on behalf of the Rcode agent tool: resolve by id/name, await it, return its output. */
   async runWorkflowForTool(
     idOrName: string,
     input?: unknown,
@@ -483,7 +483,7 @@ export class WorkflowRuntime {
   }
 
   /**
-   * Run a workflow triggered by a kun agent hook. Resolves by id (no callableByAgent
+   * Run a workflow triggered by a Rcode agent hook. Resolves by id (no callableByAgent
    * gate — the trigger binding is the gate). Reentrancy-guarded: while one hook run is
    * in flight, further hook runs are skipped so a workflow that edits files can't loop.
    */

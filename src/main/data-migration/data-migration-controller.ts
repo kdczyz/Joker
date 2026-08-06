@@ -25,12 +25,12 @@ import {
   type DataMigrationReport
 } from '../../shared/data-migration'
 import type { JsonSettingsStore } from '../settings-store'
-import type { RuntimeThreadForMigration, KunMigrationSnapshotClient } from './export-orchestrator'
+import type { RuntimeThreadForMigration, RcodeMigrationSnapshotClient } from './export-orchestrator'
 import { DataMigrationExportOrchestrator } from './export-orchestrator'
 import {
   DataMigrationImportOrchestrator,
   type DataMigrationPackageInspection,
-  type KunRuntimeMigrationImportClient,
+  type RcodeRuntimeMigrationImportClient,
   type RendererMigrationStateAdapter
 } from './import-orchestrator'
 import { DataMigrationImportTransactionCoordinator, type RuntimeMigrationCommitResult } from './import-transaction'
@@ -122,7 +122,7 @@ export class DataMigrationController {
       const result = await dialog.showSaveDialog(this.windowOptions(), {
         title: 'Create migration package',
         defaultPath: value.defaultPath,
-        filters: [{ name: 'Kun migration package', extensions: ['kunpack'] }]
+        filters: [{ name: 'Rcode migration package', extensions: ['Rcodepack'] }]
       })
       return { canceled: result.canceled, path: result.filePath || null }
     })
@@ -132,7 +132,7 @@ export class DataMigrationController {
         title: 'Select migration package',
         defaultPath: value.defaultPath,
         properties: ['openFile'],
-        filters: [{ name: 'Kun migration package', extensions: ['kunpack'] }]
+        filters: [{ name: 'Rcode migration package', extensions: ['Rcodepack'] }]
       })
       return { canceled: result.canceled, path: result.filePaths[0] ?? null }
     })
@@ -330,7 +330,7 @@ export class DataMigrationController {
     if (journal.phase === 'inspected') {
       for (const mapping of journal.plan.mappings) {
         if (!mapping.destinationRoot) continue
-        const stagingRoot = join(dirname(mapping.destinationRoot), `.kun-migration-staging-${operationId}-${mapping.workspaceId}`)
+        const stagingRoot = join(dirname(mapping.destinationRoot), `.Rcode-migration-staging-${operationId}-${mapping.workspaceId}`)
         await rm(stagingRoot, { recursive: true, force: true })
       }
       await this.transactions.requestCancellation(operationId)
@@ -442,7 +442,7 @@ export async function listRuntimeThreadsForMigration(
   // The public threads route caps an explicit `limit` at 500. Omitting it asks
   // the store for the complete inventory, including archived and side threads.
   const response = await runtimeFetch('/v1/threads?include_archived=true&include=side')
-  if (!response.ok) throw new Error(`Kun thread inventory failed (${response.status})`)
+  if (!response.ok) throw new Error(`Rcode thread inventory failed (${response.status})`)
   const value = await response.json() as { threads?: unknown[] }
   return (Array.isArray(value.threads) ? value.threads : []).flatMap((raw) => {
     if (!raw || typeof raw !== 'object') return []
@@ -516,7 +516,7 @@ export function assertTrustedDataMigrationSender(
   }
 }
 
-function runtimeSnapshotClient(runtimeFetch: DataMigrationControllerOptions['runtimeFetch']): KunMigrationSnapshotClient {
+function runtimeSnapshotClient(runtimeFetch: DataMigrationControllerOptions['runtimeFetch']): RcodeMigrationSnapshotClient {
   return {
     create: async (input, signal) => {
       const value = await fetchJson(runtimeFetch, '/v1/migrations/exports', {
@@ -531,10 +531,10 @@ function runtimeSnapshotClient(runtimeFetch: DataMigrationControllerOptions['run
     },
     download: async (snapshotId, destinationPath, signal) => {
       const response = await runtimeFetch(`/v1/migrations/exports/${encodeURIComponent(snapshotId)}`, { signal })
-      if (!response.ok || !response.body) throw new Error(`Kun snapshot download failed (${response.status})`)
+      if (!response.ok || !response.body) throw new Error(`Rcode snapshot download failed (${response.status})`)
       await pipeline(Readable.fromWeb(response.body as never), createWriteStream(destinationPath, { flags: 'wx', mode: 0o600 }), ...(signal ? [{ signal }] : []))
       const { stat } = await import('node:fs/promises')
-      const { sha256File } = await import('./kunpack-zip')
+      const { sha256File } = await import('./Rcodepack-zip')
       return { byteSize: (await stat(destinationPath)).size, sha256: await sha256File(destinationPath) }
     },
     release: async (snapshotId) => {
@@ -543,7 +543,7 @@ function runtimeSnapshotClient(runtimeFetch: DataMigrationControllerOptions['run
   }
 }
 
-function runtimeImportClient(runtimeFetch: DataMigrationControllerOptions['runtimeFetch']): KunRuntimeMigrationImportClient {
+function runtimeImportClient(runtimeFetch: DataMigrationControllerOptions['runtimeFetch']): RcodeRuntimeMigrationImportClient {
   const result = async (path: string, method = 'POST'): Promise<RuntimeMigrationCommitResult> => {
     const value = await fetchJson(runtimeFetch, path, { method }) as { result: RuntimeMigrationCommitResult }
     return value.result
@@ -569,7 +569,7 @@ function runtimeImportClient(runtimeFetch: DataMigrationControllerOptions['runti
         duplex: 'half',
         signal: input.signal,
         headers: { 'content-type': 'application/x-ndjson' }
-      }) as { preflight: Awaited<ReturnType<KunRuntimeMigrationImportClient['preflight']>> }
+      }) as { preflight: Awaited<ReturnType<RcodeRuntimeMigrationImportClient['preflight']>> }
       return value.preflight
     },
     commit: (importId) => result(`/v1/migrations/imports/${encodeURIComponent(importId)}/commit`),
@@ -787,7 +787,7 @@ async function fetchJson(
   if (!response.ok) {
     const message = value && typeof value === 'object' && typeof (value as { message?: unknown }).message === 'string'
       ? (value as { message: string }).message
-      : `Kun migration request failed (${response.status})`
+      : `Rcode migration request failed (${response.status})`
     throw new Error(message)
   }
   return value
@@ -858,14 +858,14 @@ export function publicMigrationError(error: unknown, phase?: DataMigrationProgre
   const destinationEffect = phase === 'staging'
     ? 'staged temporary data only'
     : phase === 'committing' || phase === 'verifying' || phase === 'rolling-back'
-      ? 'changes may have started; Kun will use the operation journal to roll back or recover'
+      ? 'changes may have started; Rcode will use the operation journal to roll back or recover'
       : 'no destination changes'
   const nextAction = code === 'SPACE_INSUFFICIENT'
     ? 'Free space on every target volume, then run the preflight again.'
     : code === 'IO_PERMISSION_DENIED'
       ? 'Choose a writable local destination or correct its permissions, then retry.'
       : code === 'PACKAGE_PASSWORD_REQUIRED' || code === 'PACKAGE_PASSWORD_INVALID'
-        ? 'Enter the package passphrase again; Kun never stores it.'
+        ? 'Enter the package passphrase again; Rcode never stores it.'
         : code === 'RECOVERY_REQUIRED'
           ? 'Open Data migration and resolve the interrupted operation before starting another.'
           : 'Review the package and selected destinations, then retry or use the recovery action shown.'

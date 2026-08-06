@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  resolveKunSpeechToTextSettings,
-  getKunRuntimeSettings,
+  resolveRcodeSpeechToTextSettings,
+  getRcodeRuntimeSettings,
   type AppSettingsV1,
-  type KunPromptOptimizationSettingsV1,
-  type KunSpeechToTextSettingsV1
+  type RcodePromptOptimizationSettingsV1,
+  type RcodeSpeechToTextSettingsV1
 } from '@shared/app-settings'
 import { SPEECH_TRANSCRIPTION_MAX_DURATION_MS } from '@shared/speech-to-text'
 import { SETTINGS_CHANGED_EVENT } from '../../lib/keyboard-shortcut-settings'
@@ -20,16 +20,16 @@ const MIN_RECORDING_MS = 500
 const RECORDER_MIME_CANDIDATES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
 
 /** Resolved speech-to-text settings, kept in sync with the settings screen. */
-export function useSpeechToTextSettings(): KunSpeechToTextSettingsV1 | null {
-  const [speechToText, setSpeechToText] = useState<KunSpeechToTextSettingsV1 | null>(null)
+export function useSpeechToTextSettings(): RcodeSpeechToTextSettingsV1 | null {
+  const [speechToText, setSpeechToText] = useState<RcodeSpeechToTextSettingsV1 | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const apply = (settings: AppSettingsV1): void => {
-      if (!cancelled) setSpeechToText(resolveKunSpeechToTextSettings(settings))
+      if (!cancelled) setSpeechToText(resolveRcodeSpeechToTextSettings(settings))
     }
-    if (typeof window.kunGui?.getSettings === 'function') {
-      void window.kunGui.getSettings().then(apply).catch(() => undefined)
+    if (typeof window.RcodeGui?.getSettings === 'function') {
+      void window.RcodeGui.getSettings().then(apply).catch(() => undefined)
     }
     const onSettingsChanged = (event: Event): void => {
       apply((event as CustomEvent<AppSettingsV1>).detail)
@@ -44,16 +44,16 @@ export function useSpeechToTextSettings(): KunSpeechToTextSettingsV1 | null {
   return speechToText
 }
 
-export function usePromptOptimizationSettings(): KunPromptOptimizationSettingsV1 | null {
-  const [promptOptimization, setPromptOptimization] = useState<KunPromptOptimizationSettingsV1 | null>(null)
+export function usePromptOptimizationSettings(): RcodePromptOptimizationSettingsV1 | null {
+  const [promptOptimization, setPromptOptimization] = useState<RcodePromptOptimizationSettingsV1 | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const apply = (settings: AppSettingsV1): void => {
-      if (!cancelled) setPromptOptimization(getKunRuntimeSettings(settings).promptOptimization)
+      if (!cancelled) setPromptOptimization(getRcodeRuntimeSettings(settings).promptOptimization)
     }
-    if (typeof window.kunGui?.getSettings === 'function') {
-      void window.kunGui.getSettings().then(apply).catch(() => undefined)
+    if (typeof window.RcodeGui?.getSettings === 'function') {
+      void window.RcodeGui.getSettings().then(apply).catch(() => undefined)
     }
     const onSettingsChanged = (event: Event): void => {
       apply((event as CustomEvent<AppSettingsV1>).detail)
@@ -73,7 +73,7 @@ export function useVoiceDictation({
   speechToText
 }: {
   onText: (text: string, intent: VoiceDictationIntent) => void
-  speechToText?: KunSpeechToTextSettingsV1 | null
+  speechToText?: RcodeSpeechToTextSettingsV1 | null
 }): {
   status: VoiceDictationStatus
   error: string | null
@@ -142,7 +142,7 @@ export function useVoiceDictation({
   const transcribeBlob = useCallback(async (blob: Blob, durationMs: number, intent: VoiceDictationIntent): Promise<void> => {
     try {
       const wav = await encodeBlobAsWav(blob)
-      const result = await window.kunGui.transcribeSpeech({
+      const result = await window.RcodeGui.transcribeSpeech({
         audioBase64: wav.base64,
         mimeType: 'audio/wav',
         durationMs: Math.min(durationMs, SPEECH_TRANSCRIPTION_MAX_DURATION_MS),

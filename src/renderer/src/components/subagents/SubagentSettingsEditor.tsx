@@ -4,34 +4,33 @@ import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Bot, Check, ChevronDown, ChevronLeft, ChevronRight, Pencil, Plug, Plus, Power, Search, Sparkles, Trash2, Wrench, X } from 'lucide-react'
 import type {
-  KunRuntimeSettingsPatchV1,
-  KunRuntimeSettingsV1,
-  KunSubagentProfileV1,
-  KunSubagentsSettingsV1,
+  RcodeRuntimeSettingsPatchV1,
+  RcodeRuntimeSettingsV1,
+  RcodeSubagentProfileV1,
+  RcodeSubagentsSettingsV1,
   ModelProviderModelProfileV1,
   ModelReasoningEffort
 } from '@shared/app-settings'
-import type { ModelProviderModelGroup } from '@shared/kun-gui-api'
-import { KUN_RUNTIME_TOOLS_PATH } from '@shared/kun-endpoints'
-import type { CoreRuntimeToolDiagnosticsJson } from '../../agent/kun-contract'
+import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import { RCODE_RUNTIME_TOOLS_PATH } from '@shared/Rcode-endpoints'
+import type { CoreRuntimeToolDiagnosticsJson } from '../../agent/Rcode-contract'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { confirmDialog } from '../../lib/confirm-dialog'
 import { useChatStore } from '../../store/chat-store'
-import { AgentKun } from './AgentKun'
 
 type EditorVariant = 'panel' | 'settings'
 
 export type SubagentSettingsEditorProps = {
-  kun: KunRuntimeSettingsV1
-  onPatch: (patch: KunRuntimeSettingsPatchV1) => void | Promise<void>
+  Rcode: RcodeRuntimeSettingsV1
+  onPatch: (patch: RcodeRuntimeSettingsPatchV1) => void | Promise<void>
   variant: EditorVariant
   className?: string
 }
 
-const EMPTY_SUBAGENTS: KunSubagentsSettingsV1 = { enabled: true, profiles: [] }
+const EMPTY_SUBAGENTS: RcodeSubagentsSettingsV1 = { enabled: true, profiles: [] }
 const PRESET_COLORS = ['#3b82d8', '#1d9e75', '#e8943a', '#7f77dd', '#d4537e', '#d85a30']
 
-/** kun's built-in tool names (mirror kun/src/adapters/tool/builtin-tool-types.ts). Small,
+/** Rcode's built-in tool names (mirror Rcode/src/adapters/tool/builtin-tool-types.ts). Small,
  *  stable set — a static catalog gives nicer labels than parsing the loose diagnostics shape. */
 const BUILTIN_TOOL_NAMES = [
   'read',
@@ -52,13 +51,13 @@ type CapabilityCatalog = {
   skills: Array<{ id: string; name: string; description?: string }>
 }
 
-/** Fetch the live MCP-server + skill catalog from kun for the permission picker.
+/** Fetch the live MCP-server + skill catalog from Rcode for the permission picker.
  *  Built-in tools come from the static list above; this only needs the dynamic bits.
  *  Returns empty lists on any failure so the dialog still renders. */
 async function loadCapabilityCatalog(): Promise<CapabilityCatalog> {
   const empty: CapabilityCatalog = { mcpServers: [], skills: [] }
   try {
-    const res = await rendererRuntimeClient.runtimeRequest(KUN_RUNTIME_TOOLS_PATH, 'GET')
+    const res = await rendererRuntimeClient.runtimeRequest(RCODE_RUNTIME_TOOLS_PATH, 'GET')
     if (!res.ok) return empty
     const data = JSON.parse(res.body) as CoreRuntimeToolDiagnosticsJson
     const str = (v: unknown): string => (typeof v === 'string' ? v : '')
@@ -81,16 +80,16 @@ async function loadCapabilityCatalog(): Promise<CapabilityCatalog> {
   }
 }
 
-/** kun's REAL built-in delegatable subagents (mirror kun/src/delegation/builtin-profiles.ts). */
+/** Rcode's REAL built-in delegatable subagents (mirror Rcode/src/delegation/builtin-profiles.ts). */
 const BUILTIN_IDS = new Set(['general', 'explore', 'design-reviewer', 'over-engineering-reviewer'])
-const BUILTIN_AGENTS: KunSubagentProfileV1[] = [
+const BUILTIN_AGENTS: RcodeSubagentProfileV1[] = [
   { id: 'general', enabled: true, name: '', mode: 'subagent', toolPolicy: 'inherit', color: '#3b82d8' },
   { id: 'explore', enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly', color: '#1d9e75' },
   { id: 'design-reviewer', enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly', color: '#7f77dd' },
   { id: 'over-engineering-reviewer', enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly', color: '#e8943a' }
 ]
 
-function newProfile(): KunSubagentProfileV1 {
+function newProfile(): RcodeSubagentProfileV1 {
   return { id: crypto.randomUUID(), enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly' }
 }
 
@@ -146,7 +145,7 @@ type RoleSlot = {
 }
 
 export function SubagentSettingsEditor({
-  kun,
+  Rcode,
   onPatch,
   variant,
   className
@@ -155,28 +154,28 @@ export function SubagentSettingsEditor({
   const { t: tSettings } = useTranslation('settings')
   const composerModelGroups = useChatStore((s) => s.composerModelGroups)
   const loadComposerModels = useChatStore((s) => s.loadComposerModels)
-  const [dialog, setDialog] = useState<{ profile: KunSubagentProfileV1; isNew: boolean } | null>(null)
-  const subagents = kun.subagents ?? EMPTY_SUBAGENTS
+  const [dialog, setDialog] = useState<{ profile: RcodeSubagentProfileV1; isNew: boolean } | null>(null)
+  const subagents = Rcode.subagents ?? EMPTY_SUBAGENTS
   // Compaction always runs in model mode (the heuristic fold is only a silent
   // fallback when the model call fails), so there is no user-facing mode toggle.
   // The model lives under contextCompaction.summaryModel (distinct from the
-  // top-level kun.summaryModel, which drives the session-summary role).
+  // top-level Rcode.summaryModel, which drives the session-summary role).
   const compactionSlot: RoleSlot = {
-    model: kun.contextCompaction.summaryModel ?? '',
-    providerId: kun.contextCompaction.summaryProviderId ?? ''
+    model: Rcode.contextCompaction.summaryModel ?? '',
+    providerId: Rcode.contextCompaction.summaryProviderId ?? ''
   }
-  const smallModel: RoleSlot = { model: kun.smallModel ?? '', providerId: kun.smallModelProviderId ?? '' }
-  const titleSlot: RoleSlot = { model: kun.titleModel ?? '', providerId: kun.titleProviderId ?? '' }
-  const summarySlot: RoleSlot = { model: kun.summaryModel ?? '', providerId: kun.summaryProviderId ?? '' }
-  const codeReviewSlot: RoleSlot = { model: kun.codeReviewModel ?? '', providerId: kun.codeReviewProviderId ?? '' }
-  const planSlot: RoleSlot = { model: kun.planModel ?? '', providerId: kun.planProviderId ?? '' }
-  const titleReasoning = kun.titleReasoningEffort ?? 'off'
-  const summaryReasoning = kun.summaryReasoningEffort ?? 'off'
-  const codeReviewReasoning = kun.codeReviewReasoningEffort ?? 'off'
+  const smallModel: RoleSlot = { model: Rcode.smallModel ?? '', providerId: Rcode.smallModelProviderId ?? '' }
+  const titleSlot: RoleSlot = { model: Rcode.titleModel ?? '', providerId: Rcode.titleProviderId ?? '' }
+  const summarySlot: RoleSlot = { model: Rcode.summaryModel ?? '', providerId: Rcode.summaryProviderId ?? '' }
+  const codeReviewSlot: RoleSlot = { model: Rcode.codeReviewModel ?? '', providerId: Rcode.codeReviewProviderId ?? '' }
+  const planSlot: RoleSlot = { model: Rcode.planModel ?? '', providerId: Rcode.planProviderId ?? '' }
+  const titleReasoning = Rcode.titleReasoningEffort ?? 'off'
+  const summaryReasoning = Rcode.summaryReasoningEffort ?? 'off'
+  const codeReviewReasoning = Rcode.codeReviewReasoningEffort ?? 'off'
 
   useEffect(() => { void loadComposerModels() }, [loadComposerModels])
 
-  const patchSubagents = useCallback((patch: Partial<KunSubagentsSettingsV1>): void => {
+  const patchSubagents = useCallback((patch: Partial<RcodeSubagentsSettingsV1>): void => {
     void onPatch({
       subagents: {
         ...subagents,
@@ -186,7 +185,7 @@ export function SubagentSettingsEditor({
     })
   }, [onPatch, subagents])
 
-  const persistProfiles = useCallback((profiles: KunSubagentProfileV1[]): void => {
+  const persistProfiles = useCallback((profiles: RcodeSubagentProfileV1[]): void => {
     const defaultProfile = subagents.defaultProfile
     patchSubagents({
       profiles,
@@ -197,7 +196,7 @@ export function SubagentSettingsEditor({
   }, [patchSubagents, subagents.defaultProfile])
 
   // Built-ins may not be in settings yet — upsert so configuring one persists it for the first time.
-  const upsertProfile = useCallback((id: string, patch: Partial<KunSubagentProfileV1>): void => {
+  const upsertProfile = useCallback((id: string, patch: Partial<RcodeSubagentProfileV1>): void => {
     const baseline = subagents.profiles.find((p) => p.id === id) ?? BUILTIN_AGENTS.find((p) => p.id === id)
     if (!baseline) return
     const next = { ...baseline, ...patch }
@@ -213,7 +212,7 @@ export function SubagentSettingsEditor({
   }, [upsertProfile])
 
   // Per-profile reasoning depth. 'off' is the default → store undefined so the
-  // round-trip omits it (mergeKunRuntimeSettings strips 'off'/invalid).
+  // round-trip omits it (mergeRcodeRuntimeSettings strips 'off'/invalid).
   const setProfileReasoning = useCallback((id: string, effort: ModelReasoningEffort): void => {
     upsertProfile(id, { reasoningEffort: effort === 'off' ? undefined : effort })
   }, [upsertProfile])
@@ -229,7 +228,7 @@ export function SubagentSettingsEditor({
     persistProfiles(subagents.profiles.filter((x) => x.id !== id))
   }, [subagents.profiles, persistProfiles, t])
 
-  const saveDialog = useCallback((profile: KunSubagentProfileV1): void => {
+  const saveDialog = useCallback((profile: RcodeSubagentProfileV1): void => {
     const exists = subagents.profiles.some((p) => p.id === profile.id)
     persistProfiles(exists
       ? subagents.profiles.map((p) => (p.id === profile.id ? profile : p))
@@ -238,15 +237,15 @@ export function SubagentSettingsEditor({
   }, [subagents.profiles, persistProfiles])
 
   // Compaction model override is nested under contextCompaction (not a flat
-  // kun.* key), so it needs its own patch. Empty string clears it → compaction
+  // Rcode.* key), so it needs its own patch. Empty string clears it → compaction
   // falls back to the main conversation model.
   const persistCompactionSlot = useCallback((model: string, providerId: string): void => {
     void onPatch({ contextCompaction: { summaryModel: model, summaryProviderId: providerId } })
   }, [onPatch])
 
-  // Each role slot patches its own agents.kun.* override fields. The model/
-  // provider keys are typed pairs on KunRuntimeSettingsV1; empty string clears
-  // them server-side (mergeKunRuntimeSettings omits blank slots).
+  // Each role slot patches its own agents.Rcode.* override fields. The model/
+  // provider keys are typed pairs on RcodeRuntimeSettingsV1; empty string clears
+  // them server-side (mergeRcodeRuntimeSettings omits blank slots).
   const persistRoleSlot = useCallback(
     (
       modelKey: 'smallModel' | 'titleModel' | 'summaryModel' | 'codeReviewModel' | 'planModel',
@@ -259,8 +258,8 @@ export function SubagentSettingsEditor({
     [onPatch]
   )
 
-  // Persist a role-level reasoning slot to agents.kun.*. 'off' is the default;
-  // mergeKunRuntimeSettings strips 'off'/invalid, so the field round-trips clean.
+  // Persist a role-level reasoning slot to agents.Rcode.*. 'off' is the default;
+  // mergeRcodeRuntimeSettings strips 'off'/invalid, so the field round-trips clean.
   const persistRoleReasoning = useCallback(
     (
       key: 'titleReasoningEffort' | 'summaryReasoningEffort' | 'codeReviewReasoningEffort',
@@ -273,7 +272,7 @@ export function SubagentSettingsEditor({
 
   const isBuiltin = (id: string): boolean => BUILTIN_IDS.has(id)
   const delegatable = useMemo(() => {
-    // Kun always installs its first-party profiles at composition time. Until
+    // Rcode always installs its first-party profiles at composition time. Until
     // the runtime contract has an explicit disabled-builtin list, presenting a
     // power switch here would be a false promise: an omitted builtin is added
     // back by mergeBuiltinSubagentProfiles(). Keep those rows honestly enabled.
@@ -785,7 +784,7 @@ function Row({
         className="flex h-[42px] w-[42px] shrink-0 items-center justify-center rounded-full"
         style={{ background: 'radial-gradient(circle at 50% 36%, #fff 0%, rgba(238,244,251,0.9) 78%)', boxShadow: 'inset 0 0 0 1px rgba(188,214,245,0.7)' }}
       >
-        <AgentKun id={roleId} disabled={disabled} className="h-9 w-9" />
+        <Bot className="h-6 w-6 text-ds-muted" strokeWidth={1.6} />
       </span>
       <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex min-w-0 items-center gap-1.5">
@@ -1038,19 +1037,19 @@ function ProfileDialog({
   onSave,
   onCancel
 }: {
-  profile: KunSubagentProfileV1
+  profile: RcodeSubagentProfileV1
   isNew: boolean
   builtin: boolean
   groups: ModelProviderModelGroup[]
-  onSave: (p: KunSubagentProfileV1) => void
+  onSave: (p: RcodeSubagentProfileV1) => void
   onCancel: () => void
 }): ReactElement {
   const { t } = useTranslation('common')
-  const [d, setD] = useState<KunSubagentProfileV1>(initial)
+  const [d, setD] = useState<RcodeSubagentProfileV1>(initial)
   const [tab, setTab] = useState<'basic' | 'permissions'>('basic')
   const [catalog, setCatalog] = useState<CapabilityCatalog | null>(null)
   const [catalogLoading, setCatalogLoading] = useState(false)
-  const set = <K extends keyof KunSubagentProfileV1>(k: K, v: KunSubagentProfileV1[K]): void =>
+  const set = <K extends keyof RcodeSubagentProfileV1>(k: K, v: RcodeSubagentProfileV1[K]): void =>
     setD((p) => ({ ...p, [k]: v }))
 
   // Lazily fetch the MCP/skill catalog the first time the Permissions tab opens —
@@ -1136,7 +1135,7 @@ function ProfileDialog({
           <Field label={t('agentsView.fMode', 'Mode')}>
             <select
               value={d.mode}
-              onChange={(e) => set('mode', e.target.value as KunSubagentProfileV1['mode'])}
+              onChange={(e) => set('mode', e.target.value as RcodeSubagentProfileV1['mode'])}
               className="w-full rounded-md border border-ds-border bg-[var(--ds-surface-elevated)] px-3 py-1.5 text-sm"
             >
               <option value="subagent">{t('agentsView.modeDelegate', 'delegate')}</option>
@@ -1220,8 +1219,8 @@ function TabButton({ active, onClick, badge, children }: {
  * REMOVES capabilities, so the child can never exceed the main agent.
  */
 function PermissionsTab({ d, setD, catalog, loading, t }: {
-  d: KunSubagentProfileV1
-  setD: Dispatch<SetStateAction<KunSubagentProfileV1>>
+  d: RcodeSubagentProfileV1
+  setD: Dispatch<SetStateAction<RcodeSubagentProfileV1>>
   catalog: CapabilityCatalog | null
   loading: boolean
   t: TFunction<'common'>

@@ -64,8 +64,8 @@ export function useCanvasImageAutoAttachment(
       try {
         let imageData = parseCanvasImageDataUrl(candidate.imageUrl)
         if (!imageData) {
-          if (typeof window.kunGui?.readWorkspaceImage !== 'function') return
-          const result = await window.kunGui.readWorkspaceImage({
+          if (typeof window.RcodeGui?.readWorkspaceImage !== 'function') return
+          const result = await window.RcodeGui.readWorkspaceImage({
             path: candidate.imageUrl,
             workspaceRoot: dynamicRef.current.workspaceRoot
           })
@@ -78,7 +78,7 @@ export function useCanvasImageAutoAttachment(
         if (seqRef.current !== seq) return
 
         const caps = dynamicRef.current.attachmentCapabilities
-        if (!caps || typeof window.kunGui?.uploadRuntimeImageAttachment !== 'function') return
+        if (!caps || typeof window.RcodeGui?.uploadRuntimeImageAttachment !== 'function') return
         if (seqRef.current !== seq) return
 
         const workspace = dynamicRef.current.getActiveWorkspace()

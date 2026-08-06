@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { SkillListItem } from '@shared/kun-gui-api'
+import type { SkillListItem } from '@shared/Rcode-gui-api'
 import {
   clampPage,
   filterMcpSkillsEntries,

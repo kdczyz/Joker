@@ -9,7 +9,7 @@ import type {
   ModelProviderStreamEvent,
   ProviderBinding,
   ProviderModel
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 
 export const demoModels: ProviderModel[] = [
   {
@@ -53,7 +53,7 @@ function messageText(request: ModelProviderRequest): string {
     .map((part) => part.text)
     .join(' ')
     .trim()
-  return text || 'Hello from the Kun streaming Provider example.'
+  return text || 'Hello from the Rcode streaming Provider example.'
 }
 
 function chunks(value: string, size = 12): string[] {
@@ -181,5 +181,5 @@ export async function activate(context: ExtensionContext): Promise<void> {
 }
 
 export async function deactivate(): Promise<void> {
-  // Kun cancels provider requests before disposing both registrations.
+  // Rcode cancels provider requests before disposing both registrations.
 }

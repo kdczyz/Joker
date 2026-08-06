@@ -28,7 +28,7 @@ export function ProtectedRendererSurface({
     let cancelled = false
     setReady(false)
     markProtectedSurfaceRestore(restoreTarget)
-    void window.kunGui.extensionSyncHostContentScripts({
+    void window.RcodeGui.extensionSyncHostContentScripts({
       surface: null,
       protectedSurface: kind,
       descriptors: []
@@ -40,7 +40,7 @@ export function ProtectedRendererSurface({
       }
     }).catch((error) => {
       // Fail closed: the protected children remain unmounted.
-      void window.kunGui?.logError?.('protected-surface', 'Failed to isolate protected renderer surface', {
+      void window.RcodeGui?.logError?.('protected-surface', 'Failed to isolate protected renderer surface', {
         kind,
         message: error instanceof Error ? error.message : String(error)
       }).catch(() => undefined)

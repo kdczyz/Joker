@@ -19,7 +19,7 @@ describe('canvas shape store code bindings', () => {
           designObjectId: frame.id,
           node: {
             tagName: 'main',
-            sourceFile: '.kun-design/home.html',
+            sourceFile: '.Rcode-design/home.html',
             domId: 'home-root'
           }
         }
@@ -30,7 +30,7 @@ describe('canvas shape store code bindings', () => {
       designObjectId: frame.id,
       status: 'active',
       target: {
-        sourceFile: '.kun-design/home.html',
+        sourceFile: '.Rcode-design/home.html',
         domId: 'home-root'
       }
     })

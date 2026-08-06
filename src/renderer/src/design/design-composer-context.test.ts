@@ -20,7 +20,7 @@ const createdAt = '2026-06-20T00:00:00.000Z'
 
 function artifact(id: string, kind: DesignArtifact['kind'] = 'html'): DesignArtifact {
   const relativePath =
-    kind === 'canvas' ? `.kun-design/${id}/canvas.json` : `.kun-design/${id}/v1.html`
+    kind === 'canvas' ? `.Rcode-design/${id}/canvas.json` : `.Rcode-design/${id}/v1.html`
   return {
     id,
     kind,
@@ -318,8 +318,8 @@ describe('designSelectedContextLocations', () => {
       {
         title: 'screen-a',
         kind: 'html',
-        path: '.kun-design/screen-a/v1.html',
-        directory: '.kun-design/screen-a'
+        path: '.Rcode-design/screen-a/v1.html',
+        directory: '.Rcode-design/screen-a'
       }
     ])
   })
@@ -339,8 +339,8 @@ describe('designSelectedContextLocations', () => {
       {
         title: 'board',
         kind: 'canvas',
-        path: '.kun-design/board/canvas.json',
-        directory: '.kun-design/board'
+        path: '.Rcode-design/board/canvas.json',
+        directory: '.Rcode-design/board'
       }
     ])
   })

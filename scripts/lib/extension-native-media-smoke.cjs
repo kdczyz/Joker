@@ -20,7 +20,7 @@ function resolveHostMediaExecutable(name, {
   if (!MEDIA_EXECUTABLES.includes(name)) {
     throw new TypeError(`Unsupported media executable: ${String(name)}`)
   }
-  const configuredName = `KUN_${name.toUpperCase()}_PATH`
+  const configuredName = `RCODE_${name.toUpperCase()}_PATH`
   const configured = environment[configuredName]?.trim()
   if (configured) {
     if (!isAbsolute(configured)) {

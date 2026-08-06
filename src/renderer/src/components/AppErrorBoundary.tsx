@@ -10,7 +10,7 @@ type State = {
 }
 
 type AppReloadWindow = {
-  kunGui?: {
+  RcodeGui?: {
     runDesktopCommand?: (command: 'reload') => Promise<void>
   }
   location: {
@@ -19,7 +19,7 @@ type AppReloadWindow = {
 }
 
 export function requestApplicationReload(target: AppReloadWindow = window): void {
-  const runDesktopCommand = target.kunGui?.runDesktopCommand
+  const runDesktopCommand = target.RcodeGui?.runDesktopCommand
   if (typeof runDesktopCommand !== 'function') {
     target.location.reload()
     return
@@ -40,8 +40,8 @@ export class AppErrorBoundary extends Component<Props, State> {
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('[AppErrorBoundary] uncaught render error:', error, info.componentStack)
-    if (typeof window !== 'undefined' && typeof window.kunGui?.logError === 'function') {
-      void window.kunGui.logError('renderer', 'Uncaught render error', {
+    if (typeof window !== 'undefined' && typeof window.RcodeGui?.logError === 'function') {
+      void window.RcodeGui.logError('renderer', 'Uncaught render error', {
         name: error.name,
         message: error.message,
         stack: error.stack,

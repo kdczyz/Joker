@@ -44,7 +44,7 @@ export type ExtensionContentScriptPreloadDependencies = {
 
 /**
  * Installs the only API visible in Direct DOM worlds. This module deliberately
- * imports no Node built-ins and never forwards the full `kunGui` bridge.
+ * imports no Node built-ins and never forwards the full `RcodeGui` bridge.
  */
 export function registerExtensionContentScriptPreload(
   dependencies: ExtensionContentScriptPreloadDependencies
@@ -136,7 +136,7 @@ export function registerExtensionContentScriptPreload(
         }
       })
       try {
-        dependencies.contextBridge.exposeInIsolatedWorld(binding.worldId, 'kunHost', api)
+        dependencies.contextBridge.exposeInIsolatedWorld(binding.worldId, 'RcodeHost', api)
       } catch (error) {
         void report(
           binding,
@@ -177,12 +177,12 @@ export function registerExtensionContentScriptPreload(
 export function contentScriptIsolationPrelude(): string {
   return `(() => {
     'use strict';
-    const hidden = ['kunGui', 'require', 'module', 'exports', 'process', '__dirname', '__filename'];
+    const hidden = ['RcodeGui', 'require', 'module', 'exports', 'process', '__dirname', '__filename'];
     for (const key of hidden) {
       try { Object.defineProperty(globalThis, key, { value: undefined, writable: false, configurable: false }); } catch {}
     }
-    const denied = () => { throw new DOMException('Direct network and popup access is disabled for Kun host content scripts.', 'SecurityError'); };
-    const deniedFetch = () => Promise.reject(new DOMException('Direct network access is disabled for Kun host content scripts.', 'SecurityError'));
+    const denied = () => { throw new DOMException('Direct network and popup access is disabled for Rcode host content scripts.', 'SecurityError'); };
+    const deniedFetch = () => Promise.reject(new DOMException('Direct network access is disabled for Rcode host content scripts.', 'SecurityError'));
     for (const [key, value] of [['fetch', deniedFetch], ['WebSocket', denied], ['EventSource', denied], ['XMLHttpRequest', denied], ['Worker', denied], ['SharedWorker', denied], ['open', denied]]) {
       try { Object.defineProperty(globalThis, key, { value, writable: false, configurable: false }); } catch {}
     }
@@ -196,7 +196,7 @@ function contentScriptSources(
   return [
     {
       code: contentScriptIsolationPrelude(),
-      url: `kun-extension://${binding.context.extensionId}/__kun_isolation__.js`
+      url: `Rcode-extension://${binding.context.extensionId}/__Rcode_isolation__.js`
     },
     ...binding.styles.map((style) => ({
       code: styleInstallationCode(binding.context.marker, style.css),
@@ -212,11 +212,11 @@ function styleInstallationCode(marker: string, css: string): string {
     const install = () => {
       const parent = document.head || document.documentElement;
       if (!parent) return false;
-      document.querySelectorAll('style[data-kun-extension-style]').forEach((node) => {
-        if (node.getAttribute('data-kun-extension-style') === marker) node.remove();
+      document.querySelectorAll('style[data-Rcode-extension-style]').forEach((node) => {
+        if (node.getAttribute('data-Rcode-extension-style') === marker) node.remove();
       });
       const style = document.createElement('style');
-      style.setAttribute('data-kun-extension-style', marker);
+      style.setAttribute('data-Rcode-extension-style', marker);
       style.textContent = ${JSON.stringify(css)};
       parent.appendChild(style);
       return true;
@@ -233,7 +233,7 @@ function deactivationSource(
 ): { code: string; url?: string } {
   return {
     code: EXTENSION_CONTENT_SCRIPT_DEACTIVATION_SOURCE,
-    url: `kun-extension://${binding.context.extensionId}/__kun_deactivate__.js`
+    url: `Rcode-extension://${binding.context.extensionId}/__Rcode_deactivate__.js`
   }
 }
 
@@ -275,7 +275,7 @@ function isBootstrapBinding(value: unknown): value is ExtensionHostContentScript
     !Array.isArray(value.scripts) || value.scripts.length < 1 || value.scripts.length > 32 ||
     !Array.isArray(value.styles) || value.styles.length > 32
   ) return false
-  const prefix = `kun-extension://${context.extensionId}/`
+  const prefix = `Rcode-extension://${context.extensionId}/`
   return value.scripts.every((source) => isRecord(source) &&
     typeof source.code === 'string' && typeof source.url === 'string' && source.url.startsWith(prefix)) &&
     value.styles.every((style) => isRecord(style) &&

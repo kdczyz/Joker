@@ -22,7 +22,7 @@ export type ComposerFileContextEntry = {
   truncated?: boolean
 }
 
-export const COMPOSER_FILE_REFERENCE_DRAG_MIME = 'application/x-kun-file-reference'
+export const COMPOSER_FILE_REFERENCE_DRAG_MIME = 'application/x-Rcode-file-reference'
 const MAX_COMPOSER_FILE_REFERENCE_DRAG_BYTES = 16 * 1024
 
 const FILE_MENTION_BOUNDARY = /(^|[\s([{，。；：、])@([^\s@"']*)$/u

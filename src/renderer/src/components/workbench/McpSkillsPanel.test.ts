@@ -2,7 +2,7 @@ import { createElement } from 'react'
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AppSettingsV1 } from '@shared/app-settings'
-import type { KunGuiApi, KunProjectConfigFileResult } from '@shared/kun-gui-api'
+import type { RcodeGuiApi, RcodeProjectConfigFileResult } from '@shared/Rcode-gui-api'
 import i18n from '../../i18n'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { McpSkillsPanel } from './McpSkillsPanel'
@@ -37,9 +37,9 @@ describe('McpSkillsPanel', () => {
       mcp: { servers: { 'project-server': { transport: 'stdio', command: 'project-mcp', enabled: true } } },
       skills: { enabled: true, includeConventional: true, roots: [], disabledIds: [] }
     }, null, 2)
-    const projectResult: KunProjectConfigFileResult = {
+    const projectResult: RcodeProjectConfigFileResult = {
       workspaceRoot: '/workspace/project',
-      path: '/workspace/project/.kun/project.json',
+      path: '/workspace/project/.Rcode/project.json',
       content: projectContent,
       exists: true,
       status: 'valid',
@@ -54,7 +54,7 @@ describe('McpSkillsPanel', () => {
       content,
       trust: 'stale' as const
     }))
-    const setGlobalConfig = vi.fn(async () => ({ ok: true as const, path: '/home/user/.kun/mcp.json' }))
+    const setGlobalConfig = vi.fn(async () => ({ ok: true as const, path: '/home/user/.Rcode/mcp.json' }))
     const setSettings = vi.spyOn(rendererRuntimeClient, 'setSettings').mockResolvedValue({
       disabledSkillIds: ['global-skill']
     } as unknown as AppSettingsV1)
@@ -62,13 +62,13 @@ describe('McpSkillsPanel', () => {
       disabledSkillIds: []
     } as unknown as AppSettingsV1)
 
-    const kunGui = {
-      getKunConfigFile: vi.fn(async () => ({
-        path: '/home/user/.kun/mcp.json',
+    const RcodeGui = {
+      getRcodeConfigFile: vi.fn(async () => ({
+        path: '/home/user/.Rcode/mcp.json',
         content: '{"servers":{"global-server":{"command":"global-mcp"}}}',
         exists: true
       })),
-      setKunConfigFile: setGlobalConfig,
+      setRcodeConfigFile: setGlobalConfig,
       listSkills: vi.fn(async () => ({
         ok: true as const,
         skills: [{
@@ -82,12 +82,12 @@ describe('McpSkillsPanel', () => {
         }],
         validationErrors: []
       })),
-      getKunProjectConfigFile: vi.fn(async () => projectResult),
-      setKunProjectConfigFile: setProjectConfig,
-      openKunProjectConfigDir: vi.fn(async () => ({ ok: true as const })),
-      openKunConfigDir: vi.fn(async () => ({ ok: true as const }))
-    } as unknown as KunGuiApi
-    vi.stubGlobal('window', { kunGui })
+      getRcodeProjectConfigFile: vi.fn(async () => projectResult),
+      setRcodeProjectConfigFile: setProjectConfig,
+      openRcodeProjectConfigDir: vi.fn(async () => ({ ok: true as const })),
+      openRcodeConfigDir: vi.fn(async () => ({ ok: true as const }))
+    } as unknown as RcodeGuiApi
+    vi.stubGlobal('window', { RcodeGui })
 
     const onOpenSettings = vi.fn()
     let renderer!: ReactTestRenderer

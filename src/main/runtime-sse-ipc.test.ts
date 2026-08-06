@@ -23,7 +23,7 @@ describe('runtime-sse-ipc', () => {
     mockStore = {
       load: vi.fn().mockResolvedValue({
         agents: {
-          kun: {
+          Rcode: {
             baseUrl: 'http://localhost:18899',
             runtimeToken: 'test-token'
           }

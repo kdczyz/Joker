@@ -7,7 +7,7 @@ import {
 
 describe('design asset inventory', () => {
   it('classifies image asset sources', () => {
-    expect(classifyDesignAssetSource('.kun-design/assets/logo.png')).toBe('workspace')
+    expect(classifyDesignAssetSource('.Rcode-design/assets/logo.png')).toBe('workspace')
     expect(classifyDesignAssetSource('https://example.com/image.png')).toBe('remote')
     expect(classifyDesignAssetSource('data:image/png;base64,AAAA')).toBe('data')
     expect(classifyDesignAssetSource('blob:http://localhost/123')).toBe('blob')
@@ -18,7 +18,7 @@ describe('design asset inventory', () => {
     const logo = createDefaultShape('image', 40, 60)
     logo.id = 'asset_logo'
     logo.name = 'Logo'
-    logo.imageUrl = '.kun-design/assets/logo.png'
+    logo.imageUrl = '.Rcode-design/assets/logo.png'
     const remote = createDefaultShape('image', 120, 60)
     remote.id = 'asset_remote'
     remote.name = 'Remote reference'
@@ -35,7 +35,7 @@ describe('design asset inventory', () => {
         id: 'asset_logo',
         kind: 'image',
         name: 'Logo',
-        path: '.kun-design/assets/logo.png',
+        path: '.Rcode-design/assets/logo.png',
         sourceKind: 'workspace',
         modelReady: true,
         canvasShapeId: 'asset_logo',

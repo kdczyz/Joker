@@ -7,10 +7,10 @@ import {
   type ClawImRemoteSessionV1
 } from './app-settings-types'
 import {
-  resolveKunImageGenerationSettings,
-  resolveKunMusicGenerationSettings,
-  resolveKunTextToSpeechSettings,
-  resolveKunVideoGenerationSettings
+  resolveRcodeImageGenerationSettings,
+  resolveRcodeMusicGenerationSettings,
+  resolveRcodeTextToSpeechSettings,
+  resolveRcodeVideoGenerationSettings
 } from './app-settings-provider'
 
 export const CLAW_CURRENT_USER_REQUEST_HEADING = '[Current user request]'
@@ -114,14 +114,14 @@ export function normalizeClawImRemoteSession(input: unknown): ClawImRemoteSessio
 }
 
 /**
- * Read the Kun thread id from a legacy `agentThreadIds` record.
+ * Read the Rcode thread id from a legacy `agentThreadIds` record.
  * Returns the empty string when no candidate is present.
  */
 export function readLegacyAgentThreadId(input: unknown): string {
   if (!input || typeof input !== 'object' || Array.isArray(input)) return ''
   const raw = input as Record<string, unknown>
   const candidates = [
-    typeof raw.kun === 'string' ? raw.kun.trim() : '',
+    typeof raw.Rcode === 'string' ? raw.Rcode.trim() : '',
     typeof raw.codewhale === 'string' ? raw.codewhale.trim() : '',
     typeof raw.reasonix === 'string' ? raw.reasonix.trim() : ''
   ]
@@ -204,32 +204,32 @@ export function buildClawRuntimePrompt(
   const channelInstructions = buildClawImAgentInstructions(options.channel)
   if (channelInstructions) instructions.push(channelInstructions)
   const imageGeneration = settings.provider && settings.agents
-    ? resolveKunImageGenerationSettings(settings as AppSettingsV1)
-    : settings.agents?.kun?.imageGeneration
+    ? resolveRcodeImageGenerationSettings(settings as AppSettingsV1)
+    : settings.agents?.Rcode?.imageGeneration
   if (imageGeneration?.enabled && imageGeneration.baseUrl.trim() && imageGeneration.apiKey.trim() && imageGeneration.model.trim()) {
     instructions.push(
       'Image generation is enabled for this Claw agent. When the user asks you to create, draw, generate, or edit an image, call the `generate_image` tool. After the tool succeeds the image file is delivered to the user automatically (IM chats receive it as a picture message), so simply confirm the image is ready — never paste base64 data, local file paths, or fabricated links into your reply.'
     )
   }
   const textToSpeech = settings.provider && settings.agents
-    ? resolveKunTextToSpeechSettings(settings as AppSettingsV1)
-    : settings.agents?.kun?.textToSpeech
+    ? resolveRcodeTextToSpeechSettings(settings as AppSettingsV1)
+    : settings.agents?.Rcode?.textToSpeech
   if (textToSpeech?.enabled && textToSpeech.baseUrl.trim() && textToSpeech.apiKey.trim() && textToSpeech.model.trim()) {
     instructions.push(
       'Text-to-speech generation is enabled for this Claw agent. When the user asks for spoken narration, voiceover, dubbing, or audio speech, call the `generate_speech` tool. After the tool succeeds the audio file is delivered to the user automatically, so simply confirm the speech audio is ready and never paste base64 data, local file paths, or fabricated links into your reply.'
     )
   }
   const musicGeneration = settings.provider && settings.agents
-    ? resolveKunMusicGenerationSettings(settings as AppSettingsV1)
-    : settings.agents?.kun?.musicGeneration
+    ? resolveRcodeMusicGenerationSettings(settings as AppSettingsV1)
+    : settings.agents?.Rcode?.musicGeneration
   if (musicGeneration?.enabled && musicGeneration.baseUrl.trim() && musicGeneration.apiKey.trim() && musicGeneration.model.trim()) {
     instructions.push(
       'Music generation is enabled for this Claw agent. When the user asks for a song, instrumental track, soundtrack, jingle, or music cover, call the `generate_music` tool. After the tool succeeds the audio file is delivered to the user automatically, so simply confirm the music is ready and never paste base64 data, local file paths, or fabricated links into your reply.'
     )
   }
   const videoGeneration = settings.provider && settings.agents
-    ? resolveKunVideoGenerationSettings(settings as AppSettingsV1)
-    : settings.agents?.kun?.videoGeneration
+    ? resolveRcodeVideoGenerationSettings(settings as AppSettingsV1)
+    : settings.agents?.Rcode?.videoGeneration
   if (videoGeneration?.enabled && videoGeneration.baseUrl.trim() && videoGeneration.apiKey.trim() && videoGeneration.model.trim()) {
     instructions.push(
       'Video generation is enabled for this Claw agent. When the user asks for text-to-video or image-to-video generation, call the `generate_video` tool. After the tool succeeds the video file is delivered to the user automatically, so simply confirm the video is ready and never paste base64 data, local file paths, or fabricated links into your reply.'

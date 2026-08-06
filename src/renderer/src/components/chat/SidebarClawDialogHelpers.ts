@@ -149,7 +149,7 @@ export const CLAW_AGENT_TABS: Array<{
   }
 ]
 
-export const DEFAULT_CLAW_WORKSPACE_ROOT = '~/.kun/claw'
+export const DEFAULT_CLAW_WORKSPACE_ROOT = '~/.Rcode/claw'
 
 export const CLAW_DIALOG_STEPS: Array<{
   id: ClawDialogStep

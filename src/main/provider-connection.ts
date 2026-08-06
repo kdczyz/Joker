@@ -5,7 +5,7 @@ import {
   type AppSettingsV1,
   type ModelEndpointFormat
 } from '../shared/app-settings'
-import type { ModelProviderProbeRequest, ModelProviderProbeResult } from '../shared/kun-gui-api'
+import type { ModelProviderProbeRequest, ModelProviderProbeResult } from '../shared/Rcode-gui-api'
 import { upstreamOpenAiModelsUrl } from '../shared/openai-compat-url'
 import { CHATGPT_SUBSCRIPTION_MODEL_IDS } from '../shared/model-provider-presets'
 import { fetchWithOptionalProxy } from './proxy-fetch'

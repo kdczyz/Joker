@@ -3,15 +3,15 @@ import {
   type AgentRunEvent,
   type AgentRunSubscription,
   type HostTransport
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 
 declare global {
   interface Window {
-    readonly kunExtension: HostTransport
+    readonly RcodeExtension: HostTransport
   }
 }
 
-const client = new ExtensionHostClient(window.kunExtension)
+const client = new ExtensionHostClient(window.RcodeExtension)
 const form = document.querySelector<HTMLFormElement>('#prompt-form')
 const prompt = document.querySelector<HTMLTextAreaElement>('#prompt')
 const cancelButton = document.querySelector<HTMLButtonElement>('#cancel')

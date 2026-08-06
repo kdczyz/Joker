@@ -10,8 +10,8 @@ export function artifact(
 ): DesignArtifact {
   const relativePath =
     kind === 'canvas'
-      ? `.kun-design/doc/${id}/canvas.json`
-      : `.kun-design/doc/${id}/v1.${kind === 'svg' ? 'svg' : 'html'}`
+      ? `.Rcode-design/doc/${id}/canvas.json`
+      : `.Rcode-design/doc/${id}/v1.${kind === 'svg' ? 'svg' : 'html'}`
   return {
     id,
     kind,

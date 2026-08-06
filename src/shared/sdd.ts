@@ -1,8 +1,8 @@
-export const SDD_RELATIVE_DIR = '.kunsdd'
+export const SDD_RELATIVE_DIR = '.Rcodesdd'
 /**
  * One requirement = one self-contained directory:
- * `.kunsdd/requirements/<uuid>/{requirement.md, trace.json, img/, proto/, chat/}`.
- * Plans stay under `.kunsdd/plan/sdd-<uuid>.md`, linked by the uuid.
+ * `.Rcodesdd/requirements/<uuid>/{requirement.md, trace.json, img/, proto/, chat/}`.
+ * Plans stay under `.Rcodesdd/plan/sdd-<uuid>.md`, linked by the uuid.
  */
 export const SDD_REQUIREMENTS_RELATIVE_DIR = `${SDD_RELATIVE_DIR}/requirements`
 export const SDD_DRAFT_FILE_NAME = 'requirement.md'
@@ -25,7 +25,7 @@ export function isSddDraftRelativePath(value: string): boolean {
   const parts = normalized.split('/')
   return (
     parts.length === 4 &&
-    parts[0] === '.kunsdd' &&
+    parts[0] === '.Rcodesdd' &&
     parts[1] === 'requirements' &&
     UUID_LIKE.test(parts[2] ?? '') &&
     parts[3] === SDD_DRAFT_FILE_NAME
@@ -36,11 +36,11 @@ export function isSddDraftRelativePath(value: string): boolean {
 export function sddDraftFolderFromRelativePath(value: string): string | null {
   const normalized = normalizeSddRelativePath(value)
   const parts = normalized.split('/')
-  if (parts.length !== 4 || parts[0] !== '.kunsdd' || parts[1] !== 'requirements') return null
+  if (parts.length !== 4 || parts[0] !== '.Rcodesdd' || parts[1] !== 'requirements') return null
   return UUID_LIKE.test(parts[2] ?? '') ? parts[2] : null
 }
 
-/** The requirement's self-contained unit directory (`.kunsdd/requirements/<uuid>`). */
+/** The requirement's self-contained unit directory (`.Rcodesdd/requirements/<uuid>`). */
 export function sddRequirementUnitDir(draftRelativePath: string): string | null {
   const folder = sddDraftFolderFromRelativePath(draftRelativePath)
   return folder ? `${SDD_REQUIREMENTS_RELATIVE_DIR}/${folder}` : null
@@ -71,12 +71,12 @@ export function sddDraftTraceRelativePath(draftRelativePath: string): string | n
 }
 
 /**
- * Map an SDD-generated plan path (`.kunsdd/plan/sdd-<uuid>[-n].md`) back to
+ * Map an SDD-generated plan path (`.Rcodesdd/plan/sdd-<uuid>[-n].md`) back to
  * its requirement draft path, or null for non-SDD plans.
  */
 export function sddDraftRelativePathForPlanPath(planRelativePath: string): string | null {
   const normalized = normalizeSddRelativePath(planRelativePath)
-  const match = /^\.kunsdd\/plan\/sdd-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:-\d+)?\.md$/i.exec(
+  const match = /^\.Rcodesdd\/plan\/sdd-([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})(?:-\d+)?\.md$/i.exec(
     normalized
   )
   if (!match) return null
@@ -88,7 +88,7 @@ function isSddUnitSubPath(value: string, subdir: 'img' | 'proto'): boolean {
   const normalized = normalizeSddRelativePath(value)
   const parts = normalized.split('/')
   if (parts.length < 5) return false
-  if (parts[0] !== '.kunsdd' || parts[1] !== 'requirements') return false
+  if (parts[0] !== '.Rcodesdd' || parts[1] !== 'requirements') return false
   if (!UUID_LIKE.test(parts[2] ?? '')) return false
   if (parts[3] !== subdir) return false
   return !parts.slice(4).some((part) => !part || part === '.' || part === '..')

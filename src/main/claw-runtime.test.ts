@@ -6,7 +6,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -29,10 +29,10 @@ function buildSettings(): AppSettingsV1 {
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: defaultKunRuntimeSettings()
+      Rcode: defaultRcodeRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: { enabled: true, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -75,7 +75,7 @@ function buildSettings(): AppSettingsV1 {
 }
 
 function expectImRuntimePrompt(prompt: string | undefined, userText: string): void {
-  expect(prompt).toContain('<kun_im_context>')
+  expect(prompt).toContain('<Rcode_im_context>')
   expect(prompt).toContain('<interactive_gui_input_available>false</interactive_gui_input_available>')
   expect(prompt).toContain('<user_message><![CDATA[')
   expect(prompt).toContain(userText)
@@ -108,7 +108,7 @@ function buildChannel(overrides: Partial<ClawImChannelV1> = {}): ClawImChannelV1
     threadId: 'thr_old',
     workspaceRoot: '/tmp/workspace',
     agentProfile: {
-      name: 'kun',
+      name: 'Rcode',
       description: '',
       identity: '',
       personality: '',
@@ -222,7 +222,7 @@ describe('ClawRuntime', () => {
     expect(current().claw.channels[0].conversations[0].localThreadId).toBe('')
   })
 
-  it('lists available Kun skills for an incoming IM command', async () => {
+  it('lists available Rcode skills for an incoming IM command', async () => {
     const settings = buildSettings()
     const { store } = mutableSettingsStore(settings)
     const runtimeRequest = vi.fn(async () => ({
@@ -262,7 +262,7 @@ describe('ClawRuntime', () => {
     expect(reply).toContain('Documents')
   })
 
-  it('lists Kun MCP servers for an incoming IM command', async () => {
+  it('lists Rcode MCP servers for an incoming IM command', async () => {
     const settings = buildSettings()
     const { store } = mutableSettingsStore(settings)
     const runtimeRequest = vi.fn(async () => ({
@@ -314,7 +314,7 @@ describe('ClawRuntime', () => {
     expect(reply).toContain('connect failed')
   })
 
-  it('shows the current Kun thread workspace for an incoming IM command', async () => {
+  it('shows the current Rcode thread workspace for an incoming IM command', async () => {
     const settings = buildSettings()
     settings.claw.channels = [
       buildChannel({
@@ -400,11 +400,11 @@ describe('ClawRuntime', () => {
       }
     })
 
-    expect(reply).toContain('[Kun]')
+    expect(reply).toContain('[Rcode]')
     expect(reply).toContain('not connected')
   })
 
-  it('shows current Kun thread token usage with provider and model for an incoming IM command', async () => {
+  it('shows current Rcode thread token usage with provider and model for an incoming IM command', async () => {
     const settings = buildSettings()
     settings.provider.providers = [buildModelProvider()]
     settings.claw.channels = [
@@ -493,7 +493,7 @@ describe('ClawRuntime', () => {
     expect(reply).toContain('output 45')
   })
 
-  it('returns a Kun-prefixed concrete error when an IM runtime command fails', async () => {
+  it('returns a Rcode-prefixed concrete error when an IM runtime command fails', async () => {
     const settings = buildSettings()
     const { store } = mutableSettingsStore(settings)
     const runtimeRequest = vi.fn(async () => ({
@@ -514,10 +514,10 @@ describe('ClawRuntime', () => {
       ) => Promise<string | null>
     }).handleIncomingImCommandSafely(settings, { text: '/list-threads' })
 
-    expect(reply).toBe('[Kun] runtime is offline')
+    expect(reply).toBe('[Rcode] runtime is offline')
   })
 
-  it('prefixes successful IM slash command replies as Kun system messages', async () => {
+  it('prefixes successful IM slash command replies as Rcode system messages', async () => {
     const settings = buildSettings()
     const { store } = mutableSettingsStore(settings)
     const runtime = createClawRuntime({
@@ -533,11 +533,11 @@ describe('ClawRuntime', () => {
       ) => Promise<string | null>
     }).handleIncomingImCommandSafely(settings, { text: '/help' })
 
-    expect(reply).toMatch(/^\[Kun\] /)
+    expect(reply).toMatch(/^\[Rcode\] /)
     expect(reply).toContain('/list-threads')
   })
 
-  it('shows the current Kun thread goal for an IM list-goal command', async () => {
+  it('shows the current Rcode thread goal for an IM list-goal command', async () => {
     const settings = buildSettings()
     settings.claw.channels = [
       buildChannel({
@@ -601,7 +601,7 @@ describe('ClawRuntime', () => {
     expect(shown).toContain('Read document A')
   })
 
-  it('rejects empty and duplicate Kun thread goals for IM commands', async () => {
+  it('rejects empty and duplicate Rcode thread goals for IM commands', async () => {
     const settings = buildSettings()
     settings.claw.channels = [
       buildChannel({
@@ -662,7 +662,7 @@ describe('ClawRuntime', () => {
       channel: settings.claw.channels[0],
       conversation: settings.claw.channels[0].conversations[0]
     })
-    expect(empty).toContain('[Kun]')
+    expect(empty).toContain('[Rcode]')
     expect(empty).toContain('requires an objective')
 
     const changed = await handle(settings, {
@@ -671,14 +671,14 @@ describe('ClawRuntime', () => {
       conversation: settings.claw.channels[0].conversations[0]
     })
     expect(changed).toContain('already has a goal')
-    expect(changed).toContain('[Kun]')
+    expect(changed).toContain('[Rcode]')
     expect(changed).toContain('Read document A')
     expect(runtimeRequest.mock.calls.some(([, path, init]) =>
       path === '/v1/threads/thr_goal/goal' && init.method === 'POST'
     )).toBe(false)
   })
 
-  it('sets a Kun thread goal when the current IM thread has none', async () => {
+  it('sets a Rcode thread goal when the current IM thread has none', async () => {
     const settings = buildSettings()
     settings.claw.channels = [
       buildChannel({
@@ -809,7 +809,7 @@ describe('ClawRuntime', () => {
     )
   })
 
-  it('returns a Kun-prefixed error when there is no running IM turn to stop', async () => {
+  it('returns a Rcode-prefixed error when there is no running IM turn to stop', async () => {
     const settings = buildSettings()
     settings.claw.channels = [
       buildChannel({
@@ -847,11 +847,11 @@ describe('ClawRuntime', () => {
       conversation: settings.claw.channels[0].conversations[0]
     })
 
-    expect(reply).toContain('[Kun]')
+    expect(reply).toContain('[Rcode]')
     expect(reply).toContain('no running task')
   })
 
-  it('lists recent Kun threads for an incoming WeChat command', async () => {
+  it('lists recent Rcode threads for an incoming WeChat command', async () => {
     const settings = buildSettings()
     settings.claw.im.provider = 'weixin'
     settings.claw.im.recentThreadListLimit = 3
@@ -924,7 +924,7 @@ describe('ClawRuntime', () => {
     expect(reply).toContain('Document A')
   })
 
-  it('switches the current WeChat conversation to a selected Kun thread', async () => {
+  it('switches the current WeChat conversation to a selected Rcode thread', async () => {
     const settings = buildSettings()
     settings.claw.im.provider = 'weixin'
     settings.claw.channels = [
@@ -1105,7 +1105,7 @@ describe('ClawRuntime', () => {
       conversation: settings.claw.channels[0].conversations[0]
     })
 
-    expect(reply).toContain('[Kun]')
+    expect(reply).toContain('[Rcode]')
     expect(reply).toContain('Could not find')
     expect(current().claw.channels[0].threadId).toBe('thr_old')
     expect(store.patch).not.toHaveBeenCalled()
@@ -1141,7 +1141,7 @@ describe('ClawRuntime', () => {
       ) => Promise<string | null>
     }).handleIncomingImCommand(settings, { text: '/switch 1' })
 
-    expect(reply).toContain('[Kun]')
+    expect(reply).toContain('[Rcode]')
     expect(reply).not.toContain('Switched')
     expect(store.patch).not.toHaveBeenCalled()
   })
@@ -1158,7 +1158,7 @@ describe('ClawRuntime', () => {
       threadId: '',
       workspaceRoot: '',
       agentProfile: {
-        name: 'kun',
+        name: 'Rcode',
         description: '',
         identity: '',
         personality: '',
@@ -1215,7 +1215,7 @@ describe('ClawRuntime', () => {
       threadId: '',
       workspaceRoot: '',
       agentProfile: {
-        name: 'kun',
+        name: 'Rcode',
         description: '',
         identity: '',
         personality: '',
@@ -1349,8 +1349,8 @@ describe('ClawRuntime', () => {
 
   it('accepts assistant_text items when waiting for a Claw turn result', async () => {
     const settings = buildSettings()
-    settings.agents.kun.approvalPolicy = 'on-request'
-    settings.agents.kun.sandboxMode = 'workspace-write'
+    settings.agents.Rcode.approvalPolicy = 'on-request'
+    settings.agents.Rcode.sandboxMode = 'workspace-write'
     const runtimeRequest = vi.fn(async (_settings, path, init) => {
       if (path === '/v1/threads') {
         return { ok: true, status: 200, body: JSON.stringify({ id: 'thr_1' }) }
@@ -1429,8 +1429,8 @@ describe('ClawRuntime', () => {
 
   it('passes non-default agent approval/sandbox settings through to IM turns without downgrading', async () => {
     const settings = buildSettings()
-    settings.agents.kun.approvalPolicy = 'untrusted'
-    settings.agents.kun.sandboxMode = 'read-only'
+    settings.agents.Rcode.approvalPolicy = 'untrusted'
+    settings.agents.Rcode.sandboxMode = 'read-only'
     const runtimeRequest = vi.fn(async (_settings, path, init) => {
       if (path === '/v1/threads') {
         return { ok: true, status: 200, body: JSON.stringify({ id: 'thr_1' }) }
@@ -1504,8 +1504,8 @@ describe('ClawRuntime', () => {
 
   it('passes the never approval policy through to IM turns without escalating to auto', async () => {
     const settings = buildSettings()
-    settings.agents.kun.approvalPolicy = 'never'
-    settings.agents.kun.sandboxMode = 'read-only'
+    settings.agents.Rcode.approvalPolicy = 'never'
+    settings.agents.Rcode.sandboxMode = 'read-only'
     const runtimeRequest = vi.fn(async (_settings, path, init) => {
       if (path === '/v1/threads') {
         return { ok: true, status: 200, body: JSON.stringify({ id: 'thr_1' }) }
@@ -1579,8 +1579,8 @@ describe('ClawRuntime', () => {
 
   it('does not attach IM-only permission fields when source is not im', async () => {
     const settings = buildSettings()
-    settings.agents.kun.approvalPolicy = 'untrusted'
-    settings.agents.kun.sandboxMode = 'read-only'
+    settings.agents.Rcode.approvalPolicy = 'untrusted'
+    settings.agents.Rcode.sandboxMode = 'read-only'
     const runtimeRequest = vi.fn(async (_settings, path, init) => {
       if (path === '/v1/threads') {
         return { ok: true, status: 200, body: JSON.stringify({ id: 'thr_1' }) }
@@ -1651,7 +1651,7 @@ describe('ClawRuntime', () => {
     expect(turnBody).not.toHaveProperty('disableUserInput')
   })
 
-  it('reads assistant text from the Kun thread detail shape used by the real runtime', async () => {
+  it('reads assistant text from the Rcode thread detail shape used by the real runtime', async () => {
     const settings = buildSettings()
     const runtimeRequest = vi.fn(async (_settings, path, init) => {
       if (path === '/v1/threads') {
@@ -1860,7 +1860,7 @@ describe('ClawRuntime', () => {
     expect(runtimeRequest).not.toHaveBeenCalled()
     expect(send).toHaveBeenCalledWith(
       'oc_chat_a',
-      { markdown: '[Kun] Started a new topic. The next message will create a fresh local conversation.' },
+      { markdown: '[Rcode] Started a new topic. The next message will create a fresh local conversation.' },
       { replyTo: 'om_inbound', replyInThread: false }
     )
     expect(current().claw.channels[0].threadId).toBe('')
@@ -1919,7 +1919,7 @@ describe('ClawRuntime', () => {
     })
     expect(send).toHaveBeenCalledWith(
       'oc_chat_a',
-      { markdown: '[Kun] Claw IM model switched to `deepseek-v4-pro` with provider `deepseek`.' },
+      { markdown: '[Rcode] Claw IM model switched to `deepseek-v4-pro` with provider `deepseek`.' },
       { replyTo: 'om_inbound', replyInThread: false }
     )
   })
@@ -1992,7 +1992,7 @@ describe('ClawRuntime', () => {
     })
     expect(send).toHaveBeenLastCalledWith(
       'oc_chat_a',
-      { markdown: expect.stringContaining('[Kun] Invalid model number `MiniMax-M3`.') },
+      { markdown: expect.stringContaining('[Rcode] Invalid model number `MiniMax-M3`.') },
       { replyTo: 'om_model_name_switch', replyInThread: false }
     )
 
@@ -2008,7 +2008,7 @@ describe('ClawRuntime', () => {
     })
     expect(send).toHaveBeenLastCalledWith(
       'oc_chat_a',
-      { markdown: '[Kun] Claw IM model switched to `MiniMax-M3` with provider `minimax`.' },
+      { markdown: '[Rcode] Claw IM model switched to `MiniMax-M3` with provider `minimax`.' },
       { replyTo: 'om_model_switch', replyInThread: false }
     )
   })
@@ -2029,8 +2029,8 @@ describe('ClawRuntime', () => {
     })]
     const { store } = mutableSettingsStore(settings)
     const runtimeRequest = vi.fn(async (requestSettings: AppSettingsV1, path, init) => {
-      expect(requestSettings.agents.kun.providerId).toBe('minimax')
-      expect(requestSettings.agents.kun.model).toBe('MiniMax-M3')
+      expect(requestSettings.agents.Rcode.providerId).toBe('minimax')
+      expect(requestSettings.agents.Rcode.model).toBe('MiniMax-M3')
       if (path === '/v1/threads/thr_minimax/turns' && init?.method === 'POST') {
         const body = JSON.parse(init?.body ?? '{}') as { model?: string }
         expect(body.model).toBe('MiniMax-M3')
@@ -2114,8 +2114,8 @@ describe('ClawRuntime', () => {
     })]
     const { store } = mutableSettingsStore(settings)
     const runtimeRequest = vi.fn(async (requestSettings: AppSettingsV1, path, init) => {
-      expect(requestSettings.agents.kun.providerId).toBe('minimax')
-      expect(requestSettings.agents.kun.model).toBe('MiniMax-M2.7')
+      expect(requestSettings.agents.Rcode.providerId).toBe('minimax')
+      expect(requestSettings.agents.Rcode.model).toBe('MiniMax-M2.7')
       if (path === '/v1/threads/thr_minimax/turns' && init?.method === 'POST') {
         const body = JSON.parse(init?.body ?? '{}') as { model?: string }
         expect(body.model).toBe('MiniMax-M2.7')
@@ -2205,8 +2205,8 @@ describe('ClawRuntime', () => {
     })]
     const { store } = mutableSettingsStore(settings)
     const runtimeRequest = vi.fn(async (requestSettings: AppSettingsV1, path, init) => {
-      expect(requestSettings.agents.kun.providerId).toBe('deepseek')
-      expect(requestSettings.agents.kun.model).toBe('deepseek-v4-flash')
+      expect(requestSettings.agents.Rcode.providerId).toBe('deepseek')
+      expect(requestSettings.agents.Rcode.model).toBe('deepseek-v4-flash')
       if (path === '/v1/threads/thr_deepseek/turns' && init?.method === 'POST') {
         const body = JSON.parse(init?.body ?? '{}') as { model?: string }
         expect(body.model).toBe('deepseek-v4-flash')
@@ -2274,12 +2274,12 @@ describe('ClawRuntime', () => {
     )
   })
 
-  it('resolves the default IM auto model to the current Kun model before starting a turn', async () => {
+  it('resolves the default IM auto model to the current Rcode model before starting a turn', async () => {
     const settings = buildSettings()
     settings.claw.im.enabled = true
     settings.claw.im.responseTimeoutMs = 2_000
-    settings.agents.kun.providerId = 'xiaomi'
-    settings.agents.kun.model = 'mimo-v2.5'
+    settings.agents.Rcode.providerId = 'xiaomi'
+    settings.agents.Rcode.model = 'mimo-v2.5'
     settings.provider.providers = [
       ...settings.provider.providers,
       buildModelProvider({
@@ -2292,8 +2292,8 @@ describe('ClawRuntime', () => {
       })
     ]
     const runtimeRequest = vi.fn(async (requestSettings: AppSettingsV1, path, init) => {
-      expect(requestSettings.agents.kun.providerId).toBe('xiaomi')
-      expect(requestSettings.agents.kun.model).toBe('mimo-v2.5')
+      expect(requestSettings.agents.Rcode.providerId).toBe('xiaomi')
+      expect(requestSettings.agents.Rcode.model).toBe('mimo-v2.5')
       if (path === '/v1/threads/thr_xiaomi/turns' && init?.method === 'POST') {
         const body = JSON.parse(init?.body ?? '{}') as { model?: string }
         expect(body.model).toBe('mimo-v2.5')
@@ -2356,7 +2356,7 @@ describe('ClawRuntime', () => {
     expect(result).toMatchObject({ ok: true, text: 'hello from mimo' })
   })
 
-  it('handles webhook /help as an IM command before starting a Kun turn', async () => {
+  it('handles webhook /help as an IM command before starting a Rcode turn', async () => {
     const settings = buildSettings()
     settings.claw.im.enabled = true
     settings.claw.channels = [buildChannel({ provider: 'weixin' as const, id: 'channel_weixin' })]
@@ -2500,8 +2500,8 @@ describe('ClawRuntime', () => {
     expect(turnCall).toBeDefined()
     expect(JSON.parse(String(turnCall?.[2]?.body ?? '{}'))).toMatchObject({
       disableUserInput: true,
-      approvalPolicy: settings.agents.kun.approvalPolicy,
-      sandboxMode: settings.agents.kun.sandboxMode
+      approvalPolicy: settings.agents.Rcode.approvalPolicy,
+      sandboxMode: settings.agents.Rcode.sandboxMode
     })
   })
 
@@ -2509,8 +2509,8 @@ describe('ClawRuntime', () => {
     const settings = buildSettings()
     settings.claw.im.enabled = true
     settings.claw.im.responseTimeoutMs = 2_500
-    settings.agents.kun.approvalPolicy = 'untrusted'
-    settings.agents.kun.sandboxMode = 'read-only'
+    settings.agents.Rcode.approvalPolicy = 'untrusted'
+    settings.agents.Rcode.sandboxMode = 'read-only'
     settings.claw.channels = [buildChannel({
       provider: 'weixin' as const,
       id: 'channel_weixin',
@@ -2820,7 +2820,7 @@ describe('ClawRuntime', () => {
     expect(send).toHaveBeenCalledTimes(2)
     const welcomeCall = send.mock.calls[0] as unknown as [string, { markdown?: string }, Record<string, unknown>]
     expect(welcomeCall[0]).toBe('oc_chat_a')
-    expect(welcomeCall[1].markdown).toContain('Kun')
+    expect(welcomeCall[1].markdown).toContain('Rcode')
     expect(welcomeCall[1].markdown).toContain('`/new`')
     expect(welcomeCall[1].markdown).toContain('`/list-model`')
     expect(welcomeCall[1].markdown).toContain('`/model <number>`')
@@ -3022,7 +3022,7 @@ describe('ClawRuntime', () => {
     }).handleWebhook(req, res)
 
     const reply = String(JSON.parse(responseBody).reply)
-    expect(reply).toContain('Kun')
+    expect(reply).toContain('Rcode')
     expect(reply).toContain('`/new`')
     expect(reply.endsWith('hello from GUI')).toBe(true)
     expect(current().claw.channels[0].welcomeSentAt).toBeTruthy()
@@ -3768,7 +3768,7 @@ describe('ClawRuntime', () => {
         threadId: '',
         workspaceRoot,
         agentProfile: {
-          name: 'kun',
+          name: 'Rcode',
           description: '',
           identity: '',
           personality: '',
@@ -3901,7 +3901,7 @@ describe('ClawRuntime', () => {
       const settings = buildSettings()
       settings.claw.im.enabled = true
       settings.claw.im.responseTimeoutMs = 2_000
-      settings.agents.kun.imageGeneration = {
+      settings.agents.Rcode.imageGeneration = {
         enabled: true,
         providerId: '',
         protocol: 'openai-images',
@@ -4262,7 +4262,7 @@ describe('ClawRuntime', () => {
       const settings = buildSettings()
       settings.claw.im.enabled = true
       settings.claw.im.responseTimeoutMs = 2_000
-      settings.agents.kun.imageGeneration = {
+      settings.agents.Rcode.imageGeneration = {
         enabled: true,
         providerId: '',
         protocol: 'openai-images',
@@ -4517,7 +4517,7 @@ describe('ClawRuntime', () => {
       const settings = buildSettings()
       settings.claw.im.enabled = true
       settings.claw.im.responseTimeoutMs = 2_000
-      settings.agents.kun.musicGeneration = {
+      settings.agents.Rcode.musicGeneration = {
         enabled: true,
         providerId: '',
         protocol: 'minimax-music',
@@ -4647,7 +4647,7 @@ describe('ClawRuntime', () => {
       const settings = buildSettings()
       settings.claw.im.enabled = true
       settings.claw.im.responseTimeoutMs = 2_000
-      settings.agents.kun.imageGeneration = {
+      settings.agents.Rcode.imageGeneration = {
         enabled: true,
         providerId: '',
         protocol: 'openai-images',
@@ -4781,7 +4781,7 @@ describe('ClawRuntime', () => {
       const settings = buildSettings()
       settings.claw.im.enabled = true
       settings.claw.im.responseTimeoutMs = 2_000
-      settings.agents.kun.textToSpeech = {
+      settings.agents.Rcode.textToSpeech = {
         enabled: true,
         providerId: '',
         protocol: 'minimax-t2a',
@@ -4913,7 +4913,7 @@ describe('ClawRuntime', () => {
       const settings = buildSettings()
       settings.claw.im.enabled = true
       settings.claw.im.responseTimeoutMs = 2_000
-      settings.agents.kun.videoGeneration = {
+      settings.agents.Rcode.videoGeneration = {
         enabled: true,
         providerId: '',
         protocol: 'minimax-video',

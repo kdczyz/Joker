@@ -1,5 +1,5 @@
 // Structured model + (de)serialization for the MCP server config edited in
-// settings. The on-disk file (`~/.kun/mcp.json`) is the single source of
+// settings. The on-disk file (`~/.Rcode/mcp.json`) is the single source of
 // truth; this module is the lossless-ish bridge between that JSON text and a
 // form the user can fill in without knowing the schema.
 //
@@ -10,7 +10,7 @@
 // Cursor copy-paste format works too: we accept `mcpServers` (not just
 // `servers`) and `type` (not just `transport`) with `http` aliased to
 // `streamable-http`. This mirrors the leniency in the GUI importer
-// (src/main/kun-process.ts normalizeGuiManagedMcpServer) so what the form
+// (src/main/Rcode-process.ts normalizeGuiManagedMcpServer) so what the form
 // accepts is what the runtime will actually load.
 
 export type McpTransport = 'stdio' | 'streamable-http' | 'sse'
@@ -99,7 +99,7 @@ function parseServerEntry(name: string, raw: unknown): McpFormServer {
   const record = isRecord(raw) ? raw : {}
   const command = asString(record.command).trim()
   const url = asString(record.url).trim()
-  // Accept both `transport` (kun) and `type` (Claude Desktop) field names.
+  // Accept both `transport` (Rcode) and `type` (Claude Desktop) field names.
   const transport = normalizeTransport(record.transport ?? record.type, command, url)
   const workspaceRoots = asStringArray(record.workspaceRoots)
   const trustedWorkspaceRoots = asStringArray(record.trustedWorkspaceRoots)
@@ -175,7 +175,7 @@ export function parseMcpConfigText(text: string): McpParseResult {
     return { ok: false, error: 'Config root must be a JSON object.' }
   }
 
-  // Servers can live at the top level under `servers` (kun) or `mcpServers`
+  // Servers can live at the top level under `servers` (Rcode) or `mcpServers`
   // (Claude Desktop / Cursor). Everything else at the top level is preserved.
   const serversSource = isRecord(parsed.servers)
     ? parsed.servers

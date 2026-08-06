@@ -11,10 +11,10 @@ import {
   ShieldQuestion
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { ApprovalPolicy, KunToolPermissionMode, SandboxMode } from '@shared/app-settings'
+import type { ApprovalPolicy, RcodeToolPermissionMode, SandboxMode } from '@shared/app-settings'
 import {
-  kunToolPermissionModeFromSettings,
-  kunToolPermissionModeSettings
+  RcodeToolPermissionModeFromSettings,
+  RcodeToolPermissionModeSettings
 } from '@shared/app-settings'
 import { runTrustedUserActivation } from '../../extensions/protected-user-activation'
 
@@ -31,7 +31,7 @@ type Props = {
 }
 
 type ApprovalOption = {
-  value: KunToolPermissionMode
+  value: RcodeToolPermissionMode
   labelKey: string
   descriptionKey: string
   Icon: typeof Hand
@@ -96,15 +96,15 @@ const APPROVAL_OPTIONS: ApprovalOption[] = [
   }
 ]
 
-function permissionOption(mode: KunToolPermissionMode): ApprovalOption {
+function permissionOption(mode: RcodeToolPermissionMode): ApprovalOption {
   return APPROVAL_OPTIONS.find((option) => option.value === mode) ?? APPROVAL_OPTIONS[1]
 }
 
-function permissionLabelKey(mode: KunToolPermissionMode): string {
+function permissionLabelKey(mode: RcodeToolPermissionMode): string {
   return permissionOption(mode).labelKey
 }
 
-function permissionDescriptionKey(mode: KunToolPermissionMode): string {
+function permissionDescriptionKey(mode: RcodeToolPermissionMode): string {
   return permissionOption(mode).descriptionKey
 }
 
@@ -120,7 +120,7 @@ export function FloatingComposerExecutionPicker({
   const rootRef = useRef<HTMLDivElement | null>(null)
   const approvalButtonRef = useRef<HTMLButtonElement | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
-  const permissionMode = kunToolPermissionModeFromSettings(value)
+  const permissionMode = RcodeToolPermissionModeFromSettings(value)
   const currentPermissionOption = permissionOption(permissionMode)
   const bypass = permissionMode === 'bypass'
   const PermissionIcon = currentPermissionOption.Icon
@@ -194,7 +194,7 @@ export function FloatingComposerExecutionPicker({
             iconClass={option.iconClass}
             onClick={(event) => applyTrustedComposerExecutionChange(
               event,
-              kunToolPermissionModeSettings(option.value),
+              RcodeToolPermissionModeSettings(option.value),
               update
             )}
           />
@@ -259,7 +259,7 @@ function ExecutionRow({
   iconClass,
   onClick
 }: {
-  mode: KunToolPermissionMode
+  mode: RcodeToolPermissionMode
   selected: boolean
   label: string
   description: string

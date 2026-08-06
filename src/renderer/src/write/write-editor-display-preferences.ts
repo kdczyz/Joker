@@ -1,6 +1,6 @@
 import { browserStorage, type BrowserStorageLike } from '../lib/browser-storage'
 
-const WRITE_EDITOR_DISPLAY_STORAGE_KEY = 'kun.write.editor-display.v1'
+const WRITE_EDITOR_DISPLAY_STORAGE_KEY = 'Rcode.write.editor-display.v1'
 
 export type WriteEditorDisplayPreferences = {
   lineNumbers: boolean

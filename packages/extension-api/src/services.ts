@@ -196,7 +196,7 @@ export const HostMessageSchema = z.strictObject({
 })
 export type HostMessage = z.infer<typeof HostMessageSchema>
 
-export const RESULT_PREVIEW_OPEN_CHANNEL = 'kun.resultPreview.open' as const
+export const RESULT_PREVIEW_OPEN_CHANNEL = 'Rcode.resultPreview.open' as const
 
 export const ResultPreviewSourceSchema = z.strictObject({
   sourceId: z.string().min(1).max(512),
@@ -255,7 +255,7 @@ export interface UiApi {
   showNotification(options: NotificationOptions): Promise<string | undefined>
   /**
    * From an authenticated Extension View, attach bounded, path-free extension
-   * data to the main Kun composer. The Host supplies extension/View/workspace
+   * data to the main Rcode composer. The Host supplies extension/View/workspace
    * provenance and consumes it once on the next main-conversation turn.
    */
   attachComposerContext(request: ComposerContextAttachmentRequest): Promise<ComposerContextAttachment>

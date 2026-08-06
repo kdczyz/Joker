@@ -1,4 +1,4 @@
-import type { CoreRuntimeEventJson } from './kun-contract'
+import type { CoreRuntimeEventJson } from './Rcode-contract'
 import type {
   ApprovalStatusPayload,
   CompactionEventPayload,
@@ -23,7 +23,7 @@ type TodoProjection = Parameters<NonNullable<ThreadEventSink['onTodos']>>[0]
 type ThreadMetadataProjection = Parameters<NonNullable<ThreadEventSink['onThreadUpdated']>>[0]
 
 /**
- * Normalized, provider-independent actions produced from Kun wire events.
+ * Normalized, provider-independent actions produced from Rcode wire events.
  * These records contain no store calls or renderer effects and can therefore
  * be replayed through the same reducer used for live SSE.
  */

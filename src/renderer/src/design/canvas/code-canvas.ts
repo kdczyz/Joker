@@ -5,9 +5,9 @@ import { loadDesignSystem } from './design-system-persistence'
 import { createEmptyDesignSystem, type DesignSystem } from './design-system-types'
 import { looksLikeStandaloneImageAssetPrompt } from '../design-image-intent'
 
-/** Workspace subdir for code-mode canvases. Kept out of `.kun-design` so design
- * mode's artifact lister (which enumerates `.kun-design/*`) never sees them. */
-export const CODE_CANVAS_DIR = '.kun-canvas'
+/** Workspace subdir for code-mode canvases. Kept out of `.Rcode-design` so design
+ * mode's artifact lister (which enumerates `.Rcode-design/*`) never sees them. */
+export const CODE_CANVAS_DIR = '.Rcode-canvas'
 
 export function codeCanvasArtifactId(threadId: string): string {
   return `code-${threadId}`

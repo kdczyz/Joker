@@ -12,7 +12,7 @@ import type {
   UserFileReference,
   UserInputAnswer
 } from '../agent/types'
-import type { KunRuntimeStatusPayload } from '@shared/kun-gui-api'
+import type { RcodeRuntimeStatusPayload } from '@shared/Rcode-gui-api'
 import type {
   AppLocale,
   ClawImAgentProfileV1,
@@ -23,8 +23,8 @@ import type {
   ClawModel,
   ModelReasoningEffort
 } from '@shared/app-settings'
-import type { ModelProviderModelGroup } from '@shared/kun-gui-api'
-import type { ComposerContextAttachment } from '@kun/extension-api'
+import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ComposerContextAttachment } from '@Rcode/extension-api'
 import type { ExtensionComposerContextEvent } from '@shared/extension-ipc'
 
 export type QueuedUserMessage = {
@@ -42,7 +42,7 @@ export type QueuedUserMessage = {
   fileReferences?: UserFileReference[]
   composerContexts?: ComposerContextAttachment[]
   /**
-   * Optional GUI plan context forwarded to Kun. The renderer
+   * Optional GUI plan context forwarded to Rcode. The renderer
    * attaches it for plan/refine turns so the runtime can advertise
    * the native `create_plan` tool and gate the write to the reserved
    * plan artifact.
@@ -64,7 +64,7 @@ export type QueuedUserMessage = {
 
 /**
  * GUI plan context attached to a send-message call. Mirrors the
- * Kun `GuiPlanContextSchema` and is forwarded to the runtime
+ * Rcode `GuiPlanContextSchema` and is forwarded to the runtime
  * request body so plan/refine turns are scoped to a reserved path.
  */
 export type GuiPlanMessageContext = {
@@ -127,6 +127,7 @@ export type SettingsRouteSection =
   | 'permissions'
   | 'skill'
   | 'mcp'
+  | 'profile'
   | 'shortcuts'
   | 'easterEgg'
   | 'claw'
@@ -179,10 +180,10 @@ export type ChatState = {
   initialSetupMode: InitialSetupMode
   workspaceRoot: string
   workspaceLabel: string
-  /** 对话会话的工作目录根(默认 ~/Documents/Kun),供侧边栏对话区块和项目保护使用。 */
+  /** 对话会话的工作目录根(默认 ~/Documents/Rcode),供侧边栏对话区块和项目保护使用。 */
   conversationWorkspaceRoot: string
   runtimeConnection: RuntimeConnectionStatus
-  runtimeStatus: KunRuntimeStatusPayload | null
+  runtimeStatus: RcodeRuntimeStatusPayload | null
   codeWorkspaceRoots: string[]
   threads: NormalizedThread[]
   threadSearch: string

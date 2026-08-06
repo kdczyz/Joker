@@ -1,6 +1,6 @@
 import type { ChatBlock, NormalizedThread } from '../agent/types'
 import { DEFAULT_COMPOSER_MODEL_IDS } from '@shared/default-composer-models'
-import type { ModelProviderModelGroup } from '@shared/kun-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
 import {
   CLAW_MANAGED_INSTRUCTIONS_HEADING,
   CLAW_MODEL_IDS,
@@ -24,14 +24,14 @@ import {
 import { shouldOmitFromCodeWorkspaceRoots } from '../lib/worktree-project-path'
 import { readBrowserStorageItem, writeBrowserStorageItem } from '../lib/browser-storage'
 
-const COMPOSER_MODEL_STORAGE_KEY = 'kun.composerModel'
-const COMPOSER_PROVIDER_STORAGE_KEY = 'kun.composerProviderId'
-const COMPOSER_REASONING_EFFORT_STORAGE_KEY = 'kun.composerReasoningEffortByModel.v1'
-const THREAD_COMPOSER_SELECTION_STORAGE_KEY = 'kun.threadComposerSelection.v1'
-const THREAD_COMPOSER_MODE_STORAGE_KEY = 'kun.threadComposerMode.v1'
-const COMPOSER_MODE_STORAGE_KEY = 'kun.composerMode'
-const TURN_MODEL_STORAGE_KEY = 'kun.turnModelLabel'
-const CODE_WORKSPACE_ROOTS_STORAGE_KEY = 'kun.codeWorkspaceRoots.v1'
+const COMPOSER_MODEL_STORAGE_KEY = 'Rcode.composerModel'
+const COMPOSER_PROVIDER_STORAGE_KEY = 'Rcode.composerProviderId'
+const COMPOSER_REASONING_EFFORT_STORAGE_KEY = 'Rcode.composerReasoningEffortByModel.v1'
+const THREAD_COMPOSER_SELECTION_STORAGE_KEY = 'Rcode.threadComposerSelection.v1'
+const THREAD_COMPOSER_MODE_STORAGE_KEY = 'Rcode.threadComposerMode.v1'
+const COMPOSER_MODE_STORAGE_KEY = 'Rcode.composerMode'
+const TURN_MODEL_STORAGE_KEY = 'Rcode.turnModelLabel'
+const CODE_WORKSPACE_ROOTS_STORAGE_KEY = 'Rcode.codeWorkspaceRoots.v1'
 export const MAX_CODE_WORKSPACE_ROOTS = 30
 export const MAX_THREAD_COMPOSER_SELECTIONS = 500
 export const MAX_COMPOSER_REASONING_EFFORTS = 500

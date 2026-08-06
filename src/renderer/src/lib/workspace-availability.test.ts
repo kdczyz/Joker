@@ -11,14 +11,14 @@ describe('workspace availability', () => {
 
   it('returns the directory state reported by the main process', async () => {
     const exists = vi.fn(async () => false)
-    vi.stubGlobal('window', { kunGui: { workspaceDirectoryExists: exists } })
+    vi.stubGlobal('window', { RcodeGui: { workspaceDirectoryExists: exists } })
 
     await expect(workspaceDirectoryExists('E:\\missing-project')).resolves.toBe(false)
     expect(exists).toHaveBeenCalledWith('E:\\missing-project')
   })
 
   it('fails closed when the desktop bridge cannot check the directory', async () => {
-    vi.stubGlobal('window', { kunGui: { platform: 'win32' } })
+    vi.stubGlobal('window', { RcodeGui: { platform: 'win32' } })
 
     await expect(workspaceDirectoryExists('E:\\missing-project')).resolves.toBe(false)
   })
@@ -29,7 +29,7 @@ describe('workspace availability', () => {
 
   it('shows a one-button warning with the missing path', async () => {
     const alertDialog = vi.fn(async () => undefined)
-    vi.stubGlobal('window', { kunGui: { alertDialog } })
+    vi.stubGlobal('window', { RcodeGui: { alertDialog } })
 
     await showWorkspaceMissingDialog('E:\\missing-project')
 

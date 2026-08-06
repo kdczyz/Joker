@@ -35,10 +35,10 @@ describe('desktop behavior', () => {
     const { HIDDEN_START_ARG, shouldStartHidden } = await import('./desktop-behavior')
     const startupSettings = settings({ openAtLogin: true, startMinimized: true })
 
-    expect(shouldStartHidden(startupSettings, 'win32', ['kun', HIDDEN_START_ARG])).toBe(true)
-    expect(shouldStartHidden(startupSettings, 'win32', ['kun'])).toBe(false)
-    expect(shouldStartHidden(startupSettings, 'darwin', ['kun', HIDDEN_START_ARG])).toBe(false)
-    expect(shouldStartHidden(settings({ openAtLogin: true }), 'win32', ['kun', HIDDEN_START_ARG])).toBe(false)
+    expect(shouldStartHidden(startupSettings, 'win32', ['Rcode', HIDDEN_START_ARG])).toBe(true)
+    expect(shouldStartHidden(startupSettings, 'win32', ['Rcode'])).toBe(false)
+    expect(shouldStartHidden(startupSettings, 'darwin', ['Rcode', HIDDEN_START_ARG])).toBe(false)
+    expect(shouldStartHidden(settings({ openAtLogin: true }), 'win32', ['Rcode', HIDDEN_START_ARG])).toBe(false)
   })
 
   it('syncs login item args on supported desktop platforms', async () => {

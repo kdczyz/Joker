@@ -1,6 +1,6 @@
 /**
  * Durable design-artifact metadata. The in-memory artifact list is mirrored to
- * a per-artifact `.kun-design/<id>/meta.json` sidecar so the list survives a
+ * a per-artifact `.Rcode-design/<id>/meta.json` sidecar so the list survives a
  * reload/restart (the HTML/SVG/canvas files alone can't recover title / versions /
  * implement provenance). On load the store rehydrates from these sidecars,
  * falling back to reconstructing from the on-disk files when a sidecar is
@@ -20,7 +20,7 @@ import {
   type DesignPrototypeLink
 } from './design-types'
 
-const DESIGN_DIR = '.kun-design'
+const DESIGN_DIR = '.Rcode-design'
 
 // --- Construction helpers: build paths for an artifact nested under its 设计稿.
 export function artifactDirPath(docId: string, artifactId: string): string {
@@ -36,8 +36,8 @@ export function artifactDesignMdPath(docId: string, artifactId: string): string 
 }
 
 // --- Derivation helpers: recover sibling paths from an artifact's stored
-// relativePath. Works uniformly for nested (.kun-design/<doc>/<id>/v1.html) and
-// legacy-flat (.kun-design/<id>/v1.html) artifacts, so persistence/deletion need
+// relativePath. Works uniformly for nested (.Rcode-design/<doc>/<id>/v1.html) and
+// legacy-flat (.Rcode-design/<id>/v1.html) artifacts, so persistence/deletion need
 // no docId — the path already encodes where the files live.
 export function artifactDirOf(relativePath: string): string {
   const i = relativePath.lastIndexOf('/')
@@ -292,7 +292,7 @@ export function parseArtifactMeta(raw: string, dirId: string, actualArtifactDir?
 /**
  * Reconstruct an artifact from on-disk files when no meta.json sidecar exists.
  * `artifactDir` is the artifact's full workspace-relative directory (nested:
- * `.kun-design/<docId>/<id>`, or legacy-flat: `.kun-design/<id>`).
+ * `.Rcode-design/<docId>/<id>`, or legacy-flat: `.Rcode-design/<id>`).
  */
 export function reconstructArtifact(
   artifactDir: string,

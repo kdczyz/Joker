@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { dirname, join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AppSettingsV1 } from '../../shared/app-settings'
-import type { ImageGenClient, ImageGenEditRequest, ImageGenRequest } from '../../../kun/src/adapters/tool/image-gen-tool-provider.js'
+import type { ImageGenClient, ImageGenEditRequest, ImageGenRequest } from '../../../Rcode/src/adapters/tool/image-gen-tool-provider.js'
 import { buildWriteInfographicPrompt, requestWriteInfographic } from './write-infographic-service'
 
 let workspace: string
@@ -15,7 +15,7 @@ const PNG_BYTES = Buffer.from(
 function settingsWithImageGen(overrides: Record<string, unknown> = {}): AppSettingsV1 {
   return {
     agents: {
-      kun: {
+      Rcode: {
         imageGeneration: {
           enabled: true,
           baseUrl: 'https://images.example.test/v1',
@@ -289,16 +289,16 @@ describe('write infographic service', () => {
     const client = fakeClient()
     const result = await requestWriteInfographic(settingsWithImageGen(), {
       text: '需求：支持扫码登录。',
-      filePath: join(workspace, '.kunsdd', 'draft', 'dc040c2d', 'requirement.md'),
+      filePath: join(workspace, '.Rcodesdd', 'draft', 'dc040c2d', 'requirement.md'),
       workspaceRoot: workspace,
-      imageDir: '.kunsdd/img',
+      imageDir: '.Rcodesdd/img',
       kind: 'design'
     }, { client })
 
     expect(result.ok).toBe(true)
     if (!result.ok) return
     expect(result.relativePath).toMatch(/^\.\.\/\.\.\/img\/design-\d{14}-[0-9a-f]{4}\.png$/)
-    expect(result.absolutePath).toBe(join(workspace, '.kunsdd', 'img', result.fileName))
+    expect(result.absolutePath).toBe(join(workspace, '.Rcodesdd', 'img', result.fileName))
     expect(existsSync(result.absolutePath)).toBe(true)
   })
 
@@ -319,15 +319,15 @@ describe('write infographic service', () => {
 
   it('uses selected reference images for design drafts', async () => {
     const client = fakeClient()
-    const referencePath = join(workspace, '.kunsdd', 'requirements', 'draft-1', 'img', 'source.png')
+    const referencePath = join(workspace, '.Rcodesdd', 'requirements', 'draft-1', 'img', 'source.png')
     mkdirSync(dirname(referencePath), { recursive: true })
     writeFileSync(referencePath, PNG_BYTES)
 
     const result = await requestWriteInfographic(settingsWithImageGen(), {
       text: '根据参考图重绘一个更精致的旅行社区首页。',
-      filePath: join(workspace, '.kunsdd', 'requirements', 'draft-1', 'requirement.md'),
+      filePath: join(workspace, '.Rcodesdd', 'requirements', 'draft-1', 'requirement.md'),
       workspaceRoot: workspace,
-      imageDir: '.kunsdd/requirements/draft-1/img',
+      imageDir: '.Rcodesdd/requirements/draft-1/img',
       kind: 'design',
       referenceImagePath: referencePath
     }, { client })

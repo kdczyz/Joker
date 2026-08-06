@@ -2,7 +2,7 @@ import { stat } from 'node:fs/promises'
 import type { IncomingMessage, ServerResponse } from 'node:http'
 import {
   DEFAULT_SCHEDULE_MODEL,
-  getKunRuntimeSettings,
+  getRcodeRuntimeSettings,
   getModelProviderSettings,
   modelProviderModelProfile,
   normalizeScheduleReasoningEffort,
@@ -73,7 +73,7 @@ export type RunPromptOptions = {
   title: string
   workspaceRoot: string
   model: string
-  /** Optional provider id; routed via Kun's MultiProviderModelClient. */
+  /** Optional provider id; routed via Rcode's MultiProviderModelClient. */
   providerId?: string
   reasoningEffort: ScheduleReasoningEffort
   mode: ScheduleRunMode
@@ -241,7 +241,7 @@ export function hasEnabledScheduledTask(settings: AppSettingsV1): boolean {
 // Shared model resolution + prompt execution primitives.
 //
 // These were extracted from ScheduleRuntime so the WorkflowRuntime AI-agent
-// node runs a prompt through the exact same Kun-runtime path as a scheduled
+// node runs a prompt through the exact same Rcode-runtime path as a scheduled
 // task. ScheduleRuntime now delegates to them (behavior-preserving).
 // ---------------------------------------------------------------------------
 
@@ -312,7 +312,7 @@ export function resolveScheduleModelConfig(
   const providers = getModelProviderSettings(settings).providers
   const requestedProviderId = input.providerId?.trim() || ''
   const requestedModel = normalizeTaskModel(input.model ?? '')
-  const runtimeProviderId = getKunRuntimeSettings(settings).providerId.trim()
+  const runtimeProviderId = getRcodeRuntimeSettings(settings).providerId.trim()
   const extraProviderId = fallbackProviderId.trim()
   const provider =
     providers.find((item) => item.id === requestedProviderId) ??
@@ -340,9 +340,9 @@ export type RunPromptViaRuntimeOptions = {
   workspaceRoot: string
   model: string
   /**
-   * Optional provider id override. Forwarded to Kun's `POST /v1/threads` so
+   * Optional provider id override. Forwarded to Rcode's `POST /v1/threads` so
    * the thread (and every turn on it) routes its model request through the
-   * kun-config `serve.providers[providerId]` HTTP client. Omitted or
+   * Rcode-config `serve.providers[providerId]` HTTP client. Omitted or
    * matching the runtime's bound provider → use the runtime default (no
    * behavior change).
    */
@@ -370,7 +370,7 @@ export async function runPromptViaRuntime(
       return { ok: false, message: `Workspace directory is unavailable: ${workspace}` }
     }
   }
-  const model = normalizeTaskModel(options.model) ?? (settings.agents.kun.model.trim() || DEFAULT_SCHEDULE_MODEL)
+  const model = normalizeTaskModel(options.model) ?? (settings.agents.Rcode.model.trim() || DEFAULT_SCHEDULE_MODEL)
   const providerId = options.providerId?.trim()
   const create = await deps.runtimeRequest(settings, '/v1/threads', {
     method: 'POST',

@@ -4,8 +4,8 @@ import { resolveLogDirectory, resolveNamedPreloadPath, resolvePreloadPath } from
 
 describe('main paths', () => {
   it('resolves the log directory under Electron userData', () => {
-    expect(resolveLogDirectory({ getPath: () => 'C:\\Users\\test\\AppData\\Kun' })).toBe(
-      join('C:\\Users\\test\\AppData\\Kun', 'logs')
+    expect(resolveLogDirectory({ getPath: () => 'C:\\Users\\test\\AppData\\Rcode' })).toBe(
+      join('C:\\Users\\test\\AppData\\Rcode', 'logs')
     )
   })
 

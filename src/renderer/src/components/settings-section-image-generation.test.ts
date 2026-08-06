@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import { defaultKunRuntimeSettings } from '@shared/app-settings'
+import { defaultRcodeRuntimeSettings } from '@shared/app-settings'
 import { SettingsSidebar } from './SettingsSidebar'
 import { ImageGenerationSettingsSection } from './settings-section-image-generation'
 
@@ -54,8 +54,8 @@ describe('ImageGenerationSettingsSection', () => {
     const html = renderToStaticMarkup(createElement(ImageGenerationSettingsSection, {
       ctx: {
         t,
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           imageGeneration: {
             enabled: true,
             baseUrl: 'https://images.example.com/v1',
@@ -67,7 +67,7 @@ describe('ImageGenerationSettingsSection', () => {
             timeoutMs: 240000
           }
         },
-        updateKun: () => undefined
+        updateRcode: () => undefined
       }
     }))
 

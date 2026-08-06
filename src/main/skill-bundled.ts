@@ -2,9 +2,9 @@ import { mkdir, stat, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 
 /**
- * Built-in "design system & craft" skill. Seeded once into ~/.kun/skills/ on
+ * Built-in "design system & craft" skill. Seeded once into ~/.Rcode/skills/ on
  * first launch (idempotent seed marker, mirrors ensureBundledUiPlugins). The
- * Kun runtime discovers it from the skills root and the agent can load it
+ * Rcode runtime discovers it from the skills root and the agent can load it
  * (auto-activated on design prompts, or via load_skill). Deleting it is honored
  * — it is not force-recreated. Appears after the next runtime restart.
  */
@@ -40,8 +40,8 @@ Hold this bar on any visual work — HTML mockups, prototypes, real UI.
 ## 1. Design system is the source of truth
 - Look for root \`DESIGN.md\` first. When it exists and validates, it is the canonical Google-compatible project theme shared by the canvas, HTML/SVG generation, and code implementation.
 - Patch its YAML front matter structurally, preserve its Markdown rationale and unknown extension keys, and use the exact current source hash for conflict-safe updates.
-- Never draw a separate HTML, SVG, or freeform "style guide" artifact. Kun renders \`DESIGN.md\` through its fixed built-in specimen board.
-- \`.kun-design/HANDOFF.md\` is generated project handoff, not a theme. \`.kun-design/DESIGN.md\` and \`.kun-design/design-system.json\` are compatibility/migration inputs only.
+- Never draw a separate HTML, SVG, or freeform "style guide" artifact. Rcode renders \`DESIGN.md\` through its fixed built-in specimen board.
+- \`.Rcode-design/HANDOFF.md\` is generated project handoff, not a theme. \`.Rcode-design/DESIGN.md\` and \`.Rcode-design/design-system.json\` are compatibility/migration inputs only.
 - Derive every visual decision from tokens (color, spacing scale, radius, type scale), not ad-hoc values. Keep them consistent across the whole artifact.
 
 ## 2. Avoid generic AI tells
@@ -69,9 +69,9 @@ These read as "AI made this" — do not ship them:
 
 let seedPromise: Promise<void> | null = null
 
-export function ensureBundledSkills(kunHomeDir: string): Promise<void> {
+export function ensureBundledSkills(RcodeHomeDir: string): Promise<void> {
   seedPromise ??= (async () => {
-    const skillsRoot = join(kunHomeDir, 'skills')
+    const skillsRoot = join(RcodeHomeDir, 'skills')
     const markerPath = join(skillsRoot, BUNDLED_SEED_MARKER)
     try {
       await stat(markerPath)

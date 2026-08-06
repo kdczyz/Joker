@@ -3,9 +3,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ChevronDown, ChevronUp, Loader2, SquareTerminal, X } from 'lucide-react'
 import {
-  KUN_BACKGROUND_SHELLS_PATH,
-  kunBackgroundShellStopPath
-} from '@shared/kun-endpoints'
+  RCODE_BACKGROUND_SHELLS_PATH,
+  RcodeBackgroundShellStopPath
+} from '@shared/Rcode-endpoints'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 
 type BackgroundShellSession = {
@@ -33,7 +33,7 @@ type BackgroundShellListResponse = {
 
 async function fetchBackgroundShells(threadId?: string): Promise<BackgroundShellListResponse> {
   const query = threadId ? `?thread_id=${encodeURIComponent(threadId)}` : ''
-  const result = await rendererRuntimeClient.runtimeRequest(`${KUN_BACKGROUND_SHELLS_PATH}${query}`)
+  const result = await rendererRuntimeClient.runtimeRequest(`${RCODE_BACKGROUND_SHELLS_PATH}${query}`)
   if (!result.ok) return { sessions: [], running: 0 }
   try {
     return JSON.parse(result.body) as BackgroundShellListResponse
@@ -43,7 +43,7 @@ async function fetchBackgroundShells(threadId?: string): Promise<BackgroundShell
 }
 
 async function stopBackgroundShell(sessionId: string): Promise<void> {
-  await rendererRuntimeClient.runtimeRequest(kunBackgroundShellStopPath(sessionId), 'POST')
+  await rendererRuntimeClient.runtimeRequest(RcodeBackgroundShellStopPath(sessionId), 'POST')
 }
 
 type BackgroundShellOverlayProps = {

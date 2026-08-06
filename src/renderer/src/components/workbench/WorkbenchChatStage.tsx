@@ -11,12 +11,11 @@ import { FloatingComposer } from '../chat/FloatingComposer'
 import { LazyMessageTimeline } from '../chat/LazyMessageTimeline'
 import { SubagentReturnBar } from '../chat/message-timeline-empty'
 import { WorkbenchTopActions } from '../chat/WorkbenchTopBar'
-import { KunCelebrationLayer } from '../chat/AnimatedWorkLogo'
 import { ActiveUiPluginStagePresentation } from '../chat/UiPluginStagePresentation'
 import { DevPreviewLaunchCard } from '../DevPreviewLaunchCard'
 import { SessionHeader } from '../SessionHeader'
 import { SidebarTitlebarToggleButton } from '../sidebar/SidebarPrimitives'
-import type { JsonValue } from '@kun/extension-api'
+import type { JsonValue } from '@Rcode/extension-api'
 import type { RegisteredContribution } from '../../extensions/contribution-registry'
 import { DeclarativeActionBar } from '../../extensions/ControlledContributionSurfaces'
 
@@ -30,7 +29,6 @@ export type WorkbenchChatStageProps = {
   stageInsetClass: string
   leftSidebarCollapsed: boolean
   busy: boolean
-  focusModeEnabled: boolean
   uiModeCameosEnabled: boolean
   blocks: ChatBlock[]
   liveReasoning: string
@@ -78,7 +76,6 @@ export function WorkbenchChatStage({
   stageInsetClass,
   leftSidebarCollapsed,
   busy,
-  focusModeEnabled,
   uiModeCameosEnabled,
   blocks,
   liveReasoning,
@@ -176,7 +173,6 @@ export function WorkbenchChatStage({
             onRetryConnection={onRetryConnection}
             onOpenSettings={onOpenSettings}
             onSelectSuggestion={onSelectSuggestion}
-            focusModeEnabled={focusModeEnabled}
             planActionsBusy={planActionsBusy}
             onBuildPlan={onBuildPlan}
             onOpenPlan={onOpenPlan}
@@ -197,7 +193,6 @@ export function WorkbenchChatStage({
             extensionResultPreviews={extensionResultPreviews}
             onExtensionCommand={onExtensionCommand}
           />
-          {!focusModeEnabled ? <KunCelebrationLayer active={busy} suppressed={Boolean(runtimeError)} /> : null}
         </div>
         <div className="ds-composer-dock ds-no-drag relative flex shrink-0 justify-center px-2 pb-3 pt-0 sm:px-4 md:px-6 lg:px-8">
           {showReturnBar ? (

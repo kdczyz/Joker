@@ -440,15 +440,11 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
     endpointFormat: 'chat_completions',
     models: [
       'mimo-v2.5-pro',
-      'mimo-v2.5',
-      'mimo-v2-pro',
-      'mimo-v2-omni'
+      'mimo-v2.5'
     ],
     modelProfiles: {
       'mimo-v2.5-pro': xiaomiTextChatProfile(1_000_000),
-      'mimo-v2.5': xiaomiVisionChatProfile(1_000_000),
-      'mimo-v2-pro': xiaomiTextChatProfile(1_000_000),
-      'mimo-v2-omni': xiaomiVisionChatProfile(256_000)
+      'mimo-v2.5': xiaomiVisionChatProfile(1_000_000)
     },
     speech: {
       protocol: 'mimo-asr',
@@ -470,15 +466,11 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
       endpointFormat: 'chat_completions',
       models: [
         'mimo-v2.5-pro',
-        'mimo-v2.5',
-        'mimo-v2-pro',
-        'mimo-v2-omni'
+        'mimo-v2.5'
       ],
       modelProfiles: {
         'mimo-v2.5-pro': xiaomiTextChatProfile(1_000_000),
-        'mimo-v2.5': xiaomiVisionChatProfile(1_000_000),
-        'mimo-v2-pro': xiaomiTextChatProfile(1_000_000),
-        'mimo-v2-omni': xiaomiVisionChatProfile(256_000)
+        'mimo-v2.5': xiaomiVisionChatProfile(1_000_000)
       },
       speech: {
         protocol: 'mimo-asr',

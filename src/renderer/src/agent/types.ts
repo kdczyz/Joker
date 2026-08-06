@@ -8,9 +8,9 @@ import type {
   CoreRuntimeInfoJson,
   CoreRuntimeSkillJson,
   CoreRuntimeToolDiagnosticsJson
-} from './kun-contract'
+} from './Rcode-contract'
 import type { ApprovalPolicy, SandboxMode } from '@shared/app-settings'
-import type { ComposerContextAttachment } from '@kun/extension-api'
+import type { ComposerContextAttachment } from '@Rcode/extension-api'
 
 export type ToolItemKind = 'tool_call' | 'command_execution' | 'file_change'
 export type RuntimeErrorSeverity = 'info' | 'warning' | 'error'
@@ -479,7 +479,7 @@ export type ThreadErrorOptions = {
   terminal?: boolean
 }
 
-/** Cumulative usage/cost for a Kun thread. */
+/** Cumulative usage/cost for a Rcode thread. */
 export type ThreadUsageSnapshot = {
   inputTokens: number
   outputTokens: number
@@ -518,7 +518,7 @@ export type ThreadEventSink = {
 }
 
 export interface AgentProvider {
-  readonly id: 'kun'
+  readonly id: 'Rcode'
   readonly displayName: string
   getCapabilities(): {
     interrupt: boolean
@@ -585,7 +585,7 @@ export interface AgentProvider {
   getToolDiagnostics?(): Promise<CoreRuntimeToolDiagnosticsJson>
   getMcpOAuthDiagnostics?(): Promise<CoreMcpOAuthDiagnosticJson[]>
   clearMcpOAuthCredentials?(serverId?: string): Promise<string[]>
-  authorizeMcpOAuthCredentials?(serverId: string): Promise<import('./kun-contract').CoreMcpOAuthAuthorizeResponseJson>
+  authorizeMcpOAuthCredentials?(serverId: string): Promise<import('./Rcode-contract').CoreMcpOAuthAuthorizeResponseJson>
   listSkills?(): Promise<CoreRuntimeSkillJson[]>
   uploadAttachment?(input: {
     name: string

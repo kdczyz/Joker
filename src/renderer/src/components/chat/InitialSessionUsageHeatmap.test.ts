@@ -122,7 +122,7 @@ describe('InitialSessionUsageHeatmap', () => {
     expect(html).toContain('Models')
     expect(html).toContain('All')
     expect(html).toContain('90d')
-    expect(html).toContain('Daily Kun usage calendar')
+    expect(html).toContain('Daily Rcode usage calendar')
     expect(html).toContain('Sessions')
     expect(html).toContain('Messages')
     expect(html).toContain('Current streak')
@@ -137,7 +137,7 @@ describe('InitialSessionUsageHeatmap', () => {
   it('renders the usage panel without the animated hero in focus mode', () => {
     const html = render(state({ usage: usage(), loaded: true }), { hideHero: true })
 
-    expect(html).toContain('Daily Kun usage calendar')
+    expect(html).toContain('Daily Rcode usage calendar')
     expect(html).toContain('aria-label="2026-05-02')
     expect(html).toContain('Overview')
     expect(html).toContain('Models')
@@ -227,7 +227,7 @@ describe('InitialSessionUsageHeatmap', () => {
     expect(loadingHtml).toContain('Preparing your usage calendar')
     expect(loadingHtml).toContain('Checking history')
     expect(loadingHtml).toContain('Collapse calendar')
-    expect(loadingHtml).not.toContain('Daily Kun usage calendar')
+    expect(loadingHtml).not.toContain('Daily Rcode usage calendar')
     expect(loadingHtml).not.toContain('Explain this project&#x27;s structure')
 
     const emptyHtml = render(state({ usage: usage([bucket('2026-05-01', 0, 0)]), loaded: true }))
@@ -242,14 +242,14 @@ describe('InitialSessionUsageHeatmap', () => {
     expect(errorHtml).not.toContain('Explain this project&#x27;s structure')
   })
 
-  it('renders the Kun hero with a collapsed calendar card', () => {
+  it('renders the Rcode hero with a collapsed calendar card', () => {
     const html = render(state({ usage: usage(), loaded: true }), { initialCollapsed: true })
 
     expect(html).toContain('Expand calendar')
     expect(html).toContain('ds-runtime-wake-stage')
-    expect(html).toContain('ds-kun-state-sleep')
+    expect(html).toContain('ds-Rcode-state-sleep')
     expect(html).not.toContain('Keep the canvas clear')
-    expect(html).not.toContain('Daily Kun usage calendar')
+    expect(html).not.toContain('Daily Rcode usage calendar')
   })
 
   it('uses turns as the intensity fallback when token totals are unavailable', () => {

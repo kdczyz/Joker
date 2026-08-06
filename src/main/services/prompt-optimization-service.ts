@@ -3,8 +3,8 @@ import {
   getModelProviderProfile,
   modelEndpointPath,
   modelProviderModelProfile,
-  resolveKunPromptOptimizationPrompt,
-  resolveKunRuntimeSettings,
+  resolveRcodePromptOptimizationPrompt,
+  resolveRcodeRuntimeSettings,
   resolveModelEndpointFormat,
   resolveModelProviderProxyUrl,
   isCustomModelEndpointFormat,
@@ -12,7 +12,7 @@ import {
   type ModelEndpointFormat,
   type ModelProviderProfileV1
 } from '../../shared/app-settings'
-import type { PromptOptimizationResult } from '../../shared/kun-gui-api'
+import type { PromptOptimizationResult } from '../../shared/Rcode-gui-api'
 import { fetchWithOptionalProxy } from '../proxy-fetch'
 import {
   codexResponsesLiteInput,
@@ -52,7 +52,7 @@ function firstProviderModel(provider: ModelProviderProfileV1): string {
 }
 
 function defaultPromptOptimizationModel(
-  runtime: ReturnType<typeof resolveKunRuntimeSettings>,
+  runtime: ReturnType<typeof resolveRcodeRuntimeSettings>,
   provider: ModelProviderProfileV1
 ): string {
   const smallModel = runtime.smallModel?.trim() ?? ''
@@ -76,7 +76,7 @@ function effectivePromptOptimizationModel(settings: AppSettingsV1): {
   systemPrompt: string
   timeoutMs: number
 } {
-  const runtime = resolveKunRuntimeSettings(settings)
+  const runtime = resolveRcodeRuntimeSettings(settings)
   const promptOptimization = runtime.promptOptimization
   const providerId = promptOptimization.providerId.trim() || runtime.providerId
   const provider = getModelProviderProfile(settings, providerId)
@@ -90,7 +90,7 @@ function effectivePromptOptimizationModel(settings: AppSettingsV1): {
     baseUrl: provider.baseUrl.trim() || runtime.baseUrl.trim() || DEFAULT_DEEPSEEK_BASE_URL,
     endpointFormat,
     responsesMode: profile?.responsesMode,
-    systemPrompt: resolveKunPromptOptimizationPrompt(runtime),
+    systemPrompt: resolveRcodePromptOptimizationPrompt(runtime),
     timeoutMs: promptOptimization.timeoutMs
   }
 }
@@ -216,7 +216,7 @@ export async function optimizePrompt(
   const trimmed = sourceText.trim()
   if (!trimmed) return { ok: false, message: 'Prompt text is empty.' }
   const modelSettings = effectivePromptOptimizationModel(settings)
-  if (!resolveKunRuntimeSettings(settings).promptOptimization.enabled) {
+  if (!resolveRcodeRuntimeSettings(settings).promptOptimization.enabled) {
     return { ok: false, message: 'Prompt optimization is disabled.' }
   }
   if (!modelSettings.apiKey) {

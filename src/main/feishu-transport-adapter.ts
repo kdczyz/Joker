@@ -189,7 +189,7 @@ export class FeishuTransportAdapter {
           appSecret,
           domain: domain === 'lark' ? Domain.Lark : Domain.Feishu,
           loggerLevel: LoggerLevel.warn,
-          source: 'kun',
+          source: 'Rcode',
           transport: 'websocket',
           policy: { dmMode: 'open', requireMention: true, respondToMentionAll: true },
           ...(allowedFileDirs.length > 0 ? { outbound: { allowedFileDirs } } : {})

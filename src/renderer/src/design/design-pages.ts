@@ -194,7 +194,7 @@ export function buildDesignPlanPrompt(options: {
   const designTarget = normalizeDesignTarget(options.designContext?.designTarget)
   const targetLabel = designTarget === 'app' ? 'mobile app prototype' : 'web design'
   const lines = [
-    `Kun is asking you to PLAN a multi-page ${targetLabel} — break the idea into the distinct pages/screens it needs.`,
+    `Rcode is asking you to PLAN a multi-page ${targetLabel} — break the idea into the distinct pages/screens it needs.`,
     `Workspace: ${options.workspaceRoot}`,
     '',
     'How to respond:',

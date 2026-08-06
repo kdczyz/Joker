@@ -1,7 +1,7 @@
 import {
   DEFAULT_SCHEDULE_INTERNAL_PORT,
   DEFAULT_SCHEDULE_MODEL,
-  MIN_KUN_LOCAL_PORT,
+  MIN_RCODE_LOCAL_PORT,
   type ScheduleSettingsPatchV1,
   type ScheduleSettingsV1,
   type ScheduledTaskV1
@@ -24,7 +24,7 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 
 function normalizeScheduleInternalPort(value: unknown, fallback: number): number {
   if (value === 8788) return DEFAULT_SCHEDULE_INTERNAL_PORT
-  return normalizePositiveInteger(value, fallback, MIN_KUN_LOCAL_PORT, 65_535)
+  return normalizePositiveInteger(value, fallback, MIN_RCODE_LOCAL_PORT, 65_535)
 }
 
 export function normalizeScheduledTask(

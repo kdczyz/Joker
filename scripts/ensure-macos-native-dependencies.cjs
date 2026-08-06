@@ -101,7 +101,7 @@ function ensureMacosNativeDependencies({
     canvas: installedPackageVersion(root, '@napi-rs/canvas')
   }
   const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm'
-  const stagingRoot = mkdtempSync(join(tmpdir(), `kun-macos-native-${arch}-`))
+  const stagingRoot = mkdtempSync(join(tmpdir(), `Rcode-macos-native-${arch}-`))
   try {
     execute(npm, nativeInstallArguments(arch, versions), {
       cwd: stagingRoot,

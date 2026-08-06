@@ -29,7 +29,7 @@ describe('ProtectedRendererSurface', () => {
     }))
     vi.stubGlobal('window', {
       sessionStorage: memoryStorage(),
-      kunGui: { extensionSyncHostContentScripts, logError: vi.fn() }
+      RcodeGui: { extensionSyncHostContentScripts, logError: vi.fn() }
     })
     let renderer: ReactTestRenderer
     await act(async () => {
@@ -53,7 +53,7 @@ describe('ProtectedRendererSurface', () => {
   it('mounts credential children only after Main reports a clean protected document', async () => {
     vi.stubGlobal('window', {
       sessionStorage: memoryStorage(),
-      kunGui: {
+      RcodeGui: {
         extensionSyncHostContentScripts: vi.fn(async () => ({
           ok: false as const,
           code: 'EXTENSION_PROTECTED_SURFACE_DENIED',

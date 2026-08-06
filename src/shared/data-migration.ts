@@ -364,7 +364,7 @@ export const DataMigrationProgressSchema = z.object({
 export type DataMigrationProgress = z.infer<typeof DataMigrationProgressSchema>
 
 export const DATA_MIGRATION_ERROR_CODES = [
-  'PACKAGE_NOT_KUNPACK',
+  'PACKAGE_NOT_RCODEPACK',
   'PACKAGE_PASSWORD_REQUIRED',
   'PACKAGE_PASSWORD_INVALID',
   'PACKAGE_INTEGRITY_FAILED',
@@ -580,9 +580,9 @@ export const DATA_MIGRATION_HARD_EXCLUSION_RULES: readonly MigrationPathRule[] =
   { id: 'local-models', scopes: ['runtime', 'profile'], kind: 'segment', value: 'models' },
   { id: 'downloaded-binaries', scopes: ['runtime', 'profile'], kind: 'segment', value: 'agent-sdk' },
   { id: 'opaque-extension-data', scopes: ['runtime', 'profile'], kind: 'segment', value: 'extension-data' },
-  { id: 'migration-staging', scopes: ['workspace', 'runtime', 'profile'], kind: 'segment', value: '.kun-migration-staging' },
-  { id: 'migration-backup', scopes: ['workspace', 'runtime', 'profile'], kind: 'segment', value: '.kun-migration-backup' },
-  { id: 'migration-temporary', scopes: ['workspace', 'runtime', 'profile'], kind: 'suffix', value: '.kunpack.tmp' }
+  { id: 'migration-staging', scopes: ['workspace', 'runtime', 'profile'], kind: 'segment', value: '.Rcode-migration-staging' },
+  { id: 'migration-backup', scopes: ['workspace', 'runtime', 'profile'], kind: 'segment', value: '.Rcode-migration-backup' },
+  { id: 'migration-temporary', scopes: ['workspace', 'runtime', 'profile'], kind: 'suffix', value: '.Rcodepack.tmp' }
 ])
 
 export const DATA_MIGRATION_SMALLER_PRESET_RULES: readonly MigrationPathRule[] = Object.freeze([
@@ -609,7 +609,7 @@ const SENSITIVE_BASENAME_RULES: readonly { id: string; pattern: RegExp }[] = Obj
   { id: 'credential-json', pattern: /^(?:credentials?|service-account).+\.json$/i }
 ])
 
-const PORTABLE_ARTIFACT_SEGMENTS = new Set(['.kun-design', '.kunsdd'])
+const PORTABLE_ARTIFACT_SEGMENTS = new Set(['.Rcode-design', '.Rcodesdd'])
 
 export function classifyDataMigrationPath(input: {
   path: string

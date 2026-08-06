@@ -6,7 +6,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -34,13 +34,13 @@ function createSettings(patch: Partial<AppSettingsV1['write']['inlineCompletion'
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
+      Rcode: {
+        ...defaultRcodeRuntimeSettings(),
         apiKey: 'sk-test'
       }
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: {
       enabled: true,
       retentionDays: 2
@@ -155,7 +155,7 @@ describe('requestWriteInlineCompletion', () => {
       suffix: ' a test.',
       max_tokens: 64
     })
-    expect(body.prompt).toContain('Kun inline completion')
+    expect(body.prompt).toContain('Rcode inline completion')
     expect(body.prompt).toContain('Return only the text to insert at the cursor')
     expect(body.prompt).not.toContain('<<<SHORT')
     expect(body.prompt).toContain('<<<PREFIX')
@@ -224,7 +224,7 @@ describe('requestWriteInlineCompletion', () => {
     const fetchMock = vi.fn()
     vi.stubGlobal('fetch', fetchMock)
     const settings = createSettings()
-    settings.agents.kun.apiKey = ''
+    settings.agents.Rcode.apiKey = ''
 
     const result = await requestWriteInlineCompletion(settings, createRequest())
 
@@ -239,7 +239,7 @@ describe('requestWriteInlineCompletion', () => {
       suffix: ' a test.',
       responseChars: 0
     })
-    expect(debugEntries[0].prompt).toContain('Kun inline completion')
+    expect(debugEntries[0].prompt).toContain('Rcode inline completion')
     expect(debugEntries[0].prompt.endsWith('# Draft\n\nThis is')).toBe(true)
   })
 
@@ -268,7 +268,7 @@ describe('requestWriteInlineCompletion', () => {
     })
   })
 
-  it('falls back to the General baseUrl and Kun model when write keeps defaults', async () => {
+  it('falls back to the General baseUrl and Rcode model when write keeps defaults', async () => {
     const fetchMock = vi.fn(async () =>
       new Response(JSON.stringify({ choices: [{ text: ' fallback text' }] }), {
         status: 200,
@@ -279,7 +279,7 @@ describe('requestWriteInlineCompletion', () => {
 
     const settings = createSettings()
     settings.provider.baseUrl = 'https://general.example/v1'
-    settings.agents.kun.model = 'deepseek-chat'
+    settings.agents.Rcode.model = 'deepseek-chat'
     settings.write.inlineCompletion.baseUrl = 'https://api.deepseek.com/beta'
     settings.write.inlineCompletion.model = 'deepseek-v4-flash'
 
@@ -373,7 +373,7 @@ describe('requestWriteInlineCompletion', () => {
       model: 'deepseek-v4-flash'
     })
     settings.provider.baseUrl = 'https://general.example/v1'
-    settings.agents.kun.model = 'deepseek-chat'
+    settings.agents.Rcode.model = 'deepseek-chat'
 
     const result = await requestWriteInlineCompletion(settings, {
       ...createRequest(),
@@ -716,7 +716,7 @@ describe('requestWriteInlineCompletion', () => {
     const request = createRequest()
 
     const prompt = buildWriteInlineCompletionPrompt(request, null)
-    expect(prompt).toContain('Kun inline completion')
+    expect(prompt).toContain('Rcode inline completion')
     expect(prompt).toContain('<<<PREFIX')
     expect(prompt).toContain('<<<SUFFIX')
     expect(prompt).not.toContain('<<<SHORT')

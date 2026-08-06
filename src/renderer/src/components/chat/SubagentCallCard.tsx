@@ -4,14 +4,13 @@ import { useTranslation } from 'react-i18next'
 import { Check, ChevronDown, ChevronRight, ExternalLink, Hourglass, Loader2, TriangleAlert } from 'lucide-react'
 import type { ChatBlock, ToolBlock } from '../../agent/types'
 import { useChatStore } from '../../store/chat-store'
-import { AgentKun } from '../subagents/AgentKun'
 
 /**
- * "Kun Crew" — the subagent (`delegate_task`) visualization for the chat
+ * "Rcode Crew" — the subagent (`delegate_task`) visualization for the chat
  * timeline. A single delegation renders as one {@link SubagentCallCard}; sibling
  * delegations of one turn coalesce under a {@link SwarmHeader} (only N >= 2).
  *
- * Three independent visual channels: AgentKun **pose** = role, **motion** =
+ * Three independent visual channels: AgentRcode **pose** = role, **motion** =
  * liveness, **disc ring + status dot** = status. Bound only to fields that
  * exist today (`block.meta.child` + guarded parse of the tool `detail` JSON);
  * every read degrades gracefully so a contract change never blanks the card.
@@ -357,11 +356,11 @@ function AvatarDisc({
   animate: boolean
 }): ReactElement {
   // Failed: keep the pose, freeze motion, tint disc red (reads "stuck", not "asleep").
-  // Queued: AgentKun's disabled (resting) path, grayscale + static.
+  // Queued: resting path, grayscale + static.
   const disabled = status === 'queued'
   const frozen = !animate || status === 'failed' || isTerminal(status)
   const size = compact ? 'h-9 w-9' : 'h-11 w-11'
-  const inner = compact ? 'h-[31px] w-[31px]' : 'h-9 w-9'
+  void disabled
   // Hash-tint for same-pose custom agents — applied to the wrapper gradient only.
   const bg =
     hue !== null && status !== 'failed' && status !== 'done'
@@ -374,7 +373,6 @@ function AvatarDisc({
       }`}
       style={{ background: bg, boxShadow: DISC_RING[status] }}
     >
-      <AgentKun id={poseId} disabled={disabled} className={inner} />
       <StatusDot status={status} />
     </span>
   )
@@ -652,13 +650,6 @@ export function SubagentGroup({
     return <SubagentCallCard block={sorted[0]} tickNow={tickNow} onOpenChildThread={onOpenChildThread} />
   }
 
-  const clusterPoses = sorted.slice(0, 5).map((b) => {
-    const c = readChildMeta(b)
-    const d = parseDelegateDetail(b.kind === 'tool' ? (b as ToolBlock).detail : undefined)
-    return c.childProfile || d.profile || c.childLabel || c.childId || 'custom'
-  })
-  const overflow = sorted.length - clusterPoses.length
-
   const summaryParts: string[] = []
   if (running > 0) summaryParts.push(t('subagentSwarmRunning', { count: running }))
   if (queued > 0) summaryParts.push(t('subagentSwarmQueued', { count: queued }))
@@ -683,28 +674,6 @@ export function SubagentGroup({
           {t('subagentSwarmTitle', { count: sorted.length })}
           {summaryParts.length > 0 ? (
             <span className="font-normal text-ds-muted"> · {summaryParts.join(' · ')}</span>
-          ) : null}
-        </span>
-        <span className="flex shrink-0">
-          {clusterPoses.map((pose, i) => (
-            <span
-              key={`${pose}-${i}`}
-              className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-ds-card"
-              style={{
-                marginLeft: i === 0 ? 0 : -8,
-                background: 'radial-gradient(circle at 50% 36%,#fff,#eef4fb)'
-              }}
-            >
-              <AgentKun id={pose} className="h-5 w-5" />
-            </span>
-          ))}
-          {overflow > 0 ? (
-            <span
-              className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-ds-card bg-ds-card-muted text-[9px] font-semibold text-ds-muted"
-              style={{ marginLeft: -8 }}
-            >
-              +{overflow}
-            </span>
           ) : null}
         </span>
         {collapsed ? (

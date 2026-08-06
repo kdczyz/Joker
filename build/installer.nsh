@@ -54,7 +54,7 @@
   !endif
 !macroend
 
-!macro kunContinueAfterOldUninstallerFailure
+!macro rcodeContinueAfterOldUninstallerFailure
   ${if} $R0 != 0
     DetailPrint "Old ${PRODUCT_NAME} uninstaller returned $R0; removing $INSTDIR directly before overwrite install."
     SetOutPath $TEMP
@@ -65,9 +65,9 @@
 !macroend
 
 !macro customUnInstallCheck
-  !insertmacro kunContinueAfterOldUninstallerFailure
+  !insertmacro rcodeContinueAfterOldUninstallerFailure
 !macroend
 
 !macro customUnInstallCheckCurrentUser
-  !insertmacro kunContinueAfterOldUninstallerFailure
+  !insertmacro rcodeContinueAfterOldUninstallerFailure
 !macroend

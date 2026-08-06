@@ -23,9 +23,9 @@ import {
   JsonSettingsStore,
   devServerHintUrl
 } from './settings-store'
-import kunLogoPng from '../asset/img/kun.png?url'
-import kunMacLogoPng from '../asset/img/kun_mac.png?url'
-import kunTrayPng from '../asset/img/kun_tray.png?url'
+import RcodeLogoPng from '../asset/img/Rcode.png?url'
+import RcodeMacLogoPng from '../asset/img/Rcode_mac.png?url'
+import RcodeTrayPng from '../asset/img/Rcode_tray.png?url'
 import { createAppIcon, pickTrayIcon, prepareTrayIcon } from './app-icon'
 import { buildTrayMenuTemplate, parseTrayThreads, type TrayThreadSummary } from './tray-session-menu'
 import { configureLinuxWaylandImeSwitches } from './app-command-line'
@@ -37,14 +37,14 @@ import {
 import { configureAppIdentity } from './app-identity'
 import { shouldStartHidden, syncLoginItemSettings } from './desktop-behavior'
 import { resolveLogDirectory, resolveNamedPreloadPath, resolvePreloadPath } from './main-paths'
-import { runLegacyKunDataMigration } from './legacy-data-migration'
+import { runLegacyRcodeDataMigration } from './legacy-data-migration'
 import { LegacyProviderSettingsMigrationCoordinator } from './legacy-provider-settings-migration'
 import {
-  applyKunRuntimePatch,
-  kunSettingsEnvelope,
+  applyRcodeRuntimePatch,
+  RcodeSettingsEnvelope,
   getActiveAgentApiKey,
-  getKunRuntimeSettings,
-  mergeKunRuntimeSettings,
+  getRcodeRuntimeSettings,
+  mergeRcodeRuntimeSettings,
   mergeClawSettings,
   mergeWorkflowSettings,
   mergeAppBehaviorSettings,
@@ -53,12 +53,12 @@ import {
   mergeScheduleSettings,
   mergeWriteSettings,
   mergeTerminalSettings,
-  MIN_KUN_LOCAL_PORT,
+  MIN_RCODE_LOCAL_PORT,
   normalizeAppSettings,
   normalizeAppBehaviorSettings,
   normalizeCheckpointCleanupSettings,
   normalizeKeyboardShortcuts,
-  resolveKunRuntimeSettings,
+  resolveRcodeRuntimeSettings,
   resolveTerminalColorMode,
   type AppBehaviorConfigV1,
   type AppSettingsPatch,
@@ -66,28 +66,28 @@ import {
   type WindowCloseAction
 } from '../shared/app-settings'
 import { parseRuntimeErrorBody, runtimeErrorToError, type RuntimeErrorCode } from '../shared/runtime-error'
+import type { TrayActionPayload } from '../shared/Rcode-gui-api'
 import type { GuiUpdateState } from '../shared/gui-update'
-import type { TrayActionPayload } from '../shared/kun-gui-api'
 import { isAllowedDevPreviewUrl } from '../shared/dev-preview-url'
 import { isAuthorizedPrototypeFileUrl } from './services/prototype-embed-registry'
 import { fetchUpstreamModelIds } from './upstream-models'
 import {
-  kunRuntimeAdapter,
+  RcodeRuntimeAdapter,
   getRuntimeBaseUrlForSettings,
   runtimeAuthHeaders,
   runtimeRequestViaHost,
   type RuntimeRequestInit
-} from './runtime/kun-adapter'
+} from './runtime/Rcode-adapter'
 import { waitForRuntimeTurnsIdle } from './runtime/managed-runtime-idle'
 import {
-  resolveKunDataDir,
-  setKunUnexpectedExitHandler,
-  syncGuiManagedKunConfig,
-  waitForKunStartupSettled,
-  type KunUnexpectedExitInfo
-} from './kun-process'
+  resolveRcodeDataDir,
+  setRcodeUnexpectedExitHandler,
+  syncGuiManagedRcodeConfig,
+  waitForRcodeStartupSettled,
+  type RcodeUnexpectedExitInfo
+} from './Rcode-process'
 import { expandHomePath } from './settings-store'
-import { KunRuntimeSupervisor, type KunRuntimeStatus } from './kun-runtime-supervisor'
+import { RcodeRuntimeSupervisor, type RcodeRuntimeStatus } from './Rcode-runtime-supervisor'
 import { configureLogger, logError, logInfo, logWarn, pruneOnStartup } from './logger'
 import { cleanupUnusedGitCheckpointsIfDue } from './services/git-checkpoint-service'
 import { resolveMainWindowCloseDecision } from './window-close-behavior'
@@ -104,7 +104,7 @@ import { createScheduleRuntime, type ScheduleRuntime } from './schedule-runtime'
 import { createWorkflowRuntime, type WorkflowRuntime } from './workflow-runtime'
 import { runClawScheduleMcpServerFromArgv } from './claw-schedule-mcp-server'
 import {
-  resolveKunMcpJsonPath,
+  resolveRcodeMcpJsonPath,
   syncClawScheduleMcpConfig,
   type ClawScheduleMcpLaunchConfig
 } from './claw-schedule-mcp-config'
@@ -123,6 +123,7 @@ import {
   startWeixinInstallQrcode
 } from './claw-platform-install'
 import { registerRuntimeSseIpc } from './runtime-sse-ipc'
+import { registerRemoteAgentIpc } from './remote-agent-ipc'
 import { registerTerminalPtyIpc } from './terminal/terminal-pty-ipc'
 import {
   configureWeixinBridgeRuntimeContextProvider,
@@ -134,18 +135,18 @@ import {
 import { webhookUrl } from './claw-runtime-helpers'
 import { createTelegramRuntime, type TelegramRuntime, verifyTelegramBotToken } from './telegram-runtime'
 import { shutdownLocalWhisperService } from './services/local-whisper-service'
-import { KunRuntimeHealthMonitor } from './runtime/kun-runtime-health-monitor'
+import { RcodeRuntimeHealthMonitor } from './runtime/Rcode-runtime-health-monitor'
 import {
   buildManagedRuntimeHotApplyBody,
   classifyManagedRuntimeHotApplyResponse
-} from './runtime/kun-runtime-config-service'
+} from './runtime/Rcode-runtime-config-service'
 import { ManagedRuntimeShutdownCoordinator } from './runtime/managed-runtime-shutdown-coordinator'
 import {
-  registerKunExtensionProtocol,
+  registerRcodeExtensionProtocol,
 } from './extensions/extension-resource-protocol'
 import {
   ExtensionMediaProtocolRegistry,
-  registerKunExtensionPlatformSchemesAsPrivileged
+  registerRcodeExtensionPlatformSchemesAsPrivileged
 } from './extensions/extension-media-protocol'
 import { ExtensionDescriptorResolver } from './extensions/extension-descriptor-resolver'
 import { ExtensionViewSessionRegistry } from './extensions/extension-view-sessions'
@@ -168,13 +169,13 @@ import {
 } from './ipc/register-extension-ipc-handlers'
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
-registerKunExtensionPlatformSchemesAsPrivileged(protocol)
-// 品牌升级为 Kun 后仍保留旧 AppUserModelId:它必须和 electron-builder
+registerRcodeExtensionPlatformSchemesAsPrivileged(protocol)
+// 品牌升级为 Rcode 后仍保留旧 AppUserModelId:它必须和 electron-builder
 // 的 appId 一致才能让 Windows 通知 / 任务栏分组在升级前后连续,而
 // appId 因为 NSIS 升级 GUID 与 macOS 更新签名校验的原因永远不改。
 const APP_USER_MODEL_ID = 'com.xingyuzhong.deepseekgui'
 const startupTraceEnabled =
-  process.env.KUN_STARTUP_TRACE === '1' || process.env.DEEPSEEK_GUI_STARTUP_TRACE === '1'
+  process.env.RCODE_STARTUP_TRACE === '1' || process.env.DEEPSEEK_GUI_STARTUP_TRACE === '1'
 const startupTraceStart = Date.now()
 
 function traceStartup(label: string, detail?: unknown): void {
@@ -251,10 +252,10 @@ configureAppIdentity()
 // 紧跟在身份设置之后、requestSingleInstanceLock() 之前做旧数据迁移:
 // 单实例锁文件就放在 userData 里,必须先把目录定下来。rename 失败
 // (典型场景:老版本还在运行)时退回旧目录,功能不受影响,下次再迁。
-const legacyMigration = runLegacyKunDataMigration({
+const legacyMigration = runLegacyRcodeDataMigration({
   userDataPath: app.getPath('userData'),
   homeDir: homedir(),
-  log: (message, detail) => console.warn(`[kun-gui] ${message}`, detail ?? '')
+  log: (message, detail) => console.warn(`[Rcode-gui] ${message}`, detail ?? '')
 })
 if (legacyMigration.userData.usedLegacyFallback) {
   app.setPath('userData', legacyMigration.userData.userDataPath)
@@ -312,14 +313,10 @@ function isAppQuitInProgress(): boolean {
   return runtimeShutdown.isQuitInProgress
 }
 
-function setUpdateInstallQuitting(active: boolean): void {
-  runtimeShutdown.setUpdateInstallQuit(active)
-}
-
 async function runCheckpointCleanupIfDue(settings: AppSettingsV1): Promise<void> {
   if (!settings.checkpointCleanup.enabled) return
-  const runtime = resolveKunRuntimeSettings(settings)
-  const dataDir = resolveKunDataDir(runtime)
+  const runtime = resolveRcodeRuntimeSettings(settings)
+  const dataDir = resolveRcodeDataDir(runtime)
   const intervalDays = settings.checkpointCleanup.intervalDays
   const checkpointsRoot = settings.checkpointCleanup.directory?.trim()
     ? expandHomePath(settings.checkpointCleanup.directory.trim())
@@ -333,7 +330,7 @@ async function runCheckpointCleanupIfDue(settings: AppSettingsV1): Promise<void>
     if (!cleanup.due) return
     const { result } = cleanup
     console.info(
-      `[kun-gui] git checkpoint cleanup scanned=${result.scanned} deleted=${result.deleted} kept=${result.kept} failed=${result.failed}`
+      `[Rcode-gui] git checkpoint cleanup scanned=${result.scanned} deleted=${result.deleted} kept=${result.kept} failed=${result.failed}`
     )
     if (result.failed > 0) {
       logWarn('git-checkpoint-cleanup', 'failed to delete some unused checkpoints', {
@@ -369,11 +366,15 @@ const runtimeShutdown = new ManagedRuntimeShutdownCoordinator(async () => {
   ])
   await stopWeixinBridgeRuntime()
   await shutdownLocalWhisperService()
-  await kunRuntimeAdapter.stopAndWait()
+  await RcodeRuntimeAdapter.stopAndWait()
 })
 
 function stopManagedRuntimesForQuit(): Promise<void> {
   return runtimeShutdown.stopForQuit()
+}
+
+function setUpdateInstallQuitting(active: boolean): void {
+  runtimeShutdown.setUpdateInstallQuit(active)
 }
 
 function stopManagedRuntimes(): Promise<void> {
@@ -418,7 +419,6 @@ async function readGuiUpdateState(): Promise<GuiUpdateState> {
   }
 }
 
-
 function installDevPreviewWebviewGuards(options: {
   viewProtocols: ExtensionViewProtocolRegistry
 }): void {
@@ -441,9 +441,9 @@ function installDevPreviewWebviewGuards(options: {
 }
 
 
-const appIconSource = process.platform === 'win32' ? kunMacLogoPng : kunLogoPng
+const appIconSource = process.platform === 'win32' ? RcodeMacLogoPng : RcodeLogoPng
 const appIcon = createAppIcon(appIconSource)
-const trayIcon = createAppIcon(kunTrayPng)
+const trayIcon = createAppIcon(RcodeTrayPng)
 traceStartup('app icon loaded', { source: appIconSource.startsWith('data:') ? 'data-url' : 'path' })
 const gotSingleInstanceLock = runningClawScheduleMcpServer || app.requestSingleInstanceLock()
 traceStartup('single instance lock checked', {
@@ -464,7 +464,7 @@ function windowCloseLabels(locale: AppSettingsV1['locale']): {
     return {
       title: '关闭窗口',
       message: '关闭窗口时要怎么处理？',
-      detail: '选择最小化到托盘时，Kun 会继续在后台运行；选择退出应用会结束后台服务。',
+      detail: '选择最小化到托盘时，Rcode 会继续在后台运行；选择退出应用会结束后台服务。',
       minimizeToTray: '最小化到托盘',
       quit: '退出应用',
       cancel: '取消',
@@ -473,8 +473,8 @@ function windowCloseLabels(locale: AppSettingsV1['locale']): {
   }
   return {
     title: 'Close window',
-    message: 'What should Kun do when this window closes?',
-    detail: 'Minimize to tray keeps Kun running in the background. Quit app stops the background service.',
+    message: 'What should Rcode do when this window closes?',
+    detail: 'Minimize to tray keeps Rcode running in the background. Quit app stops the background service.',
     minimizeToTray: 'Minimize to tray',
     quit: 'Quit app',
     cancel: 'Cancel',
@@ -606,7 +606,7 @@ function syncTray(settings: AppSettingsV1): void {
     tray.on('right-click', showTrayMenu)
   }
 
-  tray.setToolTip('Kun')
+  tray.setToolTip('Rcode')
   trayMenu = createTrayMenu(settings, [])
   tray.setContextMenu(null)
 }
@@ -651,7 +651,7 @@ async function promptWindowCloseAction(window: BrowserWindow): Promise<void> {
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    console.warn('[kun-gui] failed to handle close-window prompt:', error)
+    console.warn('[Rcode-gui] failed to handle close-window prompt:', error)
     logWarn('desktop-behavior', 'Failed to handle close-window prompt.', { message })
   } finally {
     closeWindowPromptOpen = false
@@ -696,7 +696,7 @@ async function showTurnCompleteNotification(
     return { ok: true, shown: false, reason: 'unsupported' }
   }
 
-  const title = normalizeNotificationText(payload.title, 'Kun', 80)
+  const title = normalizeNotificationText(payload.title, 'Rcode', 80)
   const body = normalizeNotificationText(payload.body, 'Conversation complete.', 180)
 
   try {
@@ -759,7 +759,7 @@ async function probeThreadApi(settings: AppSettingsV1): Promise<
   }
 }
 
-const kunRuntimeHealthMonitor = new KunRuntimeHealthMonitor<AppSettingsV1>({
+const runtimeHealthMonitor = new RcodeRuntimeHealthMonitor<AppSettingsV1>({
   runtimeBaseUrl: getRuntimeBaseUrlForSettings,
   runtimeHeaders: runtimeAuthHeaders,
   warn: (source, message) => logWarn(source, message)
@@ -788,16 +788,16 @@ async function sleepWithAbort(ms: number, signal: AbortSignal): Promise<void> {
  * slow-but-alive runtime would cost the user their in-flight turn (#621).
  */
 const RUNTIME_HUNG_CONFIRM_MS = 10_000
-const runtimeSupervisor = new KunRuntimeSupervisor<AppSettingsV1>({
+const runtimeSupervisor = new RcodeRuntimeSupervisor<AppSettingsV1>({
   deps: {
     loadSettings: () => store.load(),
     canAutoRestart: (settings) => Boolean(
-      resolveConfiguredApiKey(settings) && getKunRuntimeSettings(settings).autoStart
+      resolveConfiguredApiKey(settings) && getRcodeRuntimeSettings(settings).autoStart
     ),
     ensureRuntime: (settings) => ensureRuntime(settings),
     restartRuntime: (settings) => restartRuntime(settings),
-    checkHealth: (settings, timeoutMs) => kunRuntimeHealthMonitor.waitForHealthy(settings, timeoutMs),
-    isChildRunning: () => kunRuntimeAdapter.isChildRunning(),
+    checkHealth: (settings, timeoutMs) => runtimeHealthMonitor.waitForHealthy(settings, timeoutMs),
+    isChildRunning: () => RcodeRuntimeAdapter.isChildRunning(),
     isStopped: () => runtimeShutdown.isStoppedForQuit || isAppQuitInProgress(),
     publish: (full) => {
       logWarn('runtime-status', `${full.state} (${full.source})${full.message ? `: ${full.message}` : ''}`)
@@ -810,7 +810,7 @@ const runtimeSupervisor = new KunRuntimeSupervisor<AppSettingsV1>({
   }
 })
 
-function publishRuntimeStatus(status: Omit<KunRuntimeStatus, 'at'>): void {
+function publishRuntimeStatus(status: Omit<RcodeRuntimeStatus, 'at'>): void {
   runtimeSupervisor.publish(status)
 }
 
@@ -819,7 +819,7 @@ function noteRuntimeHealthy(source: string): void {
   runtimeSupervisor.noteHealthy(source)
 }
 
-function handleUnexpectedKunExit(info: KunUnexpectedExitInfo): void {
+function handleUnexpectedRcodeExit(info: RcodeUnexpectedExitInfo): void {
   runtimeSupervisor.handleUnexpectedExit(info)
 }
 
@@ -854,7 +854,7 @@ function queueRuntimeSettingsApply(prev: AppSettingsV1, next: AppSettingsV1): vo
       }
     },
     (error: unknown) => {
-      logWarn('settings-apply', 'Failed to apply Kun runtime settings in background', {
+      logWarn('settings-apply', 'Failed to apply Rcode runtime settings in background', {
         message: error instanceof Error ? error.message : String(error)
       })
     }
@@ -872,7 +872,7 @@ function queueRuntimeMcpConfigApply(settings: AppSettingsV1): void {
       }
     },
     (error: unknown) => {
-      logWarn('mcp-config', 'Failed to apply Kun MCP config change in background', {
+      logWarn('mcp-config', 'Failed to apply Rcode MCP config change in background', {
         message: error instanceof Error ? error.message : String(error)
       })
     }
@@ -885,13 +885,13 @@ async function waitForQueuedRuntimeSettingsApply(): Promise<void> {
 
 /**
  * Build a stable fingerprint of the settings that affect the
- * Kun runtime so that `ensureRuntime` can debounce on real
+ * Rcode runtime so that `ensureRuntime` can debounce on real
  * state instead of on a single in-flight promise. Without this,
  * a fresh call that arrives while a failing ensure is still pending
  * would re-throw the old error.
  */
 function runtimeFingerprint(settings: AppSettingsV1): string {
-  return stableSettingsStringify(resolveKunRuntimeSettings(settings))
+  return stableSettingsStringify(resolveRcodeRuntimeSettings(settings))
 }
 
 async function ensureRuntime(settings: AppSettingsV1): Promise<AppSettingsV1> {
@@ -908,22 +908,22 @@ async function ensureRuntime(settings: AppSettingsV1): Promise<AppSettingsV1> {
 
 async function ensureRuntimeOnce(settings: AppSettingsV1): Promise<AppSettingsV1> {
   await waitForQueuedRuntimeSettingsApply()
-  return ensureKunRuntime(settings)
+  return ensureRcodeRuntime(settings)
 }
 
-async function resolveManagedKunLaunchSettings(
+async function resolveManagedRcodeLaunchSettings(
   settings: AppSettingsV1,
   source: string
 ): Promise<AppSettingsV1> {
-  const tokenResult = await ensureManagedKunRuntimeToken(settings, source)
+  const tokenResult = await ensureManagedRcodeRuntimeToken(settings, source)
   const launchSettings = tokenResult.settings
-  const runtime = getKunRuntimeSettings(launchSettings)
-  const resolved = await kunRuntimeAdapter.resolveAvailablePort(runtime.port)
+  const runtime = getRcodeRuntimeSettings(launchSettings)
+  const resolved = await RcodeRuntimeAdapter.resolveAvailablePort(runtime.port)
   if (!resolved.changed) return launchSettings
 
-  const next = await store.patch({ agents: { kun: { port: resolved.port } } })
+  const next = await store.patch({ agents: { Rcode: { port: resolved.port } } })
   runtimeSupervisor.noteLatest(next)
-  logWarn(source, `Kun port ${runtime.port} is unavailable; using ${resolved.port} for the managed runtime`, {
+  logWarn(source, `Rcode port ${runtime.port} is unavailable; using ${resolved.port} for the managed runtime`, {
     previousPort: runtime.port,
     port: resolved.port,
     message: resolved.message
@@ -931,39 +931,39 @@ async function resolveManagedKunLaunchSettings(
   return next
 }
 
-function generateKunRuntimeToken(): string {
+function generateRcodeRuntimeToken(): string {
   return randomBytes(32).toString('base64url')
 }
 
-async function ensureManagedKunRuntimeToken(
+async function ensureManagedRcodeRuntimeToken(
   settings: AppSettingsV1,
   source: string
 ): Promise<{ settings: AppSettingsV1; generated: boolean }> {
-  const runtime = getKunRuntimeSettings(settings)
+  const runtime = getRcodeRuntimeSettings(settings)
   if (runtime.runtimeToken.trim()) {
     return { settings, generated: false }
   }
 
   const next = await store.patch({
-    agents: { kun: { runtimeToken: generateKunRuntimeToken() } }
+    agents: { Rcode: { runtimeToken: generateRcodeRuntimeToken() } }
   })
   runtimeSupervisor.noteLatest(next)
-  logWarn(source, 'Generated a runtime token for the managed Kun runtime because none was configured.')
+  logWarn(source, 'Generated a runtime token for the managed Rcode runtime because none was configured.')
   return { settings: next, generated: true }
 }
 
-async function ensureKunRuntime(settings: AppSettingsV1): Promise<AppSettingsV1> {
-  const tokenResult = await ensureManagedKunRuntimeToken(settings, 'runtime-start')
+async function ensureRcodeRuntime(settings: AppSettingsV1): Promise<AppSettingsV1> {
+  const tokenResult = await ensureManagedRcodeRuntimeToken(settings, 'runtime-start')
   const currentSettings = tokenResult.settings
-  if (tokenResult.generated && kunRuntimeAdapter.isChildRunning()) {
-    logWarn('runtime-start', 'Restarting managed Kun to apply the generated runtime token.')
-    await kunRuntimeAdapter.stopAndWait()
+  if (tokenResult.generated && RcodeRuntimeAdapter.isChildRunning()) {
+    logWarn('runtime-start', 'Restarting managed Rcode to apply the generated runtime token.')
+    await RcodeRuntimeAdapter.stopAndWait()
   }
 
-  const runtime = getKunRuntimeSettings(currentSettings)
+  const runtime = getRcodeRuntimeSettings(currentSettings)
   const hasApiKey = Boolean(resolveConfiguredApiKey(currentSettings))
 
-  const healthy = await kunRuntimeHealthMonitor.waitForHealthy(currentSettings, 2_000)
+  const healthy = await runtimeHealthMonitor.waitForHealthy(currentSettings, 2_000)
   if (healthy) {
     const threadApi = await probeThreadApi(currentSettings)
     if (threadApi.ok) {
@@ -976,32 +976,32 @@ async function ensureKunRuntime(settings: AppSettingsV1): Promise<AppSettingsV1>
   if (!hasApiKey) {
     throw runtimeJsonError(
       'missing_api_key',
-      'DeepSeek API Key is required before the GUI can start Kun.'
+      'DeepSeek API Key is required before the GUI can start Rcode.'
     )
   }
   if (!runtime.autoStart) {
     throw runtimeJsonError(
       'runtime_offline',
-      'Kun is offline. Enable automatic startup in Settings, or start `kun serve` manually.'
+      'Rcode is offline. Enable automatic startup in Settings, or start `Rcode serve` manually.'
     )
   }
 
   // A managed child that is alive but failed the probe is hung (blocked event
   // loop) or merely busy — not absent. The launch path below cannot recover it
   // on its own: resolveAvailablePort skips our own child when reclaiming the
-  // port (isCurrentKunChildPid) and startKunChild early-returns while
+  // port (isCurrentRcodeChildPid) and startRcodeChild early-returns while
   // isChildRunning() stays true, so it would pick a fresh port, never spawn,
   // and fail every request until the ~90s watchdog finally force-restarts
-  // (KunAgent/Kun#621). Stop the hung child here so the relaunch spawns a fresh
+  // (kdczyz/Rcode#621). Stop the hung child here so the relaunch spawns a fresh
   // process on the SAME port instead.
-  if (kunRuntimeAdapter.isChildRunning()) {
+  if (RcodeRuntimeAdapter.isChildRunning()) {
     // Never tear down a child still inside its (deliberately generous) startup
     // window — interrupting a slow-but-healthy boot is the #544 restart storm.
-    await waitForKunStartupSettled()
-    if (kunRuntimeAdapter.isChildRunning()) {
+    await waitForRcodeStartupSettled()
+    if (RcodeRuntimeAdapter.isChildRunning()) {
       // Give a merely-busy runtime a real chance to answer before judging it
       // hung, so one long synchronous step does not cost the user their turn.
-      const recovered = await kunRuntimeHealthMonitor.waitForHealthy(currentSettings, RUNTIME_HUNG_CONFIRM_MS)
+      const recovered = await runtimeHealthMonitor.waitForHealthy(currentSettings, RUNTIME_HUNG_CONFIRM_MS)
       if (recovered) {
         const threadApi = await probeThreadApi(currentSettings)
         if (threadApi.ok) {
@@ -1012,25 +1012,25 @@ async function ensureKunRuntime(settings: AppSettingsV1): Promise<AppSettingsV1>
       }
       logWarn(
         'runtime-start',
-        `managed Kun child stopped responding on port ${runtime.port}; restarting it in place`
+        `managed Rcode child stopped responding on port ${runtime.port}; restarting it in place`
       )
-      await kunRuntimeAdapter.stopAndWait()
+      await RcodeRuntimeAdapter.stopAndWait()
     }
   }
 
-  const launchSettings = await resolveManagedKunLaunchSettings(currentSettings, 'runtime-start')
-  const adapter = kunRuntimeAdapter
+  const launchSettings = await resolveManagedRcodeLaunchSettings(currentSettings, 'runtime-start')
+  const adapter = RcodeRuntimeAdapter
   try {
     await adapter.ensureRunning(launchSettings)
   } catch (e) {
-    console.error('[kun-gui] failed to start kun:', e)
+    console.error('[Rcode-gui] failed to start Rcode:', e)
     throw e
   }
-  const started = await kunRuntimeHealthMonitor.waitForHealthy(launchSettings, 20_000)
+  const started = await runtimeHealthMonitor.waitForHealthy(launchSettings, 20_000)
   if (!started) {
     throw runtimeJsonError(
       'runtime_unhealthy',
-      'Kun did not become healthy after launch.'
+      'Rcode did not become healthy after launch.'
     )
   }
 
@@ -1051,38 +1051,38 @@ async function restartRuntimeOnce(settings: AppSettingsV1): Promise<void> {
   // Don't tear down a child that is still completing its startup; wait for it
   // to settle so a restart trigger that races a boot doesn't reset the clock
   // (#544). Resolves immediately when nothing is launching.
-  await waitForKunStartupSettled()
-  const runtime = getKunRuntimeSettings(settings)
+  await waitForRcodeStartupSettled()
+  const runtime = getRcodeRuntimeSettings(settings)
 
   if (!resolveConfiguredApiKey(settings)) {
     throw runtimeJsonError(
       'missing_api_key',
-      'DeepSeek API Key is required before the GUI can start Kun.'
+      'DeepSeek API Key is required before the GUI can start Rcode.'
     )
   }
   if (!runtime.autoStart) {
     throw runtimeJsonError(
       'runtime_offline',
-      'Kun is offline. Enable automatic startup in Settings, or start `kun serve` manually.'
+      'Rcode is offline. Enable automatic startup in Settings, or start `Rcode serve` manually.'
     )
   }
 
-  const adapter = kunRuntimeAdapter
+  const adapter = RcodeRuntimeAdapter
   await adapter.stopAndWait()
-  const launchSettings = await resolveManagedKunLaunchSettings(settings, 'runtime-restart')
+  const launchSettings = await resolveManagedRcodeLaunchSettings(settings, 'runtime-restart')
 
   try {
     await adapter.ensureRunning(launchSettings)
   } catch (e) {
-    console.error('[kun-gui] failed to restart kun:', e)
+    console.error('[Rcode-gui] failed to restart Rcode:', e)
     throw e
   }
 
-  const healthy = await kunRuntimeHealthMonitor.waitForHealthy(launchSettings, 20_000)
+  const healthy = await runtimeHealthMonitor.waitForHealthy(launchSettings, 20_000)
   if (!healthy) {
     throw runtimeJsonError(
       'runtime_unhealthy',
-      'Kun did not become healthy after restart.'
+      'Rcode did not become healthy after restart.'
     )
   }
 
@@ -1113,7 +1113,7 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
       sandbox: true,
       webviewTag: true,
       // Pass the home dir to the sandboxed preload (it can't require node:os).
-      additionalArguments: [`--kun-home-dir=${homedir()}`]
+      additionalArguments: [`--Rcode-home-dir=${homedir()}`]
     }
   })
   mainWindow = window
@@ -1168,7 +1168,7 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
 
   window.webContents.on('preload-error', (_event, preloadPath, error) => {
     const message = error instanceof Error ? error.message : String(error)
-    console.error(`[kun-gui] failed to load preload ${preloadPath}:`, error)
+    console.error(`[Rcode-gui] failed to load preload ${preloadPath}:`, error)
     logError('preload', 'Failed to load preload script', { preloadPath, message })
   })
   window.webContents.on('render-process-gone', (_event, details) => {
@@ -1178,7 +1178,7 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
       exitCode: details.exitCode,
       rendererProcessId
     }
-    console.error('[kun-gui] main renderer process exited unexpectedly:', detail)
+    console.error('[Rcode-gui] main renderer process exited unexpectedly:', detail)
     logError('renderer', 'Main renderer process exited unexpectedly.', detail)
     scheduleRendererRecovery('render-process-gone', detail)
   })
@@ -1195,7 +1195,7 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
         validatedURL,
         frameProcessId
       }
-      console.error('[kun-gui] main renderer failed to load:', detail)
+      console.error('[Rcode-gui] main renderer failed to load:', detail)
       logError('renderer', 'Main renderer failed to load.', detail)
       scheduleRendererRecovery('did-fail-load', detail)
     }
@@ -1254,13 +1254,13 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
 }
 
 /**
- * Reject runtime-affecting values that would persist a config kun can
+ * Reject runtime-affecting values that would persist a config Rcode can
  * never boot with. Runs before the settings patch is written to disk.
  */
 function validateRuntimeSettingsForApply(next: AppSettingsV1): string | null {
-  const runtime = resolveKunRuntimeSettings(next)
-  if (!Number.isInteger(runtime.port) || runtime.port < MIN_KUN_LOCAL_PORT || runtime.port > 65_535) {
-    return `Kun port must be an integer between ${MIN_KUN_LOCAL_PORT} and 65535 (got ${String(runtime.port)})`
+  const runtime = resolveRcodeRuntimeSettings(next)
+  if (!Number.isInteger(runtime.port) || runtime.port < MIN_RCODE_LOCAL_PORT || runtime.port > 65_535) {
+    return `Rcode port must be an integer between ${MIN_RCODE_LOCAL_PORT} and 65535 (got ${String(runtime.port)})`
   }
   const baseUrl = (runtime.baseUrl ?? '').trim()
   if (baseUrl) {
@@ -1280,19 +1280,19 @@ function preserveRuntimeTokenForFullSettingsSnapshot(
   prev: AppSettingsV1,
   partial: AppSettingsPatch
 ): AppSettingsPatch {
-  const incomingKun = partial.agents?.kun
-  if (!incomingKun || !isFullSettingsSnapshotPatch(partial)) return partial
-  if (typeof incomingKun.runtimeToken !== 'string' || incomingKun.runtimeToken.trim()) return partial
+  const incomingRcode = partial.agents?.Rcode
+  if (!incomingRcode || !isFullSettingsSnapshotPatch(partial)) return partial
+  if (typeof incomingRcode.runtimeToken !== 'string' || incomingRcode.runtimeToken.trim()) return partial
 
-  const currentToken = getKunRuntimeSettings(prev).runtimeToken.trim()
+  const currentToken = getRcodeRuntimeSettings(prev).runtimeToken.trim()
   if (!currentToken) return partial
 
   return {
     ...partial,
     agents: {
       ...partial.agents,
-      kun: {
-        ...incomingKun,
+      Rcode: {
+        ...incomingRcode,
         runtimeToken: currentToken
       }
     }
@@ -1302,7 +1302,7 @@ function preserveRuntimeTokenForFullSettingsSnapshot(
 function isFullSettingsSnapshotPatch(partial: AppSettingsPatch): boolean {
   return partial.version !== undefined &&
     partial.provider !== undefined &&
-    partial.agents?.kun !== undefined &&
+    partial.agents?.Rcode !== undefined &&
     partial.log !== undefined &&
     partial.checkpointCleanup !== undefined &&
     partial.notifications !== undefined &&
@@ -1312,8 +1312,7 @@ function isFullSettingsSnapshotPatch(partial: AppSettingsPatch): boolean {
     partial.claw !== undefined &&
     partial.schedule !== undefined &&
     partial.workflow !== undefined &&
-    partial.terminal !== undefined &&
-    partial.guiUpdate !== undefined
+    partial.terminal !== undefined
 }
 
 type ManagedRuntimeHotApplyResult = 'applied' | 'skipped' | 'restart_required'
@@ -1322,13 +1321,13 @@ async function applyManagedRuntimeSettingsHot(
   settings: AppSettingsV1,
   source: string
 ): Promise<ManagedRuntimeHotApplyResult> {
-  await waitForKunStartupSettled()
-  const adapter = kunRuntimeAdapter
+  await waitForRcodeStartupSettled()
+  const adapter = RcodeRuntimeAdapter
   if (!adapter.isChildRunning()) return 'skipped'
 
-  const runtime = resolveKunRuntimeSettings(settings)
-  const dataDir = resolveKunDataDir(runtime)
-  const config = await syncGuiManagedKunConfig(dataDir, runtime, {
+  const runtime = resolveRcodeRuntimeSettings(settings)
+  const dataDir = resolveRcodeDataDir(runtime)
+  const config = await syncGuiManagedRcodeConfig(dataDir, runtime, {
     scheduleMcp: {
       settings,
       launch: getClawScheduleMcpLaunchConfig()
@@ -1354,13 +1353,13 @@ async function applyManagedRuntimeSettingsHot(
       return 'applied'
     }
     if (outcome.result === 'restart_required') {
-      logWarn(source, `Kun hot config apply requested restart: ${outcome.message}`)
+      logWarn(source, `Rcode hot config apply requested restart: ${outcome.message}`)
       return 'restart_required'
     }
     throw new Error(outcome.message)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
-    logWarn(source, `Kun hot config apply failed; falling back to restart: ${message}`)
+    logWarn(source, `Rcode hot config apply failed; falling back to restart: ${message}`)
     return 'restart_required'
   }
 }
@@ -1373,14 +1372,14 @@ async function restartManagedRuntimeForSettingsChange(
   if (!force && !runtimeProcessConfigChanged(prev, next)) return
 
   // Let any in-flight boot launch finish (or fail) before we read liveness
-  // and stop the child. Killing a kun that is still inside its startup window
+  // and stop the child. Killing a Rcode that is still inside its startup window
   // throws away the boot's progress and restarts the clock — the #544 restart
   // storm. Once it settles, the child is either healthy (graceful restart
   // below) or already gone (`wasRunning` is false and we return).
-  await waitForKunStartupSettled()
+  await waitForRcodeStartupSettled()
 
-  const runtime = resolveKunRuntimeSettings(next)
-  const adapter = kunRuntimeAdapter
+  const runtime = resolveRcodeRuntimeSettings(next)
+  const adapter = RcodeRuntimeAdapter
   const wasRunning = adapter.isChildRunning()
 
   if (!wasRunning) return
@@ -1397,7 +1396,7 @@ async function restartManagedRuntimeForSettingsChange(
   if (!nextHasApiKey && Boolean(resolveConfiguredApiKey(prev))) {
     logWarn(
       'settings-apply',
-      'Skipping Kun restart: the new settings resolve to no API key but the running runtime had one — leaving the healthy runtime in place.'
+      'Skipping Rcode restart: the new settings resolve to no API key but the running runtime had one — leaving the healthy runtime in place.'
     )
     return
   }
@@ -1408,24 +1407,24 @@ async function restartManagedRuntimeForSettingsChange(
     publishRuntimeStatus({
       state: 'stopped',
       source: 'settings-apply',
-      message: 'Kun was stopped: the new settings have no API key or auto-start is disabled.'
+      message: 'Rcode was stopped: the new settings have no API key or auto-start is disabled.'
     })
     return
   }
 
   publishRuntimeStatus({ state: 'restarting', source: 'settings-apply' })
   try {
-    const launchSettings = await resolveManagedKunLaunchSettings(next, 'settings-apply')
+    const launchSettings = await resolveManagedRcodeLaunchSettings(next, 'settings-apply')
     await adapter.ensureRunning(launchSettings)
-    const healthy = await kunRuntimeHealthMonitor.waitForHealthy(launchSettings, 20_000)
+    const healthy = await runtimeHealthMonitor.waitForHealthy(launchSettings, 20_000)
     if (!healthy) {
-      throw new Error('Kun did not become healthy after the settings change')
+      throw new Error('Rcode did not become healthy after the settings change')
     }
     noteRuntimeHealthy('settings-apply')
     publishRuntimeStatus({ state: 'running', source: 'settings-apply' })
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
-    logWarn('settings-apply', `Kun restart failed after settings change: ${message}`)
+    logWarn('settings-apply', `Rcode restart failed after settings change: ${message}`)
     await rollbackRuntimeSettingsAfterFailedApply(prev, message)
   }
 }
@@ -1433,18 +1432,18 @@ async function restartManagedRuntimeForSettingsChange(
 /**
  * A settings change took the runtime down and the new config cannot
  * boot. Restore the previous runtime/provider settings on disk (so the
- * next app launch is not bricked either) and bring kun back up on the
+ * next app launch is not bricked either) and bring Rcode back up on the
  * last-known-good configuration.
  */
 async function rollbackRuntimeSettingsAfterFailedApply(
   prev: AppSettingsV1,
   failureMessage: string
 ): Promise<void> {
-  const adapter = kunRuntimeAdapter
+  const adapter = RcodeRuntimeAdapter
   let base: AppSettingsV1 = prev
   try {
     base = await store.patch({
-      agents: { kun: getKunRuntimeSettings(prev) },
+      agents: { Rcode: getRcodeRuntimeSettings(prev) },
       provider: prev.provider
     })
     runtimeSupervisor.noteLatest(base)
@@ -1453,7 +1452,7 @@ async function rollbackRuntimeSettingsAfterFailedApply(
       message: error instanceof Error ? error.message : String(error)
     })
   }
-  if (!resolveConfiguredApiKey(base) || !getKunRuntimeSettings(base).autoStart) {
+  if (!resolveConfiguredApiKey(base) || !getRcodeRuntimeSettings(base).autoStart) {
     publishRuntimeStatus({
       state: 'stopped',
       source: 'settings-apply',
@@ -1463,9 +1462,9 @@ async function rollbackRuntimeSettingsAfterFailedApply(
     return
   }
   try {
-    const launchSettings = await resolveManagedKunLaunchSettings(base, 'settings-apply-rollback')
+    const launchSettings = await resolveManagedRcodeLaunchSettings(base, 'settings-apply-rollback')
     await adapter.ensureRunning(launchSettings)
-    const healthy = await kunRuntimeHealthMonitor.waitForHealthy(launchSettings, 20_000)
+    const healthy = await runtimeHealthMonitor.waitForHealthy(launchSettings, 20_000)
     if (!healthy) {
       throw new Error('previous configuration did not become healthy')
     }
@@ -1474,7 +1473,7 @@ async function rollbackRuntimeSettingsAfterFailedApply(
       state: 'running',
       source: 'settings-apply',
       rolledBack: true,
-      message: `The new settings failed to apply (${failureMessage}); Kun is running on the previous settings again.`
+      message: `The new settings failed to apply (${failureMessage}); Rcode is running on the previous settings again.`
     })
   } catch (error) {
     publishRuntimeStatus({
@@ -1491,10 +1490,10 @@ async function rollbackRuntimeSettingsAfterFailedApply(
 async function restartManagedRuntimeForMcpConfigChange(settings: AppSettingsV1): Promise<void> {
   // See restartManagedRuntimeForSettingsChange: never interrupt an in-flight
   // boot launch (#544 restart storm).
-  await waitForKunStartupSettled()
+  await waitForRcodeStartupSettled()
 
-  const runtime = resolveKunRuntimeSettings(settings)
-  const adapter = kunRuntimeAdapter
+  const runtime = resolveRcodeRuntimeSettings(settings)
+  const adapter = RcodeRuntimeAdapter
   const wasRunning = adapter.isChildRunning()
 
   if (!wasRunning) return
@@ -1504,21 +1503,21 @@ async function restartManagedRuntimeForMcpConfigChange(settings: AppSettingsV1):
 
   publishRuntimeStatus({ state: 'restarting', source: 'mcp-config' })
   try {
-    const launchSettings = await resolveManagedKunLaunchSettings(settings, 'mcp-config')
+    const launchSettings = await resolveManagedRcodeLaunchSettings(settings, 'mcp-config')
     await adapter.ensureRunning(launchSettings)
-    const healthy = await kunRuntimeHealthMonitor.waitForHealthy(launchSettings, 20_000)
+    const healthy = await runtimeHealthMonitor.waitForHealthy(launchSettings, 20_000)
     if (!healthy) {
-      throw new Error('Kun did not become healthy after the MCP config change')
+      throw new Error('Rcode did not become healthy after the MCP config change')
     }
     noteRuntimeHealthy('mcp-config')
     publishRuntimeStatus({ state: 'running', source: 'mcp-config' })
   } catch (e) {
     const message = e instanceof Error ? e.message : String(e)
-    logWarn('mcp-config', `Kun restart failed after MCP config change: ${message}`)
+    logWarn('mcp-config', `Rcode restart failed after MCP config change: ${message}`)
     publishRuntimeStatus({
       state: 'failed',
       source: 'mcp-config',
-      message: `Kun failed to restart after the MCP config change: ${message}. Check the MCP config file, then retry.`
+      message: `Rcode failed to restart after the MCP config change: ${message}. Check the MCP config file, then retry.`
     })
   }
 }
@@ -1527,16 +1526,16 @@ async function waitForManagedRuntimeReadyBeforeStop(
   settings: AppSettingsV1,
   source: string
 ): Promise<void> {
-  const healthy = await kunRuntimeHealthMonitor.waitForHealthy(settings, 20_000)
+  const healthy = await runtimeHealthMonitor.waitForHealthy(settings, 20_000)
   if (!healthy) {
-    logWarn(source, 'Kun did not become healthy before a managed restart; stopping it anyway')
+    logWarn(source, 'Rcode did not become healthy before a managed restart; stopping it anyway')
     return
   }
   const idle = await waitForRuntimeTurnsIdle({ settings })
   if (idle === 'timeout') {
-    logWarn(source, 'Kun still has running turns after waiting; stopping it anyway')
+    logWarn(source, 'Rcode still has running turns after waiting; stopping it anyway')
   } else if (idle === 'unavailable') {
-    logWarn(source, 'Could not verify Kun turn idleness before a managed restart; stopping it anyway')
+    logWarn(source, 'Could not verify Rcode turn idleness before a managed restart; stopping it anyway')
   }
 }
 
@@ -1575,11 +1574,11 @@ app.whenReady().then(async () => {
     )
     if (cleared) traceStartup('development renderer HTTP cache cleared')
   } catch (error) {
-    console.warn('[kun-gui] failed to clear the development renderer HTTP cache:', error)
+    console.warn('[Rcode-gui] failed to clear the development renderer HTTP cache:', error)
   }
 
   if (process.platform === 'darwin') {
-    const macDockIcon = createAppIcon(kunMacLogoPng)
+    const macDockIcon = createAppIcon(RcodeMacLogoPng)
     app.dock?.setIcon(macDockIcon.isEmpty() ? appIcon : macDockIcon)
   }
 
@@ -1594,7 +1593,7 @@ app.whenReady().then(async () => {
     return runtimeRequest(settings, path, { method, body })
   })
   const registerExtensionProtocol = (targetProtocol: typeof protocol): void => {
-    registerKunExtensionProtocol({
+    registerRcodeExtensionProtocol({
       protocol: targetProtocol,
       resolveDescriptor: (extensionId) => extensionDescriptors.resolveResourceDescriptor(extensionId),
       onDenied: ({ extensionId, code }) => {
@@ -1664,7 +1663,7 @@ app.whenReady().then(async () => {
       })
     }
   })
-  setKunUnexpectedExitHandler(handleUnexpectedKunExit)
+  setRcodeUnexpectedExitHandler(handleUnexpectedRcodeExit)
   appBehavior = initial.appBehavior
   syncLoginItemSettings(initial)
   syncTray(initial)
@@ -1734,7 +1733,7 @@ app.whenReady().then(async () => {
     const effectivePartial = preserveRuntimeTokenForFullSettingsSnapshot(prev, partial)
     const { agents: agentsPatch, provider: providerPatch, ...restPatch } = effectivePartial
     const next = normalizeAppSettings({
-      ...applyKunRuntimePatch(prev, agentsPatch?.kun),
+      ...applyRcodeRuntimePatch(prev, agentsPatch?.Rcode),
       ...restPatch,
       provider: mergeModelProviderSettings(prev.provider, providerPatch),
       log: { ...prev.log, ...(effectivePartial.log ?? {}) },
@@ -1823,12 +1822,12 @@ app.whenReady().then(async () => {
     pollFeishuInstall,
     startWeixinInstallQrcode,
     pollWeixinInstall,
-    resolveKunConfigPath: resolveKunMcpJsonPath,
-    onKunMcpConfigWritten: async () => {
+    resolveRcodeConfigPath: resolveRcodeMcpJsonPath,
+    onRcodeMcpConfigWritten: async () => {
       const settings = await store.load()
       queueRuntimeMcpConfigApply(settings)
     },
-    onKunProjectConfigChanged: async () => {
+    onRcodeProjectConfigChanged: async () => {
       const settings = await store.load()
       queueRuntimeMcpConfigApply(settings)
     },
@@ -1858,8 +1857,8 @@ app.whenReady().then(async () => {
     sourceInstallationId: `installation_${createHash('sha256').update(app.getPath('userData')).digest('hex').slice(0, 24)}`,
     sourceAppVersion: app.getVersion(),
     sourceRuntimeVersion: app.getVersion(),
-    featureEnabled: process.env.KUN_DATA_MIGRATION_ENABLED === '1' ||
-      (process.env.KUN_DATA_MIGRATION_ENABLED !== '0' && !app.isPackaged)
+    featureEnabled: process.env.RCODE_DATA_MIGRATION_ENABLED === '1' ||
+      (process.env.RCODE_DATA_MIGRATION_ENABLED !== '0' && !app.isPackaged)
   })
   dataMigrationController.registerIpc()
   const extensionIpcOptions: RegisterExtensionIpcHandlersOptions = {
@@ -1929,10 +1928,12 @@ app.whenReady().then(async () => {
   })
 
   void loadGuiUpdaterModule().catch((error) => {
-    console.warn('[kun-gui updater] failed to initialize on startup:', error)
+    console.warn('[Rcode-gui updater] failed to initialize on startup:', error)
   })
 
   registerRuntimeSseIpc({ ipcMain, store, ensureRuntime, logError })
+
+  registerRemoteAgentIpc({ store, ensureRuntime, getMainWindow: () => mainWindow, logError })
 
   registerTerminalPtyIpc({
     ipcMain,
@@ -1947,17 +1948,17 @@ app.whenReady().then(async () => {
   void loadGuiUpdaterModule()
     .then((module) => module.showPostUpdateReleaseNotes())
     .catch((error) => {
-      console.warn('[kun-gui updater] failed to show post-update release notes:', error)
+      console.warn('[Rcode-gui updater] failed to show post-update release notes:', error)
     })
 
   void pruneOnStartup().catch((err) => {
-    console.warn('[kun-gui] prune logs:', err)
+    console.warn('[Rcode-gui] prune logs:', err)
   })
 
   if (resolveConfiguredApiKey(initial)) {
     setTimeout(() => {
-      void kunRuntimeAdapter.resolveExecutable(initial).catch((err) => {
-        console.warn('[kun-gui] prewarm Kun binary:', err)
+      void RcodeRuntimeAdapter.resolveExecutable(initial).catch((err) => {
+        console.warn('[Rcode-gui] prewarm Rcode binary:', err)
       })
     }, 1500)
   }
@@ -1972,15 +1973,15 @@ app.whenReady().then(async () => {
   })
 }).catch((error) => {
   const message = error instanceof Error ? error.message : String(error)
-  console.error('[kun-gui] startup failed:', error)
-  dialog.showErrorBox('Kun failed to start', message)
+  console.error('[Rcode-gui] startup failed:', error)
+  dialog.showErrorBox('Rcode failed to start', message)
   app.quit()
 })
 }
 
 app.on('window-all-closed', () => {
   void stopManagedRuntimes().catch((error) => {
-    console.warn('[kun-gui] failed to stop Kun runtime:', error)
+    console.warn('[Rcode-gui] failed to stop Rcode runtime:', error)
   })
   if (process.platform !== 'darwin') {
     app.quit()
@@ -1996,7 +1997,7 @@ app.on('before-quit', (event) => {
   event.preventDefault()
   void stopManagedRuntimesForQuit()
     .catch((error) => {
-      console.warn('[kun-gui] failed to stop Kun runtime:', error)
+      console.warn('[Rcode-gui] failed to stop Rcode runtime:', error)
     })
     .finally(() => {
       app.quit()

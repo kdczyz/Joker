@@ -28,7 +28,7 @@ describe('WriteFileTree reveal action', () => {
 
   beforeEach(async () => {
     ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
-    vi.stubGlobal('window', { kunGui: { platform: 'linux' } })
+    vi.stubGlobal('window', { RcodeGui: { platform: 'linux' } })
     onRevealEntry.mockClear()
     await act(async () => {
       renderer = create(createElement(WriteFileTree, {

@@ -45,7 +45,7 @@ function addRect(x: number, y: number, w = 100, h = 80, parentId?: string): stri
 }
 
 function installHtmlArtifact(id = 'screen'): DesignArtifact {
-  const relativePath = `.kun-design/doc/${id}/v1.html`
+  const relativePath = `.Rcode-design/doc/${id}/v1.html`
   const artifact: DesignArtifact = {
     id,
     kind: 'html',
@@ -81,10 +81,10 @@ function installLinkedScreenFactory(): void {
     id: 'board',
     kind: 'canvas',
     title: 'Design board',
-    relativePath: '.kun-design/doc/board/canvas.json',
+    relativePath: '.Rcode-design/doc/board/canvas.json',
     createdAt,
     updatedAt: createdAt,
-    versions: [{ id: 'board-v1', relativePath: '.kun-design/doc/board/canvas.json', createdAt, summary: '' }]
+    versions: [{ id: 'board-v1', relativePath: '.Rcode-design/doc/board/canvas.json', createdAt, summary: '' }]
   }
   const doc: DesignDocument = {
     id: 'doc',
@@ -569,10 +569,10 @@ describe('add-screens', () => {
       id: 'hidden-home',
       kind: 'html',
       title: 'Home',
-      relativePath: '.kun-design/doc/hidden-home/v1.html',
+      relativePath: '.Rcode-design/doc/hidden-home/v1.html',
       createdAt,
       updatedAt: createdAt,
-      versions: [{ id: 'hidden-home-v1', relativePath: '.kun-design/doc/hidden-home/v1.html', createdAt, summary: '' }],
+      versions: [{ id: 'hidden-home-v1', relativePath: '.Rcode-design/doc/hidden-home/v1.html', createdAt, summary: '' }],
       node: { x: 40, y: 60, width: 1280, height: 800, sizeMode: 'auto', boardHidden: true }
     }
     useDesignWorkspaceStore.setState({

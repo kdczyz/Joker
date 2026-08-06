@@ -20,13 +20,13 @@ import { CANVAS_MOTION_VERSION } from '../motion/canvas-motion-types'
 const now = '2026-06-29T00:00:00.000Z'
 
 function artifact(): DesignArtifact {
-  const relativePath = '.kun-design/doc/home/v1.html'
+  const relativePath = '.Rcode-design/doc/home/v1.html'
   return {
     id: 'home',
     kind: 'html',
     title: 'Home',
     relativePath,
-    designMdPath: '.kun-design/doc/home/DESIGN.md',
+    designMdPath: '.Rcode-design/doc/home/DESIGN.md',
     createdAt: now,
     updatedAt: now,
     versions: [{ id: 'home-v1', relativePath, createdAt: now, summary: '' }],
@@ -36,13 +36,13 @@ function artifact(): DesignArtifact {
 }
 
 function svgArtifact(): DesignArtifact {
-  const relativePath = '.kun-design/doc/motion/v1.svg'
+  const relativePath = '.Rcode-design/doc/motion/v1.svg'
   return {
     id: 'motion',
     kind: 'svg',
     title: 'Orbit loader',
     relativePath,
-    designMdPath: '.kun-design/doc/motion/DESIGN.md',
+    designMdPath: '.Rcode-design/doc/motion/DESIGN.md',
     createdAt: now,
     updatedAt: now,
     versions: [{ id: 'motion-v1', relativePath, createdAt: now, summary: 'Motion' }]
@@ -93,7 +93,7 @@ function canvasDocument(): CanvasDocument {
     id: 'asset_logo',
     name: 'Logo',
     parentId: ROOT_SHAPE_ID,
-    imageUrl: '.kun-design/assets/logo.png'
+    imageUrl: '.Rcode-design/assets/logo.png'
   }
   doc.objects[ROOT_SHAPE_ID] = { ...doc.objects[ROOT_SHAPE_ID], children: [frame.id, liveFrame.id, image.id] }
   doc.objects[frame.id] = frame
@@ -130,7 +130,7 @@ const designSystem: DesignSystem = {
 
 describe('design resource surface', () => {
   it('uses the stable resource-surface path', () => {
-    expect(DESIGN_RESOURCE_SURFACE_PATH).toBe('.kun-design/design-resources.json')
+    expect(DESIGN_RESOURCE_SURFACE_PATH).toBe('.Rcode-design/design-resources.json')
   })
 
   it('exports MCP-like board, frame, token, component, and direction resources', () => {
@@ -145,20 +145,20 @@ describe('design resource surface', () => {
 
     expect(surface).toMatchObject({
       version: 1,
-      kind: 'kun.design.resources',
+      kind: 'Rcode.design.resources',
       document: { id: 'doc', title: 'Ops app' },
       counts: { board: 1, frame: 2, asset: 1, token: 1, component: 1, direction: 1, tool: 1, mode: 1 }
     })
     expect(surface.resources.map((resource) => resource.uri)).toEqual([
-      'kun-design://documents/doc/boards/main',
-      'kun-design://documents/doc/frames/frame_home',
-      'kun-design://documents/doc/frames/frame_live',
-      'kun-design://documents/doc/assets/asset_logo',
-      'kun-design://documents/doc/tokens/brand%2Fprimary',
-      'kun-design://documents/doc/components/card',
-      'kun-design://documents/doc/directions/dir_1',
-      'kun-design://documents/doc/modes/design-mode-surface',
-      'kun-design://documents/doc/tools/design-tool-protocol'
+      'Rcode-design://documents/doc/boards/main',
+      'Rcode-design://documents/doc/frames/frame_home',
+      'Rcode-design://documents/doc/frames/frame_live',
+      'Rcode-design://documents/doc/assets/asset_logo',
+      'Rcode-design://documents/doc/tokens/brand%2Fprimary',
+      'Rcode-design://documents/doc/components/card',
+      'Rcode-design://documents/doc/directions/dir_1',
+      'Rcode-design://documents/doc/modes/design-mode-surface',
+      'Rcode-design://documents/doc/tools/design-tool-protocol'
     ])
 
     const board = JSON.parse(surface.resources[0].text)
@@ -184,7 +184,7 @@ describe('design resource surface', () => {
     expect(frame).toMatchObject({
       id: 'frame_home',
       kind: 'html-frame',
-      htmlPath: '.kun-design/doc/home/v1.html',
+      htmlPath: '.Rcode-design/doc/home/v1.html',
       codeBindings: [{ id: 'binding_1', kind: 'component', status: 'active' }]
     })
     expect(liveFrame).toMatchObject({
@@ -199,7 +199,7 @@ describe('design resource surface', () => {
     expect(asset).toMatchObject({
       id: 'asset_logo',
       kind: 'image',
-      path: '.kun-design/assets/logo.png',
+      path: '.Rcode-design/assets/logo.png',
       sourceKind: 'workspace',
       modelReady: true
     })
@@ -216,21 +216,21 @@ describe('design resource surface', () => {
       {
         id: 'home',
         title: 'Home',
-        htmlPath: '.kun-design/doc/home/v1.html',
-        designMdPath: '.kun-design/doc/home/DESIGN.md',
+        htmlPath: '.Rcode-design/doc/home/v1.html',
+        designMdPath: '.Rcode-design/doc/home/DESIGN.md',
         prototypeLinks: [{ targetTitle: 'Settings', targetArtifactId: 'settings', href: '../settings/v1.html' }]
       }
     ])
     expect(modeSurface).toMatchObject({
-      kind: 'kun.design.mode-surface',
+      kind: 'Rcode.design.mode-surface',
       recommendedSurfaceId: 'whiteboard',
       counts: { screenCount: 1, directionCount: 1, activeBindingCount: 1 },
       workflow: {
-        kind: 'kun.design.mode-workflow',
+        kind: 'Rcode.design.mode-workflow',
         recommendedStepId: 'critique-current-direction'
       }
     })
-    expect(toolProtocol.kind).toBe('kun.design.tool-protocol')
+    expect(toolProtocol.kind).toBe('Rcode.design.tool-protocol')
     expect(toolProtocol.tools).toEqual(expect.arrayContaining([
       expect.objectContaining({ id: 'design.plan' }),
       expect.objectContaining({ id: 'design.ops' })
@@ -248,7 +248,7 @@ describe('design resource surface', () => {
     )
 
     expect(content.endsWith('\n')).toBe(true)
-    expect(JSON.parse(content)).toMatchObject({ kind: 'kun.design.resources' })
+    expect(JSON.parse(content)).toMatchObject({ kind: 'Rcode.design.resources' })
   })
 
   it('includes bounded Motion and reduced-motion guidance in board and frame resources', () => {
@@ -322,10 +322,10 @@ describe('design resource surface', () => {
     expect(JSON.parse(resource!.text)).toMatchObject({
       id: 'frame_motion',
       kind: 'svg-frame',
-      artifactPath: '.kun-design/doc/motion/v1.svg',
+      artifactPath: '.Rcode-design/doc/motion/v1.svg',
       artifactKind: 'svg',
-      svgPath: '.kun-design/doc/motion/v1.svg',
-      designMdPath: '.kun-design/doc/motion/DESIGN.md',
+      svgPath: '.Rcode-design/doc/motion/v1.svg',
+      designMdPath: '.Rcode-design/doc/motion/DESIGN.md',
       source: { artifactId: 'motion', artifactKind: 'svg' }
     })
   })

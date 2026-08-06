@@ -8,7 +8,7 @@ import {
   type ClawImPlatformCredentialV1,
   type ClawModel
 } from '@shared/app-settings'
-import type { ClawImTelegramConnectErrorCode } from '@shared/kun-gui-api'
+import type { ClawImTelegramConnectErrorCode } from '@shared/Rcode-gui-api'
 import { AdvancedSettingsDisclosure, InlineNoticeView, SettingsCard, SettingRow, Toggle } from './settings-controls'
 import { clawModelSelectOptions } from '../lib/claw-model-options'
 
@@ -164,7 +164,7 @@ function TelegramConnectCard({
     setError('')
     setConnecting(true)
     try {
-      const result = await window.kunGui.connectTelegramBot(
+      const result = await window.RcodeGui.connectTelegramBot(
         trimmedToken,
         allowedChatIds.trim() || undefined
       )

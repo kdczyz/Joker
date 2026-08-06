@@ -11,13 +11,13 @@ import {
 import { basename, dirname, join } from 'node:path'
 
 /**
- * 一次性把 “DeepSeek GUI” 时代的本地数据搬到 Kun 的新命名下。
+ * 一次性把 “DeepSeek GUI” 时代的本地数据搬到 Rcode 的新命名下。
  *
  * 设计约束(都来自“老版本必须无痛升级、还要能回滚”):
  *   1. 整目录 rename 而不是逐文件拷贝 —— userData 里有 Chromium 的
  *      Local Storage / IndexedDB / Partitions,半拷贝状态比不迁移更糟。
  *   2. 旧路径留符号链接(Windows 用 junction,无需管理员权限)。这样:
- *        - 设置 / kun sqlite 里残留的旧绝对路径仍然可以解析;
+ *        - 设置 / Rcode sqlite 里残留的旧绝对路径仍然可以解析;
  *        - 用户回滚到老版本时,老版本透过链接复用同一份数据;
  *        - 老版本和新版本透过同一个 userData 抢同一把单实例锁,
  *          不会出现两个进程同时写一份 sqlite。
@@ -34,12 +34,12 @@ export type MigrationLogger = (message: string, detail?: unknown) => void
 export const LEGACY_USER_DATA_DIR_NAMES = ['DeepSeek GUI', 'deepseek-gui'] as const
 
 export const LEGACY_HOME_DATA_ROOT = '.deepseekgui'
-export const NEW_HOME_DATA_ROOT = '.kun'
+export const NEW_HOME_DATA_ROOT = '.Rcode'
 
 export type HomeDataMigrationMapping = {
-  /** 相对 home 的旧路径段,如 ['.deepseekgui', 'kun'] */
+  /** 相对 home 的旧路径段,如 ['.deepseekgui', 'Rcode'] */
   legacySegments: readonly string[]
-  /** 相对 home 的新路径段,如 ['.kun', 'data'] */
+  /** 相对 home 的新路径段,如 ['.Rcode', 'data'] */
   nextSegments: readonly string[]
 }
 
@@ -49,8 +49,8 @@ export type HomeDataMigrationMapping = {
  * 指向它们的路径也不会被重写。
  */
 export const HOME_DATA_MIGRATION_MAPPINGS: readonly HomeDataMigrationMapping[] = [
-  // kun 运行时数据(sqlite、线程、config.json)。新家叫 data,避免 ~/.kun/kun。
-  { legacySegments: [LEGACY_HOME_DATA_ROOT, 'kun'], nextSegments: [NEW_HOME_DATA_ROOT, 'data'] },
+  // Rcode 运行时数据(sqlite、线程、config.json)。新家叫 data,避免 ~/.Rcode/Rcode。
+  { legacySegments: [LEGACY_HOME_DATA_ROOT, 'Rcode'], nextSegments: [NEW_HOME_DATA_ROOT, 'data'] },
   { legacySegments: [LEGACY_HOME_DATA_ROOT, 'default_workspace'], nextSegments: [NEW_HOME_DATA_ROOT, 'default_workspace'] },
   { legacySegments: [LEGACY_HOME_DATA_ROOT, 'claw'], nextSegments: [NEW_HOME_DATA_ROOT, 'claw'] },
   { legacySegments: [LEGACY_HOME_DATA_ROOT, 'write_workspace'], nextSegments: [NEW_HOME_DATA_ROOT, 'write_workspace'] }
@@ -90,7 +90,7 @@ export type LegacyDataMigrationResult = {
 /** 迁移完成后写进新 userData 的标记文件,只用于排障。 */
 export const USER_DATA_MIGRATION_MARKER = '.migrated-from-deepseek-gui.json'
 
-const SETTINGS_FILE_NAME_NEW = 'kun-settings.json'
+const SETTINGS_FILE_NAME_NEW = 'Rcode-settings.json'
 const SETTINGS_FILE_NAME_LEGACY = 'deepseek-gui-settings.json'
 
 type PathState = 'missing' | 'symlink' | 'dir' | 'other'
@@ -148,7 +148,7 @@ function tryLinkLegacyPath(legacyPath: string, targetPath: string, log: Migratio
 }
 
 export function migrateLegacyUserDataDir(input: {
-  /** electron app.getPath('userData') —— 已经是新名字(…/Kun)。 */
+  /** electron app.getPath('userData') —— 已经是新名字(…/Rcode)。 */
   userDataPath: string
   legacyDirNames?: readonly string[]
   log?: MigrationLogger
@@ -274,7 +274,7 @@ export function migrateLegacyHomeDataDirs(input: {
     }
 
     if (!tryLinkLegacyPath(legacyPath, nextPath, log)) {
-      // 链接建不起来时优先保证旧绝对路径(kun sqlite 里的线程 cwd、
+      // 链接建不起来时优先保证旧绝对路径(Rcode sqlite 里的线程 cwd、
       // 同步出去的 config.json 等)继续有效:把目录搬回去,本机放弃改名。
       try {
         renameSync(nextPath, legacyPath)
@@ -438,7 +438,7 @@ export function rewriteLegacyPathsInSettingsFile(input: {
  * 启动期一次性迁移入口。必须在 requestSingleInstanceLock() 和一切读写
  * userData 的代码之前调用;内部任何失败都被吞掉并降级,绝不抛出。
  */
-export function runLegacyKunDataMigration(input: {
+export function runLegacyRcodeDataMigration(input: {
   /** electron 的 app.getPath('userData'),即新命名目录。 */
   userDataPath: string
   homeDir: string

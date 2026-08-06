@@ -2,16 +2,16 @@
  * Async infographic placeholders.
  *
  * Clicking 生成信息图 inserts a markdown image whose src uses the
- * `kun-pending-infographic:` scheme, so the document itself carries the
+ * `Rcode-pending-infographic:` scheme, so the document itself carries the
  * placeholder position while generation runs in the background. All three
  * render surfaces (rich editor, live preview, split preview) recognize the
  * scheme and draw an animated "painting" canvas; when the IPC call resolves
  * the token is swapped for the real image path (or removed on failure).
  */
 
-export const PENDING_INFOGRAPHIC_PROTOCOL = 'kun-pending-infographic:'
+export const PENDING_INFOGRAPHIC_PROTOCOL = 'Rcode-pending-infographic:'
 
-const PENDING_SRC_PATTERN = /^kun-pending-infographic:\/\/([A-Za-z0-9-]+)$/
+const PENDING_SRC_PATTERN = /^Rcode-pending-infographic:\/\/([A-Za-z0-9-]+)$/
 
 export type PendingInfographicKind = 'infographic' | 'design' | 'prototype'
 
@@ -65,7 +65,7 @@ export function buildPendingInfographicMarkdown(alt: string, src: string): strin
   return `![${alt.replace(/[[\]]/g, '')}](${src})`
 }
 
-/** Parse `![alt](kun-pending-infographic://id)` image markdown. */
+/** Parse `![alt](Rcode-pending-infographic://id)` image markdown. */
 export function parsePendingInfographicImage(
   source: string
 ): { alt: string; id: string; src: string } | null {

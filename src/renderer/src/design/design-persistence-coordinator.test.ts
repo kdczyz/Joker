@@ -34,23 +34,23 @@ describe('design persistence coordinator', () => {
 
     await expect(writeDesignWorkspaceFile({
       workspaceRoot: '/workspace',
-      path: '.kun-design/a.json',
+      path: '.Rcode-design/a.json',
       content: 'a'
     }, resolvedApi)).resolves.toEqual({ ok: false, message: 'disk full' })
     await expect(writeDesignWorkspaceFile({
       workspaceRoot: '/workspace',
-      path: '.kun-design/b.json',
+      path: '.Rcode-design/b.json',
       content: 'b'
     }, thrownApi)).resolves.toEqual({ ok: false, message: 'bridge down' })
 
     expect(failures).toHaveBeenNthCalledWith(1, expect.objectContaining({
       operation: 'write',
-      path: '.kun-design/a.json',
+      path: '.Rcode-design/a.json',
       message: 'disk full'
     }))
     expect(failures).toHaveBeenNthCalledWith(2, expect.objectContaining({
       operation: 'write',
-      path: '.kun-design/b.json',
+      path: '.Rcode-design/b.json',
       message: 'bridge down'
     }))
   })

@@ -4,12 +4,12 @@ import {
   DEFAULT_LOG_RETENTION_DAYS,
   DEFAULT_GUI_UPDATE_CHANNEL,
   DEFAULT_GIT_BRANCH_PREFIX,
-  MIN_KUN_LOCAL_PORT,
-  defaultKunRuntimeSettings,
-  applyKunRuntimePatch,
-  getKunRuntimeSettings,
-  kunSettingsEnvelope,
-  mergeKunRuntimeSettings,
+  MIN_RCODE_LOCAL_PORT,
+  defaultRcodeRuntimeSettings,
+  applyRcodeRuntimePatch,
+  getRcodeRuntimeSettings,
+  RcodeSettingsEnvelope,
+  mergeRcodeRuntimeSettings,
   mergeAppBehaviorSettings,
   mergeClawSettings,
   mergeDesignSettings,
@@ -48,22 +48,22 @@ const SETTINGS_DIFF_NO_CHANGE = Symbol('settings-diff-no-change')
 // to the main-process patch merger. Emit the same explicit clear values the
 // settings controls use so persisted overrides are actually removed.
 const SETTINGS_CLEAR_SENTINELS: Readonly<Record<string, string>> = {
-  'agents.kun.smallModel': '',
-  'agents.kun.smallModelProviderId': '',
-  'agents.kun.titleModel': '',
-  'agents.kun.titleProviderId': '',
-  'agents.kun.summaryModel': '',
-  'agents.kun.summaryProviderId': '',
-  'agents.kun.codeReviewModel': '',
-  'agents.kun.codeReviewProviderId': '',
-  'agents.kun.titleReasoningEffort': 'off',
-  'agents.kun.summaryReasoningEffort': 'off',
-  'agents.kun.codeReviewReasoningEffort': 'off',
-  'agents.kun.contextCompaction.summaryModel': '',
-  'agents.kun.contextCompaction.summaryProviderId': ''
+  'agents.Rcode.smallModel': '',
+  'agents.Rcode.smallModelProviderId': '',
+  'agents.Rcode.titleModel': '',
+  'agents.Rcode.titleProviderId': '',
+  'agents.Rcode.summaryModel': '',
+  'agents.Rcode.summaryProviderId': '',
+  'agents.Rcode.codeReviewModel': '',
+  'agents.Rcode.codeReviewProviderId': '',
+  'agents.Rcode.titleReasoningEffort': 'off',
+  'agents.Rcode.summaryReasoningEffort': 'off',
+  'agents.Rcode.codeReviewReasoningEffort': 'off',
+  'agents.Rcode.contextCompaction.summaryModel': '',
+  'agents.Rcode.contextCompaction.summaryProviderId': ''
 }
 
-export const DEFAULT_WORKSPACE_ROOT = '~/.kun/default_workspace'
+export const DEFAULT_WORKSPACE_ROOT = '~/.Rcode/default_workspace'
 
 export function splitSettingsList(raw: string): string[] {
   return raw
@@ -77,15 +77,15 @@ export function listSettingsText(values: string[]): string {
 }
 
 export function hasValidPort(settings: AppSettingsV1): boolean {
-  const port = getKunRuntimeSettings(settings).port
-  return Number.isFinite(port) && port >= MIN_KUN_LOCAL_PORT && port <= 65535
+  const port = getRcodeRuntimeSettings(settings).port
+  return Number.isFinite(port) && port >= MIN_RCODE_LOCAL_PORT && port <= 65535
 }
 
 export function mergeSettings(current: AppSettingsV1, patch: SettingsPatch): AppSettingsV1 {
   const safeCurrent = coerceRendererSettings(current)
   const { agents: agentsPatch, provider: providerPatch, ...restPatch } = patch
   return {
-    ...applyKunRuntimePatch(safeCurrent, agentsPatch?.kun),
+    ...applyRcodeRuntimePatch(safeCurrent, agentsPatch?.Rcode),
     ...restPatch,
     provider: mergeModelProviderSettings(safeCurrent.provider, providerPatch),
     log: {
@@ -142,7 +142,7 @@ export function coerceRendererSettings(settings: AppSettingsV1): AppSettingsV1 {
     cursorSpotlight: raw.cursorSpotlight !== false,
     cursorSpotlightColor: normalizeCursorSpotlightColor(raw.cursorSpotlightColor),
     provider: normalizeModelProviderSettings(raw.provider),
-    agents: kunSettingsEnvelope(mergeKunRuntimeSettings(defaultKunRuntimeSettings(), getKunRuntimeSettings(settings))),
+    agents: RcodeSettingsEnvelope(mergeRcodeRuntimeSettings(defaultRcodeRuntimeSettings(), getRcodeRuntimeSettings(settings))),
     workspaceRoot: typeof raw.workspaceRoot === 'string' ? raw.workspaceRoot : DEFAULT_WORKSPACE_ROOT,
     conversationWorkspaceRoot:
       typeof raw.conversationWorkspaceRoot === 'string' ? raw.conversationWorkspaceRoot : '',

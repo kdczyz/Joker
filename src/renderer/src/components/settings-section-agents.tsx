@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react'
 import type {
   AppSettingsV1,
-  KunToolPermissionMode,
+  RcodeToolPermissionMode,
   ModelProviderProfileV1
 } from '@shared/app-settings'
 import {
@@ -11,15 +11,15 @@ import {
   DEFAULT_WRITE_INLINE_COMPLETION_MAX_TOKENS,
   DEFAULT_WRITE_INLINE_COMPLETION_MODEL,
   DEFAULT_WRITE_INLINE_LONG_COMPLETION_MAX_TOKENS,
-  DEFAULT_KUN_DATA_DIR,
+  DEFAULT_RCODE_DATA_DIR,
   DEFAULT_TOOL_OUTPUT_MAX_BYTES,
   DEFAULT_TOOL_OUTPUT_MAX_LINES,
-  MIN_KUN_LOCAL_PORT,
+  MIN_RCODE_LOCAL_PORT,
   WRITE_INLINE_COMPLETION_MODEL_IDS,
   defaultModelProviderSettings,
-  isKunRuntimeInsecure,
-  kunToolPermissionModeFromSettings,
-  kunToolPermissionModeSettings
+  isRcodeRuntimeInsecure,
+  RcodeToolPermissionModeFromSettings,
+  RcodeToolPermissionModeSettings
 } from '@shared/app-settings'
 import type { GuiUpdateChannel } from '@shared/gui-update'
 import type {
@@ -27,7 +27,7 @@ import type {
   ComputerUsePermissions,
   ComputerUsePermissionState,
   SkillRootListItem
-} from '@shared/kun-gui-api'
+} from '@shared/Rcode-gui-api'
 import {
   Ban,
   Check,
@@ -73,7 +73,7 @@ import { ComputerUseSettingsPanel, DesignQualitySettingsPanel } from './settings
 export { modelProvidersSettingsPatch } from './settings-section-providers'
 
 const TOOL_PERMISSION_OPTIONS: Array<{
-  value: KunToolPermissionMode
+  value: RcodeToolPermissionMode
   labelKey: string
   descriptionKey: string
   Icon: typeof Hand
@@ -128,9 +128,9 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     t,
     tCommon,
     form,
-    kun,
+    Rcode,
     update,
-    updateKun,
+    updateRcode,
     showRuntimeToken,
     setShowRuntimeToken,
     portError,
@@ -202,7 +202,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     memoryRecords,
     runtimeDiagnosticsBusy,
     runtimeDiagnosticsNotice,
-    refreshKunDiagnostics,
+    refreshRcodeDiagnostics,
     disableMemoryRecord,
     restoreMemoryRecord,
     deleteMemoryRecord,
@@ -212,7 +212,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     splitSettingsList,
     listSettingsText
   } = ctx
-  const mcpSearch = kun.mcpSearch ?? {
+  const mcpSearch = Rcode.mcpSearch ?? {
     enabled: false,
     mode: 'auto',
     autoThresholdToolCount: 24,
@@ -236,11 +236,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   }
   const tokenEconomy = {
     ...tokenEconomyDefaults,
-    ...(kun.tokenEconomy ?? {}),
-    enabled: kun.tokenEconomy?.enabled ?? kun.tokenEconomyMode ?? false,
+    ...(Rcode.tokenEconomy ?? {}),
+    enabled: Rcode.tokenEconomy?.enabled ?? Rcode.tokenEconomyMode ?? false,
     historyHygiene: {
       ...tokenEconomyDefaults.historyHygiene,
-      ...(kun.tokenEconomy?.historyHygiene ?? {})
+      ...(Rcode.tokenEconomy?.historyHygiene ?? {})
     }
   }
   const [tokenEconomySavingsState, setTokenEconomySavingsState] =
@@ -270,11 +270,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     }
   }, [tokenEconomy.enabled])
   const tokenEconomySavings = tokenEconomySavingsState.summary
-  const storage = kun.storage ?? {
+  const storage = Rcode.storage ?? {
     backend: 'hybrid',
     sqlitePath: ''
   }
-  const contextCompaction = kun.contextCompaction ?? {
+  const contextCompaction = Rcode.contextCompaction ?? {
     defaultSoftThreshold: 16000,
     defaultHardThreshold: 24000,
     summaryMode: 'model',
@@ -283,11 +283,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     summaryInputMaxBytes: 98304
   }
   const modelContext = modelContextProfileSummary({
-    model: kun.model,
+    model: Rcode.model,
     fallbackSoftThreshold: contextCompaction.defaultSoftThreshold,
     fallbackHardThreshold: contextCompaction.defaultHardThreshold
   })
-  const runtimeTuning = kun.runtimeTuning ?? {
+  const runtimeTuning = Rcode.runtimeTuning ?? {
     maxWallTimeMs: 86400000,
     streamIdleTimeoutMs: 45000,
     toolStorm: {
@@ -299,12 +299,12 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
       maxStringBytes: 524288
     }
   }
-  const toolOutputLimits = kun.toolOutputLimits ?? {
+  const toolOutputLimits = Rcode.toolOutputLimits ?? {
     maxLines: DEFAULT_TOOL_OUTPUT_MAX_LINES,
     maxBytes: DEFAULT_TOOL_OUTPUT_MAX_BYTES
   }
   const updateMcpSearch = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateRcode({
       mcpSearch: {
         ...mcpSearch,
         ...patch
@@ -313,7 +313,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   }
   const updateTokenEconomy = (patch: Record<string, unknown>): void => {
     const enabled = typeof patch.enabled === 'boolean' ? patch.enabled : tokenEconomy.enabled
-    updateKun({
+    updateRcode({
       tokenEconomyMode: enabled,
       tokenEconomy: {
         ...tokenEconomy,
@@ -331,7 +331,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateStorage = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateRcode({
       storage: {
         ...storage,
         ...patch
@@ -339,7 +339,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateContextCompaction = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateRcode({
       contextCompaction: {
         ...contextCompaction,
         ...patch
@@ -347,7 +347,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateRuntimeTuning = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateRcode({
       runtimeTuning: {
         ...runtimeTuning,
         ...patch
@@ -355,7 +355,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateToolOutputLimits = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateRcode({
       toolOutputLimits: {
         ...toolOutputLimits,
         ...patch
@@ -380,17 +380,17 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   }
   const provider = form.provider ?? defaultModelProviderSettings()
   const modelProviders = provider.providers as ModelProviderProfileV1[]
-  const computerUse = kun.computerUse ?? {
+  const computerUse = Rcode.computerUse ?? {
     enabled: false,
     mode: 'auto' as const,
     maxImageDimension: 1280,
     maxActionsPerTurn: 40
   }
-  const instructions = kun.instructions ?? {
+  const instructions = Rcode.instructions ?? {
     enabled: true
   }
   const updateInstructions = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateRcode({
       instructions: {
         ...instructions,
         ...patch
@@ -398,14 +398,14 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateComputerUse = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateRcode({
       computerUse: {
         ...computerUse,
         ...patch
       }
     })
   }
-  const quality = kun.quality ?? {
+  const quality = Rcode.quality ?? {
     enabled: true,
     strictness: 'standard' as const,
     ignoreRules: [],
@@ -413,14 +413,14 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     maxFindings: 12
   }
   const updateQuality = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateRcode({
       quality: {
         ...quality,
         ...patch
       }
     })
   }
-  const activeProviderId = kun.providerId?.trim() || DEFAULT_MODEL_PROVIDER_ID
+  const activeProviderId = Rcode.providerId?.trim() || DEFAULT_MODEL_PROVIDER_ID
   const activeProvider = modelProviders.find((item) => item.id === activeProviderId) ?? modelProviders[0]
   const activeProviderModels = activeProvider?.models ?? []
   const promptOptimization = {
@@ -429,7 +429,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     model: '',
     prompt: '',
     timeoutMs: 60000,
-    ...(kun.promptOptimization ?? {})
+    ...(Rcode.promptOptimization ?? {})
   }
   const promptOptimizationProviderId = promptOptimization.providerId?.trim() || activeProviderId
   const promptOptimizationProvider =
@@ -437,29 +437,29 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   const promptOptimizationModels = promptOptimizationProvider?.models ?? []
   const promptOptimizationDefaultModel = (() => {
     const providerId = promptOptimizationProvider?.id ?? promptOptimizationProviderId
-    const smallModel = kun.smallModel?.trim() ?? ''
-    const smallProviderId = kun.smallModelProviderId?.trim() || activeProviderId
+    const smallModel = Rcode.smallModel?.trim() ?? ''
+    const smallProviderId = Rcode.smallModelProviderId?.trim() || activeProviderId
     if (smallModel && smallProviderId === providerId) return smallModel
-    const mainModel = kun.model?.trim() ?? ''
+    const mainModel = Rcode.model?.trim() ?? ''
     if (mainModel && activeProviderId === providerId) return mainModel
     return promptOptimizationModels[0] ?? mainModel
   })()
   const updatePromptOptimization = (patch: Record<string, unknown>): void => {
-    updateKun({
+    updateRcode({
       promptOptimization: {
         ...promptOptimization,
         ...patch
       }
     })
   }
-  const selectKunProvider = (providerId: string): void => {
+  const selectRcodeProvider = (providerId: string): void => {
     const nextProvider = modelProviders.find((item) => item.id === providerId) ?? activeProvider
-    const nextModel = nextProvider?.models.includes(kun.model)
-      ? kun.model
-      : nextProvider?.models[0] ?? kun.model
-    updateKun({ providerId, model: nextModel, apiKey: '', baseUrl: '' })
+    const nextModel = nextProvider?.models.includes(Rcode.model)
+      ? Rcode.model
+      : nextProvider?.models[0] ?? Rcode.model
+    updateRcode({ providerId, model: nextModel, apiKey: '', baseUrl: '' })
   }
-  const toolPermissionMode = kunToolPermissionModeFromSettings(kun)
+  const toolPermissionMode = RcodeToolPermissionModeFromSettings(Rcode)
 
   return (
             <>
@@ -480,19 +480,19 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     description={t('autoStartDesc')}
                     control={
                       <Toggle
-                        checked={kun.autoStart}
-                        onChange={(v) => updateKun({ autoStart: v })}
+                        checked={Rcode.autoStart}
+                        onChange={(v) => updateRcode({ autoStart: v })}
                       />
                     }
                   />
                   <SettingRow
-                    title={t('kunProvider')}
-                    description={t('kunProviderSelectDesc')}
+                    title={t('RcodeProvider')}
+                    description={t('RcodeProviderSelectDesc')}
                     control={
                       <select
                         className={selectControlClass}
                         value={activeProvider?.id ?? DEFAULT_MODEL_PROVIDER_ID}
-                        onChange={(e) => selectKunProvider(e.target.value)}
+                        onChange={(e) => selectRcodeProvider(e.target.value)}
                       >
                         {modelProviders.map((item) => (
                           <option key={item.id} value={item.id}>{item.name}</option>
@@ -501,11 +501,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunModel')}
-                    description={t('kunModelDesc')}
+                    title={t('RcodeModel')}
+                    description={t('RcodeModelDesc')}
                     control={
                       <ModelSelect
-                        value={kun.model}
+                        value={Rcode.model}
                         options={activeProviderModels}
                         optionLabel={(model) =>
                           model === activeProviderModels[0]
@@ -517,7 +517,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         selectClassName={selectControlClass}
                         onChange={(model) => {
                           const next = model.trim()
-                          updateKun({ model: next || (activeProviderModels[0] ?? kun.model) })
+                          updateRcode({ model: next || (activeProviderModels[0] ?? Rcode.model) })
                         }}
                       />
                     }
@@ -536,8 +536,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunPromptOptimization')}
-                    description={t('kunPromptOptimizationDesc')}
+                    title={t('RcodePromptOptimization')}
+                    description={t('RcodePromptOptimizationDesc')}
                     control={
                       <Toggle
                         checked={promptOptimization.enabled}
@@ -547,13 +547,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                   />
                   {promptOptimization.enabled ? (
                     <SettingRow
-                      title={t('kunPromptOptimizationConfig')}
-                      description={t('kunPromptOptimizationConfigDesc')}
+                      title={t('RcodePromptOptimizationConfig')}
+                      description={t('RcodePromptOptimizationConfigDesc')}
                       wideControl
                       control={
                         <div className="grid gap-3 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(120px,160px)]">
                           <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                            {t('kunPromptOptimizationProvider')}
+                            {t('RcodePromptOptimizationProvider')}
                             <select
                               className={selectControlClass}
                               value={promptOptimization.providerId?.trim() || ''}
@@ -576,11 +576,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                             </select>
                           </label>
                           <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                            {t('kunPromptOptimizationModel')}
+                            {t('RcodePromptOptimizationModel')}
                             <ModelSelect
                               value={promptOptimization.model}
                               options={promptOptimizationModels}
-                              defaultLabel={t('kunPromptOptimizationModelDefault', {
+                              defaultLabel={t('RcodePromptOptimizationModelDefault', {
                                 model: promptOptimizationDefaultModel
                               })}
                               optionLabel={(model) => model}
@@ -592,7 +592,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                             />
                           </label>
                           <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                            {t('kunPromptOptimizationTimeout')}
+                            {t('RcodePromptOptimizationTimeout')}
                             <input
                               type="number"
                               min={1000}
@@ -604,7 +604,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                             />
                           </label>
                           <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted lg:col-span-3">
-                            {t('kunPromptOptimizationPrompt')}
+                            {t('RcodePromptOptimizationPrompt')}
                             <textarea
                               value={promptOptimization.prompt}
                               onChange={(e) => updatePromptOptimization({ prompt: e.target.value })}
@@ -618,8 +618,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                   ) : null}
                   <div className="px-3 py-4">
                     <AdvancedSettingsDisclosure
-                      title={t('kunAssistantAdvanced')}
-                      description={t('kunAssistantAdvancedDesc')}
+                      title={t('RcodeAssistantAdvanced')}
+                      description={t('RcodeAssistantAdvancedDesc')}
                     >
                       <div className="divide-y divide-ds-border-muted">
                   <SettingRow
@@ -629,15 +629,15 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                       <div>
                         <input
                           type="number"
-                          min={MIN_KUN_LOCAL_PORT}
+                          min={MIN_RCODE_LOCAL_PORT}
                           max={65535}
                           className={`w-28 rounded-xl border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:outline-none focus:ring-1 ${
                             portError
                               ? 'border-red-400 focus:ring-red-300'
                               : 'border-ds-border focus:border-accent/40 focus:ring-accent/30'
                           }`}
-                          value={kun.port}
-                          onChange={(e) => updateKun({ port: Number(e.target.value) })}
+                          value={Rcode.port}
+                          onChange={(e) => updateRcode({ port: Number(e.target.value) })}
                         />
                         {portError ? (
                           <p className="mt-1 text-[12px] text-red-700 dark:text-red-300">{portError}</p>
@@ -646,26 +646,26 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunBinary')}
-                    description={t('kunBinaryDesc')}
+                    title={t('RcodeBinary')}
+                    description={t('RcodeBinaryDesc')}
                     control={
                       <input
                         className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
-                        placeholder={t('kunBinaryPlaceholder')}
-                        value={compactHomePath(kun.binaryPath)}
-                        onChange={(e) => updateKun({ binaryPath: expandHomePath(e.target.value) })}
+                        placeholder={t('RcodeBinaryPlaceholder')}
+                        value={compactHomePath(Rcode.binaryPath)}
+                        onChange={(e) => updateRcode({ binaryPath: expandHomePath(e.target.value) })}
                       />
                     }
                   />
                   <SettingRow
-                    title={t('kunDataDir')}
-                    description={t('kunDataDirDesc')}
+                    title={t('RcodeDataDir')}
+                    description={t('RcodeDataDirDesc')}
                     control={
                       <input
                         className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
-                        placeholder={DEFAULT_KUN_DATA_DIR}
-                        value={compactHomePath(kun.dataDir)}
-                        onChange={(e) => updateKun({ dataDir: expandHomePath(e.target.value) })}
+                        placeholder={DEFAULT_RCODE_DATA_DIR}
+                        value={compactHomePath(Rcode.dataDir)}
+                        onChange={(e) => updateRcode({ dataDir: expandHomePath(e.target.value) })}
                       />
                     }
                   />
@@ -674,8 +674,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     description={t('runtimeTokenDesc')}
                     control={
                       <SecretInput
-                        value={kun.runtimeToken}
-                        onChange={(value) => updateKun({ runtimeToken: value })}
+                        value={Rcode.runtimeToken}
+                        onChange={(value) => updateRcode({ runtimeToken: value })}
                         visible={showRuntimeToken}
                         onToggleVisibility={() => setShowRuntimeToken((value: boolean) => !value)}
                         showLabel={t('showSecret')}
@@ -685,12 +685,12 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunInsecure')}
-                    description={t('kunInsecureDesc')}
+                    title={t('RcodeInsecure')}
+                    description={t('RcodeInsecureDesc')}
                     control={
                       <Toggle
-                        checked={isKunRuntimeInsecure(kun)}
-                        onChange={(v) => updateKun({ insecure: v })}
+                        checked={isRcodeRuntimeInsecure(Rcode)}
+                        onChange={(v) => updateRcode({ insecure: v })}
                       />
                     }
                   />
@@ -698,8 +698,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     </AdvancedSettingsDisclosure>
                   </div>
                   <SettingRow
-                    title={t('kunTokenEconomy')}
-                    description={t('kunTokenEconomyDesc')}
+                    title={t('RcodeTokenEconomy')}
+                    description={t('RcodeTokenEconomyDesc')}
                     control={
                       <div className="flex min-w-0 flex-col items-start gap-2 sm:items-end">
                         <Toggle
@@ -710,14 +710,14 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           <div className="max-w-full rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1.5 text-[12px] font-medium leading-5 text-emerald-700 dark:text-emerald-200">
                             {tokenEconomySavings ? (
                               <span>
-                                {t('kunTokenEconomySavings', {
+                                {t('RcodeTokenEconomySavings', {
                                   tokens: formatCompactNumber(tokenEconomySavings.tokens)
                                 })}
                               </span>
                             ) : tokenEconomySavingsState.loading ? (
-                              <span>{t('kunTokenEconomySavingsLoading')}</span>
+                              <span>{t('RcodeTokenEconomySavingsLoading')}</span>
                             ) : (
-                              <span>{t('kunTokenEconomySavingsEmpty')}</span>
+                              <span>{t('RcodeTokenEconomySavingsEmpty')}</span>
                             )}
                           </div>
                         ) : null}
@@ -725,8 +725,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunInstructions')}
-                    description={t('kunInstructionsDesc')}
+                    title={t('RcodeInstructions')}
+                    description={t('RcodeInstructionsDesc')}
                     control={
                       <div className="flex min-w-0 flex-col items-start gap-2 sm:items-end">
                         <Toggle
@@ -734,7 +734,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           onChange={(enabled) => updateInstructions({ enabled })}
                         />
                         <div className="max-w-full rounded-lg border border-ds-border-muted bg-ds-main/40 px-2.5 py-1.5 text-[12px] leading-5 text-ds-muted">
-                          {t('kunInstructionsDiagnostics', {
+                          {t('RcodeInstructionsDiagnostics', {
                             count: toolDiagnostics?.instructions?.lastInjection?.sources?.length ?? runtimeInfo?.capabilities?.instructions?.lastSourceCount ?? 0
                           })}
                         </div>
@@ -768,7 +768,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                               type="button"
                               role="radio"
                               aria-checked={selected}
-                              onClick={() => updateKun(kunToolPermissionModeSettings(option.value))}
+                              onClick={() => updateRcode(RcodeToolPermissionModeSettings(option.value))}
                               className={`min-h-[72px] rounded-lg border px-3 py-2.5 text-left transition ${
                                 selected
                                   ? 'border-accent/55 bg-accent/10 text-ds-ink'
@@ -836,7 +836,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           <div className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 font-mono text-[12px] text-ds-ink shadow-sm">
                             <div className="break-all">{compactHomePath(activeProjectWorkspaceRoot)}</div>
                             <div className="mt-1 break-all text-ds-muted">
-                              {compactHomePath(projectConfig?.path ?? `${activeProjectWorkspaceRoot}/.kun/project.json`)}
+                              {compactHomePath(projectConfig?.path ?? `${activeProjectWorkspaceRoot}/.Rcode/project.json`)}
                             </div>
                           </div>
                         }
@@ -1357,21 +1357,21 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
 
 
               <div className="mt-6">
-                <SettingsCard title={t('kunAdvanced')}>
+                <SettingsCard title={t('RcodeAdvanced')}>
                   <div className="px-3 py-4">
                     <AdvancedSettingsDisclosure
-                      title={t('kunAdvancedDetails')}
-                      description={t('kunAdvancedDetailsDesc')}
+                      title={t('RcodeAdvancedDetails')}
+                      description={t('RcodeAdvancedDetailsDesc')}
                     >
                       <div className="divide-y divide-ds-border-muted">
                   <SettingRow
-                    title={t('kunTokenEconomyOptions')}
-                    description={t('kunTokenEconomyOptionsDesc')}
+                    title={t('RcodeTokenEconomyOptions')}
+                    description={t('RcodeTokenEconomyOptionsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-3">
                         <label className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-muted">
-                          <span>{t('kunCompressToolDescriptions')}</span>
+                          <span>{t('RcodeCompressToolDescriptions')}</span>
                           <Toggle
                             checked={tokenEconomy.compressToolDescriptions}
                             disabled={!tokenEconomy.enabled}
@@ -1380,7 +1380,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-muted">
-                          <span>{t('kunCompressToolResults')}</span>
+                          <span>{t('RcodeCompressToolResults')}</span>
                           <Toggle
                             checked={tokenEconomy.compressToolResults}
                             disabled={!tokenEconomy.enabled}
@@ -1389,7 +1389,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-muted">
-                          <span>{t('kunConciseResponses')}</span>
+                          <span>{t('RcodeConciseResponses')}</span>
                           <Toggle
                             checked={tokenEconomy.conciseResponses}
                             disabled={!tokenEconomy.enabled}
@@ -1401,13 +1401,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunHistoryHygiene')}
-                    description={t('kunHistoryHygieneDesc')}
+                    title={t('RcodeHistoryHygiene')}
+                    description={t('RcodeHistoryHygieneDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-3">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxResultLines')}
+                          {t('RcodeHistoryMaxResultLines')}
                           <input
                             type="number"
                             min={1}
@@ -1418,7 +1418,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxResultBytes')}
+                          {t('RcodeHistoryMaxResultBytes')}
                           <input
                             type="number"
                             min={512}
@@ -1430,7 +1430,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxResultTokens')}
+                          {t('RcodeHistoryMaxResultTokens')}
                           <input
                             type="number"
                             min={128}
@@ -1442,7 +1442,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxArgumentBytes')}
+                          {t('RcodeHistoryMaxArgumentBytes')}
                           <input
                             type="number"
                             min={512}
@@ -1455,7 +1455,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxArgumentTokens')}
+                          {t('RcodeHistoryMaxArgumentTokens')}
                           <input
                             type="number"
                             min={128}
@@ -1468,7 +1468,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunHistoryMaxArrayItems')}
+                          {t('RcodeHistoryMaxArrayItems')}
                           <input
                             type="number"
                             min={1}
@@ -1482,14 +1482,14 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunModelContextProfile')}
-                    description={t('kunModelContextProfileDesc')}
+                    title={t('RcodeModelContextProfile')}
+                    description={t('RcodeModelContextProfileDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-4">
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('kunModelContextModel')}
+                            {t('RcodeModelContextModel')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.modelLabel}
@@ -1500,7 +1500,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('kunModelContextWindow')}
+                            {t('RcodeModelContextWindow')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.contextWindowLabel}
@@ -1508,7 +1508,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('kunModelContextSoft')}
+                            {t('RcodeModelContextSoft')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.softThresholdLabel}
@@ -1516,7 +1516,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('kunModelContextHard')}
+                            {t('RcodeModelContextHard')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.hardThresholdLabel}
@@ -1526,40 +1526,40 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunStorageBackend')}
-                    description={t('kunStorageBackendDesc')}
+                    title={t('RcodeStorageBackend')}
+                    description={t('RcodeStorageBackendDesc')}
                     control={
                       <select
                         className={selectControlClass}
                         value={storage.backend}
                         onChange={(e) => updateStorage({ backend: e.target.value })}
                       >
-                        <option value="hybrid">{t('kunStorageHybrid')}</option>
-                        <option value="file">{t('kunStorageFile')}</option>
+                        <option value="hybrid">{t('RcodeStorageHybrid')}</option>
+                        <option value="file">{t('RcodeStorageFile')}</option>
                       </select>
                     }
                   />
                   <SettingRow
-                    title={t('kunStorageSqlitePath')}
-                    description={t('kunStorageSqlitePathDesc')}
+                    title={t('RcodeStorageSqlitePath')}
+                    description={t('RcodeStorageSqlitePathDesc')}
                     control={
                       <input
                         className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
                         value={compactHomePath(storage.sqlitePath)}
                         disabled={storage.backend !== 'hybrid'}
-                        placeholder={t('kunStorageSqlitePathPlaceholder')}
+                        placeholder={t('RcodeStorageSqlitePathPlaceholder')}
                         onChange={(e) => updateStorage({ sqlitePath: expandHomePath(e.target.value) })}
                       />
                     }
                   />
                   <SettingRow
-                    title={t('kunCompactionThresholds')}
-                    description={t('kunCompactionThresholdsDesc')}
+                    title={t('RcodeCompactionThresholds')}
+                    description={t('RcodeCompactionThresholdsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionSoftThreshold')}
+                          {t('RcodeCompactionSoftThreshold')}
                           <input
                             type="number"
                             min={1024}
@@ -1570,7 +1570,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionHardThreshold')}
+                          {t('RcodeCompactionHardThreshold')}
                           <input
                             type="number"
                             min={1024}
@@ -1584,13 +1584,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunCompactionSummary')}
-                    description={t('kunCompactionSummaryDesc')}
+                    title={t('RcodeCompactionSummary')}
+                    description={t('RcodeCompactionSummaryDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-3">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionSummaryTimeout')}
+                          {t('RcodeCompactionSummaryTimeout')}
                           <input
                             type="number"
                             min={1000}
@@ -1602,7 +1602,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionSummaryMaxTokens')}
+                          {t('RcodeCompactionSummaryMaxTokens')}
                           <input
                             type="number"
                             min={64}
@@ -1614,7 +1614,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunCompactionSummaryInputBytes')}
+                          {t('RcodeCompactionSummaryInputBytes')}
                           <input
                             type="number"
                             min={1024}
@@ -1629,8 +1629,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunMaxWallTime')}
-                    description={t('kunMaxWallTimeDesc')}
+                    title={t('RcodeMaxWallTime')}
+                    description={t('RcodeMaxWallTimeDesc')}
                     control={
                       <input
                         type="number"
@@ -1646,8 +1646,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunStreamIdleTimeout')}
-                    description={t('kunStreamIdleTimeoutDesc')}
+                    title={t('RcodeStreamIdleTimeout')}
+                    description={t('RcodeStreamIdleTimeoutDesc')}
                     control={
                       <input
                         type="number"
@@ -1663,8 +1663,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunToolStorm')}
-                    description={t('kunToolStormDesc')}
+                    title={t('RcodeToolStorm')}
+                    description={t('RcodeToolStormDesc')}
                     control={
                       <Toggle
                         checked={runtimeTuning.toolStorm.enabled}
@@ -1673,13 +1673,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunToolStormLimits')}
-                    description={t('kunToolStormLimitsDesc')}
+                    title={t('RcodeToolStormLimits')}
+                    description={t('RcodeToolStormLimitsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunToolStormWindowSize')}
+                          {t('RcodeToolStormWindowSize')}
                           <input
                             type="number"
                             min={1}
@@ -1691,7 +1691,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunToolStormThreshold')}
+                          {t('RcodeToolStormThreshold')}
                           <input
                             type="number"
                             min={2}
@@ -1706,13 +1706,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunToolOutputLimits')}
-                    description={t('kunToolOutputLimitsDesc')}
+                    title={t('RcodeToolOutputLimits')}
+                    description={t('RcodeToolOutputLimitsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunToolOutputMaxLines')}
+                          {t('RcodeToolOutputMaxLines')}
                           <input
                             type="number"
                             min={1}
@@ -1724,7 +1724,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('kunToolOutputMaxBytes')}
+                          {t('RcodeToolOutputMaxBytes')}
                           <input
                             type="number"
                             min={1}
@@ -1739,8 +1739,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunToolArgumentRepair')}
-                    description={t('kunToolArgumentRepairDesc')}
+                    title={t('RcodeToolArgumentRepair')}
+                    description={t('RcodeToolArgumentRepairDesc')}
                     control={
                       <input
                         type="number"
@@ -1760,16 +1760,16 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
               </div>
 
               <div className="mt-6">
-                <SettingsCard title={t('kunDiagnostics')}>
+                <SettingsCard title={t('RcodeDiagnostics')}>
                   <div className="px-3 py-4">
                     <AdvancedSettingsDisclosure
-                      title={t('kunDiagnosticsAdvanced')}
-                      description={t('kunDiagnosticsAdvancedDesc')}
+                      title={t('RcodeDiagnosticsAdvanced')}
+                      description={t('RcodeDiagnosticsAdvancedDesc')}
                     >
                       <div className="divide-y divide-ds-border-muted">
                   <SettingRow
-                    title={t('kunRuntimeCapabilities')}
-                    description={t('kunRuntimeCapabilitiesDesc')}
+                    title={t('RcodeRuntimeCapabilities')}
+                    description={t('RcodeRuntimeCapabilitiesDesc')}
                     wideControl
                     control={
                       <div className="flex w-full flex-col gap-3">
@@ -1794,10 +1794,10 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="grid gap-2 text-[12.5px] text-ds-muted sm:grid-cols-2">
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                            {t('kunRuntimeModel')}: <span className="font-mono text-ds-ink">{runtimeInfo?.capabilities?.model?.id ?? 'unknown'}</span>
+                            {t('RcodeRuntimeModel')}: <span className="font-mono text-ds-ink">{runtimeInfo?.capabilities?.model?.id ?? 'unknown'}</span>
                           </div>
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                            {t('kunRuntimePid')}: <span className="font-mono text-ds-ink">{runtimeInfo?.pid ?? 'unknown'}</span>
+                            {t('RcodeRuntimePid')}: <span className="font-mono text-ds-ink">{runtimeInfo?.pid ?? 'unknown'}</span>
                           </div>
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
                             MCP: <span className="font-mono text-ds-ink">{runtimeInfo?.capabilities?.mcp?.connectedServers ?? 0}/{runtimeInfo?.capabilities?.mcp?.configuredServers ?? 0}</span>
@@ -1821,12 +1821,12 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => void refreshKunDiagnostics()}
+                            onClick={() => void refreshRcodeDiagnostics()}
                             disabled={runtimeDiagnosticsBusy}
                             className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-ink shadow-sm transition hover:bg-ds-hover disabled:cursor-not-allowed disabled:opacity-55"
                           >
                             <RefreshCw className={`h-3.5 w-3.5 ${runtimeDiagnosticsBusy ? 'animate-spin' : ''}`} strokeWidth={1.75} />
-                            {t('kunDiagnosticsRefresh')}
+                            {t('RcodeDiagnosticsRefresh')}
                           </button>
                           {runtimeDiagnosticsNotice ? <InlineNoticeView notice={runtimeDiagnosticsNotice} /> : null}
                         </div>
@@ -1834,35 +1834,35 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('kunToolDiagnostics')}
-                    description={t('kunToolDiagnosticsDesc')}
+                    title={t('RcodeToolDiagnostics')}
+                    description={t('RcodeToolDiagnosticsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-2 text-[12.5px] text-ds-muted sm:grid-cols-2">
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('kunDiagnosticsProviders')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.providers?.length ?? 0}</span>
+                          {t('RcodeDiagnosticsProviders')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.providers?.length ?? 0}</span>
                         </div>
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('kunDiagnosticsMcpServers')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.mcpServers?.length ?? 0}</span>
+                          {t('RcodeDiagnosticsMcpServers')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.mcpServers?.length ?? 0}</span>
                         </div>
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('kunDiagnosticsSkills')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.skills?.skills?.length ?? 0}</span>
+                          {t('RcodeDiagnosticsSkills')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.skills?.skills?.length ?? 0}</span>
                         </div>
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('kunDiagnosticsAttachments')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.attachments?.count ?? 0}</span>
+                          {t('RcodeDiagnosticsAttachments')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.attachments?.count ?? 0}</span>
                         </div>
                       </div>
                     }
                   />
                   <SettingRow
-                    title={t('kunMemoryRecords')}
-                    description={t('kunMemoryRecordsDesc')}
+                    title={t('RcodeMemoryRecords')}
+                    description={t('RcodeMemoryRecordsDesc')}
                     wideControl
                     control={
                       <div className="flex flex-col gap-2">
                         {memoryRecords.length === 0 ? (
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-3 text-[13px] text-ds-faint">
-                            {t('kunMemoryEmpty')}
+                            {t('RcodeMemoryEmpty')}
                           </div>
                         ) : (
                           memoryRecords.slice(0, 8).map((memory: any) => (
@@ -1873,7 +1873,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                   <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-ds-faint">
                                     <span className="font-mono">{memory.scope}</span>
                                     <span className="font-mono">{memory.id}</span>
-                                    {memory.disabledAt ? <span>{t('kunMemoryDisabled')}</span> : null}
+                                    {memory.disabledAt ? <span>{t('RcodeMemoryDisabled')}</span> : null}
                                     {memory.tags?.length ? <span>{compactList(memory.tags, '')}</span> : null}
                                   </div>
                                 </div>
@@ -1893,8 +1893,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                       type="button"
                                       onClick={() => void disableMemoryRecord(memory.id)}
                                       className="rounded-lg p-1.5 text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
-                                      aria-label={t('kunMemoryDisable')}
-                                      title={t('kunMemoryDisable')}
+                                      aria-label={t('RcodeMemoryDisable')}
+                                      title={t('RcodeMemoryDisable')}
                                     >
                                       <Ban className="h-3.5 w-3.5" strokeWidth={1.8} />
                                     </button>
@@ -1903,8 +1903,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                     type="button"
                                     onClick={() => void deleteMemoryRecord(memory.id)}
                                     className="rounded-lg p-1.5 text-ds-muted transition hover:bg-red-500/10 hover:text-red-600"
-                                    aria-label={t('kunMemoryDelete')}
-                                    title={t('kunMemoryDelete')}
+                                    aria-label={t('RcodeMemoryDelete')}
+                                    title={t('RcodeMemoryDelete')}
                                   >
                                     <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                   </button>
@@ -1939,7 +1939,7 @@ function ComputerUsePermissionRow({ t }: { t: (key: string) => string }): ReactE
   const [permissions, setPermissions] = useState<ComputerUsePermissions | null>(null)
 
   const refresh = (): void => {
-    void window.kunGui?.getComputerUsePermissions?.().then(setPermissions).catch(() => undefined)
+    void window.RcodeGui?.getComputerUsePermissions?.().then(setPermissions).catch(() => undefined)
   }
   useEffect(() => {
     refresh()
@@ -1949,7 +1949,7 @@ function ComputerUsePermissionRow({ t }: { t: (key: string) => string }): ReactE
   if (permissions && !permissions.needsPermission) return null
 
   const request = (kind: ComputerUsePermissionKind): void => {
-    void window.kunGui
+    void window.RcodeGui
       ?.requestComputerUsePermission?.(kind)
       .then(setPermissions)
       .catch(() => undefined)

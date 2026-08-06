@@ -19,7 +19,7 @@ export type DesignFoundationStep = 'spec' | 'system' | 'logo'
 
 /** Per-设计稿 design brief (the project spec the foundation + pages all follow). */
 export function designSpecPath(docId: string): string {
-  return `.kun-design/${docId}/design.md`
+  return `.Rcode-design/${docId}/design.md`
 }
 
 /** First filled-role foundation artifact, if any (so re-runs reuse instead of duplicating). */
@@ -105,7 +105,7 @@ export function buildDesignSpecPrompt(options: {
     Math.max(DESIGN_PAGES_MIN, options.maxPages ?? DESIGN_PAGES_MAX)
   )
   const lines = [
-    'Kun is asking you to LAY THE FOUNDATION for a multi-page design before any screen is built.',
+    'Rcode is asking you to LAY THE FOUNDATION for a multi-page design before any screen is built.',
     `Workspace: ${options.workspaceRoot}`,
     `Design brief file (already created — fill it in): ${options.designMdPath}`,
     ...formatFoundationTargetLines(options.designContext, 'spec'),
@@ -170,7 +170,7 @@ export function buildDesignLogoPrompt(options: {
   designContext?: DesignContext
 }): string {
   const lines = [
-    'Kun is asking you to design the BRAND LOGO for this product.',
+    'Rcode is asking you to design the BRAND LOGO for this product.',
     `Workspace: ${options.workspaceRoot}`,
     ...(options.designMdPath ? [`Design brief to honor: ${options.designMdPath}.`] : []),
     ...(options.designSystemMdPath

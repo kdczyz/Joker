@@ -20,7 +20,7 @@ const {
   _internals: { assertElfExecutable, linuxElectronLauncherContent, linuxRealExecutableName }
 } = require('./after-pack.cjs')
 
-const APPIMAGE_FILE_PATTERN = /^Kun-[0-9A-Za-z][0-9A-Za-z._-]*-linux-x86_64\.AppImage$/
+const APPIMAGE_FILE_PATTERN = /^Rcode-[0-9A-Za-z][0-9A-Za-z._-]*-linux-x86_64\.AppImage$/
 const APPIMAGE_EXTRACTION_TIMEOUT_MS = 120_000
 
 function assertLinuxX64(platform = process.platform, arch = process.arch) {
@@ -126,7 +126,7 @@ function runAppImageSmoke(options = {}) {
 
   const extractionDirectory = options.extractionDirectory
     ? resolve(options.extractionDirectory)
-    : mkdtempSync(join(tmpdir(), 'kun-appimage-extract-'))
+    : mkdtempSync(join(tmpdir(), 'Rcode-appimage-extract-'))
   const ownsExtractionDirectory = options.extractionDirectory === undefined
   inspectEmptyExtractionDirectory(extractionDirectory)
 

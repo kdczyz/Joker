@@ -4,16 +4,16 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   extensionResourceHeaders,
-  parseKunExtensionUrl,
-  registerKunExtensionSchemeAsPrivileged,
-  resolveKunExtensionResource,
+  parseRcodeExtensionUrl,
+  registerRcodeExtensionSchemeAsPrivileged,
+  resolveRcodeExtensionResource,
   type ExtensionResourceDescriptor
 } from './extension-resource-protocol'
 
 const roots: string[] = []
 
 async function fixture(): Promise<ExtensionResourceDescriptor> {
-  const root = await mkdtemp(join(tmpdir(), 'kun-extension-protocol-'))
+  const root = await mkdtemp(join(tmpdir(), 'Rcode-extension-protocol-'))
   roots.push(root)
   await mkdir(join(root, 'dist', 'assets'), { recursive: true })
   await writeFile(join(root, 'dist', 'index.html'), '<!doctype html>')
@@ -33,13 +33,13 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 
-describe('kun-extension protocol confinement', () => {
+describe('Rcode-extension protocol confinement', () => {
   it('registers a secure standard scheme without bypassing CSP', () => {
     const registerSchemesAsPrivileged = vi.fn()
-    registerKunExtensionSchemeAsPrivileged({ registerSchemesAsPrivileged } as never)
+    registerRcodeExtensionSchemeAsPrivileged({ registerSchemesAsPrivileged } as never)
     expect(registerSchemesAsPrivileged).toHaveBeenCalledWith([
       expect.objectContaining({
-        scheme: 'kun-extension',
+        scheme: 'Rcode-extension',
         privileges: expect.objectContaining({ secure: true, standard: true, bypassCSP: false })
       })
     ])
@@ -48,28 +48,28 @@ describe('kun-extension protocol confinement', () => {
   it('loads only exact files and files below declared roots', async () => {
     const descriptor = await fixture()
     const resolveDescriptor = async () => descriptor
-    await expect(resolveKunExtensionResource(
-      'kun-extension://acme.example/dist/index.html?kunViewSession=1234567890abcdef',
+    await expect(resolveRcodeExtensionResource(
+      'Rcode-extension://acme.example/dist/index.html?RcodeViewSession=1234567890abcdef',
       resolveDescriptor
     )).resolves.toMatchObject({ relativePath: 'dist/index.html' })
-    await expect(resolveKunExtensionResource(
-      'kun-extension://acme.example/dist/assets/app.js',
+    await expect(resolveRcodeExtensionResource(
+      'Rcode-extension://acme.example/dist/assets/app.js',
       resolveDescriptor
     )).resolves.toMatchObject({ relativePath: 'dist/assets/app.js' })
-    await expect(resolveKunExtensionResource(
-      'kun-extension://acme.example/kun-extension.json',
+    await expect(resolveRcodeExtensionResource(
+      'Rcode-extension://acme.example/Rcode-extension.json',
       resolveDescriptor
     )).rejects.toThrow(/RESOURCE_NOT_DECLARED/)
   })
 
   it('allows cross-origin host embedding only for declared icon files', async () => {
     const descriptor = await fixture()
-    await expect(resolveKunExtensionResource(
-      'kun-extension://acme.example/dist/icon.svg?kunHostResource=icon',
+    await expect(resolveRcodeExtensionResource(
+      'Rcode-extension://acme.example/dist/icon.svg?RcodeHostResource=icon',
       async () => descriptor
     )).resolves.toMatchObject({ relativePath: 'dist/icon.svg', hostResource: 'icon' })
-    await expect(resolveKunExtensionResource(
-      'kun-extension://acme.example/dist/index.html?kunHostResource=icon',
+    await expect(resolveRcodeExtensionResource(
+      'Rcode-extension://acme.example/dist/index.html?RcodeHostResource=icon',
       async () => descriptor
     )).rejects.toThrow(/HOST_ICON_NOT_DECLARED/)
     expect(extensionResourceHeaders('dist/icon.svg', true)).toMatchObject({
@@ -83,20 +83,20 @@ describe('kun-extension protocol confinement', () => {
 
   it('rejects traversal, cross-extension descriptors and symlink escape', async () => {
     const descriptor = await fixture()
-    expect(() => parseKunExtensionUrl(
-      'kun-extension://acme.example/dist/%2e%2e/secret.txt'
+    expect(() => parseRcodeExtensionUrl(
+      'Rcode-extension://acme.example/dist/%2e%2e/secret.txt'
     )).toThrow(/PATH_INVALID/)
-    await expect(resolveKunExtensionResource(
-      'kun-extension://other.example/dist/index.html',
+    await expect(resolveRcodeExtensionResource(
+      'Rcode-extension://other.example/dist/index.html',
       async () => descriptor
     )).rejects.toThrow(/EXTENSION_NOT_AVAILABLE/)
 
-    const outside = await mkdtemp(join(tmpdir(), 'kun-extension-outside-'))
+    const outside = await mkdtemp(join(tmpdir(), 'Rcode-extension-outside-'))
     roots.push(outside)
     await writeFile(join(outside, 'secret.js'), 'secret')
     await symlink(join(outside, 'secret.js'), join(descriptor.packageRoot, 'dist', 'assets', 'link.js'))
-    await expect(resolveKunExtensionResource(
-      'kun-extension://acme.example/dist/assets/link.js',
+    await expect(resolveRcodeExtensionResource(
+      'Rcode-extension://acme.example/dist/assets/link.js',
       async () => descriptor
     )).rejects.toThrow(/RESOURCE_ROOT_ESCAPE/)
   })
@@ -111,10 +111,10 @@ describe('kun-extension protocol confinement', () => {
       "connect-src 'none'"
     )
     expect(extensionResourceHeaders('dist/index.html')['Content-Security-Policy']).toContain(
-      "img-src 'self' data: kun-media:"
+      "img-src 'self' data: Rcode-media:"
     )
     expect(extensionResourceHeaders('dist/index.html')['Content-Security-Policy']).toContain(
-      "media-src 'self' kun-media:"
+      "media-src 'self' Rcode-media:"
     )
     expect(extensionResourceHeaders('dist/index.html')['Content-Security-Policy']).toContain(
       "frame-src 'none'"

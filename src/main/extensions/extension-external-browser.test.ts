@@ -117,7 +117,7 @@ describe('ExtensionExternalBrowserManager', () => {
       bounds: { x: 900, y: 700, width: 300, height: 100 },
       visible: true
     })
-    expect(externalBrowserPartition('acme.social')).toMatch(/^persist:kun-external-[a-f0-9]{32}$/)
+    expect(externalBrowserPartition('acme.social')).toMatch(/^persist:Rcode-external-[a-f0-9]{32}$/)
     expect(externalBrowserPartition('acme.social')).not.toBe(externalBrowserPartition('other.social'))
     expect(externalBrowserPartition('acme.social', 'mobile')).toBe(
       externalBrowserPartition('acme.social', 'desktop')

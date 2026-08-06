@@ -65,9 +65,9 @@ describe('parseMemoryProfileImport', () => {
     expect(buildMemoryImportContent({
       date: 'unknown',
       category: '项目',
-      content: 'Kun: 桌面 AI 应用。',
+      content: 'Rcode: 桌面 AI 应用。',
       tags: []
-    })).toBe('[unknown] 项目: Kun: 桌面 AI 应用。')
+    })).toBe('[unknown] 项目: Rcode: 桌面 AI 应用。')
   })
 })
 
@@ -88,7 +88,7 @@ describe('buildMemoryMarkdownExport', () => {
           id: 'mem_2',
           content: '偏好: 喜欢 TypeScript。',
           scope: 'workspace',
-          workspace: '/tmp/kun',
+          workspace: '/tmp/Rcode',
           tags: ['preference'],
           createdAt: '2026-07-02T00:00:00.000Z',
           updatedAt: '2026-07-02T00:00:00.000Z',
@@ -106,17 +106,17 @@ describe('buildMemoryMarkdownExport', () => {
       ]
     })
 
-    expect(markdown).toContain('# Kun 记忆导出')
+    expect(markdown).toContain('# Rcode 记忆导出')
     expect(markdown).toContain('记录数量: 2')
     expect(markdown).toContain('## 指令')
     expect(markdown).toContain('[2026-07-01] - 回答要直接。')
     expect(markdown).not.toContain('[2026-07-04] - 回答要直接。')
     expect(markdown).toContain('## 偏好')
-    expect(markdown).toContain('[2026-07-02] - 偏好: 喜欢 TypeScript。 [disabled] (workspace: /tmp/kun)')
+    expect(markdown).toContain('[2026-07-02] - 偏好: 喜欢 TypeScript。 [disabled] (workspace: /tmp/Rcode)')
     expect(markdown).not.toContain('不要导出')
   })
 
   it('uses a dated default export filename', () => {
-    expect(defaultMemoryExportFileName(new Date('2026-07-03T12:00:00.000Z'))).toBe('kun-memory-export-2026-07-03.md')
+    expect(defaultMemoryExportFileName(new Date('2026-07-03T12:00:00.000Z'))).toBe('Rcode-memory-export-2026-07-03.md')
   })
 })

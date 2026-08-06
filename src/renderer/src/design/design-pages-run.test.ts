@@ -38,7 +38,7 @@ describe('runDesignPages parallel fanout', () => {
   const writeWorkspaceFile = vi.fn(async (_payload: { path?: string }) => ({ ok: true as const }))
 
   beforeEach(() => {
-    vi.stubGlobal('window', { kunGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
     writeWorkspaceFile.mockClear()
     useChatStore.setState({
       blocks: [],
@@ -79,7 +79,7 @@ describe('runDesignPages parallel fanout', () => {
           {
             kind: 'assistant',
             id: 'assistant_plan',
-            text: '```pages\n[{"title":"Landing","brief":"Landing page","userGoal":"Decide whether to join the IKUN community","dataExamples":["8,421 active members","June watch party","VIP tier $12"],"states":["loading featured posts","empty events"],"primaryAction":"Join community","linksTo":["Community"]},{"title":"Community","brief":"Community feed","userGoal":"Browse member stories and post an update","dataExamples":["Mina Chen","3 new replies","Shanghai fan club"],"states":["empty feed","posting disabled"],"primaryAction":"Post update","linksTo":["Landing"]}]\n```',
+            text: '```pages\n[{"title":"Landing","brief":"Landing page","userGoal":"Decide whether to join the IRCODE community","dataExamples":["8,421 active members","June watch party","VIP tier $12"],"states":["loading featured posts","empty events"],"primaryAction":"Join community","linksTo":["Community"]},{"title":"Community","brief":"Community feed","userGoal":"Browse member stories and post an update","dataExamples":["Mina Chen","3 new replies","Shanghai fan club"],"states":["empty feed","posting disabled"],"primaryAction":"Post update","linksTo":["Landing"]}]\n```',
             createdAt
           }
         ])
@@ -106,7 +106,7 @@ describe('runDesignPages parallel fanout', () => {
     })
 
     await runDesignPages({
-      brief: 'IKUN community',
+      brief: 'IRCODE community',
       workspaceRoot: '/workspace',
       sendMessage,
       foundation: false
@@ -116,7 +116,7 @@ describe('runDesignPages parallel fanout', () => {
     const fanoutPrompt = String(sendMessage.mock.calls[1]?.[0] ?? '')
     expect(fanoutPrompt).toContain('fan out a multi-page design build')
     expect(fanoutPrompt).toContain('delegate_task')
-    expect(fanoutPrompt).toContain('User goal for this page: Decide whether to join the IKUN community')
+    expect(fanoutPrompt).toContain('User goal for this page: Decide whether to join the IRCODE community')
     expect(fanoutPrompt).toContain('Required realistic content/data to visibly include:')
     expect(fanoutPrompt).toContain('8,421 active members')
     expect(fanoutPrompt).toContain('Key UI states to represent or document in the screen:')
@@ -131,7 +131,7 @@ describe('runDesignPages parallel fanout', () => {
     expect(useDesignWorkspaceStore.getState().artifacts).toHaveLength(2)
     const artifacts = useDesignWorkspaceStore.getState().artifacts
     expect(new Set(artifacts.map((artifact) => artifact.direction?.id))).toHaveLength(1)
-    expect(artifacts.every((artifact) => artifact.direction?.name === 'IKUN community')).toBe(true)
+    expect(artifacts.every((artifact) => artifact.direction?.name === 'IRCODE community')).toBe(true)
     expect(useDesignWorkspaceStore.getState().pagesRun).toBeNull()
     expect(Object.values(useDesignWorkspaceStore.getState().parallelPageStates)).toHaveLength(2)
     expect(Object.values(useDesignWorkspaceStore.getState().parallelPageStates).every((state) => state.status === 'done')).toBe(true)
@@ -142,10 +142,10 @@ describe('runDesignPages parallel fanout', () => {
     expect(htmlWrites).toHaveLength(2)
     const projectDesignMdWrite = writeWorkspaceFile.mock.calls.find((call) => {
       const payload = call[0] as { path?: string; content?: string } | undefined
-      return payload?.path === '.kun-design/HANDOFF.md'
+      return payload?.path === '.Rcode-design/HANDOFF.md'
     })?.[0] as { content?: string } | undefined
     expect(projectDesignMdWrite?.content).toContain('# DESIGN.md: Doc')
-    expect(projectDesignMdWrite?.content).toContain('IKUN community')
+    expect(projectDesignMdWrite?.content).toContain('IRCODE community')
     expect(projectDesignMdWrite?.content).toContain('Join community')
     expect(projectDesignMdWrite?.content).toContain('../')
   })

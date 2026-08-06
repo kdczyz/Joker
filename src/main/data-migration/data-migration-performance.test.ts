@@ -10,14 +10,14 @@ import {
   type DataMigrationPackageEntry
 } from '../../shared/data-migration'
 import {
-  validateKunpackArchiveDirectory
+  validateRcodepackArchiveDirectory
 } from './archive-security'
 import {
   extractZip64ArchiveEntries,
   prepareZip64ArchiveEntries,
   writeZip64Archive,
   type Zip64DirectoryEntry
-} from './kunpack-zip'
+} from './Rcodepack-zip'
 
 const roots: string[] = []
 
@@ -36,7 +36,7 @@ afterEach(async () => {
 
 describe('data migration streaming performance', () => {
   it('streams a large file with bounded buffer growth and intra-file progress', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kunpack-large-file-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcodepack-large-file-'))
     roots.push(root)
     const sourcePath = join(root, 'large.bin')
     const archivePath = join(root, 'large.zip')
@@ -107,7 +107,7 @@ describe('data migration streaming performance', () => {
     }
     const baseline = process.memoryUsage().heapUsed
     const started = performance.now()
-    validateKunpackArchiveDirectory(directory, declarations)
+    validateRcodepackArchiveDirectory(directory, declarations)
     const elapsedMs = performance.now() - started
     const heapGrowth = process.memoryUsage().heapUsed - baseline
 

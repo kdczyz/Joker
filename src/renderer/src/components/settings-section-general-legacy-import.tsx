@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactElement } from 'react'
 import { ArchiveRestore, FolderOpen, Loader2 } from 'lucide-react'
-import type { LegacySessionDetectResult } from '@shared/kun-gui-api'
+import type { LegacySessionDetectResult } from '@shared/Rcode-gui-api'
 import { compactHomePathForSettingsDisplay } from '../lib/settings-home-paths'
 import { InlineNoticeView, SettingsCard, SettingRow, type InlineNotice } from './settings-controls'
 
@@ -27,13 +27,13 @@ export function LegacySessionImportCard({
   const [notice, setNotice] = useState<InlineNotice | null>(null)
 
   const refreshDetection = useCallback(async () => {
-    if (typeof window.kunGui?.detectLegacySessions !== 'function') {
+    if (typeof window.RcodeGui?.detectLegacySessions !== 'function') {
       setDetecting(false)
       return
     }
     setDetecting(true)
     try {
-      setDetection(await window.kunGui.detectLegacySessions())
+      setDetection(await window.RcodeGui.detectLegacySessions())
     } catch (error) {
       setNotice({ tone: 'error', message: error instanceof Error ? error.message : String(error) })
     } finally {
@@ -47,11 +47,11 @@ export function LegacySessionImportCard({
 
   const runImport = useCallback(
     async (sourceDir?: string) => {
-      if (typeof window.kunGui?.importLegacySessions !== 'function') return
+      if (typeof window.RcodeGui?.importLegacySessions !== 'function') return
       setBusy(true)
       setNotice(null)
       try {
-        const result = await window.kunGui.importLegacySessions(sourceDir)
+        const result = await window.RcodeGui.importLegacySessions(sourceDir)
         if (!result.ok) {
           setNotice({ tone: 'error', message: result.message })
           return
@@ -65,17 +65,17 @@ export function LegacySessionImportCard({
           message: t('legacyImportResult', { imported: result.imported, skipped: result.skipped })
         })
         await refreshDetection()
-        if (result.imported > 0 && typeof window.kunGui?.confirmDialog === 'function') {
-          const restart = await window.kunGui.confirmDialog({
+        if (result.imported > 0 && typeof window.RcodeGui?.confirmDialog === 'function') {
+          const restart = await window.RcodeGui.confirmDialog({
             message: t('legacyImportRestartTitle'),
             detail: t('legacyImportRestartDetail', { count: result.imported }),
             confirmLabel: t('legacyImportRestartConfirm'),
             cancelLabel: tCommon('cancel')
           })
-          if (restart && typeof window.kunGui?.restartRuntime === 'function') {
+          if (restart && typeof window.RcodeGui?.restartRuntime === 'function') {
             setRestarting(true)
             try {
-              await window.kunGui.restartRuntime()
+              await window.RcodeGui.restartRuntime()
             } finally {
               setRestarting(false)
             }
@@ -91,9 +91,9 @@ export function LegacySessionImportCard({
   )
 
   const pickAndImport = useCallback(async () => {
-    if (typeof window.kunGui?.pickLegacySessionDir !== 'function') return
+    if (typeof window.RcodeGui?.pickLegacySessionDir !== 'function') return
     try {
-      const picked = await window.kunGui.pickLegacySessionDir()
+      const picked = await window.RcodeGui.pickLegacySessionDir()
       if (picked.canceled || !picked.path) return
       await runImport(picked.path)
     } catch (error) {

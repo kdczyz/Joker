@@ -930,7 +930,7 @@ export function applyPresentationOperations(
   }
 }
 
-const MODEL_MARKER_START = '<script id="kun-presentation-model" type="application/json">'
+const MODEL_MARKER_START = '<script id="Rcode-presentation-model" type="application/json">'
 const MODEL_MARKER_END = '</script>'
 
 function escapeHtml(value: string): string {
@@ -1004,7 +1004,7 @@ function renderElement(
   className: string,
   slideId: string
 ): string {
-  const attributes = `class="kun-element ${className} kun-${element.type}" data-kun-slide-id="${escapeHtml(slideId)}" data-kun-element-id="${escapeHtml(element.id)}"`
+  const attributes = `class="Rcode-element ${className} Rcode-${element.type}" data-Rcode-slide-id="${escapeHtml(slideId)}" data-Rcode-element-id="${escapeHtml(element.id)}"`
   if (element.type === 'text') return `<div ${attributes}>${escapeHtml(element.text)}</div>`
   if (element.type === 'shape') {
     return `<div ${attributes} role="img" aria-label="${escapeHtml(`${element.shape} shape`)}"></div>`
@@ -1016,14 +1016,14 @@ export function serializePresentationHtml(value: PresentationProject): string {
   const project = normalizePresentationProject(value)
   const dynamicCss: string[] = []
   const slides = project.slides.map((slide, slideIndex) => {
-    const slideClass = `kun-slide-${slideIndex}`
+    const slideClass = `Rcode-slide-${slideIndex}`
     dynamicCss.push(`.${slideClass}{background:${slide.backgroundColor ?? project.theme.backgroundColor}}`)
     const elements = slide.elements.map((element, elementIndex) => {
-      const className = `kun-element-${slideIndex}-${elementIndex}`
+      const className = `Rcode-element-${slideIndex}-${elementIndex}`
       dynamicCss.push(elementCss(element, className, elementIndex))
       return renderElement(element, className, slide.id)
     }).join('\n')
-    return `<section class="kun-slide ${slideClass}" data-kun-slide-id="${escapeHtml(slide.id)}" aria-label="${escapeHtml(slide.title)}">
+    return `<section class="Rcode-slide ${slideClass}" data-Rcode-slide-id="${escapeHtml(slide.id)}" aria-label="${escapeHtml(slide.title)}">
 ${elements}
 </section>`
   }).join('\n')
@@ -1040,17 +1040,17 @@ ${MODEL_MARKER_START}${embeddedJson}${MODEL_MARKER_END}
 :root{color-scheme:dark;font-family:${fontStack(project.theme.fontFamily)};background:#0B0F19}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:#0B0F19}
-.kun-deck{display:grid;gap:5vh;justify-items:center;padding:5vh 3vw;scroll-snap-type:y mandatory}
-.kun-slide{position:relative;container-type:inline-size;width:min(94vw,calc(90vh * 16 / 9));aspect-ratio:16/9;overflow:hidden;scroll-snap-align:center;box-shadow:0 1rem 3rem #0008}
-.kun-element{position:absolute;margin:0;box-sizing:border-box;overflow:hidden}
-.kun-text{display:flex;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.15}
-.kun-image{display:block}
+.Rcode-deck{display:grid;gap:5vh;justify-items:center;padding:5vh 3vw;scroll-snap-type:y mandatory}
+.Rcode-slide{position:relative;container-type:inline-size;width:min(94vw,calc(90vh * 16 / 9));aspect-ratio:16/9;overflow:hidden;scroll-snap-align:center;box-shadow:0 1rem 3rem #0008}
+.Rcode-element{position:absolute;margin:0;box-sizing:border-box;overflow:hidden}
+.Rcode-text{display:flex;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.15}
+.Rcode-image{display:block}
 ${dynamicCss.join('\n')}
-@media print{@page{size:13.333in 7.5in;margin:0}html,body{background:#fff}.kun-deck{display:block;padding:0}.kun-slide{width:13.333in;height:7.5in;break-after:page;box-shadow:none}.kun-slide:last-child{break-after:auto}}
+@media print{@page{size:13.333in 7.5in;margin:0}html,body{background:#fff}.Rcode-deck{display:block;padding:0}.Rcode-slide{width:13.333in;height:7.5in;break-after:page;box-shadow:none}.Rcode-slide:last-child{break-after:auto}}
 </style>
 </head>
 <body>
-<main class="kun-deck" data-kun-presentation-id="${escapeHtml(project.id)}">
+<main class="Rcode-deck" data-Rcode-presentation-id="${escapeHtml(project.id)}">
 ${slides}
 </main>
 </body>

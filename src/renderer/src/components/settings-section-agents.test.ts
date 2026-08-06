@@ -3,7 +3,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
   DEFAULT_MODEL_PROVIDER_ID,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   getModelProviderPreset,
   modelProviderPresetProfile,
@@ -20,9 +20,9 @@ const labels: Record<string, string> = {
   agents: 'Agents',
   providers: 'Providers',
   providersDesc: 'Providers description',
-  kunProvider: 'Provider',
-  kunProviderDesc: 'Provider description',
-  kunProviderSelectDesc: 'Provider select description',
+  RcodeProvider: 'Provider',
+  RcodeProviderDesc: 'Provider description',
+  RcodeProviderSelectDesc: 'Provider select description',
   modelProviderAdd: 'Add provider',
   modelProviderAddMenuCustom: 'Custom provider…',
   modelProviderSectionBasics: 'Provider basics',
@@ -68,128 +68,128 @@ const labels: Record<string, string> = {
   imageGenModel: 'Image model',
   imageGenBaseUrlPlaceholder: 'https://api.example.com/v1',
   baseUrlPlaceholder: 'https://api.example.com/v1',
-  kunApiKey: 'Kun API key',
-  kunApiKeyDesc: 'Kun API key description',
-  kunApiKeyPlaceholder: 'Inherit API key',
-  kunApiKeyInherited: 'Inherited API key',
-  kunApiKeyMissing: 'Missing API key',
-  kunApiKeyOverride: 'Override API key',
-  kunBaseUrl: 'Kun base URL',
-  kunBaseUrlDesc: 'Kun base URL description',
-  kunBaseUrlPlaceholder: 'Inherit base URL',
-  kunBaseUrlOfficial: 'Official base URL',
-  kunBaseUrlInherited: 'Inherited base URL',
-  kunBaseUrlOverride: 'Override base URL',
-  kunAssistantAdvanced: 'Assistant advanced settings',
-  kunAssistantAdvancedDesc: 'Assistant advanced settings description',
+  RcodeApiKey: 'Rcode API key',
+  RcodeApiKeyDesc: 'Rcode API key description',
+  RcodeApiKeyPlaceholder: 'Inherit API key',
+  RcodeApiKeyInherited: 'Inherited API key',
+  RcodeApiKeyMissing: 'Missing API key',
+  RcodeApiKeyOverride: 'Override API key',
+  RcodeBaseUrl: 'Rcode base URL',
+  RcodeBaseUrlDesc: 'Rcode base URL description',
+  RcodeBaseUrlPlaceholder: 'Inherit base URL',
+  RcodeBaseUrlOfficial: 'Official base URL',
+  RcodeBaseUrlInherited: 'Inherited base URL',
+  RcodeBaseUrlOverride: 'Override base URL',
+  RcodeAssistantAdvanced: 'Assistant advanced settings',
+  RcodeAssistantAdvancedDesc: 'Assistant advanced settings description',
   autoStart: 'Auto start',
   autoStartDesc: 'Auto start description',
   port: 'Port',
   portDesc: 'Port description',
-  kunBinary: 'Kun binary',
-  kunBinaryDesc: 'Kun binary description',
-  kunBinaryPlaceholder: 'Bundled Kun',
-  kunDataDir: 'Data dir',
-  kunDataDirDesc: 'Data dir description',
-  kunModel: 'Model',
-  kunModelDesc: 'Model description',
-  kunTokenEconomy: 'Token-saving mode',
-  kunTokenEconomyDesc: 'Token-saving mode description',
-  kunTokenEconomySavings: 'Saved {{tokens}} tokens',
-  kunTokenEconomySavingsLoading: 'Loading savings',
-  kunTokenEconomySavingsEmpty: 'Savings empty',
-  kunTokenEconomyAdvanced: 'Token-saving advanced settings',
-  kunTokenEconomyAdvancedDesc: 'Token-saving advanced settings description',
-  kunTokenEconomyOptions: 'Token-saving options',
-  kunTokenEconomyOptionsDesc: 'Token-saving options description',
-  kunCompressToolDescriptions: 'Compress tool descriptions',
-  kunCompressToolResults: 'Compress tool results',
-  kunConciseResponses: 'Concise responses',
-  kunHistoryHygiene: 'History guard',
-  kunHistoryHygieneDesc: 'History guard description',
-  kunHistoryMaxResultLines: 'Max result lines',
-  kunHistoryMaxResultBytes: 'Max result bytes',
-  kunHistoryMaxResultTokens: 'Max result tokens',
-  kunHistoryMaxArgumentBytes: 'Max argument bytes',
-  kunHistoryMaxArgumentTokens: 'Max argument tokens',
-  kunHistoryMaxArrayItems: 'Max array items',
+  RcodeBinary: 'Rcode binary',
+  RcodeBinaryDesc: 'Rcode binary description',
+  RcodeBinaryPlaceholder: 'Bundled Rcode',
+  RcodeDataDir: 'Data dir',
+  RcodeDataDirDesc: 'Data dir description',
+  RcodeModel: 'Model',
+  RcodeModelDesc: 'Model description',
+  RcodeTokenEconomy: 'Token-saving mode',
+  RcodeTokenEconomyDesc: 'Token-saving mode description',
+  RcodeTokenEconomySavings: 'Saved {{tokens}} tokens',
+  RcodeTokenEconomySavingsLoading: 'Loading savings',
+  RcodeTokenEconomySavingsEmpty: 'Savings empty',
+  RcodeTokenEconomyAdvanced: 'Token-saving advanced settings',
+  RcodeTokenEconomyAdvancedDesc: 'Token-saving advanced settings description',
+  RcodeTokenEconomyOptions: 'Token-saving options',
+  RcodeTokenEconomyOptionsDesc: 'Token-saving options description',
+  RcodeCompressToolDescriptions: 'Compress tool descriptions',
+  RcodeCompressToolResults: 'Compress tool results',
+  RcodeConciseResponses: 'Concise responses',
+  RcodeHistoryHygiene: 'History guard',
+  RcodeHistoryHygieneDesc: 'History guard description',
+  RcodeHistoryMaxResultLines: 'Max result lines',
+  RcodeHistoryMaxResultBytes: 'Max result bytes',
+  RcodeHistoryMaxResultTokens: 'Max result tokens',
+  RcodeHistoryMaxArgumentBytes: 'Max argument bytes',
+  RcodeHistoryMaxArgumentTokens: 'Max argument tokens',
+  RcodeHistoryMaxArrayItems: 'Max array items',
   runtimeToken: 'Runtime token',
   runtimeTokenDesc: 'Runtime token description',
   showSecret: 'Show',
   hideSecret: 'Hide',
-  kunInsecure: 'Insecure',
-  kunInsecureDesc: 'Insecure description',
-  kunInsecureForcedDesc: 'Insecure forced',
-  kunAdvanced: 'Advanced runtime settings',
-  kunAdvancedDetails: 'Storage, model context, and tool guards',
-  kunAdvancedDetailsDesc: 'Per-model context policy comes from models.profiles',
-  kunStorageBackend: 'Storage backend',
-  kunStorageBackendDesc: 'Storage backend description',
-  kunStorageHybrid: 'Hybrid storage',
-  kunStorageFile: 'Pure JSONL file storage',
-  kunStorageSqlitePath: 'SQLite path',
-  kunStorageSqlitePathDesc: 'SQLite path description',
-  kunStorageSqlitePathPlaceholder: 'Automatic SQLite path',
-  kunModelContextProfile: 'Current model context policy',
-  kunModelContextProfileDesc: 'Current model context policy description',
-  kunModelContextModel: 'Matched model',
-  kunModelContextWindow: 'Context window',
-  kunModelContextSoft: 'Model soft threshold',
-  kunModelContextHard: 'Model hard threshold',
-  kunModelContextSourceBuiltIn: 'Built-in model config',
-  kunModelContextSourceFallback: 'Fallback model config',
-  kunCompactionThresholds: 'Fallback compaction thresholds',
-  kunCompactionThresholdsDesc: 'Fallback compaction thresholds description',
-  kunCompactionSoftThreshold: 'Fallback soft threshold',
-  kunCompactionHardThreshold: 'Fallback hard threshold',
-  kunCompactionSummary: 'Compaction summary',
-  kunCompactionSummaryDesc: 'Compaction summary description',
-  kunCompactionSummaryMode: 'Summary mode',
-  kunCompactionSummaryHeuristic: 'Heuristic summary',
-  kunCompactionSummaryModel: 'Model summary',
-  kunCompactionSummaryTimeout: 'Summary timeout',
-  kunCompactionSummaryMaxTokens: 'Summary max tokens',
-  kunCompactionSummaryInputBytes: 'Summary input bytes',
-  kunMaxWallTime: 'Maximum turn duration',
-  kunMaxWallTimeDesc: 'Maximum turn duration description',
-  kunStreamIdleTimeout: 'Stream idle timeout',
-  kunStreamIdleTimeoutDesc: 'Stream idle timeout description',
-  kunToolStorm: 'Tool storm',
-  kunToolStormDesc: 'Tool storm description',
-  kunToolStormLimits: 'Tool storm limits',
-  kunToolStormLimitsDesc: 'Tool storm limits description',
-  kunToolStormWindowSize: 'Tool storm window',
-  kunToolStormThreshold: 'Tool storm threshold',
-  kunToolOutputLimits: 'Tool output limits',
-  kunToolOutputLimitsDesc: 'Tool output limits description',
-  kunToolOutputMaxLines: 'Tool output max lines',
-  kunToolOutputMaxBytes: 'Tool output max bytes',
-  kunToolArgumentRepair: 'Tool argument repair',
-  kunToolArgumentRepairDesc: 'Tool argument repair description',
-  kunInstructions: 'AGENTS.md instructions',
-  kunInstructionsDesc: 'AGENTS.md instructions description',
-  kunInstructionsDiagnostics: '1 source injected last turn',
-  kunDiagnostics: 'Kun diagnostics',
-  kunDiagnosticsAdvanced: 'Detailed diagnostics',
-  kunDiagnosticsAdvancedDesc: 'Detailed diagnostics description',
-  kunRuntimeCapabilities: 'Runtime capabilities',
-  kunRuntimeCapabilitiesDesc: 'Runtime capabilities description',
-  kunRuntimeModel: 'Runtime model',
-  kunRuntimePid: 'Runtime PID',
-  kunDiagnosticsRefresh: 'Refresh diagnostics',
-  kunToolDiagnostics: 'Tool diagnostics',
-  kunToolDiagnosticsDesc: 'Tool diagnostics description',
-  kunDiagnosticsProviders: 'Providers',
-  kunDiagnosticsMcpServers: 'MCP servers',
-  kunDiagnosticsSkills: 'Discovered Skills',
-  kunDiagnosticsAttachments: 'Attachments',
-  kunMemoryRecords: 'Memory records',
-  kunMemoryRecordsDesc: 'Memory records description',
-  kunMemoryEmpty: 'No memories',
-  kunMemoryDisable: 'Disable memory',
+  RcodeInsecure: 'Insecure',
+  RcodeInsecureDesc: 'Insecure description',
+  RcodeInsecureForcedDesc: 'Insecure forced',
+  RcodeAdvanced: 'Advanced runtime settings',
+  RcodeAdvancedDetails: 'Storage, model context, and tool guards',
+  RcodeAdvancedDetailsDesc: 'Per-model context policy comes from models.profiles',
+  RcodeStorageBackend: 'Storage backend',
+  RcodeStorageBackendDesc: 'Storage backend description',
+  RcodeStorageHybrid: 'Hybrid storage',
+  RcodeStorageFile: 'Pure JSONL file storage',
+  RcodeStorageSqlitePath: 'SQLite path',
+  RcodeStorageSqlitePathDesc: 'SQLite path description',
+  RcodeStorageSqlitePathPlaceholder: 'Automatic SQLite path',
+  RcodeModelContextProfile: 'Current model context policy',
+  RcodeModelContextProfileDesc: 'Current model context policy description',
+  RcodeModelContextModel: 'Matched model',
+  RcodeModelContextWindow: 'Context window',
+  RcodeModelContextSoft: 'Model soft threshold',
+  RcodeModelContextHard: 'Model hard threshold',
+  RcodeModelContextSourceBuiltIn: 'Built-in model config',
+  RcodeModelContextSourceFallback: 'Fallback model config',
+  RcodeCompactionThresholds: 'Fallback compaction thresholds',
+  RcodeCompactionThresholdsDesc: 'Fallback compaction thresholds description',
+  RcodeCompactionSoftThreshold: 'Fallback soft threshold',
+  RcodeCompactionHardThreshold: 'Fallback hard threshold',
+  RcodeCompactionSummary: 'Compaction summary',
+  RcodeCompactionSummaryDesc: 'Compaction summary description',
+  RcodeCompactionSummaryMode: 'Summary mode',
+  RcodeCompactionSummaryHeuristic: 'Heuristic summary',
+  RcodeCompactionSummaryModel: 'Model summary',
+  RcodeCompactionSummaryTimeout: 'Summary timeout',
+  RcodeCompactionSummaryMaxTokens: 'Summary max tokens',
+  RcodeCompactionSummaryInputBytes: 'Summary input bytes',
+  RcodeMaxWallTime: 'Maximum turn duration',
+  RcodeMaxWallTimeDesc: 'Maximum turn duration description',
+  RcodeStreamIdleTimeout: 'Stream idle timeout',
+  RcodeStreamIdleTimeoutDesc: 'Stream idle timeout description',
+  RcodeToolStorm: 'Tool storm',
+  RcodeToolStormDesc: 'Tool storm description',
+  RcodeToolStormLimits: 'Tool storm limits',
+  RcodeToolStormLimitsDesc: 'Tool storm limits description',
+  RcodeToolStormWindowSize: 'Tool storm window',
+  RcodeToolStormThreshold: 'Tool storm threshold',
+  RcodeToolOutputLimits: 'Tool output limits',
+  RcodeToolOutputLimitsDesc: 'Tool output limits description',
+  RcodeToolOutputMaxLines: 'Tool output max lines',
+  RcodeToolOutputMaxBytes: 'Tool output max bytes',
+  RcodeToolArgumentRepair: 'Tool argument repair',
+  RcodeToolArgumentRepairDesc: 'Tool argument repair description',
+  RcodeInstructions: 'AGENTS.md instructions',
+  RcodeInstructionsDesc: 'AGENTS.md instructions description',
+  RcodeInstructionsDiagnostics: '1 source injected last turn',
+  RcodeDiagnostics: 'Rcode diagnostics',
+  RcodeDiagnosticsAdvanced: 'Detailed diagnostics',
+  RcodeDiagnosticsAdvancedDesc: 'Detailed diagnostics description',
+  RcodeRuntimeCapabilities: 'Runtime capabilities',
+  RcodeRuntimeCapabilitiesDesc: 'Runtime capabilities description',
+  RcodeRuntimeModel: 'Runtime model',
+  RcodeRuntimePid: 'Runtime PID',
+  RcodeDiagnosticsRefresh: 'Refresh diagnostics',
+  RcodeToolDiagnostics: 'Tool diagnostics',
+  RcodeToolDiagnosticsDesc: 'Tool diagnostics description',
+  RcodeDiagnosticsProviders: 'Providers',
+  RcodeDiagnosticsMcpServers: 'MCP servers',
+  RcodeDiagnosticsSkills: 'Discovered Skills',
+  RcodeDiagnosticsAttachments: 'Attachments',
+  RcodeMemoryRecords: 'Memory records',
+  RcodeMemoryRecordsDesc: 'Memory records description',
+  RcodeMemoryEmpty: 'No memories',
+  RcodeMemoryDisable: 'Disable memory',
   memoryRestore: 'Restore',
-  kunMemoryDelete: 'Delete memory',
-  kunMemoryDisabled: 'Disabled',
+  RcodeMemoryDelete: 'Delete memory',
+  RcodeMemoryDisabled: 'Disabled',
   skill: 'Skill',
   skillsLocation: 'Skill location',
   skillsLocationDesc: 'Skill location description',
@@ -315,8 +315,8 @@ function baseCtx(): Record<string, unknown> {
   const noop = () => undefined
   const asyncNoop = async () => undefined
   const ref = { current: null }
-  const kun = {
-    ...defaultKunRuntimeSettings(),
+  const Rcode = {
+    ...defaultRcodeRuntimeSettings(),
     autoStart: true,
     runtimeToken: '',
     insecure: true
@@ -325,10 +325,10 @@ function baseCtx(): Record<string, unknown> {
     t,
     tCommon: t,
     form: { claw: { skills: { extraDirs: ['/tmp/project/.agents/skills'] } } },
-    kun,
+    Rcode,
     activeApiKey: '',
     update: noop,
-    updateKun: noop,
+    updateRcode: noop,
     updateSharedCredential: noop,
     sharedApiKey: '',
     sharedBaseUrl: '',
@@ -379,7 +379,7 @@ function baseCtx(): Record<string, unknown> {
     skillNotice: null,
     openSkillRoot: asyncNoop,
     openPlugins: noop,
-    mcpConfigPath: '/tmp/project/.kun/mcp.json',
+    mcpConfigPath: '/tmp/project/.Rcode/mcp.json',
     mcpConfigExists: true,
     mcpConfigText: '{"mcpServers":{}}',
     setMcpConfigText: noop,
@@ -392,7 +392,7 @@ function baseCtx(): Record<string, unknown> {
     activeProjectWorkspaceRoot: '/tmp/project',
     projectConfig: {
       workspaceRoot: '/tmp/project',
-      path: '/tmp/project/.kun/project.json',
+      path: '/tmp/project/.Rcode/project.json',
       content: '{"version":1}',
       exists: true,
       status: 'valid',
@@ -416,7 +416,7 @@ function baseCtx(): Record<string, unknown> {
     memoryRecords: [],
     runtimeDiagnosticsBusy: false,
     runtimeDiagnosticsNotice: null,
-    refreshKunDiagnostics: asyncNoop,
+    refreshRcodeDiagnostics: asyncNoop,
     disableMemoryRecord: asyncNoop,
     deleteMemoryRecord: asyncNoop,
     pickClawWorkspace: asyncNoop,
@@ -427,7 +427,7 @@ function baseCtx(): Record<string, unknown> {
   }
 }
 
-describe('AgentsSettingsSection Kun diagnostics smoke', () => {
+describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
   it('builds a single patch when adding and selecting a model provider', () => {
     const provider = defaultModelProviderSettings()
     const customProvider = {
@@ -443,13 +443,13 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
     const patch = modelProvidersSettingsPatch({
       provider,
       providers: [...provider.providers, customProvider],
-      kun: { providerId: customProvider.id }
+      Rcode: { providerId: customProvider.id }
     })
 
     expect(patch.provider?.providers).toEqual([...provider.providers, customProvider])
-    expect(patch.agents?.kun?.providerId).toBe(customProvider.id)
-    expect(patch.agents?.kun?.apiKey).toBe('')
-    expect(patch.agents?.kun?.baseUrl).toBe('')
+    expect(patch.agents?.Rcode?.providerId).toBe(customProvider.id)
+    expect(patch.agents?.Rcode?.apiKey).toBe('')
+    expect(patch.agents?.Rcode?.baseUrl).toBe('')
   })
 
   it('builds a single patch when removing the active model provider', () => {
@@ -472,13 +472,13 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
         ]
       },
       providers: provider.providers,
-      kun: { providerId: DEFAULT_MODEL_PROVIDER_ID }
+      Rcode: { providerId: DEFAULT_MODEL_PROVIDER_ID }
     })
 
     expect(patch.provider?.providers).toEqual(provider.providers)
-    expect(patch.agents?.kun?.providerId).toBe(DEFAULT_MODEL_PROVIDER_ID)
-    expect(patch.agents?.kun?.apiKey).toBe('')
-    expect(patch.agents?.kun?.baseUrl).toBe('')
+    expect(patch.agents?.Rcode?.providerId).toBe(DEFAULT_MODEL_PROVIDER_ID)
+    expect(patch.agents?.Rcode?.apiKey).toBe('')
+    expect(patch.agents?.Rcode?.baseUrl).toBe('')
   })
 
   it('builds a single patch when adding a preset model provider', () => {
@@ -490,7 +490,7 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
     const patch = modelProvidersSettingsPatch({
       provider,
       providers: [...provider.providers, xiaomiProvider],
-      kun: {
+      Rcode: {
         providerId: xiaomiProvider.id,
         model: xiaomiProvider.models[0]
       }
@@ -504,7 +504,7 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
         models: expect.arrayContaining(['mimo-v2.5'])
       })
     ]))
-    expect(patch.agents?.kun).toEqual(expect.objectContaining({
+    expect(patch.agents?.Rcode).toEqual(expect.objectContaining({
       providerId: 'xiaomi',
       model: xiaomiProvider.models[0]
     }))
@@ -519,14 +519,14 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
     const patch = modelProvidersSettingsPatch({
       provider,
       providers: [...provider.providers, minimaxProvider],
-      currentKun: defaultKunRuntimeSettings(),
-      kun: {
+      currentRcode: defaultRcodeRuntimeSettings(),
+      Rcode: {
         providerId: minimaxProvider.id,
         model: minimaxProvider.models[0]
       }
     })
 
-    expect(patch.agents?.kun).toEqual(expect.objectContaining({
+    expect(patch.agents?.Rcode).toEqual(expect.objectContaining({
       providerId: 'minimax',
       model: minimaxProvider.models[0],
       textToSpeech: expect.objectContaining({
@@ -565,8 +565,8 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
           ...provider,
           providers: [...provider.providers, customProvider]
         },
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           providerId: customProvider.id
         }
       }
@@ -612,8 +612,8 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
           ...provider,
           providers: [...provider.providers, customProvider]
         },
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           providerId: customProvider.id
         }
       }
@@ -639,8 +639,8 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
           ...provider,
           providers: [...provider.providers, modelProviderPresetProfile(xiaomi!)]
         },
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           providerId: 'xiaomi'
         }
       }
@@ -658,7 +658,7 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
       ctx: {
         ...baseCtx(),
         provider: defaultModelProviderSettings(),
-        kun: defaultKunRuntimeSettings()
+        Rcode: defaultRcodeRuntimeSettings()
       }
     }))
 
@@ -764,7 +764,7 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
 
     const html = renderToStaticMarkup(createElement(AgentsSettingsSection, { ctx }))
 
-    expect(html).toContain('Kun diagnostics')
+    expect(html).toContain('Rcode diagnostics')
     expect(html).toContain('MCP')
     expect(html).toContain('available')
     expect(html).toContain('2/2')
@@ -785,7 +785,7 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
     const html = renderToStaticMarkup(createElement(AgentsSettingsSection, { ctx: baseCtx() }))
 
     expect(html).toContain('External tool config path')
-    expect(html).toContain('/tmp/project/.kun/mcp.json')
+    expect(html).toContain('/tmp/project/.Rcode/mcp.json')
     expect(html).toContain('Model and API credentials do not live in this MCP file')
     expect(html).not.toContain('DeepSeek auth')
     expect(html).not.toContain('Base URL are stored in this file')
@@ -796,7 +796,7 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
     const html = renderToStaticMarkup(createElement(AgentsSettingsSection, { ctx: baseCtx() }))
 
     expect(html).toContain('Project MCP &amp; Skills')
-    expect(html).toContain('/tmp/project/.kun/project.json')
+    expect(html).toContain('/tmp/project/.Rcode/project.json')
     expect(html).toContain('Valid configuration')
     expect(html).toContain('MCP not approved')
     expect(html).toContain('sha256:aaaaaaaaaaaa')
@@ -884,9 +884,9 @@ describe('AgentsSettingsSection Kun diagnostics smoke', () => {
           skillCount: 2
         },
         {
-          id: 'global-kun',
-          disableKey: 'global-kun',
-          path: '/home/me/.kun/skills',
+          id: 'global-Rcode',
+          disableKey: 'global-Rcode',
+          path: '/home/me/.Rcode/skills',
           scope: 'global',
           source: 'common',
           exists: true,

@@ -1,4 +1,4 @@
-import type { SkillRootListItem } from '@shared/kun-gui-api'
+import type { SkillRootListItem } from '@shared/Rcode-gui-api'
 import { parseUsageResponse } from '../hooks/usage-response'
 import { parseMcpConfigText, type McpFormServer } from './mcp/mcp-config-form'
 
@@ -151,7 +151,7 @@ export function modelContextProfileSummary(input: {
       contextWindowLabel: formatTokenNumber(DEEPSEEK_V4_CONTEXT_PROFILE.contextWindowTokens),
       softThresholdLabel: formatTokenNumber(DEEPSEEK_V4_CONTEXT_PROFILE.softThreshold),
       hardThresholdLabel: formatTokenNumber(DEEPSEEK_V4_CONTEXT_PROFILE.hardThreshold),
-      sourceLabelKey: 'kunModelContextSourceBuiltIn'
+      sourceLabelKey: 'RcodeModelContextSourceBuiltIn'
     }
   }
   const model = input.model?.trim() || 'auto'
@@ -160,7 +160,7 @@ export function modelContextProfileSummary(input: {
     contextWindowLabel: 'models.profiles',
     softThresholdLabel: formatTokenNumber(input.fallbackSoftThreshold),
     hardThresholdLabel: formatTokenNumber(input.fallbackHardThreshold),
-    sourceLabelKey: 'kunModelContextSourceFallback'
+    sourceLabelKey: 'RcodeModelContextSourceFallback'
   }
 }
 
@@ -169,8 +169,8 @@ function usageNumber(value: unknown): number {
 }
 
 export async function loadTokenEconomySavingsSummary(): Promise<TokenEconomySavingsSummary | null> {
-  if (typeof window === 'undefined' || typeof window.kunGui?.runtimeRequest !== 'function') return null
-  const response = await window.kunGui.runtimeRequest('/v1/usage?group_by=thread', 'GET')
+  if (typeof window === 'undefined' || typeof window.RcodeGui?.runtimeRequest !== 'function') return null
+  const response = await window.RcodeGui.runtimeRequest('/v1/usage?group_by=thread', 'GET')
   if (!response.ok || !response.body.trim()) return null
   const parsed = parseUsageResponse<{ totals?: Record<string, unknown> }>(response.body, 'token economy usage')
   const totals = parsed.totals ?? {}

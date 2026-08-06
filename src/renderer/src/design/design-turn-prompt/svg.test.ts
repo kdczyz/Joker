@@ -7,8 +7,8 @@ describe('SVG design turn prompt', () => {
       target: 'svg',
       mode: 'text',
       text: 'Create a looping orbit loader with a subtle path draw.',
-      artifactRelativePath: '.kun-design/doc/motion/v1.svg',
-      designNotesPath: '.kun-design/doc/motion/DESIGN.md',
+      artifactRelativePath: '.Rcode-design/doc/motion/v1.svg',
+      designNotesPath: '.Rcode-design/doc/motion/DESIGN.md',
       workspaceRoot: '/workspace',
       designContext: { designTarget: 'web', brandColor: '#7c3aed' }
     })
@@ -19,7 +19,7 @@ describe('SVG design turn prompt', () => {
     expect(prompt).toContain('design_svg_validate')
     expect(prompt).toContain('Never add scripts')
     expect(prompt).toContain('Do not create an HTML page, raster image, or ShapeOps recreation')
-    expect(prompt).toContain('.kun-design/doc/motion/v1.svg')
+    expect(prompt).toContain('.Rcode-design/doc/motion/v1.svg')
     expect(prompt).toContain('Create a looping orbit loader')
   })
 
@@ -28,11 +28,11 @@ describe('SVG design turn prompt', () => {
       target: 'svg',
       mode: 'text',
       text: 'Slow the pulse down.',
-      artifactRelativePath: '.kun-design/doc/motion/v2.svg',
-      basePath: '.kun-design/doc/motion/v1.svg',
+      artifactRelativePath: '.Rcode-design/doc/motion/v2.svg',
+      basePath: '.Rcode-design/doc/motion/v1.svg',
       workspaceRoot: '/workspace'
     })
     expect(prompt).toContain('ITERATE on an existing standalone SVG motion artifact')
-    expect(prompt).toContain('Previous version to preserve and improve: .kun-design/doc/motion/v1.svg')
+    expect(prompt).toContain('Previous version to preserve and improve: .Rcode-design/doc/motion/v1.svg')
   })
 })

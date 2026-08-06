@@ -1,4 +1,4 @@
-import { ContributionIdSchema } from '@kun/extension-api'
+import { ContributionIdSchema } from '@Rcode/extension-api'
 
 export const BUILTIN_RIGHT_PANEL_IDS = {
   todo: 'builtin:right-panel-todo',

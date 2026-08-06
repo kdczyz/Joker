@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react'
-import type { DesktopCommand } from '@shared/kun-gui-api'
+import type { DesktopCommand } from '@shared/Rcode-gui-api'
 import {
   findKeyboardShortcutCommand,
   keyboardEventToShortcut,
@@ -54,7 +54,7 @@ export function useWorkbenchKeyboardShortcuts({
   worktreeBranch
 }: UseWorkbenchKeyboardShortcutsInput): void {
   const keyboardShortcuts = useKeyboardShortcutSettings()
-  const shortcutPlatform = typeof window === 'undefined' ? undefined : window.kunGui?.platform
+  const shortcutPlatform = typeof window === 'undefined' ? undefined : window.RcodeGui?.platform
   const keyboardShortcutBindings = useMemo(
     () => resolveKeyboardShortcutBindings(keyboardShortcuts, shortcutPlatform),
     [keyboardShortcuts, shortcutPlatform]
@@ -62,8 +62,8 @@ export function useWorkbenchKeyboardShortcuts({
 
   useEffect(() => {
     const runDesktopShortcut = (command: DesktopCommand): void => {
-      if (typeof window.kunGui?.runDesktopCommand !== 'function') return
-      void window.kunGui.runDesktopCommand(command)
+      if (typeof window.RcodeGui?.runDesktopCommand !== 'function') return
+      void window.RcodeGui.runDesktopCommand(command)
     }
 
     const onKeyDown = (event: KeyboardEvent): void => {

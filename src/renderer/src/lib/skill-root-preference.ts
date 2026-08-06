@@ -9,7 +9,7 @@ import { readBrowserStorageItem, writeBrowserStorageItem } from './browser-stora
  */
 export type SkillRootId = string
 
-const SKILL_ROOT_PREFERENCE_KEY = 'kun.skillRootPreference'
+const SKILL_ROOT_PREFERENCE_KEY = 'Rcode.skillRootPreference'
 
 /** The skill root the user last picked in the marketplace, or '' when unset. */
 export function loadPreferredSkillRootId(): SkillRootId {

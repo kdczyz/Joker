@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { KunRuntimeStatusPayload } from '@shared/kun-gui-api'
+import type { RcodeRuntimeStatusPayload } from '@shared/Rcode-gui-api'
 import { RuntimeBanner } from '../RuntimeBanner'
 import {
   resolveWriteRuntimeBannerMessage,
@@ -8,7 +8,7 @@ import {
 import { shouldSuppressRuntimeErrorBanner } from '../../lib/runtime-banner-visibility'
 
 type UseWorkbenchRuntimeBannersInput = {
-  runtimeStatus: KunRuntimeStatusPayload | null
+  runtimeStatus: RcodeRuntimeStatusPayload | null
   runtimeConnection: RuntimeConnectionLike
   runtimeLogPath: string
   runtimeError: string | null
@@ -54,8 +54,8 @@ export function useWorkbenchRuntimeBanners({
       runtimeReady={runtimeConnection === 'ready'}
       stageInsetClass={stageInsetClass}
       onOpenLogDir={
-        typeof window !== 'undefined' && typeof window.kunGui?.openLogDir === 'function'
-          ? () => window.kunGui.openLogDir()
+        typeof window !== 'undefined' && typeof window.RcodeGui?.openLogDir === 'function'
+          ? () => window.RcodeGui.openLogDir()
           : undefined
       }
       onOpenSettings={onOpenSettings}

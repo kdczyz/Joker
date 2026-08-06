@@ -78,9 +78,9 @@ const UI_PLUGIN_SCENE_ATTRIBUTES = [
 let activationRequestId = 0
 let activationQueue: Promise<void> = Promise.resolve()
 
-function uiPluginApi(): Window['kunGui'] | null {
+function uiPluginApi(): Window['RcodeGui'] | null {
   if (typeof window === 'undefined') return null
-  return window.kunGui ?? null
+  return window.RcodeGui ?? null
 }
 
 function applyUiModeDom(mode: string, runtime: UiPluginRuntime | null): void {
@@ -146,7 +146,7 @@ function applyUiModeDom(mode: string, runtime: UiPluginRuntime | null): void {
   document.getElementById(LEGACY_RENDERER_THEME_STYLE_ID)?.remove()
 }
 
-async function deactivateHostTheme(api: Window['kunGui'] | null): Promise<string | null> {
+async function deactivateHostTheme(api: Window['RcodeGui'] | null): Promise<string | null> {
   if (typeof api?.deactivateUiPluginTheme !== 'function') return null
   try {
     const result = await api.deactivateUiPluginTheme()
@@ -289,7 +289,7 @@ export const useUiPluginStore = create<UiPluginState>((set, get) => ({
       // Reinstalling the currently selected plugin replaces its canonical
       // manifest/assets on disk. Reload it immediately so the renderer and
       // main-held CDP theme cannot keep presenting the previous version until
-      // the user manually switches themes or restarts Kun.
+      // the user manually switches themes or restarts Rcode.
       if (get().uiMode === result.plugin.manifest.id) {
         await get().activateUiMode(result.plugin.manifest.id)
       }

@@ -21,9 +21,9 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1">',
           '<style>button:focus-visible{outline:2px solid #000}@media(max-width:640px){main{padding:16px}}</style>',
           '</head><body><main><h1>Customer profile</h1>',
-          '<img src=".kun-design/assets/customer.png" alt="Portrait of Mina Chen">',
-          '<img src=".kun-design/assets/ring.png" alt="">',
-          '<img src=".kun-design/assets/grid.png" role="presentation">',
+          '<img src=".Rcode-design/assets/customer.png" alt="Portrait of Mina Chen">',
+          '<img src=".Rcode-design/assets/ring.png" alt="">',
+          '<img src=".Rcode-design/assets/grid.png" role="presentation">',
           '<button>Review account</button><p>Loading state, empty state, error state.</p></main></body></html>'
         ].join('')
       })
@@ -41,7 +41,7 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '</head><body><main><button>Start project</button><p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' }
         ]
       })
   
@@ -57,7 +57,7 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' }
         ]
       })
   
@@ -72,7 +72,7 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' }
         ]
       })
   
@@ -87,7 +87,7 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<main><a href="../settings/v1.html">Start project</a><p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' }
         ]
       })
   
@@ -104,8 +104,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
         ]
       })
       const codes = findings.map((finding) => finding.code)
@@ -125,8 +125,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
         ]
       })
       const codes = findings.map((finding) => finding.code)
@@ -148,8 +148,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
         ]
       })
       const codes = findings.map((finding) => finding.code)
@@ -171,8 +171,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
         ]
       })
       const codes = findings.map((finding) => finding.code)
@@ -193,9 +193,9 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' },
-          { name: 'Weekly Stats', htmlPath: '.kun-design/doc/weekly-stats/v1.html', prototypeHref: '../weekly-stats/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' },
+          { name: 'Weekly Stats', htmlPath: '.Rcode-design/doc/weekly-stats/v1.html', prototypeHref: '../weekly-stats/v1.html' }
         ]
       })
       const codes = findings.map((finding) => finding.code)
@@ -215,8 +215,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
         ]
       })
       const codes = findings.map((finding) => finding.code)
@@ -234,8 +234,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<main><h1>Vendor queue</h1><p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Settings', htmlPath: '.kun-design/doc/account-settings/v1.html', prototypeHref: '../account-settings/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/project-settings/v1.html', prototypeHref: '../project-settings/v1.html' }
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/account-settings/v1.html', prototypeHref: '../account-settings/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/project-settings/v1.html', prototypeHref: '../project-settings/v1.html' }
         ]
       })
   
@@ -251,8 +251,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Account Settings', htmlPath: '.kun-design/doc/account-settings/v1.html', prototypeHref: '../account-settings/v1.html' },
-          { name: 'Weekly Stats', htmlPath: '.kun-design/doc/weekly-stats/v1.html', prototypeHref: '../weekly-stats/v1.html' }
+          { name: 'Account Settings', htmlPath: '.Rcode-design/doc/account-settings/v1.html', prototypeHref: '../account-settings/v1.html' },
+          { name: 'Weekly Stats', htmlPath: '.Rcode-design/doc/weekly-stats/v1.html', prototypeHref: '../weekly-stats/v1.html' }
         ]
       })
       const codes = findings.map((finding) => finding.code)
@@ -270,8 +270,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Account Settings', htmlPath: '.kun-design/doc/account-settings/v1.html', prototypeHref: '../account-settings/v1.html' },
-          { name: 'Weekly Stats', htmlPath: '.kun-design/doc/weekly-stats/v1.html', prototypeHref: '../weekly-stats/v1.html' }
+          { name: 'Account Settings', htmlPath: '.Rcode-design/doc/account-settings/v1.html', prototypeHref: '../account-settings/v1.html' },
+          { name: 'Weekly Stats', htmlPath: '.Rcode-design/doc/weekly-stats/v1.html', prototypeHref: '../weekly-stats/v1.html' }
         ]
       })
       const codes = findings.map((finding) => finding.code)
@@ -290,8 +290,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<main><h1>Vendor queue</h1><p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Account Settings', htmlPath: '.kun-design/doc/account-settings/v1.html', prototypeHref: '../account-settings/v1.html' },
-          { name: 'Project Settings', htmlPath: '.kun-design/doc/project-settings/v1.html', prototypeHref: '../project-settings/v1.html' }
+          { name: 'Account Settings', htmlPath: '.Rcode-design/doc/account-settings/v1.html', prototypeHref: '../account-settings/v1.html' },
+          { name: 'Project Settings', htmlPath: '.Rcode-design/doc/project-settings/v1.html', prototypeHref: '../project-settings/v1.html' }
         ]
       })
   
@@ -307,9 +307,9 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' },
-          { name: 'Reports', htmlPath: '.kun-design/doc/reports/v1.html', prototypeHref: '../reports/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' },
+          { name: 'Reports', htmlPath: '.Rcode-design/doc/reports/v1.html', prototypeHref: '../reports/v1.html' }
         ]
       })
       const codes = findings.map((finding) => finding.code)
@@ -327,9 +327,9 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' },
-          { name: 'Reports', htmlPath: '.kun-design/doc/reports/v1.html', prototypeHref: '../reports/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' },
+          { name: 'Reports', htmlPath: '.Rcode-design/doc/reports/v1.html', prototypeHref: '../reports/v1.html' }
         ]
       })
   
@@ -344,8 +344,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<main><h1>Vendor queue</h1><p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
         ]
       })
   
@@ -360,8 +360,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<main><h1>Vendor queue</h1><p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
         ]
       })
   
@@ -376,8 +376,8 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<main><h1>Vendor queue</h1><p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
-          { name: 'Settings', htmlPath: '.kun-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' },
+          { name: 'Settings', htmlPath: '.Rcode-design/doc/settings/v1.html', prototypeHref: '../settings/v1.html' }
         ]
       })
   
@@ -393,7 +393,7 @@ describe("auditDesignHtmlQuality document readiness and states0", () => {
           '<p>Loading state, empty state, error state.</p></main></body></html>'
         ].join(''),
         siblingScreens: [
-          { name: 'Home', htmlPath: '.kun-design/doc/home/v1.html', prototypeHref: '../home/v1.html' }
+          { name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', prototypeHref: '../home/v1.html' }
         ]
       })
   

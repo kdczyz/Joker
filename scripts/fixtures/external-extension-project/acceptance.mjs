@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
-import { CURRENT_EXTENSION_API_VERSION } from '@kun/extension-api'
-import { useExtensionClient } from '@kun/extension-react'
-import { createExtensionTestHarness } from '@kun/extension-test'
+import { CURRENT_EXTENSION_API_VERSION } from '@Rcode/extension-api'
+import { useExtensionClient } from '@Rcode/extension-react'
+import { createExtensionTestHarness } from '@Rcode/extension-test'
 import { activate, deactivate } from './dist/extension.js'
 
 // The installed SDK is current v1.2 while this fixture's manifest intentionally
@@ -11,8 +11,8 @@ assert.equal(typeof useExtensionClient, 'function')
 
 const harness = createExtensionTestHarness({
   identity: {
-    id: 'kun-release-fixtures.external-release',
-    publisher: 'kun-release-fixtures',
+    id: 'Rcode-release-fixtures.external-release',
+    publisher: 'Rcode-release-fixtures',
     name: 'external-release',
     version: '1.0.0'
   },

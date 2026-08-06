@@ -37,7 +37,7 @@ spacing:
 components:
   button:
     background: '{colors.primary}'
-x-kun-extension:
+x-Rcode-extension:
   note: preserve me
 ---
 # Brand & Style
@@ -76,7 +76,7 @@ describe('DESIGN.md adapter', () => {
   it('preserves Markdown prose and unknown YAML while applying a structured patch', () => {
     const result = patchProjectDesignMd(LUMINOUS_STAGE, [{ section: 'colors', key: 'secondary', value: '#d4af37' }])
     expect(result.document?.colors.secondary.raw).toBe('#d4af37')
-    expect(result.document?.extensions['x-kun-extension']).toEqual({ note: 'preserve me' })
+    expect(result.document?.extensions['x-Rcode-extension']).toEqual({ note: 'preserve me' })
     expect(result.document?.raw.endsWith('# Colors\n\nUse gold sparingly.\n')).toBe(true)
   })
 

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   APP_LOCALES,
-  applyKunRuntimePatch,
-  kunSettingsEnvelope,
-  kunSettingsPatch,
-  DEFAULT_KUN_DATA_DIR,
-  DEFAULT_KUN_MODEL,
+  applyRcodeRuntimePatch,
+  RcodeSettingsEnvelope,
+  RcodeSettingsPatch,
+  DEFAULT_RCODE_DATA_DIR,
+  DEFAULT_RCODE_MODEL,
   DEFAULT_LOG_RETENTION_DAYS,
   DEFAULT_CURSOR_SPOTLIGHT_COLOR,
   DEFAULT_GIT_BRANCH_PREFIX,
@@ -18,9 +18,9 @@ import {
   buildClawRuntimePrompt,
   defaultClawSettings,
   defaultModelProviderSettings,
-  mergeKunRuntimeSettings,
+  mergeRcodeRuntimeSettings,
   mergeScheduleSettings,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
   defaultTerminalSettings,
@@ -34,7 +34,7 @@ import {
   mergeWriteSettings,
   normalizeWriteSettings,
   normalizeWriteAgentPresets,
-  isKunRuntimeInsecure,
+  isRcodeRuntimeInsecure,
   migrateLegacyAppSettings,
   normalizeAppSettings,
   normalizeChatContentMaxWidth,
@@ -42,10 +42,10 @@ import {
   applyGitBranchPrefix,
   parseClawUserPromptForDisplay,
   inferModelEndpointFormatFromUrl,
-  kunToolPermissionModeFromSettings,
-  kunToolPermissionModeSettings,
+  RcodeToolPermissionModeFromSettings,
+  RcodeToolPermissionModeSettings,
   normalizeScheduleSettings,
-  resolveKunRuntimeSettings,
+  resolveRcodeRuntimeSettings,
   resolveWriteInlineCompletionApiKey,
   resolveWriteInlineCompletionBaseUrl,
   resolveWriteInlineCompletionModel,
@@ -63,10 +63,10 @@ function settings(): AppSettingsV1 {
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: defaultKunRuntimeSettings()
+      Rcode: defaultRcodeRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -157,72 +157,72 @@ function clawChannel(provider: ClawImProvider, label: string, name = label): Cla
   }
 }
 
-describe('kun defaults', () => {
+describe('Rcode defaults', () => {
   it('keeps a single shared default data directory source', () => {
-    expect(defaultKunRuntimeSettings().dataDir).toBe(DEFAULT_KUN_DATA_DIR)
+    expect(defaultRcodeRuntimeSettings().dataDir).toBe(DEFAULT_RCODE_DATA_DIR)
   })
 
   it('defaults the assistant model to v4 pro', () => {
-    expect(defaultKunRuntimeSettings().model).toBe(DEFAULT_KUN_MODEL)
+    expect(defaultRcodeRuntimeSettings().model).toBe(DEFAULT_RCODE_MODEL)
   })
 
   it('defaults approval policy to request confirmation for non-read tools', () => {
-    expect(defaultKunRuntimeSettings().approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
-    expect(defaultKunRuntimeSettings().approvalPolicy).toBe('on-request')
+    expect(defaultRcodeRuntimeSettings().approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
+    expect(defaultRcodeRuntimeSettings().approvalPolicy).toBe('on-request')
   })
 
   it('defaults sandbox mode to workspace write access', () => {
-    expect(defaultKunRuntimeSettings().sandboxMode).toBe(DEFAULT_SANDBOX_MODE)
-    expect(defaultKunRuntimeSettings().sandboxMode).toBe('workspace-write')
+    expect(defaultRcodeRuntimeSettings().sandboxMode).toBe(DEFAULT_SANDBOX_MODE)
+    expect(defaultRcodeRuntimeSettings().sandboxMode).toBe('workspace-write')
   })
 
   it('maps unified tool permission modes to approval and sandbox settings', () => {
-    expect(kunToolPermissionModeSettings('always-ask')).toEqual({
+    expect(RcodeToolPermissionModeSettings('always-ask')).toEqual({
       approvalPolicy: 'always',
       sandboxMode: 'danger-full-access'
     })
-    expect(kunToolPermissionModeSettings('read-only')).toEqual({
+    expect(RcodeToolPermissionModeSettings('read-only')).toEqual({
       approvalPolicy: 'on-request',
       sandboxMode: 'danger-full-access'
     })
-    expect(kunToolPermissionModeSettings('sensitive-ask')).toEqual({
+    expect(RcodeToolPermissionModeSettings('sensitive-ask')).toEqual({
       approvalPolicy: 'untrusted',
       sandboxMode: 'danger-full-access'
     })
-    expect(kunToolPermissionModeSettings('workspace-write')).toEqual({
+    expect(RcodeToolPermissionModeSettings('workspace-write')).toEqual({
       approvalPolicy: 'on-request',
       sandboxMode: 'workspace-write'
     })
-    expect(kunToolPermissionModeSettings('trusted-workspace')).toEqual({
+    expect(RcodeToolPermissionModeSettings('trusted-workspace')).toEqual({
       approvalPolicy: 'auto',
       sandboxMode: 'workspace-write'
     })
-    expect(kunToolPermissionModeSettings('bypass')).toEqual({
+    expect(RcodeToolPermissionModeSettings('bypass')).toEqual({
       approvalPolicy: 'auto',
       sandboxMode: 'danger-full-access'
     })
-    expect(kunToolPermissionModeFromSettings(defaultKunRuntimeSettings())).toBe('workspace-write')
-    expect(kunToolPermissionModeFromSettings({
+    expect(RcodeToolPermissionModeFromSettings(defaultRcodeRuntimeSettings())).toBe('workspace-write')
+    expect(RcodeToolPermissionModeFromSettings({
       approvalPolicy: 'always',
       sandboxMode: 'danger-full-access'
     })).toBe('always-ask')
-    expect(kunToolPermissionModeFromSettings({
+    expect(RcodeToolPermissionModeFromSettings({
       approvalPolicy: 'untrusted',
       sandboxMode: 'danger-full-access'
     })).toBe('sensitive-ask')
-    expect(kunToolPermissionModeFromSettings({
+    expect(RcodeToolPermissionModeFromSettings({
       approvalPolicy: 'on-request',
       sandboxMode: 'workspace-write'
     })).toBe('workspace-write')
-    expect(kunToolPermissionModeFromSettings({
+    expect(RcodeToolPermissionModeFromSettings({
       approvalPolicy: 'auto',
       sandboxMode: 'workspace-write'
     })).toBe('trusted-workspace')
   })
 
   it('defaults token economy mode to off', () => {
-    expect(defaultKunRuntimeSettings().tokenEconomyMode).toBe(false)
-    expect(defaultKunRuntimeSettings().tokenEconomy).toMatchObject({
+    expect(defaultRcodeRuntimeSettings().tokenEconomyMode).toBe(false)
+    expect(defaultRcodeRuntimeSettings().tokenEconomy).toMatchObject({
       enabled: false,
       compressToolDescriptions: true,
       compressToolResults: true,
@@ -239,16 +239,16 @@ describe('kun defaults', () => {
   })
 
   it('defaults tool output limits to 500kb and 20000 lines', () => {
-    expect(defaultKunRuntimeSettings().toolOutputLimits).toEqual({
+    expect(defaultRcodeRuntimeSettings().toolOutputLimits).toEqual({
       maxLines: DEFAULT_TOOL_OUTPUT_MAX_LINES,
       maxBytes: DEFAULT_TOOL_OUTPUT_MAX_BYTES
     })
-    expect(defaultKunRuntimeSettings().toolOutputLimits.maxLines).toBe(20_000)
-    expect(defaultKunRuntimeSettings().toolOutputLimits.maxBytes).toBe(500 * 1024)
+    expect(defaultRcodeRuntimeSettings().toolOutputLimits.maxLines).toBe(20_000)
+    expect(defaultRcodeRuntimeSettings().toolOutputLimits.maxBytes).toBe(500 * 1024)
   })
 
   it('defaults MCP search discovery to off', () => {
-    expect(defaultKunRuntimeSettings().mcpSearch).toMatchObject({
+    expect(defaultRcodeRuntimeSettings().mcpSearch).toMatchObject({
       enabled: false,
       mode: 'auto',
       autoThresholdToolCount: 24,
@@ -258,7 +258,7 @@ describe('kun defaults', () => {
   })
 
   it('defaults image generation to off with empty provider fields', () => {
-    expect(defaultKunRuntimeSettings().imageGeneration).toEqual({
+    expect(defaultRcodeRuntimeSettings().imageGeneration).toEqual({
       enabled: false,
       providerId: '',
       protocol: 'openai-images',
@@ -273,7 +273,7 @@ describe('kun defaults', () => {
   })
 
   it('defaults media generation to off with empty provider fields', () => {
-    expect(defaultKunRuntimeSettings().textToSpeech).toEqual({
+    expect(defaultRcodeRuntimeSettings().textToSpeech).toEqual({
       enabled: false,
       providerId: '',
       protocol: 'openai-speech',
@@ -284,7 +284,7 @@ describe('kun defaults', () => {
       format: 'mp3',
       timeoutMs: 120000
     })
-    expect(defaultKunRuntimeSettings().musicGeneration).toEqual({
+    expect(defaultRcodeRuntimeSettings().musicGeneration).toEqual({
       enabled: false,
       providerId: '',
       protocol: 'minimax-music',
@@ -294,7 +294,7 @@ describe('kun defaults', () => {
       format: 'mp3',
       timeoutMs: 300000
     })
-    expect(defaultKunRuntimeSettings().videoGeneration).toEqual({
+    expect(defaultRcodeRuntimeSettings().videoGeneration).toEqual({
       enabled: false,
       providerId: '',
       protocol: 'minimax-video',
@@ -308,8 +308,8 @@ describe('kun defaults', () => {
     })
   })
 
-  it('defaults advanced Kun runtime tuning to conservative values', () => {
-    expect(defaultKunRuntimeSettings()).toMatchObject({
+  it('defaults advanced Rcode runtime tuning to conservative values', () => {
+    expect(defaultRcodeRuntimeSettings()).toMatchObject({
       storage: {
         backend: 'hybrid',
         sqlitePath: ''
@@ -356,13 +356,13 @@ describe('runtime model provider selection', () => {
     const codex = codexPreset ? modelProviderPresetProfile(codexPreset) : null
     expect(codex).not.toBeNull()
     raw.provider.providers = [...raw.provider.providers, codex!]
-    raw.agents.kun.providerId = 'deepseek'
-    raw.agents.kun.model = 'gpt-5.3-codex-spark'
+    raw.agents.Rcode.providerId = 'deepseek'
+    raw.agents.Rcode.model = 'gpt-5.3-codex-spark'
 
     const normalized = normalizeAppSettings(raw)
 
-    expect(normalized.agents.kun.providerId).toBe('codex')
-    expect(normalized.agents.kun.model).toBe('gpt-5.3-codex-spark')
+    expect(normalized.agents.Rcode.providerId).toBe('codex')
+    expect(normalized.agents.Rcode.model).toBe('gpt-5.3-codex-spark')
   })
 
   it('falls back to the selected provider model instead of retaining an ambiguous mismatch', () => {
@@ -374,20 +374,20 @@ describe('runtime model provider selection', () => {
       name: 'Codex Mirror'
     }
     raw.provider.providers = [...raw.provider.providers, codex, duplicate]
-    raw.agents.kun.providerId = 'deepseek'
-    raw.agents.kun.model = 'gpt-5.3-codex-spark'
+    raw.agents.Rcode.providerId = 'deepseek'
+    raw.agents.Rcode.model = 'gpt-5.3-codex-spark'
 
     const normalized = normalizeAppSettings(raw)
 
-    expect(normalized.agents.kun.providerId).toBe('deepseek')
-    expect(normalized.agents.kun.model).toBe('deepseek-v4-flash')
+    expect(normalized.agents.Rcode.providerId).toBe('deepseek')
+    expect(normalized.agents.Rcode.model).toBe('deepseek-v4-flash')
   })
 
   it('repairs partial subagent profile selections into complete pairs', () => {
     const raw = settings()
     const codex = modelProviderPresetProfile(getModelProviderPreset('codex')!)
     raw.provider.providers = [...raw.provider.providers, codex]
-    raw.agents.kun.subagents = {
+    raw.agents.Rcode.subagents = {
       enabled: true,
       profiles: [
         {
@@ -403,7 +403,7 @@ describe('runtime model provider selection', () => {
 
     const normalized = normalizeAppSettings(raw)
 
-    expect(normalized.agents.kun.subagents?.profiles).toEqual(expect.arrayContaining([
+    expect(normalized.agents.Rcode.subagents?.profiles).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: 'model-only',
         model: 'gpt-5.3-codex-spark',
@@ -628,11 +628,11 @@ describe('claw settings', () => {
   })
 })
 
-describe('isKunRuntimeInsecure', () => {
+describe('isRcodeRuntimeInsecure', () => {
   it('keeps auth enabled even when the runtime token is empty', () => {
     expect(
-      isKunRuntimeInsecure({
-        ...defaultKunRuntimeSettings(),
+      isRcodeRuntimeInsecure({
+        ...defaultRcodeRuntimeSettings(),
         insecure: false,
         runtimeToken: ''
       })
@@ -641,8 +641,8 @@ describe('isKunRuntimeInsecure', () => {
 
   it('keeps auth enabled when a token exists and insecure is false', () => {
     expect(
-      isKunRuntimeInsecure({
-        ...defaultKunRuntimeSettings(),
+      isRcodeRuntimeInsecure({
+        ...defaultRcodeRuntimeSettings(),
         insecure: false,
         runtimeToken: 'tok-1'
       })
@@ -651,8 +651,8 @@ describe('isKunRuntimeInsecure', () => {
 
   it('honors explicit insecure mode', () => {
     expect(
-      isKunRuntimeInsecure({
-        ...defaultKunRuntimeSettings(),
+      isRcodeRuntimeInsecure({
+        ...defaultRcodeRuntimeSettings(),
         insecure: true,
         runtimeToken: 'tok-1'
       })
@@ -660,11 +660,11 @@ describe('isKunRuntimeInsecure', () => {
   })
 })
 
-describe('mergeKunRuntimeSettings', () => {
+describe('mergeRcodeRuntimeSettings', () => {
   it('normalizes bounded digest-bound project config grants and replaces the grant roster', () => {
     const digestA = 'a'.repeat(64)
     const digestB = 'B'.repeat(64)
-    const current = mergeKunRuntimeSettings(defaultKunRuntimeSettings(), {
+    const current = mergeRcodeRuntimeSettings(defaultRcodeRuntimeSettings(), {
       projectConfig: {
         grants: [
           { workspaceRoot: ' /workspace/a ', configDigest: digestA },
@@ -677,7 +677,7 @@ describe('mergeKunRuntimeSettings', () => {
       { workspaceRoot: '/workspace/a', configDigest: digestA }
     ])
 
-    const next = mergeKunRuntimeSettings(current, {
+    const next = mergeRcodeRuntimeSettings(current, {
       projectConfig: {
         grants: [{ workspaceRoot: '/workspace/b', configDigest: digestB }]
       }
@@ -690,16 +690,16 @@ describe('mergeKunRuntimeSettings', () => {
 
   it('adds an empty project config grant list to legacy settings', () => {
     const raw = settings() as AppSettingsV1 & {
-      agents: { kun: Omit<AppSettingsV1['agents']['kun'], 'projectConfig'> }
+      agents: { Rcode: Omit<AppSettingsV1['agents']['Rcode'], 'projectConfig'> }
     }
-    delete (raw.agents.kun as Partial<AppSettingsV1['agents']['kun']>).projectConfig
+    delete (raw.agents.Rcode as Partial<AppSettingsV1['agents']['Rcode']>).projectConfig
 
-    expect(normalizeAppSettings(raw as AppSettingsV1).agents.kun.projectConfig).toEqual({ grants: [] })
+    expect(normalizeAppSettings(raw as AppSettingsV1).agents.Rcode.projectConfig).toEqual({ grants: [] })
   })
 
-  it('merges a direct kun patch without the envelope wrapper', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+  it('merges a direct Rcode patch without the envelope wrapper', () => {
+    const current = defaultRcodeRuntimeSettings()
+    const next = mergeRcodeRuntimeSettings(current, {
       model: 'deepseek-reasoner',
       port: 19000,
       tokenEconomyMode: true
@@ -713,7 +713,7 @@ describe('mergeKunRuntimeSettings', () => {
 
   it('deep-merges subagent settings while replacing an explicit profiles roster', () => {
     const current = {
-      ...defaultKunRuntimeSettings(),
+      ...defaultRcodeRuntimeSettings(),
       subagents: {
         enabled: true,
         maxParallel: 3,
@@ -730,7 +730,7 @@ describe('mergeKunRuntimeSettings', () => {
       }
     }
 
-    const limitsChanged = mergeKunRuntimeSettings(current, {
+    const limitsChanged = mergeRcodeRuntimeSettings(current, {
       subagents: { maxParallel: 5 }
     })
     expect(limitsChanged.subagents).toEqual({
@@ -738,7 +738,7 @@ describe('mergeKunRuntimeSettings', () => {
       maxParallel: 5
     })
 
-    const rosterCleared = mergeKunRuntimeSettings(limitsChanged, {
+    const rosterCleared = mergeRcodeRuntimeSettings(limitsChanged, {
       subagents: { profiles: [] }
     })
     expect(rosterCleared.subagents).toEqual({
@@ -749,20 +749,20 @@ describe('mergeKunRuntimeSettings', () => {
   })
 
   it('completes a partial first subagent patch with safe defaults', () => {
-    const next = mergeKunRuntimeSettings(defaultKunRuntimeSettings(), {
+    const next = mergeRcodeRuntimeSettings(defaultRcodeRuntimeSettings(), {
       subagents: { enabled: false }
     })
 
     expect(next.subagents).toEqual({ enabled: false, profiles: [] })
     expect(normalizeAppSettings({
       ...settings(),
-      agents: { kun: next }
-    }).agents.kun.subagents).toEqual({ enabled: false, profiles: [] })
+      agents: { Rcode: next }
+    }).agents.Rcode.subagents).toEqual({ enabled: false, profiles: [] })
   })
 
   it('deep-merges token economy settings and keeps the legacy switch synced', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+    const current = defaultRcodeRuntimeSettings()
+    const next = mergeRcodeRuntimeSettings(current, {
       tokenEconomy: {
         enabled: true,
         compressToolResults: false,
@@ -781,14 +781,14 @@ describe('mergeKunRuntimeSettings', () => {
       current.tokenEconomy.historyHygiene.maxToolResultBytes
     )
 
-    const legacySwitch = mergeKunRuntimeSettings(next, { tokenEconomyMode: false })
+    const legacySwitch = mergeRcodeRuntimeSettings(next, { tokenEconomyMode: false })
     expect(legacySwitch.tokenEconomyMode).toBe(false)
     expect(legacySwitch.tokenEconomy.enabled).toBe(false)
   })
 
   it('deep-merges tool output limits and normalizes out-of-range values', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+    const current = defaultRcodeRuntimeSettings()
+    const next = mergeRcodeRuntimeSettings(current, {
       toolOutputLimits: {
         maxBytes: 2 * 1024 * 1024
       }
@@ -797,7 +797,7 @@ describe('mergeKunRuntimeSettings', () => {
     expect(next.toolOutputLimits.maxLines).toBe(current.toolOutputLimits.maxLines)
     expect(next.toolOutputLimits.maxBytes).toBe(2 * 1024 * 1024)
 
-    const clamped = mergeKunRuntimeSettings(next, {
+    const clamped = mergeRcodeRuntimeSettings(next, {
       toolOutputLimits: {
         maxLines: 9_999_999,
         maxBytes: 999 * 1024 * 1024
@@ -808,8 +808,8 @@ describe('mergeKunRuntimeSettings', () => {
   })
 
   it('deep-merges MCP search settings', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+    const current = defaultRcodeRuntimeSettings()
+    const next = mergeRcodeRuntimeSettings(current, {
       mcpSearch: {
         enabled: true,
         mode: 'search',
@@ -824,54 +824,54 @@ describe('mergeKunRuntimeSettings', () => {
   })
 
   it('preserves workspace-write when normalizing unified tool permission settings', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+    const current = defaultRcodeRuntimeSettings()
+    const next = mergeRcodeRuntimeSettings(current, {
       approvalPolicy: 'on-request',
       sandboxMode: 'workspace-write'
     })
 
     expect(next.approvalPolicy).toBe('on-request')
     expect(next.sandboxMode).toBe('workspace-write')
-    expect(kunToolPermissionModeFromSettings(next)).toBe('workspace-write')
+    expect(RcodeToolPermissionModeFromSettings(next)).toBe('workspace-write')
   })
 
   it('preserves trusted workspace when normalizing unified tool permission settings', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+    const current = defaultRcodeRuntimeSettings()
+    const next = mergeRcodeRuntimeSettings(current, {
       approvalPolicy: 'auto',
       sandboxMode: 'workspace-write'
     })
 
     expect(next.approvalPolicy).toBe('auto')
     expect(next.sandboxMode).toBe('workspace-write')
-    expect(kunToolPermissionModeFromSettings(next)).toBe('trusted-workspace')
+    expect(RcodeToolPermissionModeFromSettings(next)).toBe('trusted-workspace')
   })
 
   it('preserves non-UI approval/sandbox combinations instead of canonicalizing them', () => {
     // The unified 6-mode selector cannot represent every approvalPolicy/sandboxMode
-    // combination. mergeKunRuntimeSettings must NOT snap these to a canonical mode,
+    // combination. mergeRcodeRuntimeSettings must NOT snap these to a canonical mode,
     // otherwise it would silently weaken a user's saved security posture.
-    const current = defaultKunRuntimeSettings()
+    const current = defaultRcodeRuntimeSettings()
 
-    const neverReadOnly = mergeKunRuntimeSettings(current, {
+    const neverReadOnly = mergeRcodeRuntimeSettings(current, {
       approvalPolicy: 'never',
       sandboxMode: 'read-only'
     })
     expect(neverReadOnly.approvalPolicy).toBe('never')
     expect(neverReadOnly.sandboxMode).toBe('read-only')
 
-    const suggest = mergeKunRuntimeSettings(current, { approvalPolicy: 'suggest' })
+    const suggest = mergeRcodeRuntimeSettings(current, { approvalPolicy: 'suggest' })
     expect(suggest.approvalPolicy).toBe('suggest')
 
-    const externalSandbox = mergeKunRuntimeSettings(current, { sandboxMode: 'external-sandbox' })
+    const externalSandbox = mergeRcodeRuntimeSettings(current, { sandboxMode: 'external-sandbox' })
     expect(externalSandbox.sandboxMode).toBe('external-sandbox')
   })
 
-  it('deep-merges advanced Kun settings', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+  it('deep-merges advanced Rcode settings', () => {
+    const current = defaultRcodeRuntimeSettings()
+    const next = mergeRcodeRuntimeSettings(current, {
       storage: {
-        sqlitePath: ' /tmp/kun.sqlite3 '
+        sqlitePath: ' /tmp/Rcode.sqlite3 '
       },
       contextCompaction: {
         defaultSoftThreshold: 64000
@@ -884,7 +884,7 @@ describe('mergeKunRuntimeSettings', () => {
     })
 
     expect(next.storage.backend).toBe('hybrid')
-    expect(next.storage.sqlitePath).toBe('/tmp/kun.sqlite3')
+    expect(next.storage.sqlitePath).toBe('/tmp/Rcode.sqlite3')
     expect(next.contextCompaction.defaultSoftThreshold).toBe(64000)
     expect(next.contextCompaction.defaultHardThreshold).toBe(64000)
     expect(next.contextCompaction.summaryMode).toBe('model')
@@ -897,30 +897,30 @@ describe('mergeKunRuntimeSettings', () => {
   })
 
   it('normalizes the maximum turn duration', () => {
-    const current = defaultKunRuntimeSettings()
+    const current = defaultRcodeRuntimeSettings()
     expect(current.runtimeTuning.maxWallTimeMs).toBe(86_400_000)
 
-    const set = mergeKunRuntimeSettings(current, {
+    const set = mergeRcodeRuntimeSettings(current, {
       runtimeTuning: { maxWallTimeMs: 7_200_000 }
     })
     expect(set.runtimeTuning.maxWallTimeMs).toBe(7_200_000)
     expect(set.runtimeTuning.toolStorm).toEqual(current.runtimeTuning.toolStorm)
 
     expect(
-      mergeKunRuntimeSettings(current, { runtimeTuning: { maxWallTimeMs: 0 } })
+      mergeRcodeRuntimeSettings(current, { runtimeTuning: { maxWallTimeMs: 0 } })
         .runtimeTuning.maxWallTimeMs
     ).toBe(86_400_000)
     expect(
-      mergeKunRuntimeSettings(current, { runtimeTuning: { maxWallTimeMs: 999_999_999 } })
+      mergeRcodeRuntimeSettings(current, { runtimeTuning: { maxWallTimeMs: 999_999_999 } })
         .runtimeTuning.maxWallTimeMs
     ).toBe(86_400_000)
   })
 
   it('normalizes the stream idle timeout (0 disables, out-of-range clamps)', () => {
-    const current = defaultKunRuntimeSettings()
+    const current = defaultRcodeRuntimeSettings()
     expect(current.runtimeTuning.streamIdleTimeoutMs).toBe(450000)
 
-    const set = mergeKunRuntimeSettings(current, {
+    const set = mergeRcodeRuntimeSettings(current, {
       runtimeTuning: { streamIdleTimeoutMs: 300000 }
     })
     expect(set.runtimeTuning.streamIdleTimeoutMs).toBe(300000)
@@ -929,24 +929,24 @@ describe('mergeKunRuntimeSettings', () => {
 
     // 0 means "disabled" and is preserved rather than coerced to the default.
     expect(
-      mergeKunRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: 0 } })
+      mergeRcodeRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: 0 } })
         .runtimeTuning.streamIdleTimeoutMs
     ).toBe(0)
 
     // Negative falls back to the default; absurdly large clamps to the cap.
     expect(
-      mergeKunRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: -5 } })
+      mergeRcodeRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: -5 } })
         .runtimeTuning.streamIdleTimeoutMs
     ).toBe(450000)
     expect(
-      mergeKunRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: 999_999_999 } })
+      mergeRcodeRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: 999_999_999 } })
         .runtimeTuning.streamIdleTimeoutMs
     ).toBe(3_600_000)
   })
 
   it('deep-merges image generation settings and normalizes invalid values', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+    const current = defaultRcodeRuntimeSettings()
+    const next = mergeRcodeRuntimeSettings(current, {
       imageGeneration: {
         enabled: true,
         baseUrl: ' https://api.siliconflow.cn/v1 ',
@@ -968,7 +968,7 @@ describe('mergeKunRuntimeSettings', () => {
       timeoutMs: 180000
     })
 
-    const sized = mergeKunRuntimeSettings(next, {
+    const sized = mergeRcodeRuntimeSettings(next, {
       imageGeneration: {
         defaultResolution: '2K',
         defaultSize: '1536x1024',
@@ -982,7 +982,7 @@ describe('mergeKunRuntimeSettings', () => {
     expect(sized.imageGeneration.timeoutMs).toBe(240000)
     expect(sized.imageGeneration.apiKey).toBe('sk-image')
 
-    const invalidSize = mergeKunRuntimeSettings(sized, {
+    const invalidSize = mergeRcodeRuntimeSettings(sized, {
       imageGeneration: {
         defaultResolution: '4K' as never,
         defaultSize: 'huge',
@@ -997,8 +997,8 @@ describe('mergeKunRuntimeSettings', () => {
   })
 
   it('deep-merges media generation settings and normalizes invalid values', () => {
-    const current = defaultKunRuntimeSettings()
-    const next = mergeKunRuntimeSettings(current, {
+    const current = defaultRcodeRuntimeSettings()
+    const next = mergeRcodeRuntimeSettings(current, {
       textToSpeech: {
         enabled: true,
         protocol: 'minimax-t2a',
@@ -1052,7 +1052,7 @@ describe('mergeKunRuntimeSettings', () => {
       pollIntervalMs: 20000
     })
 
-    const invalid = mergeKunRuntimeSettings(next, {
+    const invalid = mergeRcodeRuntimeSettings(next, {
       textToSpeech: { format: 'aac', timeoutMs: -1 },
       videoGeneration: { defaultDuration: -1, pollIntervalMs: -1 }
     })
@@ -1070,8 +1070,8 @@ describe('mergeKunRuntimeSettings', () => {
       textToSpeech: _textToSpeech,
       musicGeneration: _musicGeneration,
       videoGeneration: _videoGeneration,
-      ...legacyKun
-    } = defaultKunRuntimeSettings()
+      ...legacyRcode
+    } = defaultRcodeRuntimeSettings()
     void _textToSpeech
     void _musicGeneration
     void _videoGeneration
@@ -1084,23 +1084,23 @@ describe('mergeKunRuntimeSettings', () => {
           minimaxProfile
         ]
       },
-      agents: { kun: legacyKun as AppSettingsV1['agents']['kun'] }
+      agents: { Rcode: legacyRcode as AppSettingsV1['agents']['Rcode'] }
     })
-    const resolved = resolveKunRuntimeSettings(normalized)
+    const resolved = resolveRcodeRuntimeSettings(normalized)
 
-    expect(normalized.agents.kun.textToSpeech).toEqual(expect.objectContaining({
+    expect(normalized.agents.Rcode.textToSpeech).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-t2a',
       model: 'speech-2.8-hd'
     }))
-    expect(normalized.agents.kun.musicGeneration).toEqual(expect.objectContaining({
+    expect(normalized.agents.Rcode.musicGeneration).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-music',
       model: 'music-2.6'
     }))
-    expect(normalized.agents.kun.videoGeneration).toEqual(expect.objectContaining({
+    expect(normalized.agents.Rcode.videoGeneration).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-video',
@@ -1112,25 +1112,25 @@ describe('mergeKunRuntimeSettings', () => {
   })
 })
 
-describe('kun envelope helpers', () => {
+describe('Rcode envelope helpers', () => {
   it('wraps runtime settings and patches into the compatibility shell', () => {
-    const runtime = defaultKunRuntimeSettings()
-    expect(kunSettingsEnvelope(runtime)).toEqual({ kun: runtime })
-    expect(kunSettingsPatch({ model: 'deepseek-reasoner' })).toEqual({
-      kun: { model: 'deepseek-reasoner' }
+    const runtime = defaultRcodeRuntimeSettings()
+    expect(RcodeSettingsEnvelope(runtime)).toEqual({ Rcode: runtime })
+    expect(RcodeSettingsPatch({ model: 'deepseek-reasoner' })).toEqual({
+      Rcode: { model: 'deepseek-reasoner' }
     })
   })
 
-  it('applies a kun patch onto full app settings', () => {
+  it('applies a Rcode patch onto full app settings', () => {
     const current = settings()
-    const next = applyKunRuntimePatch(current, { model: 'deepseek-reasoner' })
-    expect(next.agents.kun.model).toBe('deepseek-reasoner')
+    const next = applyRcodeRuntimePatch(current, { model: 'deepseek-reasoner' })
+    expect(next.agents.Rcode.model).toBe('deepseek-reasoner')
     expect(next.write).toEqual(current.write)
   })
 })
 
-describe('legacy Kun defaults migration', () => {
-  it('normalizes old master settings without an agents.kun envelope', () => {
+describe('legacy Rcode defaults migration', () => {
+  it('normalizes old master settings without an agents.Rcode envelope', () => {
     const normalized = normalizeAppSettings({
       version: 1,
       locale: 'zh',
@@ -1155,7 +1155,7 @@ describe('legacy Kun defaults migration', () => {
       claw: defaultClawSettings()
     } as unknown as AppSettingsV1)
 
-    expect(normalized.agents.kun).toEqual(expect.objectContaining({
+    expect(normalized.agents.Rcode).toEqual(expect.objectContaining({
       binaryPath: '',
       port: 18787,
       autoStart: false,
@@ -1171,7 +1171,7 @@ describe('legacy Kun defaults migration', () => {
     expect('deepseek' in normalized).toBe(false)
   })
 
-  it('keeps legacy workspace-write permissions during Kun migration', () => {
+  it('keeps legacy workspace-write permissions during Rcode migration', () => {
     const normalized = normalizeAppSettings({
       version: 1,
       locale: 'zh',
@@ -1196,7 +1196,7 @@ describe('legacy Kun defaults migration', () => {
       claw: defaultClawSettings()
     } as unknown as AppSettingsV1)
 
-    expect(normalized.agents.kun).toEqual(expect.objectContaining({
+    expect(normalized.agents.Rcode).toEqual(expect.objectContaining({
       approvalPolicy: 'on-request',
       sandboxMode: 'workspace-write'
     }))
@@ -1211,23 +1211,23 @@ describe('legacy Kun defaults migration', () => {
     expect('instructions' in normalized).toBe(false)
   })
 
-  it('moves the legacy local HTTP default port to the Kun default port', () => {
+  it('moves the legacy local HTTP default port to the Rcode default port', () => {
     const migrated = migrateLegacyAppSettings({
       version: 1,
       agentProvider: 'deepseek-runtime',
       deepseek: {
-        // 这里必须保留旧版真实写入值, 用于升级到当前 Kun 默认端口。
+        // 这里必须保留旧版真实写入值, 用于升级到当前 Rcode 默认端口。
         port: 7878
       }
     } as unknown as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.kun?.port).toBe(18899)
+    expect(migrated.agents?.Rcode?.port).toBe(18899)
   })
 
-  it('moves previous Kun local default ports out of the low range', () => {
+  it('moves previous Rcode local default ports out of the low range', () => {
     const normalized = normalizeAppSettings({
       ...settings(),
-      agents: { kun: { ...defaultKunRuntimeSettings(), port: 8899 } },
+      agents: { Rcode: { ...defaultRcodeRuntimeSettings(), port: 8899 } },
       claw: {
         ...defaultClawSettings(),
         im: { ...defaultClawSettings().im, port: 8787 }
@@ -1242,7 +1242,7 @@ describe('legacy Kun defaults migration', () => {
       }
     })
 
-    expect(normalized.agents.kun.port).toBe(18899)
+    expect(normalized.agents.Rcode.port).toBe(18899)
     expect(normalized.claw.im.port).toBe(18787)
     expect(normalized.schedule.internal.port).toBe(18788)
     expect(normalized.workflow.webhookPort).toBe(18799)
@@ -1255,7 +1255,7 @@ describe('legacy Kun defaults migration', () => {
       deepseek: {}
     } as unknown as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.kun?.imageGeneration).toEqual({
+    expect(migrated.agents?.Rcode?.imageGeneration).toEqual({
       enabled: false,
       providerId: '',
       protocol: 'openai-images',
@@ -1273,10 +1273,10 @@ describe('legacy Kun defaults migration', () => {
     const normalized = normalizeAppSettings({
       ...settings(),
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           imageGeneration: {
-            ...defaultKunRuntimeSettings().imageGeneration,
+            ...defaultRcodeRuntimeSettings().imageGeneration,
             enabled: true,
             providerId: 'custom',
             protocol: 'codex-responses-image',
@@ -1288,7 +1288,7 @@ describe('legacy Kun defaults migration', () => {
       }
     })
 
-    expect(normalized.agents.kun.imageGeneration).toMatchObject({
+    expect(normalized.agents.Rcode.imageGeneration).toMatchObject({
       protocol: 'codex-responses-image',
       baseUrl: 'https://chatgpt.com/backend-api/codex',
       apiKey: 'codex-access',
@@ -1303,39 +1303,39 @@ describe('legacy Kun defaults migration', () => {
       deepseek: {}
     } as unknown as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.kun?.approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
+    expect(migrated.agents?.Rcode?.approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
   })
 
-  it('upgrades old persisted Kun defaults to the current defaults', () => {
+  it('upgrades old persisted Rcode defaults to the current defaults', () => {
     const migrated = migrateLegacyAppSettings({
       version: 1,
       agents: {
-        kun: {
+        Rcode: {
           dataDir: '~/.deepseekgui/coreagent',
           model: 'deepseek-chat'
         }
       }
     } as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.kun).toEqual(expect.objectContaining({
-      dataDir: DEFAULT_KUN_DATA_DIR,
-      model: DEFAULT_KUN_MODEL
+    expect(migrated.agents?.Rcode).toEqual(expect.objectContaining({
+      dataDir: DEFAULT_RCODE_DATA_DIR,
+      model: DEFAULT_RCODE_MODEL
     }))
   })
 
-  it('preserves a non-legacy Kun model override', () => {
+  it('preserves a non-legacy Rcode model override', () => {
     const migrated = migrateLegacyAppSettings({
       version: 1,
       agents: {
-        kun: {
-          dataDir: '/tmp/custom-kun',
+        Rcode: {
+          dataDir: '/tmp/custom-Rcode',
           model: 'deepseek-v4-flash'
         }
       }
     } as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.kun).toEqual(expect.objectContaining({
-      dataDir: '/tmp/custom-kun',
+    expect(migrated.agents?.Rcode).toEqual(expect.objectContaining({
+      dataDir: '/tmp/custom-Rcode',
       model: 'deepseek-v4-flash'
     }))
   })
@@ -1364,8 +1364,8 @@ describe('legacy Kun defaults migration', () => {
         ]
       },
       agents: {
-        kun: {
-          ...defaultKunRuntimeSettings(),
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
           providerId: 'custom-provider-2',
           model: 'custom-model'
         }
@@ -1384,12 +1384,12 @@ describe('legacy Kun defaults migration', () => {
         })
       ])
     )
-    expect(migrated.agents.kun.providerId).toBe('custom-provider-2')
+    expect(migrated.agents.Rcode.providerId).toBe('custom-provider-2')
     expect(migrated.provider.proxy).toEqual({
       enabled: true,
       url: 'http://127.0.0.1:7890'
     })
-    expect(resolveKunRuntimeSettings(migrated)).toEqual(
+    expect(resolveRcodeRuntimeSettings(migrated)).toEqual(
       expect.objectContaining({
         apiKey: 'sk-custom',
         baseUrl: 'https://custom.example/v1',
@@ -1470,14 +1470,14 @@ describe('claw runtime prompts', () => {
     state.claw.channels = [{
       id: 'channel-1',
       provider: 'feishu',
-      label: 'kun',
+      label: 'Rcode',
       enabled: true,
       model: 'auto',
       threadId: '',
       workspaceRoot: '',
       conversations: [],
       agentProfile: {
-        name: 'kun',
+        name: 'Rcode',
         description: '',
         identity: '',
         personality: '',
@@ -1491,14 +1491,14 @@ describe('claw runtime prompts', () => {
     const prompt = buildClawRuntimePrompt(state, 'hi', { channel: state.claw.channels[0] })
 
     expect(prompt).toContain('[Claw managed instructions]')
-    expect(prompt).toContain('[Agent name]\nkun')
+    expect(prompt).toContain('[Agent name]\nRcode')
     expect(prompt).not.toContain('gui_schedule')
     expect(prompt).not.toContain('scheduled-task tools')
   })
 
   it('tells Claw agents to use the image tool when image generation is configured', () => {
     const state = settings()
-    state.agents.kun.imageGeneration = {
+    state.agents.Rcode.imageGeneration = {
       enabled: true,
       providerId: '',
       protocol: 'openai-images',
@@ -1519,7 +1519,7 @@ describe('claw runtime prompts', () => {
 
   it('tells Claw agents to use media tools when media generation is configured', () => {
     const state = settings()
-    state.agents.kun.textToSpeech = {
+    state.agents.Rcode.textToSpeech = {
       enabled: true,
       providerId: '',
       protocol: 'minimax-t2a',
@@ -1530,7 +1530,7 @@ describe('claw runtime prompts', () => {
       format: 'mp3',
       timeoutMs: 120000
     }
-    state.agents.kun.musicGeneration = {
+    state.agents.Rcode.musicGeneration = {
       enabled: true,
       providerId: '',
       protocol: 'minimax-music',
@@ -1540,7 +1540,7 @@ describe('claw runtime prompts', () => {
       format: 'mp3',
       timeoutMs: 300000
     }
-    state.agents.kun.videoGeneration = {
+    state.agents.Rcode.videoGeneration = {
       enabled: true,
       providerId: '',
       protocol: 'minimax-video',
@@ -1570,7 +1570,7 @@ describe('claw runtime prompts', () => {
       '[Claw IM agent instructions]',
       '',
       '[Agent name]',
-      'kun',
+      'Rcode',
       '',
       '---',
       '[Current user request]',
@@ -1605,15 +1605,15 @@ describe('write inline completion runtime config', () => {
     expect(resolveWriteInlineCompletionBaseUrl(state)).toBe('https://write-only.example/v1')
   })
 
-  it('falls back to the kun model when write keeps the default inline model', () => {
+  it('falls back to the Rcode model when write keeps the default inline model', () => {
     const state = settings()
-    state.agents.kun.model = 'deepseek-chat'
+    state.agents.Rcode.model = 'deepseek-chat'
     expect(resolveWriteInlineCompletionModel(state)).toBe('deepseek-chat')
   })
 
   it('keeps an explicit flash override when write disables inheritance', () => {
     const state = settings()
-    state.agents.kun.model = 'deepseek-chat'
+    state.agents.Rcode.model = 'deepseek-chat'
     state.write.inlineCompletion.inheritModel = false
     state.write.inlineCompletion.model = 'deepseek-v4-flash'
 
@@ -1622,7 +1622,7 @@ describe('write inline completion runtime config', () => {
 
   it('preserves an explicit request model before any fallback', () => {
     const state = settings()
-    state.agents.kun.model = 'deepseek-chat'
+    state.agents.Rcode.model = 'deepseek-chat'
     expect(resolveWriteInlineCompletionModel(state, 'deepseek-v4-pro')).toBe('deepseek-v4-pro')
   })
 
@@ -1630,7 +1630,7 @@ describe('write inline completion runtime config', () => {
     const state = settings()
     state.provider.apiKey = 'general-key'
     state.provider.baseUrl = 'https://general.example/v1'
-    state.agents.kun.model = 'deepseek-chat'
+    state.agents.Rcode.model = 'deepseek-chat'
     const legacyInlineCompletion = { ...state.write.inlineCompletion } as Partial<AppSettingsV1['write']['inlineCompletion']>
     delete legacyInlineCompletion.apiKey
     delete legacyInlineCompletion.baseUrl
@@ -1645,7 +1645,7 @@ describe('write inline completion runtime config', () => {
 
   it('treats legacy flash defaults without an inherit flag as inherited', () => {
     const state = settings()
-    state.agents.kun.model = 'deepseek-chat'
+    state.agents.Rcode.model = 'deepseek-chat'
     const legacyInlineCompletion = {
       ...state.write.inlineCompletion,
       model: 'deepseek-v4-flash'

@@ -1,6 +1,6 @@
 import type { App, Session, WebContents, WebPreferences } from 'electron'
-import { parseKunMediaUrl } from './extension-media-protocol'
-import { parseKunExtensionUrl } from './extension-resource-protocol'
+import { parseRcodeMediaUrl } from './extension-media-protocol'
+import { parseRcodeExtensionUrl } from './extension-resource-protocol'
 import {
   ExtensionViewSessionRegistry,
   isAllowedExternalWebviewUrl,
@@ -26,7 +26,7 @@ export function installWebviewSecurityGuards(options: WebviewSecurityOptions): v
   options.app.on('web-contents-created', (_event, contents) => {
     contents.on('will-attach-webview', (event, webPreferences, params) => {
       const src = typeof params.src === 'string' ? params.src : ''
-      if (src.startsWith('kun-extension:')) {
+      if (src.startsWith('Rcode-extension:')) {
         if (!options.isTrustedWorkbench(contents)) {
           event.preventDefault()
           options.onDenied?.({ code: 'EXTENSION_WEBVIEW_PARENT_INVALID' })
@@ -135,8 +135,8 @@ export function hardenExtensionWebPreferences(
   webPreferences.webviewTag = false
   webPreferences.partition = record.partition
   webPreferences.additionalArguments = [
-    `--kun-extension-view-session=${record.sessionId}`,
-    `--kun-extension-view-nonce=${record.nonce}`
+    `--Rcode-extension-view-session=${record.sessionId}`,
+    `--Rcode-extension-view-nonce=${record.nonce}`
   ]
   webPreferences.navigateOnDragDrop = false
   webPreferences.safeDialogs = true
@@ -193,7 +193,7 @@ export function isAllowedExtensionNavigation(
   record: Pick<ExtensionViewSessionRecord, 'extensionId'>
 ): boolean {
   try {
-    return parseKunExtensionUrl(rawUrl).extensionId === record.extensionId
+    return parseRcodeExtensionUrl(rawUrl).extensionId === record.extensionId
   } catch {
     return false
   }
@@ -205,9 +205,9 @@ export function isAllowedExtensionSubresource(
 ): boolean {
   if (isAllowedExtensionNavigation(rawUrl, record)) return true
   try {
-    // The isolated partition's kun-media handler remains the lease authority;
+    // The isolated partition's Rcode-media handler remains the lease authority;
     // this outer Host filter only lets well-formed requests reach it.
-    parseKunMediaUrl(rawUrl)
+    parseRcodeMediaUrl(rawUrl)
     return true
   } catch {
     return false

@@ -14,7 +14,7 @@ export function buildSvgArtifactSkeleton(options: {
   height: number
 }): string {
   const title = escapeXml(options.title.trim() || 'SVG motion')
-  const description = escapeXml(options.brief?.trim() || 'SVG motion design generated in Kun.')
+  const description = escapeXml(options.brief?.trim() || 'SVG motion design generated in Rcode.')
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${Math.round(options.width)} ${Math.round(options.height)}" width="${Math.round(options.width)}" height="${Math.round(options.height)}" role="img" aria-labelledby="title desc">`,

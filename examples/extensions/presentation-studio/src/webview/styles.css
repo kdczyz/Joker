@@ -987,7 +987,7 @@ select:focus-visible,
   }
 }
 
-/* Kun PPT is always embedded in the right workbench sidebar. These rules are
+/* Rcode PPT is always embedded in the right workbench sidebar. These rules are
    intentionally self-contained so generic desktop breakpoints cannot create
    implicit grid rows or push the active editor above an empty workspace. */
 html,

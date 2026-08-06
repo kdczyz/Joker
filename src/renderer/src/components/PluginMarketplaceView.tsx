@@ -22,11 +22,11 @@ import {
 import { readBrowserStorageItem, writeBrowserStorageItem } from '../lib/browser-storage'
 import { normalizeWorkspaceRoot } from '../lib/workspace-path'
 import { getProvider } from '../agent/registry'
-import type { SkillListItem, SkillRootListItem } from '@shared/kun-gui-api'
+import type { SkillListItem, SkillRootListItem } from '@shared/Rcode-gui-api'
 import type {
   CoreRuntimeInfoJson,
   CoreRuntimeToolDiagnosticsJson
-} from '../agent/kun-contract'
+} from '../agent/Rcode-contract'
 import { useChatStore } from '../store/chat-store'
 import { NoticeView, TabButton, type MarketplaceNotice } from './PluginMarketplaceParts'
 import {
@@ -100,7 +100,7 @@ type SkillRootOption = {
   skillCount: number
 }
 
-const INSTALLED_STORAGE_KEY = 'kun.installedPlugins'
+const INSTALLED_STORAGE_KEY = 'Rcode.installedPlugins'
 const GUI_SCHEDULE_MCP_SERVER_ID = 'gui_schedule'
 
 function loadInstalledPlugins(): string[] {
@@ -949,8 +949,8 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
   }, [skillRootId, skillRootOptions])
 
   const readMcpConfig = useCallback(async (): Promise<string> => {
-    if (typeof window.kunGui?.getKunConfigFile !== 'function') return mcpConfigText
-    const file = await window.kunGui.getKunConfigFile()
+    if (typeof window.RcodeGui?.getRcodeConfigFile !== 'function') return mcpConfigText
+    const file = await window.RcodeGui.getRcodeConfigFile()
     setMcpConfigText(file.content)
     setMcpLoaded(true)
     return file.content
@@ -964,7 +964,7 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
   }, [activeKind, mcpLoaded, readMcpConfig])
 
   const refreshMcpRuntimeOverlay = useCallback(async (): Promise<void> => {
-    if (typeof window.kunGui?.runtimeRequest !== 'function') {
+    if (typeof window.RcodeGui?.runtimeRequest !== 'function') {
       setRuntimeInfo(null)
       setToolDiagnostics(null)
       setRuntimeOverlayError(t('pluginMcpRuntimeUnavailable'))
@@ -1003,7 +1003,7 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
   }, [activeKind, refreshMcpRuntimeOverlay])
 
   const refreshSkillList = useCallback(async (): Promise<void> => {
-    if (typeof window.kunGui?.listSkills !== 'function') {
+    if (typeof window.RcodeGui?.listSkills !== 'function') {
       setDiscoveredSkills([])
       setSkillListError(t('pluginSkillScanUnavailable'))
       return
@@ -1011,7 +1011,7 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
     setSkillListLoading(true)
     setSkillListError('')
     try {
-      const result = await window.kunGui.listSkills(workspaceRoot || undefined)
+      const result = await window.RcodeGui.listSkills(workspaceRoot || undefined)
       if (!result.ok) {
         setDiscoveredSkills([])
         setSkillListError(result.message)
@@ -1030,12 +1030,12 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
   }, [t, workspaceRoot])
 
   const refreshSkillRoots = useCallback(async (): Promise<void> => {
-    if (typeof window.kunGui?.listSkillRoots !== 'function') {
+    if (typeof window.RcodeGui?.listSkillRoots !== 'function') {
       setSkillRoots([])
       return
     }
     try {
-      const result = await window.kunGui.listSkillRoots(workspaceRoot || undefined)
+      const result = await window.RcodeGui.listSkillRoots(workspaceRoot || undefined)
       setSkillRoots(result.ok ? result.roots : [])
     } catch {
       setSkillRoots([])
@@ -1164,7 +1164,7 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
       setNotice({ tone: 'info', message: t('pluginAlreadyAdded') })
       return
     }
-    const result = await window.kunGui.setKunConfigFile(merged.text)
+    const result = await window.RcodeGui.setRcodeConfigFile(merged.text)
     setMcpConfigText(merged.text)
     setMcpLoaded(true)
     markInstalled(storageKey('mcp', id))
@@ -1205,7 +1205,7 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
         description,
         item.skillInstructions ?? description
       )
-      const result = await window.kunGui.saveSkillFile(selectedSkillRoot.path, item.id, content)
+      const result = await window.RcodeGui.saveSkillFile(selectedSkillRoot.path, item.id, content)
       if (!result.ok) {
         setNotice({ tone: 'error', message: result.message })
         return
@@ -1263,7 +1263,7 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
         }
         const body = customSkillBody.trim() || t('pluginCustomSkillFallbackBody')
         const content = buildSkillContent(id, customName.trim() || id, description, body)
-        const result = await window.kunGui.saveSkillFile(selectedSkillRoot.path, id, content)
+        const result = await window.RcodeGui.saveSkillFile(selectedSkillRoot.path, id, content)
         if (!result.ok) {
           setNotice({ tone: 'error', message: result.message })
           return
@@ -1316,7 +1316,7 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
     try {
       const content = mcpLoaded ? mcpConfigText : await readMcpConfig()
       const nextText = setMcpServerEnabled(content, id, enabled)
-      await window.kunGui.setKunConfigFile(nextText)
+      await window.RcodeGui.setRcodeConfigFile(nextText)
       setMcpConfigText(nextText)
       setMcpLoaded(true)
       setNotice({
@@ -1334,7 +1334,7 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
   const openManageTarget = async (): Promise<void> => {
     try {
       if (activeKind === 'mcp') {
-        const result = await window.kunGui.openKunConfigDir()
+        const result = await window.RcodeGui.openRcodeConfigDir()
         if (!result.ok) setNotice({ tone: 'error', message: result.message ?? t('pluginActionFailed') })
         return
       }
@@ -1342,7 +1342,7 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
         setNotice({ tone: 'error', message: t('pluginSkillRootMissing') })
         return
       }
-      const result = await window.kunGui.openSkillRoot(selectedSkillRoot.path)
+      const result = await window.RcodeGui.openSkillRoot(selectedSkillRoot.path)
       if (!result.ok) setNotice({ tone: 'error', message: result.message ?? t('pluginActionFailed') })
     } catch (e) {
       setNotice({ tone: 'error', message: e instanceof Error ? e.message : String(e) })
@@ -1363,7 +1363,7 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
     setNotice(null)
     setGithubImportSummary(null)
     try {
-      const result = await window.kunGui.importSkillsFromGitHub(selectedSkillRoot.path, trimmedUrl)
+      const result = await window.RcodeGui.importSkillsFromGitHub(selectedSkillRoot.path, trimmedUrl)
       if (!result.ok) {
         throw new Error(result.message)
       }
@@ -1815,7 +1815,7 @@ function marketplaceSourceTone(tone: MarketplaceItem['statusTone']): string {
 
 function runtimeOverlayErrorMessage(error: unknown, fallback: string): string {
   const message = error instanceof Error ? error.message : String(error)
-  return /runtimeRequest|kunGui|Cannot read properties/i.test(message) ? fallback : message
+  return /runtimeRequest|RcodeGui|Cannot read properties/i.test(message) ? fallback : message
 }
 
 function OAuthConnectorPreviewDialog({
@@ -1832,11 +1832,11 @@ function OAuthConnectorPreviewDialog({
   const oauth = item.oauth
   const title = itemTitle(item, t)
   const openDocs = (): void => {
-    if (!oauth || typeof window.kunGui?.openExternal !== 'function') return
+    if (!oauth || typeof window.RcodeGui?.openExternal !== 'function') return
     // Only open allowlisted https docs origins; ignore anything else so a
     // malformed or unexpected docsUrl can never reach the OS link handler.
     if (!isAllowedDocsUrl(oauth.docsUrl)) return
-    void window.kunGui.openExternal(oauth.docsUrl).catch(() => undefined)
+    void window.RcodeGui.openExternal(oauth.docsUrl).catch(() => undefined)
   }
 
   if (!oauth) return <></>

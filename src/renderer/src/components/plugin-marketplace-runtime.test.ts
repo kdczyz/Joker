@@ -8,7 +8,7 @@ describe('buildMcpMarketplaceOverlay', () => {
       runtimeInfo: {
         host: '127.0.0.1',
         port: 18899,
-        dataDir: '/tmp/kun',
+        dataDir: '/tmp/Rcode',
         startedAt: '2026-06-03T00:00:00.000Z',
         capabilities: {
           contractVersion: 1,
@@ -113,7 +113,7 @@ describe('buildMcpMarketplaceOverlay', () => {
       runtimeInfo: {
         host: '127.0.0.1',
         port: 18899,
-        dataDir: '/tmp/kun',
+        dataDir: '/tmp/Rcode',
         startedAt: '2026-06-03T00:00:00.000Z',
         capabilities: {
           contractVersion: 1,

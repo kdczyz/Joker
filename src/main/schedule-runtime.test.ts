@@ -6,7 +6,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -94,13 +94,13 @@ function settingsWith(
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
+      Rcode: {
+        ...defaultRcodeRuntimeSettings(),
         apiKey: 'test-key'
       }
     },
     workspaceRoot: testWorkspaceRoot,
-    conversationWorkspaceRoot: '~/Documents/Kun',
+    conversationWorkspaceRoot: '~/Documents/Rcode',
     log: { enabled: true, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -150,7 +150,7 @@ function createRuntime(initial: AppSettingsV1, runtimeRequest = vi.fn()) {
 
 describe('ScheduleRuntime', () => {
   beforeEach(() => {
-    testWorkspaceRoot = mkdtempSync(join(tmpdir(), 'kun-schedule-runtime-'))
+    testWorkspaceRoot = mkdtempSync(join(tmpdir(), 'Rcode-schedule-runtime-'))
     clawWorkspaceRoot = mkdtempSync(join(testWorkspaceRoot, 'claw-'))
   })
 
@@ -268,7 +268,7 @@ describe('ScheduleRuntime', () => {
     expect(store.read().claw.tasks).toEqual([])
   })
 
-  it('starts a Kun thread with a Schedule title and records running status', async () => {
+  it('starts a Rcode thread with a Schedule title and records running status', async () => {
     const task = makeTask({ reasoningEffort: 'max' })
     const runtimeRequest = vi.fn(async (_settings, path, init) => {
       if (path === '/v1/threads') {
@@ -362,7 +362,7 @@ describe('ScheduleRuntime', () => {
     expect(turnBody.prompt).toContain('Run the task')
   })
 
-  it('reads assistant text from the real Kun thread detail shape', async () => {
+  it('reads assistant text from the real Rcode thread detail shape', async () => {
     const task = makeTask()
     const runtimeRequest = vi.fn(async (_settings, path, init) => {
       if (path === '/v1/threads') {
@@ -747,7 +747,7 @@ describe('ScheduleRuntime', () => {
       slotState.set(params.poolIndex, { dirty: true })
       return {
         poolIndex: params.poolIndex,
-        path: join(projectWorkspaceRoot, `.kun-worktrees/pool-${params.poolIndex}`),
+        path: join(projectWorkspaceRoot, `.Rcode-worktrees/pool-${params.poolIndex}`),
         branch: `pool-${params.poolIndex}`,
         inUse: true,
         taskId: params.taskId,

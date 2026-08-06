@@ -247,10 +247,10 @@ export function WriteSidebar({
   const pickWriteWorkspace = async (): Promise<void> => {
     try {
       setFileError(null)
-      if (typeof window.kunGui?.pickWorkspaceDirectory !== 'function') {
+      if (typeof window.RcodeGui?.pickWorkspaceDirectory !== 'function') {
         throw new Error('workspace:pick-directory unavailable')
       }
-      const picked = await window.kunGui.pickWorkspaceDirectory(workspaceRoot || defaultWorkspaceRoot || undefined)
+      const picked = await window.RcodeGui.pickWorkspaceDirectory(workspaceRoot || defaultWorkspaceRoot || undefined)
       if (!picked.canceled && picked.path) {
         await addWriteWorkspace(picked.path)
         if (runtimeConnection === 'ready') void ensureWriteThreadForWorkspace(picked.path)
@@ -397,10 +397,10 @@ export function WriteSidebar({
                     <>
                       <SidebarIconButton
                         onClick={() => void revealWritePath(workspacePath, workspacePath)}
-                        title={window.kunGui?.platform === 'darwin'
+                        title={window.RcodeGui?.platform === 'darwin'
                           ? t('fileTreeRevealInFinder')
                           : t('fileTreeRevealInFileManager')}
-                        ariaLabel={window.kunGui?.platform === 'darwin'
+                        ariaLabel={window.RcodeGui?.platform === 'darwin'
                           ? t('fileTreeRevealInFinder')
                           : t('fileTreeRevealInFileManager')}
                         stopPropagation

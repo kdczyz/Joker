@@ -38,11 +38,11 @@ import {
  */
 function releaseThreadWorktreeIfNeeded(threadId: string | null): void {
   if (!threadId || typeof window === 'undefined') return
-  if (typeof window.kunGui?.releaseWorktree !== 'function') return
+  if (typeof window.RcodeGui?.releaseWorktree !== 'function') return
   const record = readThreadWorktreeRegistry().worktrees[threadId]
   if (!record) return
   if (record.poolIndex === undefined) return
-  void window.kunGui
+  void window.RcodeGui
     .releaseWorktree({
       projectPath: record.projectPath,
       poolIndex: record.poolIndex
@@ -675,7 +675,7 @@ export function createMaintenanceActions(
     const wtRecord = readThreadWorktreeRegistry().worktrees[targetId]
     if (wtRecord?.poolIndex !== undefined) {
       try {
-        await window.kunGui.releaseWorktree({
+        await window.RcodeGui.releaseWorktree({
           projectPath: wtRecord.projectPath,
           poolIndex: wtRecord.poolIndex
         })
@@ -743,7 +743,7 @@ export function createMaintenanceActions(
     }
     const checkpointId = targetBlock.meta?.workspaceCheckpointId
     if (checkpointId) {
-      const restored = await window.kunGui.restoreGitCheckpoint({
+      const restored = await window.RcodeGui.restoreGitCheckpoint({
         checkpointId,
         ...(state.activeThreadId ? { expectedThreadId: state.activeThreadId } : {}),
         ...(state.workspaceRoot ? { expectedWorkspaceRoot: state.workspaceRoot } : {})
@@ -841,7 +841,7 @@ export function createMaintenanceActions(
       return
     }
     const { activeThreadId, workspaceRoot } = get()
-    let restored = await window.kunGui.restoreGitCheckpoint({
+    let restored = await window.RcodeGui.restoreGitCheckpoint({
       checkpointId: targetCheckpointId,
       ...(activeThreadId ? { expectedThreadId: activeThreadId } : {}),
       ...(workspaceRoot ? { expectedWorkspaceRoot: workspaceRoot } : {})
@@ -871,7 +871,7 @@ export function createMaintenanceActions(
         set({ error: i18n.t('common:rollbackWorkspaceBusyError') })
         return
       }
-      restored = await window.kunGui
+      restored = await window.RcodeGui
         .restoreGitCheckpoint({
           checkpointId: targetCheckpointId,
           allowPartialRestore: true,
@@ -951,7 +951,7 @@ export function createMaintenanceActions(
       )
       if (!stillSubmitting) return
       const msg = formatRuntimeError(e)
-      void window.kunGui.logError('approval', 'Failed to submit approval decision', {
+      void window.RcodeGui.logError('approval', 'Failed to submit approval decision', {
         message: msg,
         blockId
       }).catch(() => undefined)
@@ -1038,7 +1038,7 @@ export function createMaintenanceActions(
       }))
     } catch (e) {
       const msg = formatRuntimeError(e)
-      void window.kunGui.logError('user-input', 'Failed to resolve user input', {
+      void window.RcodeGui.logError('user-input', 'Failed to resolve user input', {
         message: msg,
         blockId
       }).catch(() => undefined)
@@ -1079,7 +1079,7 @@ export function createMaintenanceActions(
       await p.interruptTurn(activeThreadId, currentTurnId, { discard: options?.discard === true })
     } catch (e) {
       const msg = formatRuntimeError(e)
-      void window.kunGui.logError('interrupt', 'Failed to interrupt turn', { message: msg }).catch(() => undefined)
+      void window.RcodeGui.logError('interrupt', 'Failed to interrupt turn', { message: msg }).catch(() => undefined)
       set({
         error: msg,
         ...(shouldOpenSettingsForError(e)

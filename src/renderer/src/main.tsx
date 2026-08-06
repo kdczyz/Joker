@@ -17,7 +17,7 @@ import { applyCursorSpotlight } from './lib/apply-theme'
 import { installCursorSpotlightTracking } from './lib/cursor-spotlight'
 import { installDataMigrationRendererRpc } from './data-migration/renderer-state-rpc'
 
-document.documentElement.dataset.platform = window.kunGui?.platform ?? 'unknown'
+document.documentElement.dataset.platform = window.RcodeGui?.platform ?? 'unknown'
 applyCursorSpotlight(true)
 installCursorSpotlightTracking()
 installDataMigrationRendererRpc()

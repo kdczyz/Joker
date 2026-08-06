@@ -70,18 +70,18 @@ describe("runtime design quality findings", () => {
       ])
     })
     it('caches runtime findings by normalized artifact path and merges by strongest severity', () => {
-      clearDesignRuntimeQualityFindings('.kun-design/doc/page/v1.html')
-      setDesignRuntimeQualityFindings('.kun-design\\doc\\page\\v1.html', [
+      clearDesignRuntimeQualityFindings('.Rcode-design/doc/page/v1.html')
+      setDesignRuntimeQualityFindings('.Rcode-design\\doc\\page\\v1.html', [
         { code: 'runtime-low-contrast-text', severity: 'warning', message: 'Low contrast', suggestion: 'Darken text' }
       ])
   
-      expect(getDesignRuntimeQualityFindings('.kun-design/doc/page/v1.html')).toMatchObject([
+      expect(getDesignRuntimeQualityFindings('.Rcode-design/doc/page/v1.html')).toMatchObject([
         { code: 'runtime-low-contrast-text', severity: 'warning' }
       ])
   
       const merged = mergeDesignHtmlQualityFindings(
         [{ code: 'runtime-low-contrast-text', severity: 'info', message: 'Less specific', suggestion: 'Review' }],
-        getDesignRuntimeQualityFindings('.kun-design/doc/page/v1.html')
+        getDesignRuntimeQualityFindings('.Rcode-design/doc/page/v1.html')
       )
       expect(merged).toMatchObject([
         { code: 'runtime-low-contrast-text', severity: 'warning', message: 'Low contrast' }

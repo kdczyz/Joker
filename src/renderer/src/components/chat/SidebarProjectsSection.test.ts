@@ -53,7 +53,7 @@ function draft(overrides: Partial<SddDraftHistoryItem> & Pick<SddDraftHistoryIte
   return {
     id: overrides.id,
     workspaceRoot: overrides.workspaceRoot ?? '/tmp/app',
-    relativePath: overrides.relativePath ?? `.kunsdd/draft/${folder}/requirement.md`,
+    relativePath: overrides.relativePath ?? `.Rcodesdd/draft/${folder}/requirement.md`,
     createdAt: overrides.createdAt ?? '2026-01-01T00:00:00.000Z',
     updatedAt: overrides.updatedAt ?? '2026-01-02T00:00:00.000Z',
     title: overrides.title,
@@ -160,7 +160,7 @@ describe('SidebarProjectsSection groups', () => {
 
   it('maps remembered worktree roots to their source project without a registry entry', () => {
     const projectPath = '/Users/zxy/code/Kook-VoiceShop-Bot'
-    const worktreePath = '/Users/zxy/.kun/worktrees/ab12/Kook-VoiceShop-Bot'
+    const worktreePath = '/Users/zxy/.Rcode/worktrees/ab12/Kook-VoiceShop-Bot'
     const groups = buildSidebarWorkspaceGroups({
       threads: [thread({ id: 'thread-worktree', workspace: worktreePath })],
       searchQuery: '',
@@ -176,7 +176,7 @@ describe('SidebarProjectsSection groups', () => {
 
   it('shows worktree threads under their source project instead of a separate worktree project', () => {
     const projectPath = '/Users/zxy/code/Kook-VoiceShop-Bot'
-    const worktreePath = '/Users/zxy/.kun/worktrees/0ff7/Kook-VoiceShop-Bot'
+    const worktreePath = '/Users/zxy/.Rcode/worktrees/0ff7/Kook-VoiceShop-Bot'
     const threadWorktrees = {
       'thread-worktree': {
         projectPath,
@@ -236,12 +236,12 @@ describe('SidebarProjectsSection groups', () => {
     const groups = buildSidebarWorkspaceGroups({
       threads: [
         thread({ id: 'project-thread', workspace: '/Users/zxy/project-a' }),
-        thread({ id: 'conversation-thread', workspace: '/Users/zxy/Documents/Kun/20260626-153012' })
+        thread({ id: 'conversation-thread', workspace: '/Users/zxy/Documents/Rcode/20260626-153012' })
       ],
       searchQuery: '',
       showArchived: false,
       workspaceRoot: '/Users/zxy/project-a',
-      conversationRoot: '/Users/zxy/Documents/Kun',
+      conversationRoot: '/Users/zxy/Documents/Rcode',
       workspaceRoots: ['/Users/zxy/project-a']
     })
 
@@ -256,16 +256,16 @@ describe('SidebarProjectsSection groups', () => {
         thread({
           id: 'design-assistant',
           title: 'Design Assistant',
-          workspace: '/Users/zxy/.kun/design-workspace'
+          workspace: '/Users/zxy/.Rcode/design-workspace'
         })
       ],
       searchQuery: '',
       showArchived: false,
-      workspaceRoot: '/Users/zxy/.kun/design-workspace',
+      workspaceRoot: '/Users/zxy/.Rcode/design-workspace',
       conversationRoot: '',
       workspaceRoots: [
         '/Users/zxy/project-a',
-        '/Users/zxy/.kun/design-workspace'
+        '/Users/zxy/.Rcode/design-workspace'
       ]
     })
 
@@ -439,10 +439,10 @@ describe('sidebar thread move helpers', () => {
   it('blocks moving a worktree-linked thread', () => {
     expect(
       isSidebarThreadMoveBlocked({
-        thread: thread({ id: 'thread-worktree', workspace: '/Users/zxy/.kun/worktrees/abcd/project-a' }),
+        thread: thread({ id: 'thread-worktree', workspace: '/Users/zxy/.Rcode/worktrees/abcd/project-a' }),
         worktreeRecord: {
           projectPath: '/Users/zxy/project-a',
-          worktreePath: '/Users/zxy/.kun/worktrees/abcd/project-a'
+          worktreePath: '/Users/zxy/.Rcode/worktrees/abcd/project-a'
         }
       })
     ).toBe(true)
@@ -482,7 +482,7 @@ describe('SidebarActionDialog', () => {
       createElement(SidebarActionDialog, {
         state: {
           title: 'Remove AI training?',
-          description: 'This removes the project from Kun.',
+          description: 'This removes the project from Rcode.',
           detail: 'Files on disk will not be deleted.',
           confirmLabel: 'Remove',
           danger: true,
@@ -608,7 +608,7 @@ describe('ThreadRow', () => {
         }),
         worktreeRecord: {
           projectPath: '/Users/zxy/project-a',
-          worktreePath: '/Users/zxy/.kun/worktrees/abcd/project-a',
+          worktreePath: '/Users/zxy/.Rcode/worktrees/abcd/project-a',
           branch: 'feature/layout-fix'
         },
         active: false,
@@ -727,7 +727,7 @@ describe('SidebarProjectsSection drag ordering', () => {
           showArchived: false,
           workspaceRoot: '/Users/zxy/project-a',
           workspaceRoots: ['/Users/zxy/project-a', '/Users/zxy/project-b'],
-          conversationRoot: '/Users/zxy/Documents/Kun',
+          conversationRoot: '/Users/zxy/Documents/Rcode',
           busy: false,
           watchTurnCompletion: {},
           unreadThreadIds: {},
@@ -763,7 +763,7 @@ describe('SidebarConversationsSection drag ordering', () => {
       version: 1,
       workspacePaths: [],
       threadIdsByScope: {
-        '/users/zxy/documents/kun': ['conversation-b', 'conversation-a']
+        '/users/zxy/documents/Rcode': ['conversation-b', 'conversation-a']
       }
     })
     vi.stubGlobal('localStorage', {
@@ -777,17 +777,17 @@ describe('SidebarConversationsSection drag ordering', () => {
             thread({
               id: 'conversation-a',
               title: 'Conversation A',
-              workspace: '/Users/zxy/Documents/Kun/conversation-a'
+              workspace: '/Users/zxy/Documents/Rcode/conversation-a'
             }),
             thread({
               id: 'conversation-b',
               title: 'Conversation B',
-              workspace: '/Users/zxy/Documents/Kun/conversation-b'
+              workspace: '/Users/zxy/Documents/Rcode/conversation-b'
             })
           ],
           activeThreadId: null,
           runtimeReady: true,
-          conversationRoot: '/Users/zxy/Documents/Kun',
+          conversationRoot: '/Users/zxy/Documents/Rcode',
           onNewConversation: vi.fn(),
           onSelectThread: vi.fn(),
           onRenameThread: vi.fn(async () => undefined),

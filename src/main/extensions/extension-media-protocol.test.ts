@@ -5,8 +5,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   ExtensionMediaProtocolRegistry,
   parseMediaByteRange,
-  registerKunExtensionPlatformSchemesAsPrivileged,
-  registerKunMediaSchemeAsPrivileged
+  registerRcodeExtensionPlatformSchemesAsPrivileged,
+  registerRcodeMediaSchemeAsPrivileged
 } from './extension-media-protocol'
 import { ExtensionViewSessionRegistry } from './extension-view-sessions'
 
@@ -31,7 +31,7 @@ async function fixture(options: {
   maxRangeBytes?: number
   maxConcurrentStreamsPerLease?: number
 } = {}) {
-  const root = await mkdtemp(join(tmpdir(), 'kun-media-protocol-'))
+  const root = await mkdtemp(join(tmpdir(), 'Rcode-media-protocol-'))
   roots.push(root)
   const path = join(root, 'source.mp4')
   const bytes = options.bytes ?? Uint8Array.from({ length: 256 }, (_, index) => index)
@@ -103,13 +103,13 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => rm(root, { recursive: true, force: true })))
 })
 
-describe('kun-media protocol', () => {
+describe('Rcode-media protocol', () => {
   it('registers a secure streaming scheme without bypassing CSP', () => {
     const registerSchemesAsPrivileged = vi.fn()
-    registerKunMediaSchemeAsPrivileged({ registerSchemesAsPrivileged } as never)
+    registerRcodeMediaSchemeAsPrivileged({ registerSchemesAsPrivileged } as never)
     expect(registerSchemesAsPrivileged).toHaveBeenCalledWith([
       expect.objectContaining({
-        scheme: 'kun-media',
+        scheme: 'Rcode-media',
         privileges: expect.objectContaining({
           standard: true,
           secure: true,
@@ -122,11 +122,11 @@ describe('kun-media protocol', () => {
 
   it('registers both Extension schemes in the one permitted pre-ready call', () => {
     const registerSchemesAsPrivileged = vi.fn()
-    registerKunExtensionPlatformSchemesAsPrivileged({ registerSchemesAsPrivileged } as never)
+    registerRcodeExtensionPlatformSchemesAsPrivileged({ registerSchemesAsPrivileged } as never)
     expect(registerSchemesAsPrivileged).toHaveBeenCalledTimes(1)
     expect(registerSchemesAsPrivileged).toHaveBeenCalledWith([
-      expect.objectContaining({ scheme: 'kun-extension' }),
-      expect.objectContaining({ scheme: 'kun-media' })
+      expect.objectContaining({ scheme: 'Rcode-extension' }),
+      expect.objectContaining({ scheme: 'Rcode-media' })
     ])
   })
 
@@ -136,7 +136,7 @@ describe('kun-media protocol', () => {
       handleId: 'media_handle_0000000001',
       mimeType: 'video/mp4'
     })
-    expect(state.lease.url).toMatch(/^kun-media:\/\/lease\/[A-Za-z0-9_-]+$/)
+    expect(state.lease.url).toMatch(/^Rcode-media:\/\/lease\/[A-Za-z0-9_-]+$/)
     expect(JSON.stringify(state.lease)).not.toContain(state.root)
     await expect(state.registry.createLease({
       viewSessionId: state.pending.sessionId,
@@ -252,7 +252,7 @@ describe('kun-media protocol', () => {
   })
 
   it('rejects copied URLs in another isolated View and stale sessions', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'kun-media-protocol-isolation-'))
+    const root = await mkdtemp(join(tmpdir(), 'Rcode-media-protocol-isolation-'))
     roots.push(root)
     const path = join(root, 'source.mp4')
     await writeFile(path, new Uint8Array(256).fill(4))

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import type { SkillListItem } from '@shared/kun-gui-api'
-import type { CoreRuntimeInfoJson, CoreRuntimeSkillJson } from '../../agent/kun-contract'
+import type { SkillListItem } from '@shared/Rcode-gui-api'
+import type { CoreRuntimeInfoJson, CoreRuntimeSkillJson } from '../../agent/Rcode-contract'
 import { getProvider } from '../../agent/registry'
 
 function mergeSkillCommands(
@@ -39,8 +39,8 @@ async function loadSkillCommands(
   activeSkillWorkspace: string
 ): Promise<CoreRuntimeSkillJson[]> {
   const provider = getProvider()
-  const localSkillsTask = typeof window !== 'undefined' && typeof window.kunGui?.listSkills === 'function'
-    ? window.kunGui.listSkills(activeSkillWorkspace || undefined)
+  const localSkillsTask = typeof window !== 'undefined' && typeof window.RcodeGui?.listSkills === 'function'
+    ? window.RcodeGui.listSkills(activeSkillWorkspace || undefined)
     : Promise.resolve({ ok: true as const, skills: [], validationErrors: [] })
   const [runtimeResult, localSkillsResult] = await Promise.allSettled([
     runtimeReady && provider.listSkills ? provider.listSkills() : Promise.resolve([]),

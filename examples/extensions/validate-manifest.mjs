@@ -2,7 +2,7 @@ import { access, readFile, stat } from 'node:fs/promises'
 import { dirname, isAbsolute, relative, resolve } from 'node:path'
 import { parseExtensionManifest } from '../../packages/extension-api/dist/index.js'
 
-const manifestPath = resolve(process.argv[2] ?? 'kun-extension.json')
+const manifestPath = resolve(process.argv[2] ?? 'Rcode-extension.json')
 const extensionRoot = dirname(manifestPath)
 const manifest = parseExtensionManifest(JSON.parse(await readFile(manifestPath, 'utf8')))
 

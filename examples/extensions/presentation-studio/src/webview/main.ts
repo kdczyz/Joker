@@ -5,7 +5,7 @@ import {
   type JsonObject,
   type JsonValue,
   type Theme
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 import {
   MAX_PRESENTATION_OPERATIONS,
   applyPresentationOperations,
@@ -35,7 +35,7 @@ import {
 
 declare global {
   interface Window {
-    readonly kunExtension: HostTransport
+    readonly RcodeExtension: HostTransport
   }
 }
 
@@ -93,11 +93,11 @@ const INLINE_EDIT_DOUBLE_CLICK_MS = 500
 const MAX_INLINE_TEXT_LENGTH = 12_000
 const MAX_IMAGE_BASE64_CHARS = 8 * 1024 * 1024
 const MAX_IMPORTED_IMAGE_BYTES = Math.floor(MAX_IMAGE_BASE64_CHARS / 4) * 3
-const client = new ExtensionHostClient(window.kunExtension)
+const client = new ExtensionHostClient(window.RcodeExtension)
 
 function required<T extends Element>(selector: string): T {
   const node = document.querySelector<T>(selector)
-  if (!node) throw new Error(`Kun PPT is missing ${selector}`)
+  if (!node) throw new Error(`Rcode PPT is missing ${selector}`)
   return node
 }
 
@@ -206,9 +206,9 @@ function normalizePath(value: string): string {
   if (
     !path ||
     path.length > 240 ||
-    !/^[A-Za-z0-9][A-Za-z0-9._ -]*\.kun-ppt\.html$/u.test(path)
+    !/^[A-Za-z0-9][A-Za-z0-9._ -]*\.Rcode-ppt\.html$/u.test(path)
   ) {
-    throw new Error('Use a root-level filename ending in .kun-ppt.html.')
+    throw new Error('Use a root-level filename ending in .Rcode-ppt.html.')
   }
   if (path.includes('/') || path.includes('\\') || path === '.' || path === '..') {
     throw new Error('Presentation files must use a root-level workspace filename.')
@@ -467,12 +467,12 @@ async function importedImagePath(file: File): Promise<string> {
     // Extension API v1 cannot create directories. A unique root-level asset
     // remains workspace-confined when the conventional assets directory is absent.
   }
-  const deck = safeAssetStem(activePath.replace(/\.kun-ppt\.html$/u, ''), 'presentation')
+  const deck = safeAssetStem(activePath.replace(/\.Rcode-ppt\.html$/u, ''), 'presentation')
   const source = safeAssetStem(file.name, 'image')
   const nonce = globalThis.crypto?.randomUUID?.().replaceAll('-', '').slice(0, 12)
     ?? Math.random().toString(36).slice(2, 14)
   return assertImagePath(
-    `${directory}kun-ppt-${deck}-${source}-${Date.now().toString(36)}-${nonce}.${extension}`
+    `${directory}Rcode-ppt-${deck}-${source}-${Date.now().toString(36)}-${nonce}.${extension}`
   )
 }
 
@@ -485,13 +485,13 @@ function readImportedImage(file: File): Promise<string> {
     const reader = new FileReader()
     reader.addEventListener(
       'error',
-      () => reject(new Error('Kun could not read the selected image.')),
+      () => reject(new Error('Rcode could not read the selected image.')),
       { once: true }
     )
     reader.addEventListener('load', () => {
       const value = reader.result
       if (typeof value !== 'string') {
-        reject(new Error('Kun could not read the selected image.'))
+        reject(new Error('Rcode could not read the selected image.'))
         return
       }
       const separator = value.indexOf(',')
@@ -1326,7 +1326,7 @@ function cssEditorSection(element: PresentationElement): HTMLElement {
   editor.className = 'css-editor'
   const selector = html('code')
   selector.className = 'css-selector'
-  selector.textContent = `${elementTag(element)}[data-kun-element-id="${element.id}"]`
+  selector.textContent = `${elementTag(element)}[data-Rcode-element-id="${element.id}"]`
   const textarea = html('textarea')
   textarea.className = 'css-declarations'
   textarea.value = serializeEditableElementCss(element)
@@ -1508,7 +1508,7 @@ async function createDeck(path: string): Promise<void> {
   setSaveStatus('Creating presentation…', 'saving')
   const response = await executeCommand<CommandResponse>('presentation-create', {
     path,
-    title: path.replace(/\.kun-ppt\.html$/u, '').replaceAll('-', ' ')
+    title: path.replace(/\.Rcode-ppt\.html$/u, '').replaceAll('-', ' ')
   })
   commitProject(response.project, response.path)
 }
@@ -1645,7 +1645,7 @@ function bindEvents(): void {
   ui.openExport.addEventListener('click', () => {
     ui.deckMenu.open = false
     ui.exportError.textContent = ''
-    ui.exportPath.value = activePath.replace(/\.kun-ppt\.html$/u, '-copy.kun-ppt.html')
+    ui.exportPath.value = activePath.replace(/\.Rcode-ppt\.html$/u, '-copy.Rcode-ppt.html')
     ui.exportDialog.showModal()
     ui.exportPath.focus()
   })

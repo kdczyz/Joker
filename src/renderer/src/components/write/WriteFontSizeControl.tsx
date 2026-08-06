@@ -28,7 +28,7 @@ function bumpEditorFontSize(delta: number): number {
     Math.min(WRITE_EDITOR_FONT_SIZE_MAX, readEditorFontSize() + delta)
   )
   document.documentElement.style.setProperty(FONT_SIZE_VAR, `${next}px`)
-  void window.kunGui?.saveSettingsSilent?.({ write: { typography: { fontSizePx: next } } })
+  void window.RcodeGui?.saveSettingsSilent?.({ write: { typography: { fontSizePx: next } } })
   return next
 }
 

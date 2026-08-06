@@ -1,5 +1,5 @@
 import {
-  DEFAULT_KUN_MODEL,
+  DEFAULT_RCODE_MODEL,
   DEFAULT_WRITE_AUTOSAVE_DELAY_MS,
   DEFAULT_WRITE_INLINE_COMPLETION_DEBOUNCE_MS,
   DEFAULT_WRITE_INLINE_COMPLETION_MAX_TOKENS,
@@ -34,11 +34,11 @@ import {
 } from '../lib/browser-storage'
 import type { WritePreviewMode, WriteWorkspaceState } from './write-workspace-store-types'
 
-export const WRITE_PREVIEW_MODE_KEY = 'kun.write.preview-mode'
-export const WRITE_ASSISTANT_OPEN_KEY = 'kun.write.assistant-open'
-export const WRITE_ASSISTANT_MODEL_KEY = 'kun.write.assistant-model'
-export const WRITE_ASSISTANT_PROVIDER_KEY = 'kun.write.assistant-provider'
-const DEFAULT_WRITE_ASSISTANT_MODEL = DEFAULT_KUN_MODEL
+export const WRITE_PREVIEW_MODE_KEY = 'Rcode.write.preview-mode'
+export const WRITE_ASSISTANT_OPEN_KEY = 'Rcode.write.assistant-open'
+export const WRITE_ASSISTANT_MODEL_KEY = 'Rcode.write.assistant-model'
+export const WRITE_ASSISTANT_PROVIDER_KEY = 'Rcode.write.assistant-provider'
+const DEFAULT_WRITE_ASSISTANT_MODEL = DEFAULT_RCODE_MODEL
 
 export function readStoredPreviewMode(): WritePreviewMode {
   const raw = readBrowserStorageItem(WRITE_PREVIEW_MODE_KEY)
@@ -232,7 +232,7 @@ export function writeRelativeToWorkspace(workspaceRoot: string, filePath: string
 }
 
 export function activeFileStorageKey(workspaceRoot: string): string {
-  return `kun.write.active-file:${normalizePath(workspaceRoot)}`
+  return `Rcode.write.active-file:${normalizePath(workspaceRoot)}`
 }
 
 export function rememberActiveFile(workspaceRoot: string, nextPath: string | null): void {

@@ -32,24 +32,24 @@ const {
 const { tmpdir } = require('node:os')
 const { basename, dirname, isAbsolute, join, relative, resolve, sep } = require('node:path')
 const { pathToFileURL } = require('node:url')
-const { KUN_RUNTIME_REQUIRED_PATHS } = require('./after-pack.cjs')
+const { RCODE_RUNTIME_REQUIRED_PATHS } = require('./after-pack.cjs')
 
-const EXTENSION_ID = 'kun-smoke.packaged'
+const EXTENSION_ID = 'Rcode-smoke.packaged'
 const DEFAULT_EXTENSION_IDS = [
-  'kun-examples.kun-video-editor',
-  'kun-examples.presentation-studio',
-  'kun-examples.social-media-sidebar'
+  'Rcode-examples.Rcode-video-editor',
+  'Rcode-examples.presentation-studio',
+  'Rcode-examples.social-media-sidebar'
 ]
-const RUNTIME_TOKEN = 'kun-packaged-extension-smoke-token'
+const RUNTIME_TOKEN = 'Rcode-packaged-extension-smoke-token'
 const PACKAGED_EXTENSION_SMOKE_SUCCESS_MARKER = 'Packaged Extension smoke OK ('
 
 async function main() {
   // Headless release smoke profiles must not depend on an interactive OS
   // credential service. The runtime still exercises encrypted 0600 key-file
   // storage; production keeps its normal fail-closed keychain behavior.
-  process.env.KUN_DISABLE_OS_CREDENTIAL_STORE = '1'
+  process.env.RCODE_DISABLE_OS_CREDENTIAL_STORE = '1'
   const resourcesDir = resolveResources(argumentValue('--resources'))
-  if (process.env.KUN_PACKAGED_EXTENSION_SMOKE_REEXEC !== '1') {
+  if (process.env.RCODE_PACKAGED_EXTENSION_SMOKE_REEXEC !== '1') {
     const runtimeExecutable = resolvePackagedRuntimeExecutable(
       resourcesDir,
       argumentValue('--runtime-executable')
@@ -69,10 +69,10 @@ async function main() {
     }
   }
   const unpackedRoot = join(resourcesDir, 'app.asar.unpacked')
-  const runtimeEntry = join(unpackedRoot, 'kun', 'dist', 'cli', 'serve-entry.js')
+  const runtimeEntry = join(unpackedRoot, 'Rcode', 'dist', 'cli', 'serve-entry.js')
   validatePackagedResources(resourcesDir, unpackedRoot)
 
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'kun-packaged-extension-smoke-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-packaged-extension-smoke-'))
   let server
   let primaryFailed = false
   let primaryError
@@ -85,13 +85,13 @@ async function main() {
     await installSmokeExtensionFixture({
       temporaryRoot,
       profile,
-      runCli: (args) => runKun(runtimeEntry, args)
+      runCli: (args) => runRcode(runtimeEntry, args)
     })
 
-    const [{ parseServeOptions }, { startKunServe }, { makeUserItem }] = await Promise.all([
-      importFresh(join(unpackedRoot, 'kun', 'dist', 'cli', 'serve.js')),
-      importFresh(join(unpackedRoot, 'kun', 'dist', 'server', 'runtime-factory.js')),
-      importFresh(join(unpackedRoot, 'kun', 'dist', 'domain', 'item.js'))
+    const [{ parseServeOptions }, { startRcodeServe }, { makeUserItem }] = await Promise.all([
+      importFresh(join(unpackedRoot, 'Rcode', 'dist', 'cli', 'serve.js')),
+      importFresh(join(unpackedRoot, 'Rcode', 'dist', 'server', 'runtime-factory.js')),
+      importFresh(join(unpackedRoot, 'Rcode', 'dist', 'domain', 'item.js'))
     ])
     const port = await availablePort()
     const options = parseServeOptions([
@@ -106,7 +106,7 @@ async function main() {
       '--approval-policy', 'auto',
       '--sandbox-mode', 'danger-full-access'
     ], {})
-    server = await startKunServe(options)
+    server = await startRcodeServe(options)
 
     const activated = await activateSmokeExtension(server.runtime, workspace)
     await smokeWorkbenchAndWebview(port, activated.workspace)
@@ -124,9 +124,9 @@ async function main() {
 
     await server.close()
     server = undefined
-    runKun(runtimeEntry, ['extension', 'doctor', EXTENSION_ID, '--data-dir', profile, '--json'])
-    runKun(runtimeEntry, ['extension', 'uninstall', EXTENSION_ID, '--data-dir', profile, '--json'])
-    const listed = JSON.parse(runKun(runtimeEntry, [
+    runRcode(runtimeEntry, ['extension', 'doctor', EXTENSION_ID, '--data-dir', profile, '--json'])
+    runRcode(runtimeEntry, ['extension', 'uninstall', EXTENSION_ID, '--data-dir', profile, '--json'])
+    const listed = JSON.parse(runRcode(runtimeEntry, [
       'extension', 'list', '--data-dir', profile, '--json'
     ]))
     if (!Array.isArray(listed.extensions) || listed.extensions.length !== DEFAULT_EXTENSION_IDS.length) {
@@ -137,14 +137,14 @@ async function main() {
       if (installed?.globallyEnabled !== true) {
         throw new Error(`Packaged default extension was not enabled through the registry: ${id}`)
       }
-      runKun(runtimeEntry, [
+      runRcode(runtimeEntry, [
         'extension', 'uninstall', id, '--data-dir', profile, '--json'
       ])
     }
-    server = await startKunServe(options)
+    server = await startRcodeServe(options)
     await server.close()
     server = undefined
-    const afterRemoval = JSON.parse(runKun(runtimeEntry, [
+    const afterRemoval = JSON.parse(runRcode(runtimeEntry, [
       'extension', 'list', '--data-dir', profile, '--json'
     ]))
     if (!Array.isArray(afterRemoval.extensions) || afterRemoval.extensions.length !== 0) {
@@ -156,7 +156,7 @@ async function main() {
     primaryError = error
   } finally {
     await server?.close().catch(() => undefined)
-    if (process.env.KUN_KEEP_PACKAGED_EXTENSION_SMOKE === '1') {
+    if (process.env.RCODE_KEEP_PACKAGED_EXTENSION_SMOKE === '1') {
       process.stderr.write(`Preserved packaged Extension smoke profile: ${temporaryRoot}\n`)
     } else {
       try {
@@ -178,7 +178,7 @@ async function main() {
   }
   if (cleanupFailed) throw cleanupError
   process.stdout.write(
-    `${PACKAGED_EXTENSION_SMOKE_SUCCESS_MARKER}${process.platform}): resources, bundled-default seed/removal, .kunx lifecycle, Webview session, headless tool, Agent/tool round-trip, custom Provider/account stream, diagnostics, and uninstall.\n`
+    `${PACKAGED_EXTENSION_SMOKE_SUCCESS_MARKER}${process.platform}): resources, bundled-default seed/removal, .Rcodex lifecycle, Webview session, headless tool, Agent/tool round-trip, custom Provider/account stream, diagnostics, and uninstall.\n`
   )
 }
 
@@ -200,8 +200,8 @@ function createPackagedExtensionSmokeReexecEnvironment(environment = process.env
   return {
     ...environment,
     ELECTRON_RUN_AS_NODE: '1',
-    KUN_DISABLE_OS_CREDENTIAL_STORE: '1',
-    KUN_PACKAGED_EXTENSION_SMOKE_REEXEC: '1'
+    RCODE_DISABLE_OS_CREDENTIAL_STORE: '1',
+    RCODE_PACKAGED_EXTENSION_SMOKE_REEXEC: '1'
   }
 }
 
@@ -220,14 +220,14 @@ function resolvePackagedRuntimeExecutable(resourcesDir, explicit) {
         : undefined
     if (packagedArch && packagedArch !== process.arch) return undefined
     if (!normalized.endsWith('.app/Contents/Resources')) return undefined
-    const candidate = join(dirname(resourcesDir), 'MacOS', 'Kun')
+    const candidate = join(dirname(resourcesDir), 'MacOS', 'Rcode')
     assertExists(candidate, 'runtime executable')
     return candidate
   }
   const appOutDir = dirname(resourcesDir)
   const names = process.platform === 'win32'
-    ? ['Kun.exe']
-    : ['kun', 'Kun', 'kun-gui']
+    ? ['Rcode.exe']
+    : ['Rcode', 'Rcode', 'Rcode-gui']
   const candidate = names.map((name) => join(appOutDir, name)).find(existsSync)
   if (!candidate) {
     throw new Error(`Cannot find packaged runtime executable beside ${resourcesDir}`)
@@ -254,8 +254,8 @@ async function makeTreeWritable(root) {
 
 function packagedResourceCandidates(platform = process.platform, arch = process.arch) {
   if (platform === 'darwin') {
-    if (arch === 'arm64') return ['dist/mac-arm64/Kun.app/Contents/Resources']
-    if (arch === 'x64') return ['dist/mac/Kun.app/Contents/Resources']
+    if (arch === 'arm64') return ['dist/mac-arm64/Rcode.app/Contents/Resources']
+    if (arch === 'x64') return ['dist/mac/Rcode.app/Contents/Resources']
     return []
   }
   if (platform === 'win32') return ['dist/win-unpacked/resources']
@@ -284,13 +284,13 @@ function resolveResources(explicit) {
 function validatePackagedResources(resourcesDir, unpackedRoot) {
   assertExists(join(resourcesDir, 'app.asar'), 'app.asar')
   assertExists(unpackedRoot, 'app.asar.unpacked')
-  for (const relativePath of KUN_RUNTIME_REQUIRED_PATHS) {
+  for (const relativePath of RCODE_RUNTIME_REQUIRED_PATHS) {
     assertConfinedPackagedPath(unpackedRoot, relativePath)
   }
   validateBundledDefaultExtension(resourcesDir)
   for (const relativePath of [
-    'kun/node_modules/@kun/extension-api',
-    'kun/node_modules/create-kun-extension'
+    'Rcode/node_modules/@Rcode/extension-api',
+    'Rcode/node_modules/create-Rcode-extension'
   ]) {
     const details = lstatSync(join(unpackedRoot, relativePath))
     if (!details.isDirectory() || details.isSymbolicLink()) {
@@ -328,7 +328,7 @@ function validateBundledDefaultExtension(resourcesDir) {
     const entry = matches[0]
     if (
       typeof entry.archive !== 'string' ||
-      !/^[0-9A-Za-z][0-9A-Za-z._-]*\.kunx$/u.test(entry.archive) ||
+      !/^[0-9A-Za-z][0-9A-Za-z._-]*\.Rcodex$/u.test(entry.archive) ||
       typeof entry.sha256 !== 'string' ||
       !/^[a-f0-9]{64}$/u.test(entry.sha256)
     ) {
@@ -414,16 +414,16 @@ function hasAsarEntry(header, path) {
 async function createSmokeExtension(root, { webviewConnectUrls = [] } = {}) {
   const webviewCsp = smokeWebviewCsp(webviewConnectUrls)
   await mkdir(join(root, 'dist', 'webview'), { recursive: true })
-  await writeFile(join(root, 'kun-extension.json'), `${JSON.stringify({
+  await writeFile(join(root, 'Rcode-extension.json'), `${JSON.stringify({
     manifestVersion: 1,
     apiVersion: '1.2.0',
-    publisher: 'kun-smoke',
+    publisher: 'Rcode-smoke',
     name: 'packaged',
     version: '1.0.0',
     displayName: 'Packaged Extension Smoke',
     description: 'Release-only deterministic packaged Extension Platform smoke fixture.',
     license: 'MIT',
-    engines: { kun: '>=0.1.0' },
+    engines: { Rcode: '>=0.1.0' },
     main: 'dist/extension.js',
     browser: 'dist/webview/index.html',
     activationEvents: ['onTool:echo', 'onProvider:echo', 'onView:smoke'],
@@ -493,7 +493,7 @@ async function createSmokeExtension(root, { webviewConnectUrls = [] } = {}) {
   await writeFile(join(root, 'dist', 'webview', 'index.html'), [
     '<!doctype html>',
     `<html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${webviewCsp}"></head>`,
-    '<body><main data-kun-packaged-webview-smoke="ready">Packaged Webview smoke</main></body></html>',
+    '<body><main data-Rcode-packaged-webview-smoke="ready">Packaged Webview smoke</main></body></html>',
     ''
   ].join('\n'))
   await writeFile(join(root, 'dist', 'extension.js'), `
@@ -581,7 +581,7 @@ async function installSmokeExtensionFixture({
 }) {
   if (typeof runCli !== 'function') throw new TypeError('runCli must be a function')
   const source = join(temporaryRoot, 'source')
-  const archive = join(temporaryRoot, 'packaged-smoke.kunx')
+  const archive = join(temporaryRoot, 'packaged-smoke.Rcodex')
   await createSmokeExtension(source, { webviewConnectUrls })
 
   runCli(['extension', 'validate', source, '--json'])
@@ -600,7 +600,7 @@ async function installSmokeExtensionFixture({
   ])
 
   const installedRoot = join(profile, 'extensions', EXTENSION_ID, '1.0.0')
-  assertExists(join(installedRoot, 'kun-extension.json'), 'installed Manifest')
+  assertExists(join(installedRoot, 'Rcode-extension.json'), 'installed Manifest')
   assertExists(join(installedRoot, 'dist', 'webview', 'index.html'), 'installed Webview resource')
   return { source, archive, installedRoot }
 }
@@ -630,8 +630,8 @@ function smokeWebviewCsp(webviewConnectUrls = []) {
   return [
     "default-src 'none'",
     "style-src 'self'",
-    "img-src 'self' data: kun-media:",
-    "media-src 'self' kun-media:",
+    "img-src 'self' data: Rcode-media:",
+    "media-src 'self' Rcode-media:",
     `connect-src ${connectSources.length > 0 ? connectSources.join(' ') : "'none'"}`
   ].join('; ')
 }
@@ -839,7 +839,7 @@ async function runtimeJson(port, path, init = {}) {
   return body ? JSON.parse(body) : undefined
 }
 
-function runKun(entry, args) {
+function runRcode(entry, args) {
   return execFileSync(process.execPath, [entry, ...args], {
     cwd: dirname(entry),
     env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },

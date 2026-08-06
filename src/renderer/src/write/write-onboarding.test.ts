@@ -19,7 +19,7 @@ function memoryStorage(initial: string | null = null): BrowserStorageLike & { va
   }
 }
 
-const root = '/home/user/.kun/write_workspace'
+const root = '/home/user/.Rcode/write_workspace'
 const baseState = {
   persistedComplete: false,
   settingsLoading: false,

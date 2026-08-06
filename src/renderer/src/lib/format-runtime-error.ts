@@ -50,7 +50,7 @@ function runtimeErrorCode(payload: RuntimeErrorPayload | null, raw: string): str
   if (lowered.includes('preload bridge missing')) return 'preload_bridge_missing'
   if (
     lowered.includes('managed runtime npm package missing') ||
-    lowered.includes('kun npm package missing') ||
+    lowered.includes('Rcode npm package missing') ||
     lowered.includes('cannot find package.json')
   ) {
     return 'runtime_binary_not_installed'

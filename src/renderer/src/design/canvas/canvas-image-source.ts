@@ -111,8 +111,8 @@ async function readImageDataUrl(
   workspaceRoot: string,
   path: string
 ): Promise<string | null> {
-  if (typeof window.kunGui?.readWorkspaceImage !== 'function') return null
-  const result = await window.kunGui.readWorkspaceImage({
+  if (typeof window.RcodeGui?.readWorkspaceImage !== 'function') return null
+  const result = await window.RcodeGui.readWorkspaceImage({
     path,
     ...(workspaceRoot ? { workspaceRoot } : {})
   })
@@ -127,7 +127,7 @@ async function resolveWorkspaceImage(
   const hit = cache.get(key)
   if (hit) return hit
   const trimmedPath = path.trim()
-  if (!trimmedPath || typeof window.kunGui?.readWorkspaceImage !== 'function') return null
+  if (!trimmedPath || typeof window.RcodeGui?.readWorkspaceImage !== 'function') return null
   try {
     const dataUrl = isAbsoluteLocalImagePath(trimmedPath)
       ? await readImageDataUrl('', trimmedPath)

@@ -28,7 +28,7 @@ describe('legacy project design-system migration', () => {
     const legacy = serializeProjectDesignSystem(legacyDocument)
     const writeWorkspaceFile = vi.fn(async () => ({ ok: true as const, path: '/workspace/DESIGN.md', savedAt: new Date().toISOString() }))
     const deleteWorkspaceEntry = vi.fn()
-    vi.stubGlobal('window', { kunGui: {
+    vi.stubGlobal('window', { RcodeGui: {
       readWorkspaceFile: vi.fn(async () => ({ ok: false as const, message: 'missing' })),
       writeWorkspaceFile,
       deleteWorkspaceEntry

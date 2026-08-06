@@ -127,8 +127,8 @@ export function Workbench(): ReactElement {
     [activeThreadId, threads, workspaceRoot]
   )
   useEffect(() => {
-    if (typeof window.kunGui?.onExtensionComposerContext !== 'function') return
-    return window.kunGui.onExtensionComposerContext(attachExtensionComposerContext)
+    if (typeof window.RcodeGui?.onExtensionComposerContext !== 'function') return
+    return window.RcodeGui.onExtensionComposerContext(attachExtensionComposerContext)
   }, [attachExtensionComposerContext])
   const extensionComposerContextChips = useMemo(() => {
     if (route !== 'chat') return []
@@ -154,7 +154,7 @@ export function Workbench(): ReactElement {
   const [worktreeBranch, setWorktreeBranch] = useState('')
   const [connectPhoneSidebarOpen, setConnectPhoneSidebarOpen] = useState(false)
   const designDocuments = useDesignWorkspaceStore((s) => s.documents)
-  const { focusModeEnabled, runtimeLogPath, toggleTheme, uiModeCameosEnabled, updateFocusMode } =
+  const { runtimeLogPath, toggleTheme, uiModeCameosEnabled } =
     useWorkbenchUiRuntime()
   const contributionContext = useMemo(
     () => workbenchContextForRoute(route, extensionWorkspaceRoot),
@@ -1036,8 +1036,6 @@ export function Workbench(): ReactElement {
         runtimeReady={runtimeConnection === 'ready'}
         threadSearch={threadSearch}
         showArchivedThreads={showArchivedThreads}
-        focusModeEnabled={focusModeEnabled}
-        onFocusModeChange={updateFocusMode}
         onThreadSearchChange={setThreadSearch}
         onSelectThread={openThread}
         onRenameThread={renameThread}
@@ -1133,7 +1131,6 @@ export function Workbench(): ReactElement {
             stageInsetClass,
             leftSidebarCollapsed,
             busy,
-            focusModeEnabled,
             uiModeCameosEnabled,
             blocks: timelineBlocks,
             liveReasoning: timelineLiveReasoning,

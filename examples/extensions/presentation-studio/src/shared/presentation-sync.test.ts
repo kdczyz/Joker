@@ -11,15 +11,15 @@ test('main Agent changes are followed when the sidebar has no deck or another de
     hasProject: false,
     activePath: '',
     currentRevision: 0,
-    changePath: 'agent-deck.kun-ppt.html',
+    changePath: 'agent-deck.Rcode-ppt.html',
     changeRevision: 1,
     source: 'tool'
   }), 'follow-tool')
   assert.equal(decidePresentationChange({
     hasProject: true,
-    activePath: 'old-deck.kun-ppt.html',
+    activePath: 'old-deck.Rcode-ppt.html',
     currentRevision: 3,
-    changePath: 'agent-deck.kun-ppt.html',
+    changePath: 'agent-deck.Rcode-ppt.html',
     changeRevision: 2,
     source: 'tool'
   }), 'follow-tool')
@@ -28,17 +28,17 @@ test('main Agent changes are followed when the sidebar has no deck or another de
 test('the current deck refreshes only for a newer revision', () => {
   assert.equal(decidePresentationChange({
     hasProject: true,
-    activePath: 'agent-deck.kun-ppt.html',
+    activePath: 'agent-deck.Rcode-ppt.html',
     currentRevision: 2,
-    changePath: 'agent-deck.kun-ppt.html',
+    changePath: 'agent-deck.Rcode-ppt.html',
     changeRevision: 3,
     source: 'tool'
   }), 'refresh-current')
   assert.equal(decidePresentationChange({
     hasProject: true,
-    activePath: 'agent-deck.kun-ppt.html',
+    activePath: 'agent-deck.Rcode-ppt.html',
     currentRevision: 3,
-    changePath: 'agent-deck.kun-ppt.html',
+    changePath: 'agent-deck.Rcode-ppt.html',
     changeRevision: 3,
     source: 'tool'
   }), 'ignore')
@@ -46,7 +46,7 @@ test('the current deck refreshes only for a newer revision', () => {
     hasProject: false,
     activePath: '',
     currentRevision: 0,
-    changePath: 'command-deck.kun-ppt.html',
+    changePath: 'command-deck.Rcode-ppt.html',
     changeRevision: 1,
     source: 'command'
   }), 'ignore')
@@ -54,14 +54,14 @@ test('the current deck refreshes only for a newer revision', () => {
 
 test('workspace discovery accepts root presentation files and selects the newest', () => {
   const paths = presentationPathsFromWorkspaceEntries([
-    { name: 'first.kun-ppt.html', type: 'file' },
+    { name: 'first.Rcode-ppt.html', type: 'file' },
     { name: 'notes.md', type: 'file' },
-    { name: '../outside.kun-ppt.html', type: 'file' },
+    { name: '../outside.Rcode-ppt.html', type: 'file' },
     { name: 'nested', type: 'directory' }
   ])
-  assert.deepEqual(paths, ['first.kun-ppt.html'])
+  assert.deepEqual(paths, ['first.Rcode-ppt.html'])
   assert.equal(latestPresentationPath([
-    { path: 'first.kun-ppt.html', modifiedAt: '2026-07-14T01:00:00.000Z' },
-    { path: 'agent-deck.kun-ppt.html', modifiedAt: '2026-07-14T02:00:00.000Z' }
-  ]), 'agent-deck.kun-ppt.html')
+    { path: 'first.Rcode-ppt.html', modifiedAt: '2026-07-14T01:00:00.000Z' },
+    { path: 'agent-deck.Rcode-ppt.html', modifiedAt: '2026-07-14T02:00:00.000Z' }
+  ]), 'agent-deck.Rcode-ppt.html')
 })

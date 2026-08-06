@@ -117,9 +117,9 @@ function createHarness(): {
   return { actions, get, set }
 }
 
-function installDsGui(overrides: Partial<Window['kunGui']>): void {
+function installDsGui(overrides: Partial<Window['RcodeGui']>): void {
   vi.stubGlobal('window', {
-    kunGui: overrides
+    RcodeGui: overrides
   })
 }
 
@@ -250,7 +250,7 @@ describe('write workspace file actions', () => {
     const readWorkspaceFile = vi.fn()
     const confirm = vi.fn(() => false)
     vi.stubGlobal('window', {
-      kunGui: { readWorkspaceFile },
+      RcodeGui: { readWorkspaceFile },
       confirm
     })
     const { actions, get, set } = createHarness()
@@ -286,7 +286,7 @@ describe('write workspace file actions', () => {
     }))
     const confirm = vi.fn(() => true)
     vi.stubGlobal('window', {
-      kunGui: { readWorkspaceFile },
+      RcodeGui: { readWorkspaceFile },
       confirm
     })
     const { actions, get, set } = createHarness()
@@ -332,7 +332,7 @@ describe('write workspace file actions', () => {
     }))
     vi.stubGlobal('window', {
       localStorage: storage,
-      kunGui: {
+      RcodeGui: {
         renameWorkspaceEntry,
         listWorkspaceDirectory: vi.fn(async () => ({
           ok: true as const,
@@ -389,7 +389,7 @@ describe('write workspace file actions', () => {
     ), storage)
     vi.stubGlobal('window', {
       localStorage: storage,
-      kunGui: {
+      RcodeGui: {
         deleteWorkspaceEntry: vi.fn(async () => ({
           ok: true as const,
           path: `${workspace}/drafts`,

@@ -25,21 +25,21 @@ import {
   writeDesignWorkspaceFile
 } from '../design-persistence-coordinator'
 
-const DESIGN_DIR = '.kun-design'
+const DESIGN_DIR = '.Rcode-design'
 
-export const CANVAS_VIEW_KEY = 'kun.design.canvasView.v1'
-export const VIEWPORT_KEY = 'kun.design.viewport.v1'
-export const AI_RAIL_COLLAPSED_KEY = 'kun.design.aiRailCollapsed.v1'
-export const CANVAS_ASSISTANT_OPEN_KEY = 'kun.design.canvasAssistantOpen.v1'
-export const CANVAS_INSPECTOR_PINNED_KEY = 'kun.design.canvasInspectorPinned.v1'
-export const ASSISTANT_MODEL_KEY = 'kun.design.assistantModel.v1'
-export const ASSISTANT_PROVIDER_KEY = 'kun.design.assistantProvider.v1'
-export const MULTI_PAGE_MODE_KEY = 'kun.design.multiPageMode.v1'
-export const DESIGN_TARGET_KEY = 'kun.design.target.v1'
+export const CANVAS_VIEW_KEY = 'Rcode.design.canvasView.v1'
+export const VIEWPORT_KEY = 'Rcode.design.viewport.v1'
+export const AI_RAIL_COLLAPSED_KEY = 'Rcode.design.aiRailCollapsed.v1'
+export const CANVAS_ASSISTANT_OPEN_KEY = 'Rcode.design.canvasAssistantOpen.v1'
+export const CANVAS_INSPECTOR_PINNED_KEY = 'Rcode.design.canvasInspectorPinned.v1'
+export const ASSISTANT_MODEL_KEY = 'Rcode.design.assistantModel.v1'
+export const ASSISTANT_PROVIDER_KEY = 'Rcode.design.assistantProvider.v1'
+export const MULTI_PAGE_MODE_KEY = 'Rcode.design.multiPageMode.v1'
+export const DESIGN_TARGET_KEY = 'Rcode.design.target.v1'
 
 export function builtinDesignWorkspaceRoot(): string {
-  const homeDir = typeof window !== 'undefined' ? (window.kunGui?.homeDir ?? '') : ''
-  return homeDir ? `${homeDir}/.kun/design-workspace` : ''
+  const homeDir = typeof window !== 'undefined' ? (window.RcodeGui?.homeDir ?? '') : ''
+  return homeDir ? `${homeDir}/.Rcode/design-workspace` : ''
 }
 
 export function defaultDocumentTitle(): string {
@@ -96,7 +96,7 @@ function sortArtifacts(items: DesignArtifact[]): DesignArtifact[] {
 async function inferMissingSvgNode(
   artifact: DesignArtifact,
   workspaceRoot: string,
-  api: NonNullable<typeof window.kunGui>
+  api: NonNullable<typeof window.RcodeGui>
 ): Promise<DesignArtifact> {
   if (artifact.kind !== 'svg' || artifact.node) return artifact
   const svgRead = await api.readWorkspaceFile({ path: artifact.relativePath, workspaceRoot }).catch(() => null)
@@ -111,7 +111,7 @@ async function loadArtifactDir(
   artifactDir: string,
   artifactId: string
 ): Promise<DesignArtifact | null> {
-  const api = window.kunGui
+  const api = window.RcodeGui
   if (!api || typeof api.readWorkspaceFile !== 'function' || typeof api.listWorkspaceDirectory !== 'function') {
     return null
   }
@@ -135,9 +135,9 @@ async function loadArtifactDir(
   return null
 }
 
-/** Load every 画布 in a 设计稿 dir (`.kun-design/<docId>/<artifactId>/`). */
+/** Load every 画布 in a 设计稿 dir (`.Rcode-design/<docId>/<artifactId>/`). */
 async function loadArtifactsForDoc(workspaceRoot: string, docId: string): Promise<DesignArtifact[]> {
-  const api = window.kunGui
+  const api = window.RcodeGui
   if (!api || typeof api.listWorkspaceDirectory !== 'function') return []
   const sub = await api.listWorkspaceDirectory({ path: `${DESIGN_DIR}/${docId}`, workspaceRoot }).catch(() => null)
   if (!sub || !sub.ok) return []
@@ -162,8 +162,8 @@ function rewriteArtifactPaths(a: DesignArtifact, oldPrefix: string, newPrefix: s
 }
 
 /**
- * Physically move a legacy flat artifact (`.kun-design/<id>/…`) into the default
- * 设计稿's dir (`.kun-design/<docId>/<id>/…`) so the new model is uniform on disk.
+ * Physically move a legacy flat artifact (`.Rcode-design/<id>/…`) into the default
+ * 设计稿's dir (`.Rcode-design/<docId>/<id>/…`) so the new model is uniform on disk.
  * Best-effort: any IO failure leaves the artifact at its flat path (still adopted
  * into the 设计稿 — nothing is lost), since relativePath is per-artifact.
  */
@@ -173,7 +173,7 @@ async function moveArtifactIntoDoc(
   entries: { name: string; type: string }[],
   docId: string
 ): Promise<DesignArtifact> {
-  const api = window.kunGui
+  const api = window.RcodeGui
   const oldPrefix = `${DESIGN_DIR}/${artifact.id}/`
   if (
     !api ||
@@ -217,7 +217,7 @@ async function moveArtifactIntoDoc(
 }
 
 /**
- * Legacy → nested upgrade. Wrap all flat `.kun-design/<id>/` artifact dirs into a
+ * Legacy → nested upgrade. Wrap all flat `.Rcode-design/<id>/` artifact dirs into a
  * single default 设计稿 (preserving canvas positions), moving their files under
  * the 设计稿 dir. Returns the default 设计稿 or null when there's nothing legacy.
  */
@@ -225,7 +225,7 @@ async function migrateLegacyToDefaultDoc(
   workspaceRoot: string,
   topDirs: { name: string; type: string }[]
 ): Promise<DesignDocument | null> {
-  const api = window.kunGui
+  const api = window.RcodeGui
   if (!api || typeof api.listWorkspaceDirectory !== 'function' || typeof api.readWorkspaceFile !== 'function') {
     return null
   }
@@ -327,7 +327,7 @@ export async function rehydrateDesignWorkspaceArtifacts({
   const { workspaceRoot } = get()
   const hydrationIsCurrent = (): boolean =>
     (isCurrent ? isCurrent(workspaceRoot) : get().workspaceRoot === workspaceRoot)
-  const api = window.kunGui
+  const api = window.RcodeGui
   if (
     !workspaceRoot ||
     !api ||

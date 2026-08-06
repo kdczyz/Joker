@@ -12,7 +12,7 @@ import {
   isCustomModelEndpointFormat,
   modelEndpointPath,
   modelProviderModelProfile,
-  resolveKunRuntimeSettings,
+  resolveRcodeRuntimeSettings,
   resolveModelEndpointFormat,
   resolveModelProviderProxyUrl
 } from '../shared/app-settings'
@@ -325,7 +325,7 @@ export async function detectClawScheduledTaskRequest(
   now = new Date()
 ): Promise<ParsedClawScheduledTaskRequest | null> {
   if (!looksLikeClawScheduledTaskCandidate(sourceText)) return null
-  const runtime = resolveKunRuntimeSettings(settings)
+  const runtime = resolveRcodeRuntimeSettings(settings)
   const apiKey = runtime.apiKey.trim()
   if (!apiKey) return null
   const model = detectionModel(modelHint)

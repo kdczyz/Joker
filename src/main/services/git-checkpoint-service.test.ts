@@ -16,7 +16,7 @@ let repoRoot = ''
 let dataDir = ''
 
 beforeEach(async () => {
-  sandbox = await mkdtemp(join(tmpdir(), 'kun-git-checkpoint-'))
+  sandbox = await mkdtemp(join(tmpdir(), 'Rcode-git-checkpoint-'))
   repoRoot = join(sandbox, 'repo')
   dataDir = join(sandbox, 'data')
   execFileSync('git', ['init', '-b', 'main', repoRoot], { stdio: 'pipe' })
@@ -56,7 +56,7 @@ describe('git checkpoint service', () => {
     await expect(stat(join(checkpointDir, 'head.bundle'))).resolves.toBeTruthy()
 
     const refs = execFileSync('git', ['-C', repoRoot, 'show-ref'], { encoding: 'utf-8' })
-    expect(refs).not.toContain('refs/kun/checkpoints')
+    expect(refs).not.toContain('refs/Rcode/checkpoints')
   })
 
   it('writes a checkpoint manifest with canonical thread and workspace identity', async () => {
@@ -189,7 +189,7 @@ describe('git checkpoint service', () => {
       checkpoint.head
     )
     const refs = execFileSync('git', ['-C', repoRoot, 'show-ref'], { encoding: 'utf-8' })
-    expect(refs).not.toContain('refs/kun/checkpoints')
+    expect(refs).not.toContain('refs/Rcode/checkpoints')
   })
 
   it('refuses to restore when a tampered checkpoint smuggles a path-traversal untracked entry', async () => {
@@ -476,7 +476,7 @@ describe('git checkpoint service', () => {
 
 describe('git checkpoint storage limits (issue #651)', () => {
   it('stores checkpoints under a user-configured directory (e.g. another drive)', async () => {
-    const customRoot = join(sandbox, 'other-drive', 'kun-checkpoints')
+    const customRoot = join(sandbox, 'other-drive', 'Rcode-checkpoints')
     const checkpoint = await createGitCheckpoint({
       dataDir,
       workspaceRoot: repoRoot,

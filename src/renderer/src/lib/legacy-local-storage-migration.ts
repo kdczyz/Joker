@@ -1,6 +1,6 @@
 /**
- * 品牌从 DeepSeek GUI 升级为 Kun 时,localStorage 键前缀从
- * `deepseekgui.` 改成了 `kun.`。这里做一次性拷贝迁移:
+ * 品牌从 DeepSeek GUI 升级为 Rcode 时,localStorage 键前缀从
+ * `deepseekgui.` 改成了 `Rcode.`。这里做一次性拷贝迁移:
  *   - 只在新键不存在时拷贝,重复执行安全;
  *   - 旧键保留不删,用户回滚老版本时 UI 状态(线程注册表、布局等)
  *     仍然完整;
@@ -10,7 +10,7 @@
  */
 
 const LEGACY_PREFIX = 'deepseekgui.'
-const NEW_PREFIX = 'kun.'
+const NEW_PREFIX = 'Rcode.'
 
 export function migrateLegacyLocalStorageKeys(storage: Pick<Storage, 'length' | 'key' | 'getItem' | 'setItem'>): number {
   let migrated = 0

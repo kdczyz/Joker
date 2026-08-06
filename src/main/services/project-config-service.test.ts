@@ -2,13 +2,13 @@ import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
-import { writeKunProjectConfig } from '../../../kun/src/config/project-config.js'
+import { writeRcodeProjectConfig } from '../../../Rcode/src/config/project-config.js'
 import {
-  defaultKunRuntimeSettings,
+  defaultRcodeRuntimeSettings,
   normalizeAppSettings,
   type AppSettingsV1
 } from '../../shared/app-settings'
-import { syncGuiManagedKunConfig } from '../runtime/kun-runtime-config-service'
+import { syncGuiManagedRcodeConfig } from '../runtime/Rcode-runtime-config-service'
 import {
   GENERATED_PROJECT_MCP_SERVER_PREFIX,
   approvedProjectMcpServers,
@@ -20,7 +20,7 @@ describe('project config MCP grants', () => {
   let root = ''
 
   beforeEach(async () => {
-    root = await mkdtemp(join(tmpdir(), 'kun-project-mcp-'))
+    root = await mkdtemp(join(tmpdir(), 'Rcode-project-mcp-'))
   })
 
   afterEach(async () => {
@@ -114,7 +114,7 @@ describe('project config MCP grants', () => {
       { workspaceRoot: written.workspaceRoot, configDigest: written.digest }
     ])
 
-    const first = await syncGuiManagedKunConfig(dataDir, trusted.agents.kun, {
+    const first = await syncGuiManagedRcodeConfig(dataDir, trusted.agents.Rcode, {
       appSettings: trusted,
       mcpConfigPath: userMcpPath
     })
@@ -125,7 +125,7 @@ describe('project config MCP grants', () => {
     )).toBe(true)
 
     const revoked = settings()
-    const second = await syncGuiManagedKunConfig(dataDir, revoked.agents.kun, {
+    const second = await syncGuiManagedRcodeConfig(dataDir, revoked.agents.Rcode, {
       appSettings: revoked,
       mcpConfigPath: userMcpPath
     })
@@ -146,7 +146,7 @@ describe('project config MCP grants', () => {
       { workspaceRoot: written.workspaceRoot, configDigest: written.digest }
     ])
 
-    const first = await syncGuiManagedKunConfig(dataDir, approved.agents.kun, {
+    const first = await syncGuiManagedRcodeConfig(dataDir, approved.agents.Rcode, {
       appSettings: approved,
       mcpConfigPath: join(root, 'missing-mcp.json')
     })
@@ -157,7 +157,7 @@ describe('project config MCP grants', () => {
     await writeProject(workspace, {
       api: { transport: 'stdio', command: 'node', args: ['changed.js'] }
     })
-    const second = await syncGuiManagedKunConfig(dataDir, approved.agents.kun, {
+    const second = await syncGuiManagedRcodeConfig(dataDir, approved.agents.Rcode, {
       appSettings: approved,
       mcpConfigPath: join(root, 'missing-mcp.json')
     })
@@ -207,7 +207,7 @@ describe('project config MCP grants', () => {
     workspace: string,
     servers: Record<string, Record<string, unknown>>
   ) {
-    return writeKunProjectConfig(workspace, JSON.stringify({
+    return writeRcodeProjectConfig(workspace, JSON.stringify({
       version: 1,
       mcp: { servers }
     }, null, 2))
@@ -221,8 +221,8 @@ function settings(
   return normalizeAppSettings({
     ...base,
     agents: {
-      kun: {
-        ...defaultKunRuntimeSettings(),
+      Rcode: {
+        ...defaultRcodeRuntimeSettings(),
         projectConfig: { grants }
       }
     }

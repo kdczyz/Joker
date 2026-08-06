@@ -28,7 +28,7 @@ const createdAt = '2026-07-13T00:00:00.000Z'
 
 function artifact(id: string, kind: 'html' | 'svg'): DesignArtifact {
   const extension = kind === 'svg' ? 'svg' : 'html'
-  const relativePath = `.kun-design/doc/${id}/v1.${extension}`
+  const relativePath = `.Rcode-design/doc/${id}/v1.${extension}`
   return {
     id,
     kind,

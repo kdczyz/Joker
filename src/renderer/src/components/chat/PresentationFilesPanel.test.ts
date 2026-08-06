@@ -52,7 +52,7 @@ describe('PresentationFilesPanel', () => {
       editorId: 'file-manager'
     })
     logError.mockClear()
-    vi.stubGlobal('window', { kunGui: { logError } })
+    vi.stubGlobal('window', { RcodeGui: { logError } })
     vi.stubGlobal('document', {
       addEventListener: vi.fn(),
       removeEventListener: vi.fn()
@@ -91,11 +91,11 @@ describe('PresentationFilesPanel', () => {
     expect(actionMocks.reveal).toHaveBeenCalledWith('presentations/brief.pptx', '/workspace', undefined)
   })
 
-  it('forwards the trusted content digest for Kun HTML open verification', async () => {
+  it('forwards the trusted content digest for Rcode HTML open verification', async () => {
     const htmlFile: PresentationFileArtifact = {
-      path: 'brief.kun-ppt.html',
-      name: 'brief.kun-ppt.html',
-      kind: 'kun-html',
+      path: 'brief.Rcode-ppt.html',
+      name: 'brief.Rcode-ppt.html',
+      kind: 'Rcode-html',
       extension: 'HTML',
       contentSha256: 'a'.repeat(64)
     }
@@ -110,7 +110,7 @@ describe('PresentationFilesPanel', () => {
     await act(async () => openButton.props.onClick())
 
     expect(actionMocks.open).toHaveBeenCalledWith(
-      'brief.kun-ppt.html',
+      'brief.Rcode-ppt.html',
       '/workspace',
       'a'.repeat(64)
     )

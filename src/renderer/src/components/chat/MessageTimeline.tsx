@@ -16,11 +16,6 @@ import { ReviewPlanCard, ReviewSummaryCard, TurnChangeSummary, WorkMetaRow } fro
 import { ProcessSectionRow, groupProcessSections } from './message-timeline-process'
 import { ComponentPrototypeCard } from './ComponentPrototypeCard'
 import type { OpenChildThreadHandler } from './SubagentCallCard'
-import {
-  AnimatedWorkLogo,
-  WORK_LOGO_SWIM_MODE_LABEL_KEYS,
-  useWorkLogoSwimMode
-} from './AnimatedWorkLogo'
 import type { UiPluginLabelKey } from '@shared/ui-plugin'
 import { useUiPluginWorkLabel } from '../../store/ui-plugin-store'
 import {
@@ -42,7 +37,7 @@ import {
   RelativePathSchema,
   ResultPreviewSourceSchema,
   type JsonValue
-} from '@kun/extension-api'
+} from '@Rcode/extension-api'
 import type { RegisteredContribution } from '../../extensions/contribution-registry'
 import { boundedPlainText } from '../../extensions/safe-text'
 import {
@@ -67,7 +62,6 @@ type Props = {
   onRetryConnection: () => void
   onOpenSettings: () => void
   onSelectSuggestion?: (prompt: string) => void
-  focusModeEnabled?: boolean
   devPreviewCard?: ReactElement | null
   /** Disables the inline Review Plan card's Build action while a turn runs. */
   planActionsBusy?: boolean
@@ -350,7 +344,6 @@ export function MessageTimeline({
   onRetryConnection,
   onOpenSettings,
   onSelectSuggestion,
-  focusModeEnabled = false,
   devPreviewCard,
   planActionsBusy,
   onBuildPlan,
@@ -660,7 +653,6 @@ export function MessageTimeline({
             onRetry={onRetryConnection}
             onOpenSettings={onOpenSettings}
             onSelectSuggestion={onSelectSuggestion}
-            focusModeEnabled={focusModeEnabled}
           />
         ) : null}
 
@@ -931,7 +923,7 @@ function MessageTurn({
       turn.blocks,
       filePreviewWorkspaceRoot,
       isProcessing,
-      typeof window === 'undefined' ? '' : window.kunGui?.platform ?? ''
+      typeof window === 'undefined' ? '' : window.RcodeGui?.platform ?? ''
     ),
     [turn.blocks, filePreviewWorkspaceRoot, isProcessing]
   )
@@ -969,7 +961,7 @@ function MessageTurn({
   // (Feishu bot streaming) to appear only after turn_completed, which the
   // user perceives as a long delay.
   // Note: `live` is the generic SSE sink output across ALL channels
-  // (Kun runtime turns, claw channel replies from feishu/weixin/etc),
+  // (Rcode runtime turns, claw channel replies from feishu/weixin/etc),
   // not feishu-specific. Removing the !isProcessing gate is intentional
   // for all streaming paths, not just feishu.
   const showLiveAssistant = !!liveContent.trim()
@@ -1123,6 +1115,30 @@ function MessageTurn({
   )
 }
 
+const WORK_LOGO_SWIM_MODES = ['propel', 'sprint', 'dive', 'surf'] as const
+type WorkLogoSwimMode = (typeof WORK_LOGO_SWIM_MODES)[number]
+
+const WORK_LOGO_SWIM_MODE_LABEL_KEYS: Record<WorkLogoSwimMode, string> = {
+  propel: 'working',
+  sprint: 'workingSprint',
+  dive: 'workingDive',
+  surf: 'workingSurf'
+}
+
+function useWorkLogoSwimMode(active: boolean): WorkLogoSwimMode {
+  const [modeIndex, setModeIndex] = useState(() =>
+    Math.floor(Math.random() * WORK_LOGO_SWIM_MODES.length)
+  )
+  useEffect(() => {
+    if (!active) return
+    const interval = window.setInterval(() => {
+      setModeIndex((current) => (current + 1) % WORK_LOGO_SWIM_MODES.length)
+    }, 4200)
+    return () => window.clearInterval(interval)
+  }, [active])
+  return WORK_LOGO_SWIM_MODES[modeIndex] ?? 'propel'
+}
+
 function LiveTurnProgressRow({ hasActiveGoal }: { hasActiveGoal: boolean }): ReactElement {
   const { t, i18n } = useTranslation('common')
   const swimMode = useWorkLogoSwimMode(true)
@@ -1136,9 +1152,6 @@ function LiveTurnProgressRow({ hasActiveGoal }: { hasActiveGoal: boolean }): Rea
 
   return (
     <div className={liveTurnProgressClass(hasActiveGoal)}>
-      <span className="ds-work-logo-slot ds-work-logo-slot-sm mr-0.5">
-        <AnimatedWorkLogo active mode={swimMode} phase="trail" size="sm" />
-      </span>
       <span className="ds-shiny-text">{label}</span>
     </div>
   )

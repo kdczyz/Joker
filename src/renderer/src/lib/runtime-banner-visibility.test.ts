@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { shouldSuppressRuntimeErrorBanner } from './runtime-banner-visibility'
 
 describe('shouldSuppressRuntimeErrorBanner', () => {
-  it('suppresses the main error banner while Kun is auto-restarting or recovering', () => {
+  it('suppresses the main error banner while Rcode is auto-restarting or recovering', () => {
     expect(shouldSuppressRuntimeErrorBanner({
       state: 'restarting',
       source: 'settings-apply',
@@ -19,7 +19,7 @@ describe('shouldSuppressRuntimeErrorBanner', () => {
     expect(shouldSuppressRuntimeErrorBanner({
       state: 'failed',
       source: 'supervisor',
-      message: 'Kun keeps crashing.',
+      message: 'Rcode keeps crashing.',
       at: '2026-06-18T15:01:00.000Z'
     })).toBe(false)
     expect(shouldSuppressRuntimeErrorBanner({

@@ -146,7 +146,7 @@ export function WriteFileTree({
                   </>
                 ) : null}
                 <TreeActionButton
-                  title={window.kunGui?.platform === 'darwin'
+                  title={window.RcodeGui?.platform === 'darwin'
                     ? t('fileTreeRevealInFinder')
                     : t('fileTreeRevealInFileManager')}
                   onClick={() => onRevealEntry(entry)}
