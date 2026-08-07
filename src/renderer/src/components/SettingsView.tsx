@@ -123,6 +123,12 @@ const ProfileSettingsSection = lazy(() =>
 const WriteDebugLogModal = lazy(() =>
   import('./settings-debug-log').then((module) => ({ default: module.WriteDebugLogModal }))
 )
+const BackendSettingsSection = lazy(() =>
+  import('./settings-section-backend').then((module) => ({ default: module.BackendSettingsSection }))
+)
+const WebSearchSettingsSection = lazy(() =>
+  import('./settings-section-web-search').then((module) => ({ default: module.WebSearchSettingsSection }))
+)
 
 function LoadedAgentsSettingsSection({
   onReady,
@@ -144,7 +150,7 @@ function SettingsSectionFallback(): ReactElement {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'write' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'write' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch'
 type SettingsPatch = AppSettingsPatch
 type InlineNotice = {
   tone: 'success' | 'error' | 'info'
@@ -1418,6 +1424,7 @@ export function SettingsView(): ReactElement {
             {category === 'agents' ? (
               <LoadedAgentsSettingsSection ctx={settingsSectionContext} onReady={markAgentsSectionReady} />
             ) : null}
+            {category === 'backend' ? <BackendSettingsSection /> : null}
             {category === 'subagents' ? <SubagentsSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'archives' ? <ArchivedThreadsSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'worktree' ? <WorktreeSettingsSection ctx={settingsSectionContext} /> : null}
@@ -1428,6 +1435,7 @@ export function SettingsView(): ReactElement {
             {category === 'terminal' ? <TerminalSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'debug' ? <LlmDebugSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'dataMigration' ? <DataMigrationSettingsSection /> : null}
+            {category === 'webSearch' ? <WebSearchSettingsSection ctx={settingsSectionContext} /> : null}
           </Suspense>
           </div>
         </div>

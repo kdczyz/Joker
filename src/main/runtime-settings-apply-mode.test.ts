@@ -5,6 +5,7 @@ import {
   defaultKeyboardShortcuts,
   defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
+  defaultModelProviderProfile,
   defaultScheduleSettings,
   defaultTerminalSettings,
   defaultWorkflowSettings,
@@ -46,10 +47,7 @@ function settings(): AppSettingsV1 {
 
 function multiProviderSettings(): AppSettingsV1 {
   const base = settings()
-  const deepseek = {
-    ...base.provider.providers[0]!,
-    apiKey: 'sk-deepseek-old'
-  }
+  const deepseek = defaultModelProviderProfile('sk-deepseek-old', '')
   const codex: ModelProviderProfileV1 = {
     ...deepseek,
     id: 'codex',
@@ -305,7 +303,8 @@ describe('runtimeSettingsApplyMode', () => {
 
   it('requires restart when the active default provider switches between http and agent-sdk', () => {
     const prev = settings()
-    const provider = prev.provider.providers[0]!
+    const provider = defaultModelProviderProfile('', '')
+    prev.provider.providers = [provider]
     const next = {
       ...prev,
       provider: {

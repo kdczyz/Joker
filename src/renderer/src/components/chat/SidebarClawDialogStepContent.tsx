@@ -3,6 +3,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { AlertCircle, CheckCircle2, ChevronDown, ChevronRight, Copy, Eye, EyeOff, Loader2, QrCode, RadioTower } from 'lucide-react'
 import { MIN_RCODE_LOCAL_PORT, type ClawRunMode } from '@shared/app-settings'
 import { ClawProviderLogo } from './SidebarClaw'
+import { FloatingComposerExecutionPicker } from './FloatingComposerExecutionPicker'
 import {
   CLAW_AGENT_TABS,
   clawConnectionHintKey,
@@ -44,6 +45,8 @@ export function ClawStepContent({ ctx }: { ctx: Record<string, any> }): ReactEle
     resolvedPlatformCredential,
     responseTimeoutSec,
     runMode,
+    imApprovalPolicy,
+    imSandboxMode,
     secret,
     selectedCredentialHints,
     selectedOption,
@@ -59,6 +62,8 @@ export function ClawStepContent({ ctx }: { ctx: Record<string, any> }): ReactEle
     setOfficialInstallTarget,
     setResponseTimeoutSec,
     setRunMode,
+    setImApprovalPolicy,
+    setImSandboxMode,
     setSecret,
     setShowSecret,
     showSecret,
@@ -409,6 +414,20 @@ export function ClawStepContent({ ctx }: { ctx: Record<string, any> }): ReactEle
                                   <option value="plan">plan</option>
                                 </select>
                               </label>
+                            </div>
+                            <div className="mt-4">
+                              <div className="text-[12px] font-semibold text-ds-muted">
+                                {t('composerPermissionShort')}
+                              </div>
+                              <div className="mt-1.5">
+                                <FloatingComposerExecutionPicker
+                                  value={{ approvalPolicy: imApprovalPolicy, sandboxMode: imSandboxMode }}
+                                  onChange={(patch) => {
+                                    if (patch.approvalPolicy) setImApprovalPolicy(patch.approvalPolicy)
+                                    if (patch.sandboxMode) setImSandboxMode(patch.sandboxMode)
+                                  }}
+                                />
+                              </div>
                             </div>
                             <div className="mt-4 grid gap-4 sm:grid-cols-2">
                               <label className="block min-w-0">

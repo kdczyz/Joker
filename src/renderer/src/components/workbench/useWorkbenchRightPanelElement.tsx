@@ -55,6 +55,9 @@ type WorkbenchRightPanelElementOptions = Pick<
     | 'setComposerModel'
     | 'onNewConversation'
     | 'onPickWorkspace'
+    | 'executionSettings'
+    | 'executionSettingsApplying'
+    | 'onExecutionSettingsChange'
   >
   sdd: Pick<
     SddAssistantProps,

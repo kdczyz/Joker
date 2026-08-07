@@ -87,8 +87,7 @@ type ChatCompletionMessage = {
 type WriteInlineProviderResponseFormat = ModelEndpointFormat | 'fim_completions'
 
 function shouldDisableThinkingForInlineCompletion(model: string): boolean {
-  const normalized = model.trim().toLowerCase()
-  return normalized.startsWith('deepseek-v4') || normalized === 'deepseek-reasoner'
+  return false
 }
 
 const inlineCompletionDebugEntries: WriteInlineCompletionDebugEntry[] = []

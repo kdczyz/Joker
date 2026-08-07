@@ -64,7 +64,9 @@ export const ModelCapabilityMetadata = z
     endpointFormat: z.enum(MODEL_ENDPOINT_FORMATS).optional(),
     // Codex-only Responses Lite transport. Omitted uses the standard
     // Responses request shape.
-    responsesMode: z.literal('lite').optional()
+    responsesMode: z.literal('lite').optional(),
+    // 该模型是否默认开启联网搜索。true 自动开启，false 自动关闭，undefined 不干预。
+    defaultWebSearch: z.boolean().optional()
   })
   .strict()
 export type ModelCapabilityMetadata = z.infer<typeof ModelCapabilityMetadata>

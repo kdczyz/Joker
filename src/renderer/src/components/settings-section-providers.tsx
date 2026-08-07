@@ -867,7 +867,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     }
   }
   const [selectedProviderId, setSelectedProviderId] = useState<string>(
-    Rcode.providerId?.trim() || modelProviders[0]?.id || DEFAULT_MODEL_PROVIDER_ID
+    Rcode.providerId?.trim() || modelProviders[0]?.id || ''
   )
   const [addMenuOpen, setAddMenuOpen] = useState(false)
   const addMenuRef = useRef<HTMLDivElement>(null)
@@ -908,11 +908,10 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   const isDraftActive = Boolean(draftProvider && activeProvider?.id === draftProvider.id)
   const canEditActiveProviderId = Boolean(
     activeProvider &&
-    activeProvider.id !== DEFAULT_MODEL_PROVIDER_ID &&
     !getModelProviderPreset(activeProvider.id) &&
     !tokenPlanPresetForProfileId(activeProvider.id)
   )
-  const activeRcodeProviderId: string = Rcode.providerId?.trim() || DEFAULT_MODEL_PROVIDER_ID
+  const activeRcodeProviderId: string = Rcode.providerId?.trim() || modelProviders[0]?.id || ''
   const providerProxy = provider.proxy ?? { enabled: false, url: '' }
 
   const updateProviderProxy = (patch: Partial<typeof providerProxy>): void => {
@@ -1078,7 +1077,6 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   }
 
   const updateModelProviderId = (id: string, value: string): void => {
-    if (id === DEFAULT_MODEL_PROVIDER_ID) return
     const nextId = normalizeModelProviderId(value)
     if (!nextId || nextId === id) return
     if (displayProviders.some((item) => item.id === nextId && item.id !== id)) return
@@ -1190,7 +1188,6 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   }
 
   const removeModelProvider = async (id: string): Promise<void> => {
-    if (id === DEFAULT_MODEL_PROVIDER_ID) return
     const target = modelProviders.find((item) => item.id === id)
     if (!target) return
     const usedByChat = activeRcodeProviderId === id
@@ -1220,10 +1217,11 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     })
     if (!confirmed) return
     const nextProviders = modelProviders.filter((item) => item.id !== id)
+    const firstProviderId = nextProviders[0]?.id ?? ''
     const RcodePatch: RcodeRuntimeSettingsPatchV1 | undefined =
       usedByChat || usedByImage || usedBySpeech || usedByTextToSpeech || usedByMusic || usedByVideo
         ? {
-            ...(usedByChat ? { providerId: DEFAULT_MODEL_PROVIDER_ID } : {}),
+            ...(usedByChat ? { providerId: firstProviderId } : {}),
             ...(usedByImage ? { imageGeneration: { providerId: '' } } : {}),
             ...(usedBySpeech ? { speechToText: { providerId: '' } } : {}),
             ...(usedByTextToSpeech ? { textToSpeech: { providerId: '' } } : {}),
@@ -1240,7 +1238,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     if (usedByWrite) {
       patch.write = { inlineCompletion: { inheritProvider: true, providerId: '' } }
     }
-    setSelectedProviderId(DEFAULT_MODEL_PROVIDER_ID)
+    setSelectedProviderId(firstProviderId)
     update(patch)
   }
 
@@ -1407,7 +1405,6 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   }
 
   const providerKindLabel = (item: ModelProviderProfileV1): string => {
-    if (item.id === DEFAULT_MODEL_PROVIDER_ID) return t('modelProviderDefaultBadge')
     if (tokenPlanPresetForProfileId(item.id)) return t('modelProviderTokenPlanBadge')
     const preset = getModelProviderPreset(item.id)
     if (preset?.category === 'subscription') return t('modelProviderPlanBadge')
@@ -1459,7 +1456,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
 
   const planProviders = displayProviders.filter((item) => isSubscriptionProviderId(item.id))
   const apiProviders = displayProviders.filter((item) => !isSubscriptionProviderId(item.id))
-  // 只要存在任一套餐类供应商就分组展示;否则(通常只有默认 DeepSeek)保持单一平铺列表。
+  // 只要存在任一套餐类供应商就分组展示;否则保持单一平铺列表。
   const grouped = planProviders.length > 0
 
   const renderProviderButton = (item: ModelProviderProfileV1): ReactElement => {
@@ -2248,7 +2245,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
                       </span>
                     </div>
                   </DetailSection>
-                ) : activeProvider.id !== DEFAULT_MODEL_PROVIDER_ID ? (
+                ) : (
                   <DetailSection title={t('modelProviderSectionDanger')}>
                     <div className="flex flex-wrap items-center gap-3">
                       <button
@@ -2262,7 +2259,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
                       <span className="text-[12px] text-ds-faint">{t('modelProviderDangerHint')}</span>
                     </div>
                   </DetailSection>
-                ) : null}
+                )}
               </div>
             ) : null}
           </div>

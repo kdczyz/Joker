@@ -1210,6 +1210,7 @@
   "connectPhoneScanHint": "Scan with Feishu/Lark to open the authorization page.",
   "connectPhoneScanHintWeixin": "Scan with WeChat to sign in.",
   "connectPhoneAutoBindHint": "Confirm authorization on your phone and this will bind automatically.",
+  "connectPhoneBindDevice": "Bind Device",
   "connectPhoneUserCode": "Code {{code}}",
   "connectPhoneAlreadyConnected": "A phone connection already exists. Manage the existing connection in settings.",
   "connectPhoneProviderAlreadyConnected": "{{provider}} is already connected. Each platform can only be connected once.",

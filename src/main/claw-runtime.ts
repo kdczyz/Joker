@@ -1009,11 +1009,16 @@ export class ClawRuntime {
     const requestedModel = normalizeTaskModel(options.model) ?? (settings.agents.Rcode.model.trim() || DEFAULT_CLAW_MODEL)
     const runtimeSettings = settingsWithImModelProvider(settings, options.providerId, requestedModel)
     const model = effectiveImRuntimeModel(runtimeSettings, requestedModel)
+    // IM turns follow the per-IM permission policy when the user picked one,
+    // otherwise they fall back to the global agent permission policy
+    // (`agents.Rcode.approvalPolicy`/`sandboxMode`) — the historical behavior.
+    const imApprovalPolicy = settings.claw.im.approvalPolicy ?? runtimeSettings.agents.Rcode.approvalPolicy
+    const imSandboxMode = settings.claw.im.sandboxMode ?? runtimeSettings.agents.Rcode.sandboxMode
     const createThread = async (): Promise<ThreadRecordJson | null> => {
       const body: Record<string, unknown> = { workspace, model, mode: options.mode }
       if (options.source === 'im') {
-        body.approvalPolicy = runtimeSettings.agents.Rcode.approvalPolicy
-        body.sandboxMode = runtimeSettings.agents.Rcode.sandboxMode
+        body.approvalPolicy = imApprovalPolicy
+        body.sandboxMode = imSandboxMode
       }
       const create = await this.requestRuntime(runtimeSettings, '/v1/threads', {
         method: 'POST',
@@ -1056,8 +1061,8 @@ export class ClawRuntime {
     if (options.source === 'im') {
       turnBody.disableUserInput = true
       turnBody.imContext = true
-      turnBody.approvalPolicy = runtimeSettings.agents.Rcode.approvalPolicy
-      turnBody.sandboxMode = runtimeSettings.agents.Rcode.sandboxMode
+      turnBody.approvalPolicy = imApprovalPolicy
+      turnBody.sandboxMode = imSandboxMode
     }
     let turn = await this.startRuntimeTurn(runtimeSettings, thread.id, turnBody)
     if (!turn.ok && existingThreadId && isMissingThreadResult(turn)) {

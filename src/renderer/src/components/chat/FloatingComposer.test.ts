@@ -618,19 +618,13 @@ describe('FloatingComposer model controls', () => {
           }
         }
       }],
-      modelOptions: ['MiniMax-M3', 'loose-model'],
-      ungroupedLabel: 'Other models'
+      modelOptions: ['MiniMax-M3', 'loose-model']
     })
 
-    expect(groups).toHaveLength(2)
+    expect(groups).toHaveLength(1)
     expect(groups[0]).toMatchObject({
       providerId: 'minimax-token-plan',
       modelIds: ['minimax-m3']
-    })
-    expect(groups[1]).toMatchObject({
-      providerId: '__composer_models__',
-      label: 'Other models',
-      modelIds: ['loose-model']
     })
   })
 
@@ -660,8 +654,7 @@ describe('FloatingComposer model controls', () => {
           modelProfiles: {}
         }
       ],
-      modelOptions: ['deepseek-v4-pro'],
-      ungroupedLabel: 'Other models'
+      modelOptions: ['deepseek-v4-pro']
     })
 
     expect(groups).toEqual([

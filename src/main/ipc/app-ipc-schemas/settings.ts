@@ -390,7 +390,11 @@ const RcodeRuntimePatchSchema = z.object({
   titleReasoningEffort: modelReasoningEffortSchema.optional(),
   summaryReasoningEffort: modelReasoningEffortSchema.optional(),
   codeReviewReasoningEffort: modelReasoningEffortSchema.optional(),
-  subagents: subagentsPatchSchema.optional()
+  subagents: subagentsPatchSchema.optional(),
+  webSearchAutoMode: z.boolean().optional(),
+  webSearchEnabled: z.boolean().optional(),
+  tavilySearchApiKey: z.string().max(MAX_BODY_BYTES).optional(),
+  baiduSearchApiKey: z.string().max(MAX_BODY_BYTES).optional()
 }).strict()
 
 const logPatchSchema = z.object({
@@ -542,7 +546,9 @@ const clawImPatchSchema = z.object({
   model: modelIdSchema.optional(),
   mode: clawRunModeSchema.optional(),
   responseTimeoutMs: z.number().int().min(5_000).max(600_000).optional(),
-  recentThreadListLimit: z.number().int().min(1).max(50).optional()
+  recentThreadListLimit: z.number().int().min(1).max(50).optional(),
+  approvalPolicy: approvalPolicySchema.optional(),
+  sandboxMode: sandboxModeSchema.optional()
 }).strict()
 
 const clawImAgentProfilePatchSchema = z.object({
@@ -1279,6 +1285,10 @@ const settingsPatchObjectSchema = z.object({
   keyboardShortcuts: keyboardShortcutsPatchSchema.optional(),
   write: writeSettingsPatchSchema.optional(),
   claw: clawSettingsPatchSchema.optional(),
+  remoteAgent: z.object({
+    approvalPolicy: approvalPolicySchema.optional(),
+    sandboxMode: sandboxModeSchema.optional()
+  }).strict().optional(),
   schedule: scheduleSettingsPatchSchema.optional(),
   workflow: workflowSettingsPatchSchema.optional(),
   design: designSettingsPatchSchema.optional(),

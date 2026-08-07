@@ -57,6 +57,8 @@ export type ProviderModelForm = {
   /** Internal preset transport metadata; intentionally not exposed in the form UI. */
   responsesMode: 'lite' | null
   aliases: string[]
+  /** Whether to enable web search by default when switching to this model. */
+  defaultWebSearch?: boolean
 }
 
 export type ProviderModelFormError =
@@ -110,7 +112,8 @@ export function newProviderModelForm(
     reasoningProtocol: defaultReasoningProtocolForProvider(provider),
     endpointFormat: null,
     responsesMode: null,
-    aliases: []
+    aliases: [],
+    defaultWebSearch: undefined
   }
 }
 
@@ -141,7 +144,8 @@ export function providerModelFormForExisting(
     reasoningProtocol: profile.reasoning?.requestProtocol ?? base.reasoningProtocol,
     endpointFormat: profile.endpointFormat ?? null,
     responsesMode: profile.responsesMode ?? null,
-    aliases: [...(profile.aliases ?? [])]
+    aliases: [...(profile.aliases ?? [])],
+    defaultWebSearch: profile.defaultWebSearch
   }
 }
 
@@ -432,7 +436,8 @@ function chatProfileFromForm(form: ProviderModelForm): ModelProviderModelProfile
       ? { reasoning: reasoningCapabilityFromForm(form) }
       : {}),
     ...(form.endpointFormat ? { endpointFormat: form.endpointFormat } : {}),
-    ...(form.responsesMode ? { responsesMode: form.responsesMode } : {})
+    ...(form.responsesMode ? { responsesMode: form.responsesMode } : {}),
+    ...(form.defaultWebSearch !== undefined ? { defaultWebSearch: form.defaultWebSearch } : {})
   }
 }
 

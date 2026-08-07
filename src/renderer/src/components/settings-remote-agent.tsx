@@ -3,11 +3,19 @@ import {
   Loader2,
   Monitor,
   Power,
+  ShieldCheck,
   Smartphone,
   Wifi,
   WifiOff
 } from 'lucide-react'
+import {
+  DEFAULT_APPROVAL_POLICY,
+  DEFAULT_SANDBOX_MODE,
+  type ApprovalPolicy,
+  type SandboxMode
+} from '@shared/app-settings'
 import { useAuth } from '../auth/AuthGate'
+import { FloatingComposerExecutionPicker } from './chat/FloatingComposerExecutionPicker'
 
 type AgentState = 'offline' | 'connecting' | 'online' | 'waiting'
 
@@ -43,6 +51,37 @@ export function RemoteAgentPanel(): ReactElement {
   const [message, setMessage] = useState<string | undefined>()
   const [logs, setLogs] = useState<CommandLogEntry[]>([])
   const [busy, setBusy] = useState(false)
+  const [approvalPolicy, setApprovalPolicy] = useState<ApprovalPolicy>(DEFAULT_APPROVAL_POLICY)
+  const [sandboxMode, setSandboxMode] = useState<SandboxMode>(DEFAULT_SANDBOX_MODE)
+
+  // Load remote-agent permission override (falls back to global agent policy)
+  useEffect(() => {
+    if (typeof window.RcodeGui?.getSettings !== 'function') return
+    void window.RcodeGui.getSettings().then((settings) => {
+      setApprovalPolicy(
+        settings.remoteAgent?.approvalPolicy ?? settings.agents.Rcode.approvalPolicy
+      )
+      setSandboxMode(
+        settings.remoteAgent?.sandboxMode ?? settings.agents.Rcode.sandboxMode
+      )
+    })
+  }, [])
+
+  const handlePermissionChange = useCallback(
+    (patch: { approvalPolicy?: ApprovalPolicy; sandboxMode?: SandboxMode }) => {
+      const nextApproval = patch.approvalPolicy ?? approvalPolicy
+      const nextSandbox = patch.sandboxMode ?? sandboxMode
+      if (patch.approvalPolicy) setApprovalPolicy(patch.approvalPolicy)
+      if (patch.sandboxMode) setSandboxMode(patch.sandboxMode)
+      void window.RcodeGui?.saveSettingsSilent?.({
+        remoteAgent: {
+          approvalPolicy: nextApproval,
+          sandboxMode: nextSandbox
+        }
+      })
+    },
+    [approvalPolicy, sandboxMode]
+  )
 
   // Subscribe to IPC events
   useEffect(() => {
@@ -208,6 +247,25 @@ export function RemoteAgentPanel(): ReactElement {
             ) : null}
           </div>
         ) : null}
+      </div>
+
+      {/* Permission mode for remote-agent turns */}
+      <div className="mx-4 mb-3 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2.5">
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-[12.5px] font-medium text-ds-ink">
+              <ShieldCheck className="h-3.5 w-3.5 text-ds-muted" strokeWidth={1.8} />
+              执行权限
+            </div>
+            <div className="mt-0.5 text-[11.5px] leading-snug text-ds-faint">
+              手机端发起任务的工具权限，未设置时跟随全局策略
+            </div>
+          </div>
+          <FloatingComposerExecutionPicker
+            value={{ approvalPolicy, sandboxMode }}
+            onChange={handlePermissionChange}
+          />
+        </div>
       </div>
 
       {/* Device info when online */}

@@ -517,8 +517,10 @@ export type ThreadEventSink = {
   onUsage?(usage: ThreadUsageSnapshot): void
 }
 
+export type AgentProviderId = 'Rcode' | 'grok-build'
+
 export interface AgentProvider {
-  readonly id: 'Rcode'
+  readonly id: AgentProviderId
   readonly displayName: string
   getCapabilities(): {
     interrupt: boolean

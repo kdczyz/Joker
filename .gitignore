@@ -47,3 +47,6 @@ release.local.env
 .Rcode-design/
 .Rcode-canvas/
 openspec/
+
+### Large binaries (exceed GitHub 100MB limit; keep local only)
+resources/grok-runtime/

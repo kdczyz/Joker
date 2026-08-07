@@ -154,7 +154,8 @@ export async function syncGuiManagedRcodeConfig(
       attachments: enabledByDefault(objectValue(capabilities.attachments)),
       web: {
         ...enabledByDefault(objectValue(capabilities.web)),
-        fetchEnabled: objectValue(capabilities.web).fetchEnabled === false ? false : true
+        fetchEnabled: objectValue(capabilities.web).fetchEnabled === false ? false : true,
+        searchEnabled: resolveWebSearchEnabled(runtime, objectValue(capabilities.web))
       },
       skills,
       imageGen: imageGenConfigForRuntime(runtime.imageGeneration, objectValue(capabilities.imageGen)),
@@ -217,7 +218,8 @@ type RcodeRuntimeConfigSettings = Pick<RcodeRuntimeSettingsV1,
   'smallModelProviderId' | 'smallModelAccountId' |
   'titleModel' | 'titleProviderId' | 'titleAccountId' |
   'summaryModel' | 'summaryProviderId' | 'summaryAccountId' |
-  'codeReviewModel' | 'codeReviewProviderId' | 'codeReviewAccountId'
+  'codeReviewModel' | 'codeReviewProviderId' | 'codeReviewAccountId' |
+  'webSearchAutoMode' | 'webSearchEnabled'
 >
 
 /** Pure request projection for the serve runtime's hot-config endpoint. */
@@ -400,6 +402,28 @@ function buildWorkflowHookEntries(workflow: AppSettingsV1['workflow'] | undefine
       ...(secret ? { secret } : {}),
       ...(trigger.timeoutMs > 0 ? { timeoutMs: trigger.timeoutMs } : {})
     }))
+}
+
+function resolveWebSearchEnabled(
+  runtime: RcodeRuntimeConfigSettings,
+  existingWeb: Record<string, unknown>
+): boolean {
+  // When auto mode is off, keep the existing searchEnabled or fall back to the runtime setting.
+  if (!runtime.webSearchAutoMode) {
+    if (typeof existingWeb.searchEnabled === 'boolean') return existingWeb.searchEnabled
+    return runtime.webSearchEnabled
+  }
+  // Look up the current model's defaultWebSearch preference.
+  const modelKey = runtime.model?.trim().toLowerCase()
+  if (modelKey) {
+    const profile = runtime.modelProfiles?.[modelKey]
+    if (profile && typeof profile.defaultWebSearch === 'boolean') {
+      return profile.defaultWebSearch
+    }
+  }
+  // Model has no preference; keep the existing value or fall back to runtime.
+  if (typeof existingWeb.searchEnabled === 'boolean') return existingWeb.searchEnabled
+  return runtime.webSearchEnabled
 }
 
 function enabledByDefault(existing: Record<string, unknown>): Record<string, unknown> {

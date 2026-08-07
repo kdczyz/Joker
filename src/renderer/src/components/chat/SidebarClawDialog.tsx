@@ -17,12 +17,16 @@ import {
   Trash2,
   X
 } from 'lucide-react'
-import type {
-  ClawImAgentProfileV1,
-  ClawImChannelV1,
-  ClawImPlatformCredentialV1,
-  ClawImProvider,
-  ClawRunMode
+import {
+  DEFAULT_APPROVAL_POLICY,
+  DEFAULT_SANDBOX_MODE,
+  type ApprovalPolicy,
+  type ClawImAgentProfileV1,
+  type ClawImChannelV1,
+  type ClawImPlatformCredentialV1,
+  type ClawImProvider,
+  type ClawRunMode,
+  type SandboxMode
 } from '@shared/app-settings'
 import type { ClawImInstallQrResult } from '@shared/Rcode-gui-api'
 import { confirmDialog } from '../../lib/confirm-dialog'
@@ -112,6 +116,8 @@ export function ClawAddImDialog({
   const [imEnabled, setImEnabled] = useState(true)
   const [responseTimeoutSec, setResponseTimeoutSec] = useState(120)
   const [runMode, setRunMode] = useState<ClawRunMode>('agent')
+  const [imApprovalPolicy, setImApprovalPolicy] = useState<ApprovalPolicy>(DEFAULT_APPROVAL_POLICY)
+  const [imSandboxMode, setImSandboxMode] = useState<SandboxMode>(DEFAULT_SANDBOX_MODE)
   const [loadingConfig, setLoadingConfig] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -241,6 +247,8 @@ export function ClawAddImDialog({
         setSecret(settings.claw.im.secret.trim())
         setResponseTimeoutSec(Math.round(settings.claw.im.responseTimeoutMs / 1000))
         setRunMode(settings.claw.im.mode)
+        setImApprovalPolicy(settings.claw.im.approvalPolicy ?? settings.agents.Rcode.approvalPolicy)
+        setImSandboxMode(settings.claw.im.sandboxMode ?? settings.agents.Rcode.sandboxMode)
         setConfiguredModelOptions(clawModelSelectOptions(settings))
       })
       .catch((e: unknown) => {
@@ -492,7 +500,9 @@ export function ClawAddImDialog({
           path: imPath,
           secret: secret.trim(),
           mode: runMode,
-          responseTimeoutMs: responseTimeoutSec * 1000
+          responseTimeoutMs: responseTimeoutSec * 1000,
+          approvalPolicy: imApprovalPolicy,
+          sandboxMode: imSandboxMode
         }
       })
       onClose()
@@ -530,7 +540,9 @@ export function ClawAddImDialog({
           path: imPath,
           secret: secret.trim(),
           mode: runMode,
-          responseTimeoutMs: responseTimeoutSec * 1000
+          responseTimeoutMs: responseTimeoutSec * 1000,
+          approvalPolicy: imApprovalPolicy,
+          sandboxMode: imSandboxMode
         }
       })
       onClose()
@@ -628,9 +640,9 @@ export function ClawAddImDialog({
     activeStep, activeStepConfig, activeStepIndex, advancedSettingsOpen, agentProfile, atLastStep, bindingPayload, busy, channelEnabled, channelModel, channelModelOptions, channelWorkspaceRoot, copied, copyBindingPayload, credentialStatusText,
     defaultWorkspacePreview, effectiveProvider, editableChannels, endpoint, enterManageConfigure, error, existingChannel, goToPreviousStep, handleDeleteChannel, handlePrimaryAction,
     imEnabled, imPath, imPort, installQr, isManageSelection, loadingConfig, mode, navigationDisabled, noEditableChannel, officialInstallTarget, onClose, onDeleteChannel,
-    primaryActionLabel, providerConfigured, providerListTitle, qrValue, requiresOfficialInstall, resolvedPlatformCredential, responseTimeoutSec, returnToManageSelection, runMode,
+    primaryActionLabel, providerConfigured, providerListTitle, qrValue, requiresOfficialInstall, resolvedPlatformCredential, responseTimeoutSec, returnToManageSelection, runMode, imApprovalPolicy, imSandboxMode,
     secret, selectedChannelId, selectedCredentialHints, selectedOption, setActiveStep, setAdvancedSettingsOpen, setEndpoint, setChannelEnabled, setChannelModel, setChannelWorkspaceRoot,
-    setImEnabled, setImPath, setImPort, setOfficialInstallTarget, setResponseTimeoutSec, setRunMode, setSecret, setShowSecret, showSecret, startOfficialInstallQr,
+    setImEnabled, setImPath, setImPort, setOfficialInstallTarget, setResponseTimeoutSec, setRunMode, setImApprovalPolicy, setImSandboxMode, setSecret, setShowSecret, showSecret, startOfficialInstallQr,
     submitDisabled, t, updateAgentProfile
   }
 

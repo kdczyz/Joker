@@ -1,7 +1,7 @@
 import type { Dispatch, ReactElement, SetStateAction } from 'react'
-import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, GitBranch, Globe, Keyboard, Mic, Palette, PencilLine, Puzzle, RefreshCw, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
+import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, GitBranch, Globe, Keyboard, Mic, Palette, PencilLine, Puzzle, RefreshCw, Search, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
 
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'write' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'write' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch'
 
 export function SettingsSidebar({
   category,
@@ -46,6 +46,15 @@ export function SettingsSidebar({
         >
           <Globe className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('general')}
+        </button>
+        <button
+          type="button"
+          data-cursor-spotlight-target
+          className={catCls('webSearch')}
+          onClick={() => setCategory('webSearch')}
+        >
+          <Search className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
+          {t('webSearch')}
         </button>
         <button
           type="button"
@@ -120,6 +129,15 @@ export function SettingsSidebar({
         >
           <Bot className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('agents')}
+        </button>
+        <button
+          type="button"
+          data-cursor-spotlight-target
+          className={catCls('backend')}
+          onClick={() => setCategory('backend')}
+        >
+          <RefreshCw className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
+          {t('backend')}
         </button>
         <button
           type="button"

@@ -115,7 +115,6 @@ export function WorkbenchRightPanel({
   rightPanelMode,
   onBeginResize,
   design,
-  writeAssistantOpen,
   write,
   sdd,
   changes,
@@ -163,7 +162,7 @@ export function WorkbenchRightPanel({
         <Suspense fallback={<div className="h-full w-full bg-ds-sidebar" />}>
           {design.panelMode !== 'hidden' ? (
             <DesignRightPanelContent {...design} />
-          ) : route === 'write' && writeAssistantOpen ? (
+          ) : route === 'write' ? (
             <WriteAssistantPanel {...write} className="h-full max-h-full w-full" />
           ) : rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.sddAi && sdd.draft ? (
             <SddAssistantPanel {...sdd} draft={sdd.draft} className="h-full max-h-full w-full" />

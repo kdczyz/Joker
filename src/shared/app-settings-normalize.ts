@@ -19,6 +19,7 @@ import {
   type RcodeRuntimeSettingsV1,
   type ModelProviderProfileV1,
   type NotificationConfigV1,
+  type RemoteAgentSettingsV1,
   type ScheduleSettingsPatchV1,
   WINDOW_CLOSE_ACTIONS,
   type WindowCloseAction,
@@ -38,8 +39,9 @@ import {
   defaultMiniMaxMediaGenerationRcodePatch,
   normalizeModelProviderSettings
 } from './app-settings-provider'
-import { normalizeDeepseekBaseUrl } from './app-settings-normalizers'
+import { normalizeModelProviderBaseUrl } from './app-settings-normalizers'
 import { normalizeClawSettings } from './app-settings-claw'
+import { normalizeRemoteAgentSettings } from './app-settings-remote-agent'
 import { normalizeScheduleSettings } from './app-settings-schedule'
 import { normalizeWorkflowSettings } from './app-settings-workflow'
 import { normalizeWriteSettings } from './app-settings-write'
@@ -58,6 +60,7 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     checkpointCleanup?: Partial<CheckpointCleanupConfigV1>
     write?: WriteSettingsPatchV1
     claw?: ClawSettingsPatchV1
+    remoteAgent?: Partial<RemoteAgentSettingsV1>
     schedule?: ScheduleSettingsPatchV1
     workflow?: WorkflowSettingsPatchV1
     design?: DesignSettingsPatchV1
@@ -95,7 +98,7 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     provider: providerSettings,
     agents: RcodeSettingsEnvelope(mergeRcodeRuntimeSettings(defaultRcodeRuntimeSettings(), {
       ...runtime,
-      baseUrl: runtime.baseUrl.trim() ? normalizeDeepseekBaseUrl(runtime.baseUrl) : '',
+      baseUrl: runtime.baseUrl.trim() ? normalizeModelProviderBaseUrl(runtime.baseUrl) : '',
       ...(miniMaxMediaDefaults ?? {})
     })),
     workspaceRoot: typeof maybeSettings.workspaceRoot === 'string' ? maybeSettings.workspaceRoot : '',
@@ -118,6 +121,7 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     keyboardShortcuts: normalizeKeyboardShortcuts(maybeSettings.keyboardShortcuts),
     write: normalizeWriteSettings(maybeSettings.write),
     claw: normalizeClawSettings(maybeSettings.claw),
+    remoteAgent: normalizeRemoteAgentSettings(maybeSettings.remoteAgent),
     schedule: normalizeScheduleSettings(maybeSettings.schedule),
     workflow: normalizeWorkflowSettings(maybeSettings.workflow),
     design: normalizeDesignSettings(maybeSettings.design),

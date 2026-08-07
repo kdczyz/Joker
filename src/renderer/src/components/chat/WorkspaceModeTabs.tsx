@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { Code2, Palette, PencilLine } from 'lucide-react'
+import { Code2, Palette, PencilLine, Smartphone } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 type Props = {
@@ -7,13 +7,15 @@ type Props = {
   onCodeOpen: () => void
   onWriteOpen: () => void
   onDesignOpen: () => void
+  onClawOpen: () => void
 }
 
 export function WorkspaceModeTabs({
   activeView,
   onCodeOpen,
   onWriteOpen,
-  onDesignOpen
+  onDesignOpen,
+  onClawOpen
 }: Props): ReactElement {
   const { t } = useTranslation('common')
 
@@ -75,6 +77,19 @@ export function WorkspaceModeTabs({
       >
         <Palette className={iconClass(activeView === 'design')} strokeWidth={1.9} />
         <span className="workspace-mode-tab-label whitespace-nowrap">{t('design')}</span>
+      </button>
+      <button
+        type="button"
+        data-workspace-mode="claw"
+        data-cursor-spotlight-target
+        role="tab"
+        aria-selected={activeView === 'claw'}
+        onClick={onClawOpen}
+        className={tabClass(activeView === 'claw')}
+        title={t('claw')}
+      >
+        <Smartphone className={iconClass(activeView === 'claw')} strokeWidth={1.9} />
+        <span className="workspace-mode-tab-label whitespace-nowrap">{t('claw')}</span>
       </button>
     </div>
   )

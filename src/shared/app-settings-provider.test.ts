@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { DEFAULT_COMPOSER_MODEL_IDS } from './default-composer-models'
 import {
   DEFAULT_DEEPSEEK_BASE_URL,
   defaultClawSettings,
@@ -43,10 +44,10 @@ import {
 } from './app-settings'
 
 describe('model provider retry settings', () => {
-  it('adds default retry settings to default providers', () => {
+  it('default settings have no pre-configured providers', () => {
     const settings = defaultModelProviderSettings()
 
-    expect(settings.providers[0].retry).toEqual(defaultModelRequestRetrySettings())
+    expect(settings.providers).toEqual([])
   })
 
   it('normalizes retry attempts, delay, and HTTP status codes', () => {
@@ -1221,11 +1222,18 @@ describe('model provider settings', () => {
     const normalized = normalizeModelProviderSettings({
       ...state.provider,
       baseUrl: '',
-      providers: state.provider.providers.map((provider) =>
-        provider.id === 'deepseek'
-          ? { ...provider, baseUrl: '' }
-          : provider
-      )
+      providers: [
+        {
+          id: 'deepseek',
+          name: 'DeepSeek',
+          apiKey: '',
+          baseUrl: '',
+          endpointFormat: 'chat_completions',
+          models: ['deepseek-v4-pro'],
+          modelProfiles: {}
+        },
+        ...state.provider.providers.filter((provider) => provider.id !== 'deepseek')
+      ]
     })
 
     expect(normalized.baseUrl).toBe('')
@@ -1233,12 +1241,8 @@ describe('model provider settings', () => {
     expect(resolveModelProviderBaseUrl({ ...state, provider: normalized })).toBe(DEFAULT_DEEPSEEK_BASE_URL)
   })
 
-  it('keeps deprecated DeepSeek models out of the default provider list', () => {
-    const defaultModels = defaultModelProviderSettings().providers[0].models
-
-    expect(defaultModels).toEqual(['deepseek-v4-pro', 'deepseek-v4-flash'])
-    expect(defaultModels).not.toContain('deepseek-chat')
-    expect(defaultModels).not.toContain('deepseek-reasoner')
+  it('has no built-in default composer model IDs', () => {
+    expect(DEFAULT_COMPOSER_MODEL_IDS).toEqual([])
   })
 })
 

@@ -753,7 +753,34 @@ export type RcodeGuiApi = ExtensionIpcApi & {
     notifyConfigSync: () => Promise<{ ok: boolean }>
     onConfigSync: (handler: (payload: { source: string }) => void) => () => void
   }
+  /** Grok Build ACP runtime (Phase 1) */
+  grok: {
+    connect: (params: { cwd: string; apiKey: string; baseUrl?: string; model?: string; providerId?: string }) => Promise<{ ok: boolean; error?: string }>
+    disconnect: () => Promise<{ ok: boolean; error?: string }>
+    sendPrompt: (params: { prompt: string; sessionId?: string; cwd?: string }) => Promise<{
+      ok: boolean
+      error?: string
+      session?: {
+        sessionId: string
+        cwd: string
+        text: string
+        stopReason: string | null
+        isRunning: boolean
+      }
+    }>
+    cancel: () => Promise<{ ok: boolean; error?: string }>
+    onEvent: (handler: (payload: GrokBuildEvent) => void) => () => void
+  }
 }
+
+/** Events emitted by the Grok Build ACP runtime. */
+export type GrokBuildEvent =
+  | { type: 'text-chunk'; text: string }
+  | { type: 'tool-call'; toolCallId: string; toolName: string; toolInput: unknown; status: string }
+  | { type: 'tool-output'; toolCallId: string; output: string }
+  | { type: 'turn-complete'; stopReason: string; usage?: { inputTokens: number; outputTokens: number } }
+  | { type: 'error'; message: string; code?: string }
+  | { type: 'status'; state: 'connecting' | 'authenticating' | 'ready' | 'running' | 'idle'; message?: string }
 
 export type RcodeProtectedApprovalRequest = {
   approvalId: string

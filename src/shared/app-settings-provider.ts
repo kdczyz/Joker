@@ -1,5 +1,5 @@
 import {
-  DEFAULT_DEEPSEEK_BASE_URL,
+  DEFAULT_MODEL_PROVIDER_BASE_URL,
   DEFAULT_IMAGE_GENERATION_PROTOCOL,
   DEFAULT_MUSIC_GENERATION_PROTOCOL,
   DEFAULT_MODEL_ENDPOINT_FORMAT,
@@ -55,7 +55,7 @@ import {
 } from './app-settings-types'
 import { normalizeModelEndpointFormat, type ModelEndpointFormat } from '../../Rcode/src/contracts/model-endpoint-format.js'
 import { getRcodeRuntimeSettings } from './app-settings-Rcode'
-import { normalizeDeepseekBaseUrl } from './app-settings-normalizers'
+import { normalizeModelProviderBaseUrl as normalizeBaseUrl } from './app-settings-normalizers'
 import { DEFAULT_COMPOSER_MODEL_IDS } from './default-composer-models'
 import {
   CHATGPT_SUBSCRIPTION_LEGACY_MODEL_IDS,
@@ -70,7 +70,7 @@ import {
   type ModelProviderPreset
 } from './model-provider-presets'
 
-const DEFAULT_MODEL_PROVIDER_NAME = 'DeepSeek'
+const DEFAULT_MODEL_PROVIDER_NAME = ''
 const DEFAULT_PROVIDER_CONTEXT_WINDOW_TOKENS = 256_000
 
 const XIAOMI_PROVIDER_IDS = new Set(['xiaomi', `xiaomi${TOKEN_PLAN_PROVIDER_ID_SUFFIX}`])
@@ -97,12 +97,11 @@ const NON_TEXT_MODEL_PATTERN =
   /(^|[/_.:-])(embedding|embeddings|embed|bge|rerank|reranker|moderation|ocr|image|images|video|videos|music|song|audio|dall-e|dalle|flux|sdxl|cogview|cogvideo|wanx|kolors|imagen|seedream|seededit|seedance|sora|veo|kling|hailuo|t2i|i2i|t2v|i2v|s2v)([/_.:-]|$)|stable[-_.:/]?diffusion|text[-_.:/]?to[-_.:/]?image|text[-_.:/]?to[-_.:/]?video|image[-_.:/]?to[-_.:/]?video|text[-_.:/]?to[-_.:/]?music|music[-_.:/]?generation/i
 
 export function defaultModelProviderSettings(): ModelProviderSettingsV1 {
-  const defaultProvider = defaultModelProviderProfile('', DEFAULT_DEEPSEEK_BASE_URL)
   return {
-    apiKey: defaultProvider.apiKey,
-    baseUrl: defaultProvider.baseUrl,
+    apiKey: '',
+    baseUrl: DEFAULT_MODEL_PROVIDER_BASE_URL,
     proxy: defaultNetworkProxySettings(),
-    providers: [defaultProvider]
+    providers: []
   }
 }
 
@@ -114,19 +113,18 @@ export function normalizeModelProviderSettings(
   const baseUrl = normalizeModelProviderBaseUrl(input?.baseUrl, defaults.baseUrl)
   const rawProviders = Array.isArray(input?.providers) ? input.providers : []
   const providersById = new Map<string, ModelProviderProfileV1>()
-  const defaultProvider = defaultModelProviderProfile(apiKey, baseUrl)
-  providersById.set(defaultProvider.id, defaultProvider)
+  const defaultProfile = defaultModelProviderProfile(apiKey, baseUrl)
   for (const rawProvider of rawProviders) {
     const provider = normalizeModelProviderProfile(rawProvider)
     if (!provider) continue
     providersById.set(provider.id, provider.id === DEFAULT_MODEL_PROVIDER_ID
       ? {
-          ...defaultProvider,
+          ...defaultProfile,
           ...provider,
           apiKey,
           baseUrl,
           modelProfiles: {
-            ...defaultProvider.modelProfiles,
+            ...defaultProfile.modelProfiles,
             ...provider.modelProfiles
           }
         }
@@ -172,7 +170,7 @@ export function resolveModelProviderApiKey(settings: AppSettingsV1): string {
 }
 
 export function resolveModelProviderBaseUrl(settings: AppSettingsV1): string {
-  return normalizeDeepseekBaseUrl(getDefaultModelProviderProfile(settings).baseUrl)
+  return normalizeModelProviderBaseUrl(getDefaultModelProviderProfile(settings).baseUrl)
 }
 
 export function resolveModelProviderProxyUrl(settings: AppSettingsV1): string {
@@ -871,7 +869,7 @@ export function resolveRcodeRuntimeSettings(settings: AppSettingsV1): RcodeRunti
   const providerId = normalizeModelProviderId(runtime.providerId)
   const runtimeApiKey = runtime.apiKey?.trim() ?? ''
   const runtimeBaseUrl = runtime.baseUrl?.trim() ?? ''
-  const providerBaseUrl = provider.baseUrl.trim() || DEFAULT_DEEPSEEK_BASE_URL
+  const providerBaseUrl = provider.baseUrl.trim() || DEFAULT_MODEL_PROVIDER_BASE_URL
   const useProviderCredentials = Boolean(providerId)
 
   return {
@@ -885,9 +883,9 @@ export function resolveRcodeRuntimeSettings(settings: AppSettingsV1): RcodeRunti
       ? provider.apiKey.trim() || runtimeApiKey
       : runtimeApiKey || provider.apiKey.trim(),
     baseUrl:
-      !useProviderCredentials && runtimeBaseUrl && runtimeBaseUrl !== DEFAULT_DEEPSEEK_BASE_URL
-        ? normalizeDeepseekBaseUrl(runtimeBaseUrl)
-        : normalizeDeepseekBaseUrl(providerBaseUrl),
+      !useProviderCredentials && runtimeBaseUrl && runtimeBaseUrl !== DEFAULT_MODEL_PROVIDER_BASE_URL
+        ? normalizeModelProviderBaseUrl(runtimeBaseUrl)
+        : normalizeModelProviderBaseUrl(providerBaseUrl),
     endpointFormat: provider.endpointFormat,
     retry: provider.retry ?? defaultModelRequestRetrySettings(),
     imageGeneration: resolveRcodeImageGenerationSettings(settings),
@@ -900,7 +898,7 @@ export function resolveRcodeRuntimeSettings(settings: AppSettingsV1): RcodeRunti
   }
 }
 
-function defaultModelProviderProfile(apiKey: string, baseUrl: string): ModelProviderProfileV1 {
+export function defaultModelProviderProfile(apiKey: string, baseUrl: string): ModelProviderProfileV1 {
   return {
     id: DEFAULT_MODEL_PROVIDER_ID,
     name: DEFAULT_MODEL_PROVIDER_NAME,
@@ -909,13 +907,7 @@ function defaultModelProviderProfile(apiKey: string, baseUrl: string): ModelProv
     endpointFormat: DEFAULT_MODEL_ENDPOINT_FORMAT,
     retry: defaultModelRequestRetrySettings(),
     models: [...DEFAULT_COMPOSER_MODEL_IDS],
-    modelProfiles: {
-      'deepseek-v4-pro': deepseekTextModelProfile(),
-      'deepseek-v4-flash': {
-        ...deepseekTextModelProfile(),
-        aliases: ['deepseek-chat', 'deepseek-reasoner']
-      }
-    }
+    modelProfiles: {}
   }
 }
 
@@ -1013,18 +1005,6 @@ function boundedNonNegativeInteger(value: unknown, fallback: number, max = Numbe
   const num = typeof value === 'number' ? value : Number(value)
   if (!Number.isFinite(num)) return fallback
   return Math.min(max, Math.max(0, Math.round(num)))
-}
-
-function deepseekTextModelProfile(): ModelProviderModelProfileV1 {
-  return {
-    ...DEFAULT_TEXT_MODEL_PROFILE,
-    contextWindowTokens: 1_000_000,
-    reasoning: {
-      supportedEfforts: ['off', 'high', 'max'],
-      defaultEffort: 'max',
-      requestProtocol: 'deepseek-chat-completions'
-    }
-  }
 }
 
 /**
@@ -1225,7 +1205,7 @@ function normalizeModelProviderImageCapability(
 ): ModelProviderImageCapabilityV1 | undefined {
   if (!input || typeof input !== 'object') return undefined
   const baseUrl = typeof input.baseUrl === 'string' && input.baseUrl.trim()
-    ? normalizeDeepseekBaseUrl(input.baseUrl)
+    ? normalizeModelProviderBaseUrl(input.baseUrl)
     : ''
   const models = normalizeProviderModels(input.models)
   if (!baseUrl && models.length === 0) return undefined
@@ -1247,7 +1227,7 @@ function normalizeModelProviderSpeechCapability(
 ): ModelProviderSpeechCapabilityV1 | undefined {
   if (!input || typeof input !== 'object') return undefined
   const baseUrl = typeof input.baseUrl === 'string' && input.baseUrl.trim()
-    ? normalizeDeepseekBaseUrl(input.baseUrl)
+    ? normalizeModelProviderBaseUrl(input.baseUrl)
     : ''
   const models = normalizeProviderModels(input.models)
   if (!baseUrl && models.length === 0) return undefined
@@ -1268,7 +1248,7 @@ function normalizeModelProviderTextToSpeechCapability(
 ): ModelProviderTextToSpeechCapabilityV1 | undefined {
   if (!input || typeof input !== 'object') return undefined
   const baseUrl = typeof input.baseUrl === 'string' && input.baseUrl.trim()
-    ? normalizeDeepseekBaseUrl(input.baseUrl)
+    ? normalizeModelProviderBaseUrl(input.baseUrl)
     : ''
   const models = normalizeProviderModels(input.models)
   if (!baseUrl && models.length === 0) return undefined
@@ -1290,7 +1270,7 @@ function normalizeModelProviderMusicCapability(
 ): ModelProviderMusicCapabilityV1 | undefined {
   if (!input || typeof input !== 'object') return undefined
   const baseUrl = typeof input.baseUrl === 'string' && input.baseUrl.trim()
-    ? normalizeDeepseekBaseUrl(input.baseUrl)
+    ? normalizeModelProviderBaseUrl(input.baseUrl)
     : ''
   const models = normalizeProviderModels(input.models)
   if (!baseUrl && models.length === 0) return undefined
@@ -1310,7 +1290,7 @@ function normalizeModelProviderVideoCapability(
 ): ModelProviderVideoCapabilityV1 | undefined {
   if (!input || typeof input !== 'object') return undefined
   const baseUrl = typeof input.baseUrl === 'string' && input.baseUrl.trim()
-    ? normalizeDeepseekBaseUrl(input.baseUrl)
+    ? normalizeModelProviderBaseUrl(input.baseUrl)
     : ''
   const models = normalizeProviderModels(input.models)
   if (!baseUrl && models.length === 0) return undefined
@@ -1325,10 +1305,10 @@ export function normalizeVideoGenerationProtocol(value: unknown): VideoGeneratio
   return value === 'minimax-video' ? 'minimax-video' : DEFAULT_VIDEO_GENERATION_PROTOCOL
 }
 
-function normalizeModelProviderBaseUrl(value: unknown, fallback = DEFAULT_DEEPSEEK_BASE_URL): string {
+function normalizeModelProviderBaseUrl(value: unknown, fallback = DEFAULT_MODEL_PROVIDER_BASE_URL): string {
   if (typeof value !== 'string') return fallback
   const trimmed = value.trim()
-  return trimmed ? normalizeDeepseekBaseUrl(trimmed) : ''
+  return trimmed ? normalizeBaseUrl(trimmed) : ''
 }
 
 function normalizeProviderModels(models: unknown): string[] {

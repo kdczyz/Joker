@@ -18,8 +18,10 @@ export {
 } from '../../Rcode/src/contracts/model-endpoint-format.js'
 export { DEFAULT_GUI_UPDATE_CHANNEL, normalizeGuiUpdateChannel, type GuiUpdateChannel } from './gui-update'
 export {
+  APPROVAL_POLICIES,
   DEFAULT_APPROVAL_POLICY,
   DEFAULT_SANDBOX_MODE,
+  SANDBOX_MODES,
   type ApprovalPolicy,
   type SandboxMode
 } from '../../Rcode/src/contracts/policy.js'
@@ -73,15 +75,17 @@ export function normalizeChatContentMaxWidth(value: unknown): ChatContentMaxWidt
 export type ScheduleRunMode = 'agent' | 'plan'
 export type ScheduleKind = 'manual' | 'interval' | 'daily' | 'at'
 export type ScheduleTaskStatus = 'idle' | 'queued' | 'running' | 'success' | 'error'
-export type ScheduleModel = 'deepseek-v4-pro' | 'deepseek-v4-flash'
+export type ScheduleModel = string
 export type ScheduleReasoningEffort = 'auto' | 'off' | 'low' | 'medium' | 'high' | 'max'
 export type ClawRunMode = ScheduleRunMode
 export type ClawImProvider = 'feishu' | 'weixin' | 'telegram'
 export type ClawScheduleKind = ScheduleKind
 export type ClawTaskStatus = ScheduleTaskStatus
-export type ClawModel = 'auto' | ScheduleModel
+export type ClawModel = string
 
-export const DEFAULT_DEEPSEEK_BASE_URL = 'https://api.deepseek.com'
+export const DEFAULT_MODEL_PROVIDER_BASE_URL = ''
+/** @deprecated Use DEFAULT_MODEL_PROVIDER_BASE_URL instead. */
+export const DEFAULT_DEEPSEEK_BASE_URL = DEFAULT_MODEL_PROVIDER_BASE_URL
 export const CUSTOM_IMAGE_GENERATION_PROVIDER_ID = 'custom'
 export const IMAGE_GENERATION_PROTOCOLS = ['openai-images', 'minimax-image', 'codex-responses-image'] as const
 export type ImageGenerationProtocol = (typeof IMAGE_GENERATION_PROTOCOLS)[number]
@@ -108,10 +112,10 @@ export const VIDEO_GENERATION_PROTOCOLS = ['minimax-video'] as const
 export type VideoGenerationProtocol = (typeof VIDEO_GENERATION_PROTOCOLS)[number]
 export const DEFAULT_VIDEO_GENERATION_PROTOCOL: VideoGenerationProtocol = 'minimax-video'
 export const DEFAULT_CLAW_MODEL = 'auto'
-export const CLAW_MODEL_IDS = ['auto', 'deepseek-v4-pro', 'deepseek-v4-flash'] as const
+export const CLAW_MODEL_IDS = ['auto'] as const
 export const DEFAULT_CLAW_RECENT_THREAD_LIST_LIMIT = 5
-export const DEFAULT_SCHEDULE_MODEL = 'deepseek-v4-flash'
-export const SCHEDULE_MODEL_IDS = ['deepseek-v4-pro', 'deepseek-v4-flash'] as const
+export const DEFAULT_SCHEDULE_MODEL = ''
+export const SCHEDULE_MODEL_IDS: readonly string[] = []
 export const DEFAULT_SCHEDULE_REASONING_EFFORT = 'medium'
 export const SCHEDULE_REASONING_EFFORT_IDS = ['auto', 'off', 'low', 'medium', 'high', 'max'] as const
 export const MIN_RCODE_LOCAL_PORT = 10_000
@@ -124,7 +128,7 @@ export const DEFAULT_WRITE_WORKSPACE_ROOT = '~/.Rcode/write_workspace'
 // (DEFAULT_CONVERSATION_WORKSPACE_ROOT_ABSOLUTE)和 renderer 层
 // (defaultConversationWorkspaceRoot)各自按平台推导。
 export const DEFAULT_RCODE_DATA_DIR = '~/.Rcode/data'
-export const DEFAULT_RCODE_MODEL = 'deepseek-v4-pro'
+export const DEFAULT_RCODE_MODEL = ''
 export const DEFAULT_PROMPT_OPTIMIZATION_PROMPT = [
   'You rewrite rough spoken or typed instructions into a clear prompt for a coding agent.',
   'Keep the user intent, constraints, names, paths, and concrete details intact.',
@@ -132,9 +136,9 @@ export const DEFAULT_PROMPT_OPTIMIZATION_PROMPT = [
   'Do not add requirements the user did not ask for.',
   'Return only the rewritten prompt text. Do not add markdown fences or explanations.'
 ].join('\n')
-export const DEFAULT_WRITE_INLINE_COMPLETION_BASE_URL = 'https://api.deepseek.com/beta'
-export const DEFAULT_WRITE_INLINE_COMPLETION_MODEL = 'deepseek-v4-flash'
-export const WRITE_INLINE_COMPLETION_MODEL_IDS = ['deepseek-v4-pro', 'deepseek-v4-flash'] as const
+export const DEFAULT_WRITE_INLINE_COMPLETION_BASE_URL = ''
+export const DEFAULT_WRITE_INLINE_COMPLETION_MODEL = ''
+export const WRITE_INLINE_COMPLETION_MODEL_IDS: readonly string[] = []
 export const DEFAULT_WRITE_INLINE_COMPLETION_DEBOUNCE_MS = 650
 export const DEFAULT_WRITE_INLINE_COMPLETION_MIN_ACCEPT_SCORE = 0.52
 export const DEFAULT_WRITE_INLINE_COMPLETION_MAX_TOKENS = 96
@@ -155,7 +159,7 @@ export const DEFAULT_CHECKPOINT_CLEANUP_ENABLED = true
 export const DEFAULT_GIT_BRANCH_PREFIX = 'codex/'
 export const DEFAULT_CURSOR_SPOTLIGHT_COLOR = '#85c1f1'
 export const DEFAULT_WEIXIN_BRIDGE_RPC_URL = 'http://127.0.0.1:18790/api/v1/admin/rpc'
-export const DEFAULT_MODEL_PROVIDER_ID = 'deepseek'
+export const DEFAULT_MODEL_PROVIDER_ID = ''
 export const NETWORK_PROXY_PROTOCOLS = ['http', 'https', 'socks', 'socks4', 'socks4a', 'socks5', 'socks5h'] as const
 export type NetworkProxyProtocol = (typeof NETWORK_PROXY_PROTOCOLS)[number]
 export type NetworkProxySettingsV1 = {
@@ -207,6 +211,13 @@ export type ModelProviderModelProfileV1 = {
    * request shape; this is preset metadata rather than a user-facing toggle.
    */
   responsesMode?: 'lite'
+  /**
+   * 该模型是否默认开启联网搜索。
+   * true  → 切换到此模型时自动开启联网搜索
+   * false → 切换到此模型时自动关闭联网搜索
+   * undefined → 不干预，保持用户当前选择
+   */
+  defaultWebSearch?: boolean
 }
 export type ModelProviderImageCapabilityV1 = {
   protocol: ImageGenerationProtocol
@@ -428,6 +439,14 @@ export type RcodeRuntimeSettingsV1 = {
   summaryReasoningEffort?: ModelReasoningEffort
   /** Reasoning depth for the code-review subagent model call. Default 'off'. */
   codeReviewReasoningEffort?: ModelReasoningEffort
+  /** 是否启用"根据模型偏好自动切换联网搜索"功能。默认 true。 */
+  webSearchAutoMode: boolean
+  /** 当前联网搜索状态。true 开启，false 关闭。 */
+  webSearchEnabled: boolean
+  /** Tavily Search API Key，用于联网搜索 MCP 服务。 */
+  tavilySearchApiKey?: string
+  /** 百度搜索 API Key (千帆平台)，可选。百度搜索 MCP 免费无需 API Key。 */
+  baiduSearchApiKey?: string
 }
 
 export type RcodeInstructionSettingsV1 = {
@@ -1555,6 +1574,14 @@ export type ClawImSettingsV1 = {
   mode: ClawRunMode
   responseTimeoutMs: number
   recentThreadListLimit: number
+  /**
+   * Optional tool permission policy for IM-initiated turns. When unset, IM
+   * turns follow the global agent permission policy
+   * (`agents.Rcode.approvalPolicy`/`sandboxMode`) — the historical behavior.
+   */
+  approvalPolicy?: ApprovalPolicy
+  /** Optional sandbox mode paired with {@link approvalPolicy}. */
+  sandboxMode?: SandboxMode
 }
 
 export type ClawTaskScheduleV1 = {
@@ -1664,6 +1691,17 @@ export type ClawSettingsV1 = {
   im: ClawImSettingsV1
   channels: ClawImChannelV1[]
   tasks: ClawTaskV1[]
+}
+
+export type RemoteAgentSettingsV1 = {
+  /**
+   * Tool permission policy for remote-agent-initiated turns. When unset,
+   * remote agent turns follow the global agent permission policy
+   * (`agents.Rcode.approvalPolicy`/`sandboxMode`).
+   */
+  approvalPolicy?: ApprovalPolicy
+  /** Sandbox mode paired with {@link approvalPolicy}. */
+  sandboxMode?: SandboxMode
 }
 
 export type WriteInlineCompletionSettingsV1 = {
@@ -1997,6 +2035,13 @@ export type AppSettingsV1 = {
   keyboardShortcuts: KeyboardShortcutsConfigV1
   write: WriteSettingsV1
   claw: ClawSettingsV1
+  /**
+   * Optional remote-agent (mobile session) settings. When absent, remote-agent
+   * turns follow the global agent permission policy. Normalization always
+   * populates this field, but it is kept optional so legacy persisted settings
+   * and test fixtures without it remain valid.
+   */
+  remoteAgent?: RemoteAgentSettingsV1
   schedule: ScheduleSettingsV1
   workflow: WorkflowSettingsV1
   design: DesignSettingsV1
@@ -2019,6 +2064,7 @@ export type AppSettingsPatch = Partial<
   keyboardShortcuts?: Partial<KeyboardShortcutsConfigV1>
   write?: WriteSettingsPatchV1
   claw?: ClawSettingsPatchV1
+  remoteAgent?: Partial<RemoteAgentSettingsV1>
   schedule?: ScheduleSettingsPatchV1
   workflow?: WorkflowSettingsPatchV1
   design?: DesignSettingsPatchV1

@@ -25,7 +25,7 @@ import {
 } from '../adapters/tool/design-svg-tool.js'
 import { resolveWorkspacePath, shellRuntimeInstruction } from '../adapters/tool/builtin-tool-utils.js'
 import { VERIFY_CHANGES_TOOL_NAME } from '../adapters/tool/builtin-verify-tool.js'
-import { buildToolPreferenceInstruction } from '../prompt/Rcode-system-prompt.js'
+import { buildToolPreferenceInstruction, buildWebSearchProactiveInstruction } from '../prompt/Rcode-system-prompt.js'
 import { effectiveHistoryAfterLatestCompaction } from './compaction-history.js'
 import { resolveCoherentProviderAccount } from './compaction-summary.js'
 import {
@@ -501,6 +501,7 @@ export class ModelStepService {
       ...skillResolution.instructions,
       ...(userInputDisabled ? [userInputUnavailableInstruction()] : []),
       ...(toolPreferenceInstruction ? [toolPreferenceInstruction] : []),
+      ...(requestToolSpecs.some((tool) => tool.name === 'web_search') ? [buildWebSearchProactiveInstruction()] : []),
       ...(requestToolSpecs.some((tool) => tool.name === 'bash') ? [shellRuntimeInstruction()] : []),
       ...(!forceFinalAnswerRecovery && suggestVerification ? [verificationSuggestionInstruction()] : []),
       ...(toolCatalogDriftMessage ? [toolCatalogDriftMessage] : [])

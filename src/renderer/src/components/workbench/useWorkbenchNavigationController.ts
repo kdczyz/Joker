@@ -66,6 +66,7 @@ export type WorkbenchNavigationController = {
   openThread: (id: string) => void
   openWorkflowView: () => void
   openWriteMode: () => void
+  openClawMode: () => void
   pickWriteAssistantWorkspace: () => Promise<void>
   sidebarView: WorkbenchSidebarView
   startNewChat: () => void
@@ -202,6 +203,11 @@ export function useWorkbenchNavigationController({
     void openWrite()
   }, [openWrite, setConnectPhoneSidebarOpen])
 
+  const openClawMode = useCallback((): void => {
+    setConnectPhoneSidebarOpen(false)
+    openClaw()
+  }, [openClaw, setConnectPhoneSidebarOpen])
+
   const exploreSddRequirementInDesign = useCallback((): void => {
     const requirement = sddDraftContent.trim()
     dismissActiveSddDraft({ closeAssistant: true })
@@ -300,6 +306,7 @@ export function useWorkbenchNavigationController({
     closeRightPanel,
     exploreSddRequirementInDesign,
     openCodeMode,
+    openClawMode,
     openPluginsView,
     openExtensionsView,
     openScheduleView,

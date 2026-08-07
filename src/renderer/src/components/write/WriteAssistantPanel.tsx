@@ -5,7 +5,6 @@ import {
   FileText,
   ListTodo,
   MessageSquareQuote,
-  PanelRightClose,
   Plus,
   Sparkles,
   X
@@ -20,7 +19,7 @@ import {
   writeRelativeToWorkspace
 } from '../../write/write-workspace-store'
 import { LazyMessageTimeline } from '../chat/LazyMessageTimeline'
-import { FloatingComposer } from '../chat/FloatingComposer'
+import { FloatingComposer, type ComposerExecutionSettings } from '../chat/FloatingComposer'
 import type { ComposerReasoningEffort } from '../chat/FloatingComposerModelPicker'
 
 type Props = {
@@ -59,7 +58,10 @@ type Props = {
   onConfigureProviders?: () => void
   onNewConversation: () => void
   onPickWorkspace: () => void
-  onCollapse: () => void
+  onCollapse?: () => void
+  executionSettings?: ComposerExecutionSettings | null
+  executionSettingsApplying?: boolean
+  onExecutionSettingsChange?: (patch: Partial<ComposerExecutionSettings>) => void
   className?: string
 }
 
@@ -101,7 +103,9 @@ export function WriteAssistantPanel({
   onConfigureProviders,
   onNewConversation,
   onPickWorkspace,
-  onCollapse,
+  executionSettings = null,
+  executionSettingsApplying = false,
+  onExecutionSettingsChange,
   className = ''
 }: Props): ReactElement {
   const { t } = useTranslation('common')
@@ -150,15 +154,6 @@ export function WriteAssistantPanel({
     >
       <div className="write-assistant-header shrink-0 border-b border-ds-border-muted bg-white/92 dark:bg-ds-card">
         <div className="flex h-12 min-w-0 items-center gap-2 px-4">
-          <button
-            type="button"
-            onClick={onCollapse}
-            className="ds-sidebar-toggle-button shrink-0"
-            aria-label={t('rightPanelCollapse')}
-            title={t('rightPanelCollapse')}
-          >
-            <PanelRightClose className="h-4 w-4" strokeWidth={1.85} />
-          </button>
           <div className="flex min-w-0 flex-1 items-center gap-2 rounded-[12px] bg-ds-surface-subtle px-3 py-1.5 dark:bg-white/8">
             <Sparkles className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.8} />
             <span className="min-w-0 truncate text-[13px] font-medium text-ds-ink">
@@ -334,6 +329,9 @@ export function WriteAssistantPanel({
           onSend={onSend}
           onInterrupt={onInterrupt}
           onConfigureProviders={onConfigureProviders}
+          executionSettings={executionSettings}
+          executionSettingsApplying={executionSettingsApplying}
+          onExecutionSettingsChange={onExecutionSettingsChange}
         />
       </div>
     </aside>

@@ -45,6 +45,13 @@ export function registerRemoteAgentIpc(deps: RemoteAgentIpcDeps): void {
         model: null,
         reasoningEffort: null
       })
+      // Remote-agent permission override: fall back to the global agent policy
+      // when the user hasn't explicitly configured a mode for mobile sessions.
+      const remoteAgentSettings = settings.remoteAgent
+      const approvalPolicy =
+        remoteAgentSettings?.approvalPolicy ?? settings.agents.Rcode.approvalPolicy
+      const sandboxMode =
+        remoteAgentSettings?.sandboxMode ?? settings.agents.Rcode.sandboxMode
       const result = await runPromptViaRuntime(
         { runtimeRequest },
         settings,
@@ -56,6 +63,8 @@ export function registerRemoteAgentIpc(deps: RemoteAgentIpcDeps): void {
           providerId: modelConfig.providerId || undefined,
           reasoningEffort: modelConfig.reasoningEffort || DEFAULT_SCHEDULE_REASONING_EFFORT,
           mode,
+          approvalPolicy,
+          sandboxMode,
           waitForResult: true,
           responseTimeoutMs: 30 * 60_000,
           signal

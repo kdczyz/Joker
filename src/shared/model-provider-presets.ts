@@ -183,12 +183,6 @@ const GLM_REASONING: ModelProviderReasoningCapabilityV1 = {
   requestProtocol: 'glm-chat-completions'
 }
 
-const DEEPSEEK_REASONING: ModelProviderReasoningCapabilityV1 = {
-  supportedEfforts: ['off', 'high', 'max'],
-  defaultEffort: 'max',
-  requestProtocol: 'deepseek-chat-completions'
-}
-
 // 通义千问 / 混元 / 豆包的「思考」开关各家用私有 body 字段,无法用现有 requestProtocol 精确映射,
 // 这里统一按「内置推理」建模(requestProtocol: 'none'):只展示 effort 开关、不向上游发送特定协议字段,避免请求被拒。
 const QWEN_REASONING: ModelProviderReasoningCapabilityV1 = {
@@ -276,8 +270,8 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
     // the agent-sdk path (the SDK enforces the real limit); preset profiles are
     // authoritative, so edit them here.
     modelProfiles: {
-      'claude-opus-4-8': visionChatProfile(1_000_000),
-      'claude-sonnet-4-6': visionChatProfile(1_000_000),
+      'claude-opus-4-8': { ...visionChatProfile(1_000_000), defaultWebSearch: true },
+      'claude-sonnet-4-6': { ...visionChatProfile(1_000_000), defaultWebSearch: true },
       'claude-haiku-4-5': visionChatProfile(200_000)
     },
     docsUrl: 'https://code.claude.com/docs/en/authentication',
@@ -362,8 +356,6 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
       'kimi-k2.7',
       'kimi-k2.7-code',
       'kimi-k2.6',
-      'deepseek-v4-pro',
-      'deepseek-v4-flash',
       'mimo-v2.5',
       'mimo-v2.5-pro',
       'mimo-v2-pro',
@@ -382,8 +374,6 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
       'kimi-k2.7': textChatProfile(131_072),
       'kimi-k2.7-code': textChatProfile(131_072),
       'kimi-k2.6': textChatProfile(131_072),
-      'deepseek-v4-pro': textChatProfile(1_000_000, DEEPSEEK_REASONING),
-      'deepseek-v4-flash': textChatProfile(1_000_000, DEEPSEEK_REASONING),
       'mimo-v2.5': textChatProfile(131_072),
       'mimo-v2.5-pro': textChatProfile(131_072),
       'mimo-v2-pro': textChatProfile(131_072),
@@ -672,13 +662,13 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
     endpointFormat: 'custom_endpoint',
     models: [...CHATGPT_SUBSCRIPTION_MODEL_IDS],
     modelProfiles: {
-      'gpt-5.5': visionChatProfile(1_000_000),
-      'gpt-5.6-sol': codexLiteVisionChatProfile(372_000),
-      'gpt-5.6-terra': codexLiteVisionChatProfile(372_000),
-      'gpt-5.6-luna': codexLiteVisionChatProfile(372_000),
-      'gpt-5.4': visionChatProfile(1_000_000),
+      'gpt-5.5': { ...visionChatProfile(1_000_000), defaultWebSearch: true },
+      'gpt-5.6-sol': { ...codexLiteVisionChatProfile(372_000), defaultWebSearch: true },
+      'gpt-5.6-terra': { ...codexLiteVisionChatProfile(372_000), defaultWebSearch: true },
+      'gpt-5.6-luna': { ...codexLiteVisionChatProfile(372_000), defaultWebSearch: true },
+      'gpt-5.4': { ...visionChatProfile(1_000_000), defaultWebSearch: true },
       'gpt-5.4-mini': visionChatProfile(1_000_000),
-      'gpt-5.3-codex-spark': textChatProfile(128_000)
+      'gpt-5.3-codex-spark': { ...textChatProfile(128_000), defaultWebSearch: true }
     },
     image: {
       protocol: 'codex-responses-image',

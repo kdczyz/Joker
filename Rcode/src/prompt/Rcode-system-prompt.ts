@@ -107,3 +107,18 @@ function formatToolNames(tools: readonly ToolPreferenceSpec[]): string {
   const remaining = tools.length - 8
   return remaining > 0 ? `${names}, and ${remaining} more` : names
 }
+
+/**
+ * Instruction that tells the model to proactively use web_search for any
+ * question involving real-world knowledge, facts, events, dates, people,
+ * products, or time-sensitive information. Only skip web_search for purely
+ * code-related or project-internal questions.
+ */
+export function buildWebSearchProactiveInstruction(): string {
+  return [
+    'Web search is available through the `web_search` tool.',
+    'Use it proactively for any question that involves real-world facts, events, dates, people, products, or information that may change over time.',
+    'Do not rely on your training data alone for factual questions — verify with `web_search` first.',
+    'Only skip web_search for questions that are purely about code, the current project, or your own capabilities.'
+  ].join(' ')
+}

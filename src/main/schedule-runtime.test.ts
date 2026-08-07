@@ -8,6 +8,7 @@ import {
   defaultKeyboardShortcuts,
   defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
+  defaultModelProviderProfile,
   defaultScheduleSettings,
   defaultWorkflowSettings,
   defaultWriteSettings,
@@ -92,7 +93,10 @@ function settingsWith(
     theme: 'system',
     uiFontScale: 0.82,
     chatContentMaxWidthPx: 896,
-    provider: defaultModelProviderSettings(),
+    provider: {
+      ...defaultModelProviderSettings(),
+      providers: [defaultModelProviderProfile('', '')]
+    },
     agents: {
       Rcode: {
         ...defaultRcodeRuntimeSettings(),

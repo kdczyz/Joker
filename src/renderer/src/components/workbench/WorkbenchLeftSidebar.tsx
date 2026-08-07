@@ -42,6 +42,7 @@ export type WorkbenchLeftSidebarProps = {
   onCodeOpen: CodeSidebarProps['onCodeOpen']
   onWriteOpen: CodeSidebarProps['onWriteOpen']
   onDesignOpen: CodeSidebarProps['onDesignOpen']
+  onClawOpen: CodeSidebarProps['onClawOpen']
   onScheduleOpen: CodeSidebarProps['onScheduleOpen']
   onWorkflowOpen: CodeSidebarProps['onWorkflowOpen']
   onNewConversation: CodeSidebarProps['onNewConversation']
@@ -86,6 +87,7 @@ export function WorkbenchLeftSidebar({
   onCodeOpen,
   onWriteOpen,
   onDesignOpen,
+  onClawOpen,
   onScheduleOpen,
   onWorkflowOpen,
   onNewConversation,
@@ -106,6 +108,7 @@ export function WorkbenchLeftSidebar({
             onCodeOpen={onCodeOpen}
             onWriteOpen={onWriteOpen}
             onDesignOpen={onDesignOpen}
+            onClawOpen={onClawOpen}
             onOpenSettings={onOpenSettings}
             onToggleTheme={onToggleTheme}
           />
@@ -117,6 +120,7 @@ export function WorkbenchLeftSidebar({
               onCodeOpen={onCodeOpen}
               onWriteOpen={onWriteOpen}
               onDesignOpen={onDesignOpen}
+              onClawOpen={onClawOpen}
               onOpenSettings={onOpenSettings}
               onToggleConnectPhone={onToggleConnectPhone}
             />
@@ -151,6 +155,7 @@ export function WorkbenchLeftSidebar({
             onCodeOpen={onCodeOpen}
             onWriteOpen={onWriteOpen}
             onDesignOpen={onDesignOpen}
+            onClawOpen={onClawOpen}
             onScheduleOpen={onScheduleOpen}
             onWorkflowOpen={onWorkflowOpen}
             onNewConversation={onNewConversation}

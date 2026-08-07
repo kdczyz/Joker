@@ -183,6 +183,11 @@ module.exports = {
       from: 'resources/whisper',
       to: 'whisper',
       filter: ['**/*']
+    },
+    {
+      from: 'resources/grok-runtime',
+      to: 'grok-runtime',
+      filter: ['grok']
     }
   ],
   artifactName: `Rcode-${artifactVersion}-\${os}-\${arch}.\${ext}`,

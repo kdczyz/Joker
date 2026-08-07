@@ -18,6 +18,7 @@ import {
   buildClawRuntimePrompt,
   defaultClawSettings,
   defaultModelProviderSettings,
+  defaultModelProviderProfile,
   mergeRcodeRuntimeSettings,
   mergeScheduleSettings,
   defaultRcodeRuntimeSettings,
@@ -352,10 +353,11 @@ describe('log retention settings', () => {
 describe('runtime model provider selection', () => {
   it('repairs a legacy provider/model mismatch when the model has one owner', () => {
     const raw = settings()
+    const deepseek = defaultModelProviderProfile('', '')
     const codexPreset = getModelProviderPreset('codex')
     const codex = codexPreset ? modelProviderPresetProfile(codexPreset) : null
     expect(codex).not.toBeNull()
-    raw.provider.providers = [...raw.provider.providers, codex!]
+    raw.provider.providers = [deepseek, codex!]
     raw.agents.Rcode.providerId = 'deepseek'
     raw.agents.Rcode.model = 'gpt-5.3-codex-spark'
 
@@ -367,13 +369,14 @@ describe('runtime model provider selection', () => {
 
   it('falls back to the selected provider model instead of retaining an ambiguous mismatch', () => {
     const raw = settings()
+    const deepseek = defaultModelProviderProfile('', '')
     const codex = modelProviderPresetProfile(getModelProviderPreset('codex')!)
     const duplicate = {
       ...codex,
       id: 'codex-mirror',
       name: 'Codex Mirror'
     }
-    raw.provider.providers = [...raw.provider.providers, codex, duplicate]
+    raw.provider.providers = [deepseek, codex, duplicate]
     raw.agents.Rcode.providerId = 'deepseek'
     raw.agents.Rcode.model = 'gpt-5.3-codex-spark'
 
@@ -385,8 +388,9 @@ describe('runtime model provider selection', () => {
 
   it('repairs partial subagent profile selections into complete pairs', () => {
     const raw = settings()
+    const deepseek = defaultModelProviderProfile('', '')
     const codex = modelProviderPresetProfile(getModelProviderPreset('codex')!)
-    raw.provider.providers = [...raw.provider.providers, codex]
+    raw.provider.providers = [deepseek, codex]
     raw.agents.Rcode.subagents = {
       enabled: true,
       profiles: [

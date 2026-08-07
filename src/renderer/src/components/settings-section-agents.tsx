@@ -420,7 +420,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
       }
     })
   }
-  const activeProviderId = Rcode.providerId?.trim() || DEFAULT_MODEL_PROVIDER_ID
+  const activeProviderId = Rcode.providerId?.trim() || modelProviders[0]?.id || ''
   const activeProvider = modelProviders.find((item) => item.id === activeProviderId) ?? modelProviders[0]
   const activeProviderModels = activeProvider?.models ?? []
   const promptOptimization = {
@@ -491,7 +491,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     control={
                       <select
                         className={selectControlClass}
-                        value={activeProvider?.id ?? DEFAULT_MODEL_PROVIDER_ID}
+                        value={activeProvider?.id ?? ''}
                         onChange={(e) => selectRcodeProvider(e.target.value)}
                       >
                         {modelProviders.map((item) => (
@@ -568,7 +568,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                               }}
                             >
                               <option value="">{t('modelSelectDefaultSuffix', {
-                                model: activeProvider?.name ?? DEFAULT_MODEL_PROVIDER_ID
+                                model: activeProvider?.name ?? ''
                               })}</option>
                               {modelProviders.map((item) => (
                                 <option key={item.id} value={item.id}>{item.name}</option>
@@ -739,6 +739,16 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           })}
                         </div>
                       </div>
+                    }
+                  />
+                  <SettingRow
+                    title={t('webSearchAutoMode')}
+                    description={t('webSearchAutoModeDesc')}
+                    control={
+                      <Toggle
+                        checked={Rcode.webSearchAutoMode !== false}
+                        onChange={(value) => updateRcode({ webSearchAutoMode: value })}
+                      />
                     }
                   />
                 </SettingsCard>

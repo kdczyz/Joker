@@ -13,6 +13,7 @@ import {
   Pencil,
   Plus,
   Search,
+  Star,
   Trash2
 } from 'lucide-react'
 import {
@@ -283,12 +284,16 @@ export function ProviderModelsManager({
   provider,
   t,
   selectControlClass,
-  onChange
+  onChange,
+  defaultModelId,
+  onSetDefaultModel
 }: {
   provider: ModelProviderProfileV1
   t: Translate
   selectControlClass: string
   onChange: (next: ModelProviderProfileV1) => void
+  defaultModelId?: string
+  onSetDefaultModel?: (modelId: string) => void
 }): ReactElement {
   const [editor, setEditor] = useState<EditorState | null>(null)
   const [query, setQuery] = useState('')
@@ -466,6 +471,10 @@ export function ProviderModelsManager({
                 const profile = kind === 'chat' ? chatModelProfile(provider, modelId) : undefined
                 const active = editingKey !== '' && editingKey === modelEntryKey(kind, modelId)
                 const isSelected = selected.has(modelEntryKey(kind, modelId))
+                const isDefault =
+                  kind === 'chat' &&
+                  Boolean(defaultModelId) &&
+                  defaultModelId!.trim() === modelId.trim()
                 return (
                   <li
                     key={modelEntryKey(kind, modelId)}
@@ -489,6 +498,14 @@ export function ProviderModelsManager({
                     <span className="grid min-w-0 flex-1 gap-1.5">
                       <ModelName modelId={modelId} />
                       <span className="flex min-w-0 flex-wrap items-center gap-1">
+                        {isDefault ? (
+                          <ModelBadge
+                            tone="muted"
+                            icon={<Star className="h-2.5 w-2.5 fill-current" strokeWidth={1.9} />}
+                          >
+                            {t('providerModelDefaultBadge')}
+                          </ModelBadge>
+                        ) : null}
                         <ModelBadge tone={kind === 'chat' ? 'faint' : 'muted'}>
                           {t(modelKindLabelKey(kind))}
                         </ModelBadge>
@@ -524,6 +541,17 @@ export function ProviderModelsManager({
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1 pt-0.5">
+                      {kind === 'chat' && onSetDefaultModel && !isDefault ? (
+                        <button
+                          type="button"
+                          aria-label={t('providerModelSetDefault', { model: modelId })}
+                          title={t('providerModelSetDefault', { model: modelId })}
+                          onClick={() => onSetDefaultModel(modelId)}
+                          className="rounded-full p-1.5 text-ds-faint transition hover:bg-ds-hover hover:text-amber-500 dark:hover:text-amber-300"
+                        >
+                          <Star className="h-3.5 w-3.5" strokeWidth={1.9} />
+                        </button>
+                      ) : null}
                       <button
                         type="button"
                         aria-label={t('providerModelEditAction', { model: modelId })}
@@ -708,6 +736,14 @@ export function ProviderModelsManager({
                   description={t('providerModelToolsDesc')}
                   checked={editor.form.supportsToolCalling}
                   onChange={(value) => updateForm({ supportsToolCalling: value })}
+                />
+              </div>
+              <div className="grid gap-2">
+                <ToggleField
+                  label={t('providerModelDefaultWebSearch')}
+                  description={t('providerModelDefaultWebSearchDesc')}
+                  checked={editor.form.defaultWebSearch ?? false}
+                  onChange={(value) => updateForm({ defaultWebSearch: value || undefined })}
                 />
               </div>
               <div className="grid gap-2">

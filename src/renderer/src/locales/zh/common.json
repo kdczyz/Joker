@@ -1210,6 +1210,7 @@
   "connectPhoneScanHint": "用飞书 / Lark 扫码打开授权页",
   "connectPhoneScanHintWeixin": "用微信扫码登录。",
   "connectPhoneAutoBindHint": "在手机端确认授权后会自动绑定",
+  "connectPhoneBindDevice": "绑定设备",
   "connectPhoneUserCode": "授权码 {{code}}",
   "connectPhoneAlreadyConnected": "已经存在一个手机连接，请在设置中管理现有连接。",
   "connectPhoneProviderAlreadyConnected": "{{provider}} 已连接。每个平台只能连接一次。",

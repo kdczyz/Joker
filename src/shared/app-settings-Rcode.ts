@@ -1,6 +1,6 @@
 import {
   DEFAULT_APPROVAL_POLICY,
-  DEFAULT_DEEPSEEK_BASE_URL,
+  DEFAULT_MODEL_PROVIDER_BASE_URL,
   DEFAULT_IMAGE_GENERATION_PROTOCOL,
   DEFAULT_IMAGE_GENERATION_RESOLUTION,
   IMAGE_GENERATION_QUALITIES,
@@ -115,7 +115,7 @@ function legacyLocalHttpRuntimeDefaults(port = LEGACY_LOCAL_HTTP_DEFAULT_PORT): 
     port,
     autoStart: true,
     apiKey: '',
-    baseUrl: DEFAULT_DEEPSEEK_BASE_URL,
+    baseUrl: DEFAULT_MODEL_PROVIDER_BASE_URL,
     runtimeToken: '',
     extraCorsOrigins: ['http://localhost:5173', 'http://127.0.0.1:5173'],
     approvalPolicy: DEFAULT_APPROVAL_POLICY,
@@ -128,7 +128,7 @@ function legacyReasoningRuntimeDefaults(): LegacyReasoningRuntimeSettingsV1 {
     binaryPath: '',
     autoStart: true,
     apiKey: '',
-    baseUrl: DEFAULT_DEEPSEEK_BASE_URL,
+    baseUrl: DEFAULT_MODEL_PROVIDER_BASE_URL,
     model: LEGACY_RCODE_DEFAULT_MODEL,
     reasoningEffort: 'medium',
     editMode: 'auto'
@@ -175,7 +175,9 @@ export function defaultRcodeRuntimeSettings(
     memoryEnabled: false,
     instructions: defaultRcodeInstructionSettings(),
     computerUse: defaultRcodeComputerUseSettings(),
-    quality: defaultRcodeQualitySettings()
+    quality: defaultRcodeQualitySettings(),
+    webSearchAutoMode: true,
+    webSearchEnabled: true
   }
 }
 

@@ -441,6 +441,9 @@ export function FloatingComposer({
   const canAddFileReference = canCompose && fileReferenceEnabled && Boolean(effectiveWorkspaceRoot) && Boolean(onAddFileReference)
   const showIntentToolbar = !compact && route === 'chat'
   const showComposerMenuButton = showIntentToolbar
+  const showExecutionSettingsPicker = (showIntentToolbar || route === 'write' || route === 'claw')
+    && Boolean(executionSettings)
+    && Boolean(onExecutionSettingsChange)
   const canTogglePlanMode = canCompose && Boolean(onPlanCommand)
   const canCreateNewThread = runtimeReady && route !== 'claw' && Boolean(effectiveWorkspaceRoot) && Boolean(onNewCommand)
   const canOpenGoalPanel = canCompose && route !== 'claw'
@@ -448,10 +451,7 @@ export function FloatingComposer({
   const canToggleWorktreeMode = canCompose && route !== 'claw' && Boolean(onToggleWorktreeMode)
   const canOpenComposerMenu = showComposerMenuButton
     && (canPickFileReference || canPickDesignReference || canPickLocalFileReference || canTogglePlanMode || canCreateNewThread || canOpenGoalPanel || canRunReview || canToggleWorktreeMode)
-  const showToolbarStartControls = showComposerMenuButton
-  const showExecutionSettingsPicker = showIntentToolbar
-    && Boolean(executionSettings)
-    && Boolean(onExecutionSettingsChange)
+  const showToolbarStartControls = showComposerMenuButton || showExecutionSettingsPicker
   const showChangeSummary = !compact && route === 'chat' && changedFiles.length > 0
   const effectiveChangedFileStats = changedFileStats ?? changedFiles.reduce(
     (stats, file) => ({

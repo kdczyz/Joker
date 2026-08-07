@@ -58,7 +58,6 @@ const themeOptions: { value: ThemePref; icon: typeof Sun; labelKey: string }[] =
   { value: 'light', icon: Sun, labelKey: 'themeLight' },
   { value: 'dark', icon: Moon, labelKey: 'themeDark' }
 ]
-const DEEPSEEK_USAGE_URL = 'https://platform.deepseek.com/usage'
 
 type PermissionOption = {
   value: RcodeToolPermissionMode
@@ -129,31 +128,21 @@ type SetupProviderCard = {
   preset: ModelProviderPreset | null
 }
 
-const PROVIDER_CARDS: SetupProviderCard[] = [
-  {
-    presetId: DEFAULT_MODEL_PROVIDER_ID,
-    name: 'DeepSeek',
-    descKey: 'firstRunProviderDeepseekDesc',
-    capability: null,
-    preset: null
-  },
-  ...INITIAL_SETUP_PROVIDER_PRESETS.map((preset) => ({
-    presetId: preset.id,
-    name: preset.name,
-    descKey: preset.id === 'xiaomi' ? 'firstRunProviderXiaomiDesc' : 'firstRunProviderMinimaxDesc',
-    capability: preset.speech ? ('speech' as const) : preset.image ? ('image' as const) : null,
-    preset
-  }))
-]
+const PROVIDER_CARDS: SetupProviderCard[] = INITIAL_SETUP_PROVIDER_PRESETS.map((preset) => ({
+  presetId: preset.id,
+  name: preset.name,
+  descKey: preset.id === 'xiaomi' ? 'firstRunProviderXiaomiDesc' : 'firstRunProviderMinimaxDesc',
+  capability: preset.speech ? ('speech' as const) : preset.image ? ('image' as const) : null,
+  preset
+}))
 
 function keyHintKey(card: SetupProviderCard, mode: InitialSetupSelection['mode']): string {
-  if (card.presetId === DEFAULT_MODEL_PROVIDER_ID) return 'firstRunBuyApiHint'
   const suffix = mode === 'token-plan' ? 'TokenPlan' : 'Api'
   return card.presetId === 'xiaomi' ? `firstRunKeyHintXiaomi${suffix}` : `firstRunKeyHintMinimax${suffix}`
 }
 
 function keyPageUrl(card: SetupProviderCard, mode: InitialSetupSelection['mode']): string {
-  if (!card.preset) return DEEPSEEK_USAGE_URL
+  if (!card.preset) return ''
   if (mode === 'token-plan' && card.preset.tokenPlan) return card.preset.tokenPlan.apiKeyUrl
   return card.preset.apiKeyUrl
 }
@@ -210,7 +199,7 @@ export function InitialSetupDialog(): ReactElement {
   const [form, setForm] = useState<AppSettingsV1 | null>(null)
   const [drafts, setDrafts] = useState<InitialSetupDrafts | null>(null)
   const [selection, setSelection] = useState<InitialSetupSelection>({
-    presetId: DEFAULT_MODEL_PROVIDER_ID,
+    presetId: PROVIDER_CARDS[0]?.presetId ?? DEFAULT_MODEL_PROVIDER_ID,
     mode: 'api',
     permissionMode: 'workspace-write'
   })

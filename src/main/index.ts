@@ -125,6 +125,7 @@ import {
 import { registerRuntimeSseIpc } from './runtime-sse-ipc'
 import { registerRemoteAgentIpc } from './remote-agent-ipc'
 import { registerTerminalPtyIpc } from './terminal/terminal-pty-ipc'
+import { registerGrokIpc } from './ipc/register-grok-ipc'
 import {
   configureWeixinBridgeRuntimeContextProvider,
   ensureWeixinBridgeRpcUrl,
@@ -175,7 +176,7 @@ registerRcodeExtensionPlatformSchemesAsPrivileged(protocol)
 // appId 因为 NSIS 升级 GUID 与 macOS 更新签名校验的原因永远不改。
 const APP_USER_MODEL_ID = 'com.xingyuzhong.deepseekgui'
 const startupTraceEnabled =
-  process.env.RCODE_STARTUP_TRACE === '1' || process.env.DEEPSEEK_GUI_STARTUP_TRACE === '1'
+  process.env.RCODE_STARTUP_TRACE === '1'
 const startupTraceStart = Date.now()
 
 function traceStartup(label: string, detail?: unknown): void {
@@ -228,7 +229,7 @@ function runtimeFailure(code: string, message: string, status = 0, details?: unk
 
 function resolveConfiguredApiKey(settings: AppSettingsV1): string {
   const fromSettings = getActiveAgentApiKey(settings)
-  const fromEnv = process.env.DEEPSEEK_API_KEY?.trim() ?? ''
+  const fromEnv = process.env.RCODE_API_KEY?.trim() ?? ''
   return fromSettings || fromEnv
 }
 
@@ -976,7 +977,7 @@ async function ensureRcodeRuntime(settings: AppSettingsV1): Promise<AppSettingsV
   if (!hasApiKey) {
     throw runtimeJsonError(
       'missing_api_key',
-      'DeepSeek API Key is required before the GUI can start Rcode.'
+      'API Key is required before the GUI can start Rcode.'
     )
   }
   if (!runtime.autoStart) {
@@ -1057,7 +1058,7 @@ async function restartRuntimeOnce(settings: AppSettingsV1): Promise<void> {
   if (!resolveConfiguredApiKey(settings)) {
     throw runtimeJsonError(
       'missing_api_key',
-      'DeepSeek API Key is required before the GUI can start Rcode.'
+      'API Key is required before the GUI can start Rcode.'
     )
   }
   if (!runtime.autoStart) {
@@ -1941,6 +1942,13 @@ app.whenReady().then(async () => {
     logError,
     getTerminalColorMode: async () => resolveTerminalColorMode(await store.load())
   })
+
+  // --- Grok Build ACP runtime (Phase 1: optional, coexists with Rcode) ---
+  const disposeGrokIpc = registerGrokIpc({ getMainWindow: () => mainWindow })
+  app.once('before-quit', () => {
+    disposeGrokIpc()
+  })
+
   traceStartup('ipc registration:done')
 
   createWindow({ suppressInitialShow: shouldStartHidden(initial) })

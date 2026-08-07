@@ -1,5 +1,5 @@
 import {
-  DEFAULT_DEEPSEEK_BASE_URL,
+  DEFAULT_MODEL_PROVIDER_BASE_URL,
   type ClawImProvider,
   type ClawRunMode,
   type ScheduleKind,
@@ -8,9 +8,9 @@ import {
   type ScheduleTaskStatus
 } from './app-settings-types'
 
-export function normalizeDeepseekBaseUrl(baseUrl: string | null | undefined): string {
+export function normalizeModelProviderBaseUrl(baseUrl: string | null | undefined): string {
   const trimmed = typeof baseUrl === 'string' ? baseUrl.trim() : ''
-  return trimmed || DEFAULT_DEEPSEEK_BASE_URL
+  return trimmed || DEFAULT_MODEL_PROVIDER_BASE_URL
 }
 
 export function compactStrings(values: unknown): string[] {
@@ -54,7 +54,7 @@ export function normalizeClawModel(value: unknown): string {
 }
 
 export function normalizeScheduleModel(value: unknown): ScheduleModel {
-  return value === 'deepseek-v4-pro' ? 'deepseek-v4-pro' : 'deepseek-v4-flash'
+  return typeof value === 'string' ? value.trim() : ''
 }
 
 export function normalizeScheduleReasoningEffort(value: unknown): ScheduleReasoningEffort {

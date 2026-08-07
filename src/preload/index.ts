@@ -556,6 +556,20 @@ const api = {
       ipcRenderer.on('remote-agent:config-sync', wrapped)
       return () => ipcRenderer.removeListener('remote-agent:config-sync', wrapped)
     }
+  },
+  // --- Grok Build ACP Runtime ---
+  grok: {
+    connect: (params: { cwd: string; apiKey: string; baseUrl?: string; model?: string; providerId?: string }) =>
+      ipcRenderer.invoke('grok:connect', params),
+    disconnect: () => ipcRenderer.invoke('grok:disconnect'),
+    sendPrompt: (params: { prompt: string; sessionId?: string; cwd?: string }) =>
+      ipcRenderer.invoke('grok:send-prompt', params),
+    cancel: () => ipcRenderer.invoke('grok:cancel'),
+    onEvent: (handler: (payload: unknown) => void) => {
+      const wrapped = (_: Electron.IpcRendererEvent, payload: unknown) => handler(payload)
+      ipcRenderer.on('grok:event', wrapped)
+      return () => ipcRenderer.removeListener('grok:event', wrapped)
+    }
   }
 } satisfies RcodeGuiApi
 

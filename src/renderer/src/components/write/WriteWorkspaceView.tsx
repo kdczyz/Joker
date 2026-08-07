@@ -126,7 +126,6 @@ export function WriteWorkspaceView({
     fileLoading,
     saveStatus,
     previewMode,
-    assistantOpen,
     selection,
     recentEdits,
     loadWriteSettings,
@@ -190,7 +189,6 @@ export function WriteWorkspaceView({
       fileLoading: s.fileLoading,
       saveStatus: s.saveStatus,
       previewMode: s.previewMode,
-      assistantOpen: s.assistantOpen,
       selection: s.selection,
       recentEdits: s.recentEdits,
       loadWriteSettings: s.loadWriteSettings,
@@ -1142,7 +1140,6 @@ export function WriteWorkspaceView({
         activeFilePath={activeFilePath ?? ''}
         documentStatsLabel={documentStatsLabel}
         inlineCompletionEnabled={inlineCompletion.enabled}
-        assistantOpen={assistantOpen}
         exportInFlight={exportInFlight}
         exportMenuOpen={exportMenuOpen}
         exportMenuRef={exportMenuRef}
@@ -1158,7 +1155,6 @@ export function WriteWorkspaceView({
         saveLabel={saveLabel}
         saveStatus={saveStatus}
         reviewActive={reviewActive}
-        setAssistantOpen={setAssistantOpen}
         setExportMenuOpen={setExportMenuOpen}
         setModeMenuOpen={setModeMenuOpen}
         setPreviewMode={setPreviewMode}

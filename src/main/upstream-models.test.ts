@@ -9,6 +9,7 @@ import {
   defaultKeyboardShortcuts,
   defaultRcodeRuntimeSettings,
   defaultModelProviderSettings,
+  defaultModelProviderProfile,
   defaultScheduleSettings,
   defaultWorkflowSettings,
   defaultWriteSettings,
@@ -19,6 +20,7 @@ import { fetchUpstreamModelIds, readConfiguredRcodeModelIds } from './upstream-m
 
 function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
   const provider = defaultModelProviderSettings()
+  const deepseek = defaultModelProviderProfile('', '')
   return {
     version: 1,
     locale: 'en',
@@ -28,6 +30,7 @@ function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
     provider: {
       ...provider,
       providers: [
+        deepseek,
         ...provider.providers,
         {
           id: 'custom-provider',

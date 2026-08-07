@@ -27,7 +27,7 @@ export type InitialSetupDraft = {
   baseUrl: string
 }
 
-/** Keyed by provider profile id (deepseek, xiaomi, xiaomi-token-plan, ...). */
+/** Keyed by provider profile id (xiaomi, xiaomi-token-plan, ...). */
 export type InitialSetupDrafts = Record<string, InitialSetupDraft>
 
 export type InitialSetupSelection = {
@@ -51,9 +51,7 @@ export function initialSetupProfileId(selection: Pick<InitialSetupSelection, 'pr
 export function initialSetupDrafts(settings: AppSettingsV1): InitialSetupDrafts {
   const provider = getModelProviderSettings(settings)
   const byId = new Map(provider.providers.map((profile) => [profile.id, profile]))
-  const drafts: InitialSetupDrafts = {
-    [DEFAULT_MODEL_PROVIDER_ID]: { apiKey: provider.apiKey, baseUrl: provider.baseUrl }
-  }
+  const drafts: InitialSetupDrafts = {}
   for (const preset of INITIAL_SETUP_PROVIDER_PRESETS) {
     const existing = byId.get(preset.id)
     drafts[preset.id] = {
@@ -71,7 +69,7 @@ export function initialSetupDrafts(settings: AppSettingsV1): InitialSetupDrafts 
   return drafts
 }
 
-/** Card and mode to preselect: the active provider when it is one of ours, DeepSeek otherwise. */
+/** Card and mode to preselect: the active provider when it is one of ours, default otherwise. */
 export function initialSetupSelection(settings: AppSettingsV1): InitialSetupSelection {
   const runtime = getRcodeRuntimeSettings(settings)
   const activeId = runtime.providerId.trim()
@@ -140,17 +138,8 @@ export function buildInitialSetupSettings(
   const provider = getModelProviderSettings(settings)
   const profiles = new Map(provider.providers.map((profile) => [profile.id, profile]))
 
-  const deepseekDraft = drafts[DEFAULT_MODEL_PROVIDER_ID]
-  const nextApiKey = deepseekDraft ? deepseekDraft.apiKey.trim() : provider.apiKey
-  const nextBaseUrl = deepseekDraft?.baseUrl.trim() ? deepseekDraft.baseUrl.trim() : provider.baseUrl
-  const defaultProfile = profiles.get(DEFAULT_MODEL_PROVIDER_ID)
-  if (defaultProfile) {
-    profiles.set(DEFAULT_MODEL_PROVIDER_ID, {
-      ...defaultProfile,
-      apiKey: nextApiKey,
-      baseUrl: nextBaseUrl
-    })
-  }
+  const nextApiKey = provider.apiKey
+  const nextBaseUrl = provider.baseUrl
 
   for (const preset of INITIAL_SETUP_PROVIDER_PRESETS) {
     upsertPresetProfile(profiles, preset.id, drafts[preset.id], (apiKey, baseUrl) => ({

@@ -28,7 +28,6 @@ import {
   type ModelReasoningEffort,
   type ModelProviderModelProfileV1
 } from '@shared/app-settings'
-import { DEFAULT_COMPOSER_MODEL_IDS } from '@shared/default-composer-models'
 import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
 
 export type ComposerReasoningEffort = ModelReasoningEffort
@@ -104,7 +103,6 @@ const FLOATING_REASONING_POPOVER_WIDTH = 286
 const FLOATING_REASONING_POPOVER_ESTIMATED_HEIGHT = 110
 const FLOATING_REASONING_POPOVER_GAP = 12
 const REASONING_RAIL_THUMB_RADIUS = 18
-const UNGROUPED_MODEL_PROVIDER_ID = '__composer_models__'
 const REASONING_RAIL_ORDER: ComposerReasoningEffort[] = ['off', 'low', 'medium', 'high', 'max', 'auto']
 const REASONING_PARTICLES = [
   { x: '6%', y: '61%', size: '5px', delay: '-2.1s', duration: '3.7s', driftX: '7px', driftY: '-7px' },
@@ -124,9 +122,6 @@ const REASONING_PARTICLES = [
   { x: '89%', y: '27%', size: '3px', delay: '-1.8s', duration: '3.5s', driftX: '5px', driftY: '7px' },
   { x: '95%', y: '56%', size: '4px', delay: '-3.9s', duration: '4s', driftX: '-7px', driftY: '-5px' }
 ] as const
-const DEFAULT_COMPOSER_MODEL_KEYS = new Set(
-  DEFAULT_COMPOSER_MODEL_IDS.map((id) => normalizeModelCapabilityKey(id))
-)
 
 export function FloatingComposerModelPicker({
   compact,
@@ -165,10 +160,9 @@ export function FloatingComposerModelPicker({
   const providerMenuGroups = useMemo<ComposerModelMenuGroup[]>(() => {
     return buildComposerModelMenuGroups({
       composerModelGroups,
-      modelOptions,
-      ungroupedLabel: t('composerOtherModels')
+      modelOptions
     })
-  }, [composerModelGroups, modelOptions, t])
+  }, [composerModelGroups, modelOptions])
   const currentModel = composerModel.trim()
   const selectedProviderGroup = providerMenuGroups.find((group) =>
     group.providerId === composerProviderId.trim() &&
@@ -726,9 +720,7 @@ export function FloatingComposerModelPicker({
                     onClick={() => {
                       onComposerModelChange(
                         id,
-                        activeProviderGroup.providerId === UNGROUPED_MODEL_PROVIDER_ID
-                          ? undefined
-                          : activeProviderGroup.providerId
+                        activeProviderGroup.providerId
                       )
                       setReasoningPopoverOpen(false)
                       setMenuOpen(false)
@@ -893,14 +885,11 @@ export function FloatingComposerModelPicker({
 
 export function buildComposerModelMenuGroups({
   composerModelGroups,
-  modelOptions,
-  ungroupedLabel
+  modelOptions: _modelOptions
 }: {
   composerModelGroups: readonly ModelProviderModelGroup[]
   modelOptions: readonly string[]
-  ungroupedLabel: string
 }): ComposerModelMenuGroup[] {
-  const configuredModelKeys = new Set<string>()
   const groups = composerModelGroups
     .map((group) => {
       const seenInProvider = new Set<string>()
@@ -911,7 +900,6 @@ export function buildComposerModelMenuGroups({
           if (!key || seenInProvider.has(key)) return false
           if (!composerMenuSupportsModel(group, id)) return false
           markModelSeen(seenInProvider, group, id)
-          markModelSeen(configuredModelKeys, group, id)
           return true
         })
       return {
@@ -923,24 +911,6 @@ export function buildComposerModelMenuGroups({
     })
     .filter((group) => group.modelIds.length > 0)
 
-  const ungrouped: string[] = []
-  const seenUngrouped = new Set<string>()
-  for (const rawId of modelOptions) {
-    const id = rawId.trim()
-    const key = normalizeModelCapabilityKey(id)
-    if (!key || configuredModelKeys.has(key) || seenUngrouped.has(key) || !isComposerChatModelId(id)) continue
-    seenUngrouped.add(key)
-    ungrouped.push(id)
-  }
-
-  if (ungrouped.length > 0) {
-    groups.push({
-      providerId: UNGROUPED_MODEL_PROVIDER_ID,
-      label: ungroupedLabel,
-      modelIds: ungrouped,
-      modelProfiles: {}
-    })
-  }
   return groups
 }
 
@@ -963,16 +933,7 @@ export function filterComposerModelIds(
 }
 
 function shouldShowProviderSetupPrompt(groups: readonly ComposerModelMenuGroup[]): boolean {
-  const hasConfiguredProviderModels = groups.some((group) =>
-    group.providerId !== UNGROUPED_MODEL_PROVIDER_ID
-  )
-  if (hasConfiguredProviderModels) return false
-  const ungroupedModels = groups.flatMap((group) =>
-    group.providerId === UNGROUPED_MODEL_PROVIDER_ID ? group.modelIds : []
-  )
-  return ungroupedModels.every((id) =>
-    DEFAULT_COMPOSER_MODEL_KEYS.has(normalizeModelCapabilityKey(id))
-  )
+  return groups.length === 0
 }
 
 export function normalizeComposerReasoningEffort(

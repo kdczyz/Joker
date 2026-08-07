@@ -1,5 +1,5 @@
 import {
-  DEFAULT_DEEPSEEK_BASE_URL,
+  DEFAULT_MODEL_PROVIDER_BASE_URL,
   getModelProviderProfile,
   modelEndpointPath,
   modelProviderModelProfile,
@@ -87,7 +87,7 @@ function effectivePromptOptimizationModel(settings: AppSettingsV1): {
     providerId: provider.id,
     model,
     apiKey: provider.apiKey.trim() || runtime.apiKey.trim(),
-    baseUrl: provider.baseUrl.trim() || runtime.baseUrl.trim() || DEFAULT_DEEPSEEK_BASE_URL,
+    baseUrl: provider.baseUrl.trim() || runtime.baseUrl.trim() || DEFAULT_MODEL_PROVIDER_BASE_URL,
     endpointFormat,
     responsesMode: profile?.responsesMode,
     systemPrompt: resolveRcodePromptOptimizationPrompt(runtime),

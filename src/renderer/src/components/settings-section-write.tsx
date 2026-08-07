@@ -96,7 +96,6 @@ export function WriteSettingsSection({ ctx }: { ctx: Record<string, any> }): Rea
   const effectiveWriteProviderId = resolveWriteInlineCompletionProviderId(form)
   const effectiveWriteProvider =
     providerSettings.providers.find((item: { id: string }) => item.id === effectiveWriteProviderId) ??
-    providerSettings.providers.find((item: { id: string }) => item.id === DEFAULT_MODEL_PROVIDER_ID) ??
     providerSettings.providers[0]
   const writeInlineProviderInherited = form.write.inlineCompletion.inheritProvider !== false
   const writeInlineProviderModels = effectiveWriteProvider?.models ?? []

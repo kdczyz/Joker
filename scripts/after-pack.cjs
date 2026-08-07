@@ -54,9 +54,9 @@ const LINUX_REAL_EXECUTABLE_SUFFIX = '.electron-bin'
 const BUNDLED_EXTENSIONS_DIR = 'bundled-extensions'
 const BUNDLED_EXTENSION_CATALOG_FILE = 'catalog.json'
 const REQUIRED_BUNDLED_EXTENSION_IDS = [
-  'Rcode-examples.Rcode-video-editor',
-  'Rcode-examples.presentation-studio',
-  'Rcode-examples.social-media-sidebar'
+  'rcode-examples.rcode-video-editor',
+  'rcode-examples.presentation-studio',
+  'rcode-examples.social-media-sidebar'
 ]
 
 function normalizePlatform(platform) {

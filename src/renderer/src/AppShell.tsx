@@ -1,5 +1,6 @@
 import { lazy, Suspense, useEffect } from 'react'
 import { useChatStore } from './store/chat-store'
+import { initializeBackend } from './store/backend-store'
 import { supportsDesktopTitleBar, WindowsTitleBar } from './components/WindowsTitleBar'
 import { RuntimeStatusBanner } from './components/RuntimeStatusBanner'
 import i18n from './i18n'
@@ -50,6 +51,7 @@ export default function AppShell(): React.ReactElement {
     const timer = window.setTimeout(() => {
       frame = window.requestAnimationFrame(() => {
         void boot()
+        void initializeBackend()
       })
     }, 0)
     return () => {

@@ -5,6 +5,7 @@ import {
   AtSign,
   Battery,
   CheckCircle2,
+  ChevronDown,
   ChevronLeft,
   Image as ImageIcon,
   Loader2,
@@ -692,6 +693,7 @@ export function ConnectPhoneSidebarPanel({
   const [saving, setSaving] = useState(false)
   const [disconnecting, setDisconnecting] = useState(false)
   const [disconnectError, setDisconnectError] = useState('')
+  const [bindingExpanded, setBindingExpanded] = useState(false)
   const installPollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const installCountdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const installRequestInFlightRef = useRef(false)
@@ -1033,11 +1035,29 @@ export function ConnectPhoneSidebarPanel({
         </div>
       </div>
 
-      <div className="mx-1 shrink-0 border-t border-ds-border-muted/70 pt-3">
-        <div className="mb-3 flex items-center gap-2 px-1 text-[12px] font-semibold text-[#9aa5b5] dark:text-white/40">
+      <div className="mx-1 shrink-0 border-t border-ds-border-muted/70 pt-2">
+        <button
+          type="button"
+          onClick={() => setBindingExpanded((v) => !v)}
+          className="flex w-full items-center gap-2 rounded-lg px-1 py-1.5 text-left transition hover:bg-ds-hover/60"
+        >
+          <ChevronDown
+            className={`h-3.5 w-3.5 shrink-0 text-ds-faint transition-transform duration-200 ${
+              bindingExpanded ? '' : '-rotate-90'
+            }`}
+            strokeWidth={2}
+          />
           <ClawProviderLogo provider={targetProvider} className="h-4 w-4" />
-          <span>{t('claw')}</span>
-        </div>
+          <span className="text-[12px] font-semibold text-[#9aa5b5] dark:text-white/40">
+            {t('claw')}
+          </span>
+          <span className="ml-auto text-[11px] text-ds-faint">
+            {t('connectPhoneBindDevice')}
+          </span>
+        </button>
+
+        {bindingExpanded ? (
+        <div className="pt-2">
 
         <div className="grid grid-cols-4 gap-1 rounded-[14px] border border-ds-border bg-ds-card p-1 shadow-sm">
           {CONNECT_PHONE_TARGETS.map((item) => {
@@ -1213,6 +1233,8 @@ export function ConnectPhoneSidebarPanel({
             </div>
           )
         )}
+        </div>
+        ) : null}
       </div>
     </div>
   )

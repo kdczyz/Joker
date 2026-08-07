@@ -288,8 +288,7 @@ export function useWorkbenchLayout({
   latestAutoOpenDevPreviewUrl,
   latestDevPreviewUrl,
   route,
-  workspaceRoot,
-  writeAssistantOpen
+  workspaceRoot
 }: {
   activeThreadId: string | null
   designAssistantOpen: boolean
@@ -298,7 +297,6 @@ export function useWorkbenchLayout({
   latestDevPreviewUrl: string | null
   route: AppRoute
   workspaceRoot: string
-  writeAssistantOpen: boolean
 }) {
   const initialScopeRef = useRef(codeRightTabsWorkspaceScope(workspaceRoot))
   const tabsRegistryRef = useRef(readStoredCodeRightTabsRegistry())
@@ -335,7 +333,7 @@ export function useWorkbenchLayout({
     ? transientRightPanelMode ?? (codeRightTabs.expanded ? codeRightTabs.activeId : null)
     : null
   const rightPanelVisible = route === 'write'
-    ? writeAssistantOpen
+    ? true
     : route === 'design'
       ? designAssistantOpen || designImplementOpen
       : codeRightTabs.expanded || rightPanelMode !== null

@@ -3,13 +3,17 @@ import {
   DEFAULT_CLAW_MODEL,
   MIN_RCODE_LOCAL_PORT,
   DEFAULT_WEIXIN_BRIDGE_RPC_URL,
+  APPROVAL_POLICIES,
+  SANDBOX_MODES,
+  type ApprovalPolicy,
   type ClawImChannelV1,
   type ClawImConversationV1,
   type ClawImSettingsV1,
   type ClawImProvider,
   type ClawSettingsPatchV1,
   type ClawSettingsV1,
-  type ClawTaskV1
+  type ClawTaskV1,
+  type SandboxMode
 } from './app-settings-types'
 import {
   normalizeClawImAgentProfile,
@@ -40,6 +44,20 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function normalizeClawImPort(value: unknown, fallback: number): number {
   if (value === 8787) return fallback
   return normalizePositiveInteger(value, fallback, MIN_RCODE_LOCAL_PORT, 65_535)
+}
+
+/** Returns the value when it is a known approval policy, otherwise `undefined` (→ fall back to global). */
+function normalizeApprovalPolicy(value: unknown): ApprovalPolicy | undefined {
+  return typeof value === 'string' && (APPROVAL_POLICIES as readonly string[]).includes(value)
+    ? (value as ApprovalPolicy)
+    : undefined
+}
+
+/** Returns the value when it is a known sandbox mode, otherwise `undefined` (→ fall back to global). */
+function normalizeSandboxMode(value: unknown): SandboxMode | undefined {
+  return typeof value === 'string' && (SANDBOX_MODES as readonly string[]).includes(value)
+    ? (value as SandboxMode)
+    : undefined
 }
 
 function defaultClawChannelLabel(provider: ClawImProvider): string {
@@ -144,7 +162,9 @@ export function normalizeClawSettings(input: ClawSettingsPatchV1 | undefined): C
         defaults.im.recentThreadListLimit,
         1,
         50
-      )
+      ),
+      approvalPolicy: normalizeApprovalPolicy(im.approvalPolicy),
+      sandboxMode: normalizeSandboxMode(im.sandboxMode)
     },
     channels: rawChannels
       .map((channel, index): ClawImChannelV1 => {

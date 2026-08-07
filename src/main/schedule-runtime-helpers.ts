@@ -10,8 +10,10 @@ import {
 } from '../shared/app-settings'
 import type {
   AppSettingsV1,
+  ApprovalPolicy,
   ClawImChannelV1,
   ModelProviderProfileV1,
+  SandboxMode,
   ScheduleReasoningEffort,
   ScheduleRunMode,
   ScheduleRunResult,
@@ -349,6 +351,15 @@ export type RunPromptViaRuntimeOptions = {
   providerId?: string
   reasoningEffort: ScheduleReasoningEffort | ''
   mode: ScheduleRunMode
+  /**
+   * Optional tool permission policy override. When provided, forwarded to the
+   * runtime on thread creation and every turn so headless runs (remote agent,
+   * scheduled tasks) can follow a permission mode independent of the GUI's
+   * global agent settings. Omitted → runtime default applies.
+   */
+  approvalPolicy?: ApprovalPolicy
+  /** Optional sandbox mode override paired with {@link approvalPolicy}. */
+  sandboxMode?: SandboxMode
   waitForResult: boolean
   responseTimeoutMs: number
   signal?: AbortSignal
@@ -380,7 +391,9 @@ export async function runPromptViaRuntime(
       model,
       mode: options.mode,
       ...(providerId ? { providerId } : {}),
-      ...(options.title.trim() ? { title: options.title.trim() } : {})
+      ...(options.title.trim() ? { title: options.title.trim() } : {}),
+      ...(options.approvalPolicy ? { approvalPolicy: options.approvalPolicy } : {}),
+      ...(options.sandboxMode ? { sandboxMode: options.sandboxMode } : {})
     })
   })
   if (!create.ok) return { ok: false, message: runtimeErrorMessage(create, 'Failed to create thread.') }
@@ -395,6 +408,8 @@ export async function runPromptViaRuntime(
   }
   if (model) turnBody.model = model
   if (options.reasoningEffort) turnBody.reasoningEffort = options.reasoningEffort
+  if (options.approvalPolicy) turnBody.approvalPolicy = options.approvalPolicy
+  if (options.sandboxMode) turnBody.sandboxMode = options.sandboxMode
   const turn = await deps.runtimeRequest(
     settings,
     `/v1/threads/${encodeURIComponent(thread.id)}/turns`,

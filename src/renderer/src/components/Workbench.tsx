@@ -337,8 +337,7 @@ export function Workbench(): ReactElement {
     latestAutoOpenDevPreviewUrl,
     latestDevPreviewUrl,
     route,
-    workspaceRoot: extensionWorkspaceRoot,
-    writeAssistantOpen
+    workspaceRoot: extensionWorkspaceRoot
   })
   const activeExtensionRightPanel = rightPanelMode && isExtensionContributionId(rightPanelMode)
     ? extensionRightPanelItems.find((contribution) => contribution.id === rightPanelMode)
@@ -792,7 +791,7 @@ export function Workbench(): ReactElement {
   })
 
   const {
-    closeRightPanel, exploreSddRequirementInDesign, openCodeMode, openPluginsView, openExtensionsView, openScheduleView,
+    closeRightPanel, exploreSddRequirementInDesign, openClawMode, openCodeMode, openPluginsView, openExtensionsView, openScheduleView,
     openThread, openWorkflowView, openWriteMode, pickWriteAssistantWorkspace, sidebarView,
     startNewChat, startNewChatInWorkspace, startNewConversation, startNewWriteAssistantConversation,
     toggleConnectPhone
@@ -936,7 +935,10 @@ export function Workbench(): ReactElement {
       disabledSkillIds,
       setComposerModel: setWriteAssistantModel,
       onNewConversation: startNewWriteAssistantConversation,
-      onPickWorkspace: () => void pickWriteAssistantWorkspace()
+      onPickWorkspace: () => void pickWriteAssistantWorkspace(),
+      executionSettings: composerExecutionSettings,
+      executionSettingsApplying: composerExecutionApplying,
+      onExecutionSettingsChange: updateComposerExecutionSettings
     },
     sdd: {
       draft: activeSddDraft,
@@ -1055,6 +1057,7 @@ export function Workbench(): ReactElement {
         onCodeOpen={openCodeMode}
         onWriteOpen={openWriteMode}
         onDesignOpen={openDesignMode}
+        onClawOpen={openClawMode}
         onScheduleOpen={openScheduleView}
         onWorkflowOpen={openWorkflowView}
         onNewConversation={startNewConversation}

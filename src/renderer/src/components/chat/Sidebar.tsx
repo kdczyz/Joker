@@ -65,6 +65,7 @@ type Props = {
   onCodeOpen: () => void
   onWriteOpen: () => void
   onDesignOpen: () => void
+  onClawOpen: () => void
   onScheduleOpen: () => void
   onWorkflowOpen: () => void
   onNewConversation: () => void
@@ -99,6 +100,7 @@ export function Sidebar({
   onCodeOpen,
   onWriteOpen,
   onDesignOpen,
+  onClawOpen,
   onScheduleOpen,
   onWorkflowOpen,
   onNewConversation
@@ -182,6 +184,7 @@ export function Sidebar({
           onCodeOpen={onCodeOpen}
           onWriteOpen={onWriteOpen}
           onDesignOpen={onDesignOpen}
+          onClawOpen={onClawOpen}
         />
 
         {activeView !== 'claw' && activeView !== 'schedule' && activeView !== 'workflow' ? (

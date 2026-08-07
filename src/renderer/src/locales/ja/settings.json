@@ -353,6 +353,8 @@
   "providerModelEditTitle": "Configure {{model}}",
   "providerModelEditAction": "Configure {{model}}",
   "providerModelDeleteAction": "Delete {{model}}",
+  "providerModelSetDefault": "デフォルトモデルに設定 {{model}}",
+  "providerModelDefaultBadge": "デフォルト",
   "providerModelKindLabel": "これはどのようなモデルですか?",
   "providerModelKindChat": "テキストチャット",
   "providerModelKindChatDesc": "構成可能なビジョン、ツールの呼び出し、および推論を使用した、チャットおよびエージェントのタスク用。",

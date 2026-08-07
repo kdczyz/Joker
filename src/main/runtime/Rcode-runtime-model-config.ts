@@ -9,21 +9,7 @@ import {
 } from '../../shared/app-settings'
 import { legacyProviderCredentialSourceId } from '../legacy-provider-settings-migration'
 
-const DEFAULT_RCODE_MODEL_PROFILES: Record<string, Record<string, unknown>> = {
-  'deepseek-v4-pro': {
-    contextWindowTokens: 1_000_000,
-    contextCompaction: { softThreshold: 980_000, hardThreshold: 990_000 },
-    inputModalities: ['text'], outputModalities: ['text'],
-    supportsToolCalling: true, messageParts: ['text']
-  },
-  'deepseek-v4-flash': {
-    aliases: ['deepseek-chat', 'deepseek-reasoner'],
-    contextWindowTokens: 1_000_000,
-    contextCompaction: { softThreshold: 980_000, hardThreshold: 990_000 },
-    inputModalities: ['text'], outputModalities: ['text'],
-    supportsToolCalling: true, messageParts: ['text']
-  }
-}
+const DEFAULT_RCODE_MODEL_PROFILES: Record<string, Record<string, unknown>> = {}
 
 export function modelConfigForRuntime(
   existing: Record<string, unknown>,
@@ -186,7 +172,8 @@ function modelConfigProfilesFromProviderProfiles(
       messageParts: profile.messageParts,
       ...(profile.reasoning ? { reasoning: profile.reasoning } : {}),
       ...(profile.endpointFormat ? { endpointFormat: profile.endpointFormat } : {}),
-      ...(profile.responsesMode ? { responsesMode: profile.responsesMode } : {})
+      ...(profile.responsesMode ? { responsesMode: profile.responsesMode } : {}),
+      ...(profile.defaultWebSearch !== undefined ? { defaultWebSearch: profile.defaultWebSearch } : {})
     }
   }
   return out
