@@ -128,6 +128,7 @@ function currentImModel(
   return conversation?.model?.trim() ||
     channel?.model?.trim() ||
     settings.claw.im.model.trim() ||
+    getRcodeRuntimeSettings(settings).model.trim() ||
     DEFAULT_CLAW_MODEL
 }
 
@@ -338,8 +339,31 @@ function currentImModelResolution(
   channel?: ClawImChannelV1,
   conversation?: ClawImConversationV1
 ): ImModelResolution {
-  const provider = currentImProvider(settings, channel, conversation)
+  const explicitProvider = currentImProvider(settings, channel, conversation)
   const requestedModel = currentImModel(settings, channel, conversation)
+  const providers = getModelProviderSettings(settings).providers
+  // When the channel's explicit provider does not actually serve the requested
+  // model, fall back to the provider that lists the model. This prevents routing a
+  // model such as `adept/fuyu-8b` (which lives under a non-default provider) to the
+  // default provider, which would otherwise return HTTP 400 "Unsupported model".
+  const servesModel = (provider: ModelProviderProfileV1): boolean => {
+    if (!requestedModel) return false
+    const target = requestedModel.trim().toLowerCase()
+    return providerTextModels(settings, provider).some((candidate) => candidate.trim().toLowerCase() === target)
+  }
+  const debugInfo = {
+    explicitProviderId: explicitProvider?.id,
+    requestedModel,
+    explicitServesModel: servesModel(explicitProvider),
+    fallbackProviderId: requestedModel ? (providers.find(servesModel)?.id ?? null) : null,
+    allProviderIds: providers.map((p) => p.id),
+    customP4Models: providers.find((p) => p.id === 'custom-provider-4')?.models
+  }
+  try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'currentImModelResolution', ts: new Date().toISOString(), ...debugInfo }) + '\n') } catch {}
+  const provider =
+    explicitProvider && servesModel(explicitProvider)
+      ? explicitProvider
+      : (requestedModel ? providers.find(servesModel) : undefined) ?? explicitProvider
   const model = validProviderModel(settings, provider, requestedModel) ?? firstProviderModel(settings, provider.id)
   return { provider, model }
 }
@@ -1004,6 +1028,7 @@ export class ClawRuntime {
   }
 
   private async runPrompt(settings: AppSettingsV1, options: RunPromptOptions): Promise<ClawRunResult> {
+    try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'runPrompt', ts: new Date().toISOString(), providerId: options.providerId, model: options.model, existingThreadId: options.threadId }) + '\n') } catch {}
     const workspace = options.workspaceRoot.trim() || settings.workspaceRoot
     const existingThreadId = options.threadId?.trim()
     const requestedModel = normalizeTaskModel(options.model) ?? (settings.agents.Rcode.model.trim() || DEFAULT_CLAW_MODEL)
@@ -1939,8 +1964,10 @@ export class ClawRuntime {
     }
   ): Promise<ClawRunResult> {
     const { channel, conversation, prompt, provider, remoteSession, sender } = input
+    try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'processIncomingImPrompt', ts: new Date().toISOString(), channelId: channel?.id, conversationId: conversation?.id, conversationProviderId: conversation?.providerId, conversationModel: conversation?.model }) + '\n') } catch {}
     const initialThreadId = currentClawThreadId({ channel, conversation, remoteSession })
     const modelResolution = currentImModelResolution(settings, channel, conversation)
+    try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'processIncomingImPrompt_resolved', ts: new Date().toISOString(), providerId: modelResolution.provider.id, model: modelResolution.model }) + '\n') } catch {}
     const result = await this.runPrompt(settings, {
       prompt,
       title: channel ? `[Claw IM:${channel.label}] ${sender}` : `[Claw IM:${provider}] ${sender}`,

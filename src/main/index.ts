@@ -67,7 +67,6 @@ import {
 } from '../shared/app-settings'
 import { parseRuntimeErrorBody, runtimeErrorToError, type RuntimeErrorCode } from '../shared/runtime-error'
 import type { TrayActionPayload } from '../shared/Rcode-gui-api'
-import type { GuiUpdateState } from '../shared/gui-update'
 import { isAllowedDevPreviewUrl } from '../shared/dev-preview-url'
 import { isAuthorizedPrototypeFileUrl } from './services/prototype-embed-registry'
 import { fetchUpstreamModelIds } from './upstream-models'
@@ -293,11 +292,6 @@ const extensionExternalBrowsers = new ExtensionExternalBrowserManager(extensionV
 let protectedCredentialSurface: ProtectedCredentialSurfaceController | null = null
 let bindExtensionMainWindow: ((window: BrowserWindow) => void) | undefined
 
-type GuiUpdaterModule = typeof import('./gui-updater')
-
-let guiUpdaterModulePromise: Promise<GuiUpdaterModule> | null = null
-let guiUpdaterInitialized = false
-
 function emitClawChannelActivity(payload: { channelId: string; threadId: string }): void {
   if (!mainWindow || mainWindow.isDestroyed()) return
   mainWindow.webContents.send('claw:channel-activity', payload)
@@ -374,50 +368,8 @@ function stopManagedRuntimesForQuit(): Promise<void> {
   return runtimeShutdown.stopForQuit()
 }
 
-function setUpdateInstallQuitting(active: boolean): void {
-  runtimeShutdown.setUpdateInstallQuit(active)
-}
-
 function stopManagedRuntimes(): Promise<void> {
   return runtimeShutdown.stop()
-}
-
-async function loadGuiUpdaterModule(): Promise<GuiUpdaterModule> {
-  if (!guiUpdaterModulePromise) {
-    guiUpdaterModulePromise = import('./gui-updater')
-      .then((module) => {
-        if (!guiUpdaterInitialized) {
-          module.initializeGuiUpdater(
-            () => mainWindow,
-            async () => (await store.load()).guiUpdate.channel,
-            stopManagedRuntimesForQuit,
-            async () => (await store.load()).locale,
-            setUpdateInstallQuitting
-          )
-          guiUpdaterInitialized = true
-        }
-        return module
-      })
-      .catch((error) => {
-        guiUpdaterModulePromise = null
-        throw error
-      })
-  }
-  return guiUpdaterModulePromise
-}
-
-async function readGuiUpdateState(): Promise<GuiUpdateState> {
-  if (!guiUpdaterModulePromise) return { status: 'idle' }
-  try {
-    const module = await loadGuiUpdaterModule()
-    return module.getGuiUpdateState()
-  } catch (error) {
-    return {
-      status: 'error',
-      message: error instanceof Error ? error.message : String(error),
-      code: 'unknown'
-    }
-  }
 }
 
 function installDevPreviewWebviewGuards(options: {
@@ -1769,9 +1721,6 @@ app.whenReady().then(async () => {
     await syncClawScheduleMcpConfig(saved, getClawScheduleMcpLaunchConfig()).catch((error) => {
       console.error('[claw-schedule-mcp] failed to sync config after settings change:', error)
     })
-    if (prev.guiUpdate.channel !== saved.guiUpdate.channel && guiUpdaterModulePromise) {
-      void guiUpdaterModulePromise.then((module) => module.setGuiUpdateChannel(saved.guiUpdate.channel))
-    }
     queueRuntimeSettingsApply(prev, saved)
     try {
       scheduleRuntime?.sync(saved)
@@ -1834,8 +1783,6 @@ app.whenReady().then(async () => {
     },
     showTurnCompleteNotification,
     getAppVersion: () => app.getVersion(),
-    readGuiUpdateState,
-    loadGuiUpdaterModule,
     resolveLogDirectory: () => resolveLogDirectory(app),
     logError
   })
@@ -1928,10 +1875,6 @@ app.whenReady().then(async () => {
     mainWindow?.webContents.removeListener('zoom-changed', onWorkbenchZoomChanged)
   })
 
-  void loadGuiUpdaterModule().catch((error) => {
-    console.warn('[Rcode-gui updater] failed to initialize on startup:', error)
-  })
-
   registerRuntimeSseIpc({ ipcMain, store, ensureRuntime, logError })
 
   registerRemoteAgentIpc({ store, ensureRuntime, getMainWindow: () => mainWindow, logError })
@@ -1953,11 +1896,6 @@ app.whenReady().then(async () => {
 
   createWindow({ suppressInitialShow: shouldStartHidden(initial) })
   traceStartup('createWindow:returned')
-  void loadGuiUpdaterModule()
-    .then((module) => module.showPostUpdateReleaseNotes())
-    .catch((error) => {
-      console.warn('[Rcode-gui updater] failed to show post-update release notes:', error)
-    })
 
   void pruneOnStartup().catch((err) => {
     console.warn('[Rcode-gui] prune logs:', err)

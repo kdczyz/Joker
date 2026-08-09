@@ -316,9 +316,26 @@ export function resolveScheduleModelConfig(
   const requestedModel = normalizeTaskModel(input.model ?? '')
   const runtimeProviderId = getRcodeRuntimeSettings(settings).providerId.trim()
   const extraProviderId = fallbackProviderId.trim()
+
+  const requestedProvider = requestedProviderId
+    ? providers.find((item) => item.id === requestedProviderId)
+    : undefined
+  // Only honor the caller-supplied provider if it can actually serve the
+  // requested model. A remote controller (phone / Claw) may send a stale or
+  // mismatched providerId — blindly using it would route the model to the
+  // wrong upstream and fail with 400 "Unsupported model". When the requested
+  // provider can't serve the model, fall through to the model-based lookup.
+  const requestedProviderServesModel =
+    Boolean(requestedProvider) && (!requestedModel || providerHasModel(requestedProvider!, requestedModel))
+  const modelProvider = requestedModel
+    ? providers.find((item) => providerHasModel(item, requestedModel))
+    : undefined
+
+  try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'resolveScheduleModelConfig', ts: new Date().toISOString(), requestedProviderId: requestedProviderId || null, requestedModel, modelProviderId: modelProvider?.id ?? null, allProviderIds: providers.map((p) => p.id) }) + '\n') } catch {}
+
   const provider =
-    providers.find((item) => item.id === requestedProviderId) ??
-    (requestedModel ? providers.find((item) => providerHasModel(item, requestedModel)) : undefined) ??
+    (requestedProviderServesModel ? requestedProvider : undefined) ??
+    modelProvider ??
     providers.find((item) => item.id === runtimeProviderId) ??
     (extraProviderId ? providers.find((item) => item.id === extraProviderId) : undefined) ??
     providers[0] ??
@@ -407,6 +424,7 @@ export async function runPromptViaRuntime(
     disableUserInput: true
   }
   if (model) turnBody.model = model
+  if (providerId) turnBody.providerId = providerId
   if (options.reasoningEffort) turnBody.reasoningEffort = options.reasoningEffort
   if (options.approvalPolicy) turnBody.approvalPolicy = options.approvalPolicy
   if (options.sandboxMode) turnBody.sandboxMode = options.sandboxMode

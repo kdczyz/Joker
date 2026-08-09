@@ -1048,7 +1048,7 @@ export function createThreadActions(
         rememberThreadComposerSelection(activeThreadId, composerModel, composerProviderId)
       }
       await ensureRuntimeProviderForSend({
-        providerId: channel ? undefined : composerProviderId,
+        providerId: composerProviderId,
         model: composerModel
       })
       const settings = await rendererRuntimeClient.getSettings()
@@ -1098,7 +1098,7 @@ export function createThreadActions(
       const { turnId, userMessageItemId } = await p.sendUserMessage(activeThreadId, runtimeText, {
         mode,
         ...(composerModel ? { model: composerModel } : {}),
-        ...(!channel && composerProviderId ? { providerId: composerProviderId } : {}),
+        ...(composerProviderId ? { providerId: composerProviderId } : {}),
         ...(!channel && composerAccountId ? { accountId: composerAccountId } : {}),
         ...(reasoningEffort ? { reasoningEffort } : {}),
         ...(runtimeDisplayText ? { displayText: runtimeDisplayText } : {}),

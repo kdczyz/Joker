@@ -81,15 +81,20 @@ export type ModelProfileConfigSource = {
   contextCompaction?: ContextCompactionConfig
 }
 
-export const DEFAULT_CONTEXT_WINDOW_TOKENS = 256_000
+export const DEFAULT_CONTEXT_WINDOW_TOKENS = 128_000
 
 export const DEFAULT_CONTEXT_THRESHOLDS: ModelContextThresholds = {
-  // Fallback for models without a registered profile. These assume a
-  // reasonably large window (>=256k). A custom endpoint with a small
-  // window (e.g. 32k) should register a profile with explicit thresholds,
-  // otherwise it may exceed its window before the first compaction.
-  softThreshold: 192_000,
-  hardThreshold: 217_600
+  // Conservative fallback for models without a registered profile. We
+  // deliberately assume a *small* window (128k) rather than a large one:
+  // an unregistered model is far more likely to be a community/custom
+  // endpoint with a modest window than a 256k+ frontier model. Compaction
+  // triggers at 0.75 / 0.85 of the assumed window, so requests are kept
+  // well under 128k — and therefore well under the real window of models
+  // like gpt-oss-120b (131k) — which prevents the provider from computing
+  // a negative max_tokens and 400-ing. Register a profile for custom
+  // endpoints with a different window to opt out of these defaults.
+  softThreshold: 96_000,
+  hardThreshold: 108_800
 }
 
 const DEEPSEEK_V4_CONTEXT_WINDOW_TOKENS = 1_000_000

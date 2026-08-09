@@ -417,7 +417,14 @@ export class CompatModelClient implements ModelClient {
     model: string,
     fallback?: number
   ): number | undefined {
-    return request.maxTokens ?? this.maxOutputTokensFor(model) ?? fallback
+    const raw = request.maxTokens ?? this.maxOutputTokensFor(model) ?? fallback
+    // Some providers (e.g. NVIDIA vLLM/NIM) reply 400 "max_tokens must be at
+    // least 1" when max_tokens is non-positive. Guard against any upstream
+    // arithmetic (or a provider-derived fallback) producing a bogus value so
+    // we never emit a negative/zero cap.
+    if (raw === undefined) return undefined
+    const safe = Math.floor(raw)
+    return safe > 0 ? safe : 1
   }
 
   private async postChatCompletion(

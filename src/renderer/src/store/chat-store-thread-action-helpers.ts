@@ -1,6 +1,7 @@
 import type { AgentProvider, NormalizedThread, ThreadEventSink } from '../agent/types'
 import type { ChatState, ChatStoreGet } from './chat-store-types'
 import {
+  activeClawChannel,
   composerModelSelectable,
   providerIdForComposerModel,
   providerIdMatchesComposerModel,
@@ -8,7 +9,21 @@ import {
 } from './chat-store-helpers'
 
 export function fallbackComposerProviderIdForSend(state: ChatState): string {
-  return state.route === 'claw' ? '' : state.composerProviderId.trim()
+  if (state.route === 'claw') {
+    // claw (IM) 路径下，model 取自 channel.model，providerId 必须与之配对，
+    // 否则 runtime 会回退到 default provider，导致 model 与 provider 错配 → HTTP 400。
+    const channel = activeClawChannel(state)
+    const channelProviderId = channel?.providerId?.trim()
+    if (channelProviderId) return channelProviderId
+    const channelModel = channel?.model?.trim()
+    if (channelModel) {
+      const resolved = providerIdForComposerModel(state.composerModelGroups, channelModel)
+      if (resolved) return resolved
+    }
+    // channel 未显式配置时，回退到桌面端当前选中的 provider（已由 setComposerModel 写入）。
+    return state.composerProviderId.trim()
+  }
+  return state.composerProviderId.trim()
 }
 
 export async function ensureRuntimeProviderForSend(input: {
