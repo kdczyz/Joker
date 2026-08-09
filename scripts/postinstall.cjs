@@ -11,8 +11,8 @@ function run(command, args, options = {}) {
 // Keep clean-checkout bootstrap on the same canonical order as release builds:
 // build the workspace API first, install Rcode's separate dependency tree, then
 // compile Rcode. `npm --prefix Rcode ci` does not run this root lifecycle script, so
-// delegating to build:Rcode cannot recurse back into postinstall.
-const buildRcode = run('npm', ['run', 'build:Rcode'])
+// delegating to build:rcode cannot recurse back into postinstall.
+const buildRcode = run('npm', ['run', 'build:rcode'])
 if (buildRcode.status !== 0) {
   process.exit(buildRcode.status || 1)
 }
