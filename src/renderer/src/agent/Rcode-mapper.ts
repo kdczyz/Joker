@@ -330,7 +330,23 @@ function normalizeWebSources(value: unknown): Array<Record<string, string>> | un
       if (!source || typeof source !== 'object') return null
       const raw = source as Record<string, unknown>
       const normalized: Record<string, string> = {}
-      for (const key of ['sourceId', 'url', 'title', 'retrievedAt'] as const) {
+      // url / link / href
+      for (const key of ['url', 'link', 'href'] as const) {
+        const entry = raw[key]
+        if (typeof entry === 'string' && entry.trim()) {
+          normalized.url = entry.trim()
+          break
+        }
+      }
+      // title
+      for (const key of ['title', 'name', 'headline'] as const) {
+        const entry = raw[key]
+        if (typeof entry === 'string' && entry.trim()) {
+          normalized.title = entry.trim()
+          break
+        }
+      }
+      for (const key of ['sourceId', 'retrievedAt'] as const) {
         const entry = raw[key]
         if (typeof entry === 'string' && entry.trim()) normalized[key] = entry.trim()
       }
@@ -461,7 +477,17 @@ function normalizeInjectedInstructionSources(
 
 function extractToolSources(item: CoreTurnItemJson): Array<Record<string, string>> | undefined {
   const payload = payloadFor(item)
-  return normalizeWebSources(payload.sources) ?? normalizeWebSources(payload.citations)
+  return (
+    normalizeWebSources(payload.sources) ??
+    normalizeWebSources(payload.citations) ??
+    normalizeWebSources(payload.results) ??
+    normalizeWebSources(payload.search_results) ??
+    normalizeWebSources(payload.organic_results) ??
+    // Some MCP servers wrap results under a `data` or `result` field
+    normalizeWebSources((payload.data as Record<string, unknown> | undefined)?.results) ??
+    normalizeWebSources((payload.result as Record<string, unknown> | undefined)?.results) ??
+    normalizeWebSources((payload.data as Record<string, unknown> | undefined)?.sources)
+  )
 }
 
 type ToolAttachmentReference = {
@@ -844,6 +870,20 @@ function toolBlockFromItem(item: CoreTurnItemJson, child?: CoreChildRuntimeMetad
   if (isPlan) {
     const plan = extractPlanMetadata(item)
     if (plan) meta.plan = plan
+  }
+  // For web search tools, extract the query into meta.query and store arguments
+  const toolNameLower = item.toolName?.toLowerCase().trim() ?? ''
+  const isWebSearchTool = toolNameLower === 'web_search' || toolNameLower === 'web_fetch' ||
+    toolNameLower.includes('tavily') || toolNameLower.includes('baidu') ||
+    (toolNameLower.includes('search') && !toolNameLower.includes('file') && !toolNameLower.includes('code'))
+  if (isWebSearchTool && item.kind === 'tool_call' && item.arguments) {
+    const args = item.arguments as Record<string, unknown>
+    const query = typeof args.query === 'string' ? args.query.trim() :
+      typeof args.q === 'string' ? args.q.trim() :
+      typeof args.prompt === 'string' ? args.prompt.trim() :
+      typeof args.search_query === 'string' ? args.search_query.trim() :
+      typeof args.url === 'string' ? args.url.trim() : ''
+    if (query) meta.query = query
   }
   return {
     kind: 'tool',

@@ -6,6 +6,7 @@ export type ChatProjectionEffect =
   | { type: 'arm_stream_watchdog' }
   | { type: 'refresh_write_workspace'; event?: ToolEventPayload }
   | { type: 'mirror_claw_reply'; threadId: string; text: string }
+  | { type: 'deliver_claw_files'; threadId: string; turnId: string }
   | { type: 'notify_turn_complete'; threadId: string | null; state: ChatState; dedupeKey: string }
   | { type: 'mirror_sdd_transcript' }
   | { type: 'mirror_design_transcript' }
@@ -28,12 +29,16 @@ export function completionProjectionEffects(input: {
   dedupeKey: string
   mirrorText?: string
   mirrorThreadId?: string
+  deliverClawFiles?: { threadId: string; turnId: string }
   reconcile: boolean
   releaseWorktree: boolean
 }): ChatProjectionEffect[] {
   return [
     ...(input.mirrorText && input.mirrorThreadId
       ? [{ type: 'mirror_claw_reply' as const, threadId: input.mirrorThreadId, text: input.mirrorText }]
+      : []),
+    ...(input.deliverClawFiles
+      ? [{ type: 'deliver_claw_files' as const, threadId: input.deliverClawFiles.threadId, turnId: input.deliverClawFiles.turnId }]
       : []),
     { type: 'notify_turn_complete', threadId: input.threadId, state: input.state, dedupeKey: input.dedupeKey },
     { type: 'refresh_write_workspace' },

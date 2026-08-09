@@ -100,6 +100,7 @@ export type CoreMemoryRecordJson = {
   id: string
   content: string
   scope: 'user' | 'workspace' | 'project'
+  category?: 'long' | 'short' | 'session' | 'pinned'
   workspace?: string
   project?: string
   sourceThreadId?: string

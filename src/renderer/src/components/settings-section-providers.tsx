@@ -55,6 +55,7 @@ import {
   Music2,
   PlugZap,
   Plus,
+  RefreshCw,
   Trash2,
   X
 } from 'lucide-react'
@@ -356,6 +357,42 @@ function CodexLoginSection({
   const codexEmail = parseCodexEmail(provider.apiKey)
   const connected = Boolean(codexEmail)
 
+  // 拉取 ChatGPT 订阅账号的 5h/7d 速率限额百分比。仅在已连接时调用。
+  type UsageState =
+    | { status: 'idle' }
+    | { status: 'loading' }
+    | { status: 'ok'; data: Extract<import('@shared/Rcode-gui-api').CodexAccountUsageResult, { ok: true }> }
+    | { status: 'error'; message: string }
+  const [usage, setUsage] = useState<UsageState>({ status: 'idle' })
+  const refreshUsage = async (silent = false): Promise<void> => {
+    if (typeof window.RcodeGui?.codexAccountUsage !== 'function') return
+    // 首次加载显示 loading，后续静默更新不闪烁
+    setUsage((prev) => (silent && prev.status === 'ok' ? prev : { status: 'loading' }))
+    try {
+      const result = await window.RcodeGui.codexAccountUsage()
+      if (result.ok) {
+        setUsage({ status: 'ok', data: result })
+      } else {
+        setUsage({ status: 'error', message: result.message })
+      }
+    } catch (err) {
+      setUsage({ status: 'error', message: err instanceof Error ? err.message : String(err) })
+    }
+  }
+  useEffect(() => {
+    if (!connected) {
+      setUsage({ status: 'idle' })
+      return
+    }
+    // 首次获取 + 每 60 秒静默自动刷新
+    void refreshUsage()
+    const timer = setInterval(() => {
+      void refreshUsage(true)
+    }, 60_000)
+    return () => clearInterval(timer)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [connected])
+
   const clearPoll = (): void => {
     if (pollRef.current) clearInterval(pollRef.current)
     pollRef.current = null
@@ -513,17 +550,88 @@ function CodexLoginSection({
   }
 
   if (connected) {
+    const usageData = usage.status === 'ok' ? usage.data : null
+    const fmtPercent = (p?: number): string => (p == null ? '—' : `${p}%`)
+    const fmtReset = (seconds?: number): string => {
+      if (seconds == null || seconds <= 0) return '—'
+      const d = Math.floor(seconds / 86400)
+      const h = Math.floor((seconds % 86400) / 3600)
+      const m = Math.floor((seconds % 3600) / 60)
+      if (d > 0) return `${d}d${h}h`
+      if (h > 0) return `${h}h${m}m`
+      return `${m}m`
+    }
+    // 根据窗口长度生成标签：5h/7d/30d(月度)等
+    const windowLabel = (seconds?: number): string => {
+      if (seconds == null) return ''
+      const days = seconds / 86400
+      const hours = seconds / 3600
+      if (Math.abs(days - 30) < 1) return t('codexQuotaMonthly')
+      if (Math.abs(days - 7) < 1) return '7d'
+      if (days >= 1) return `${Math.round(days)}d`
+      return `${Math.round(hours)}h`
+    }
+    // 剩余百分比 = 100 - used_percent
+    const remaining = (used?: number): number | undefined =>
+      used == null ? undefined : Math.max(0, 100 - Math.round(used))
+    // 颜色按剩余量变化：剩余少→红，中等→橙，充足→绿
+    const colorFor = (left?: number): string => {
+      if (left == null) return 'text-ds-faint'
+      if (left <= 10) return 'text-red-600 dark:text-red-400'
+      if (left <= 25) return 'text-amber-600 dark:text-amber-400'
+      return 'text-emerald-700 dark:text-emerald-300'
+    }
+    const loading = usage.status === 'loading'
+    const hasSecondary = usageData != null && usageData.secondaryUsedPercent != null
+    const primaryRemaining = remaining(usageData?.primaryUsedPercent)
+    const secondaryRemaining = remaining(usageData?.secondaryUsedPercent)
     return (
-      <div className="flex items-center gap-2">
-        <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
-        <span className="text-[13px] text-ds-ink">{codexEmail}</span>
-        <button
-          type="button"
-          className="ml-auto rounded-lg px-3 py-1.5 text-[12px] font-medium text-ds-muted hover:bg-ds-hover"
-          onClick={disconnect}
-        >
-          {t('codexDisconnect')}
-        </button>
+      <div className="grid gap-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+          <span className="text-[13px] text-ds-ink">{codexEmail}</span>
+          <button
+            type="button"
+            className="ml-auto rounded-lg px-3 py-1.5 text-[12px] font-medium text-ds-muted hover:bg-ds-hover"
+            onClick={disconnect}
+          >
+            {t('codexDisconnect')}
+          </button>
+        </div>
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border border-ds-border-muted bg-ds-card px-2.5 py-1.5 text-[12px]">
+          {usageData ? (
+            <>
+              <span className="font-medium text-ds-muted">{windowLabel(usageData.primaryWindowSeconds)}</span>
+              <span className={`tabular-nums font-semibold ${colorFor(primaryRemaining)}`}>
+                {t('codexQuotaRemaining', { percent: fmtPercent(primaryRemaining) })}
+              </span>
+              <span className="text-ds-faint">· {fmtReset(usageData.primaryResetAfterSeconds)}</span>
+              {hasSecondary ? (
+                <>
+                  <span className="text-ds-faint">|</span>
+                  <span className="font-medium text-ds-muted">{windowLabel(usageData.secondaryWindowSeconds)}</span>
+                  <span className={`tabular-nums font-semibold ${colorFor(secondaryRemaining)}`}>
+                    {t('codexQuotaRemaining', { percent: fmtPercent(secondaryRemaining) })}
+                  </span>
+                  <span className="text-ds-faint">· {fmtReset(usageData.secondaryResetAfterSeconds)}</span>
+                </>
+              ) : null}
+            </>
+          ) : (
+            <span className="text-ds-faint">
+              {loading ? t('codexQuotaLoading') : usage.status === 'error' ? usage.message : t('codexQuotaUnavailable')}
+            </span>
+          )}
+          <button
+            type="button"
+            onClick={() => void refreshUsage()}
+            disabled={loading}
+            className="ml-auto inline-flex items-center rounded p-1 text-ds-faint transition-colors hover:text-ds-muted disabled:opacity-50"
+            title={t('codexQuotaRefresh')}
+          >
+            <RefreshCw className={`h-3 w-3 ${loading ? 'animate-spin' : ''}`} strokeWidth={1.9} />
+          </button>
+        </div>
       </div>
     )
   }

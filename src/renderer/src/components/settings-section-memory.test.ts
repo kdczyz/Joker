@@ -56,6 +56,13 @@ const labels: Record<string, string> = {
   memoryScope_user: 'User',
   memoryScope_workspace: 'Workspace',
   memoryScope_project: 'Project',
+  memoryCategory_all: 'All',
+  memoryCategory_long: 'Long',
+  memoryCategory_short: 'Short',
+  memoryCategory_session: 'Session',
+  memoryCategory_pinned: 'Pinned',
+  memoryPin: 'Pin',
+  memoryUnpin: 'Unpin',
   memoryCreate: 'New',
   memoryCreateTitle: 'Create memory',
   memoryEditTitle: 'Edit memory',
@@ -243,7 +250,7 @@ describe('isMemoryDraftDirty', () => {
   it('returns false in view mode regardless of draft', () => {
     const record = sampleRecord()
     const dialog: MemoryDialogState = { mode: 'view', memory: record }
-    const draft: MemoryDraft = { content: 'totally different', scope: 'user', targetPath: '', tags: 'x', confidence: 0 }
+    const draft: MemoryDraft = { content: 'totally different', scope: 'user', category: 'long', targetPath: '', tags: 'x', confidence: 0 }
     expect(isMemoryDraftDirty(dialog, draft)).toBe(false)
   })
 
@@ -253,6 +260,7 @@ describe('isMemoryDraftDirty', () => {
     const draft: MemoryDraft = {
       content: record.content,
       scope: record.scope,
+      category: 'long',
       targetPath: record.workspace ?? '',
       tags: 'summary, kook-bot',
       confidence: record.confidence ?? 1
@@ -266,6 +274,7 @@ describe('isMemoryDraftDirty', () => {
     const baseline: MemoryDraft = {
       content: record.content,
       scope: record.scope,
+      category: 'long',
       targetPath: record.workspace ?? '',
       tags: 'summary',
       confidence: 1
@@ -277,15 +286,15 @@ describe('isMemoryDraftDirty', () => {
 
   it('returns false in create mode for an empty draft on the default scope', () => {
     const dialog: MemoryDialogState = { mode: 'create' }
-    const draft: MemoryDraft = { content: '   ', scope: 'user', targetPath: '', tags: '   ', confidence: 1 }
+    const draft: MemoryDraft = { content: '   ', scope: 'user', category: 'long', targetPath: '', tags: '   ', confidence: 1 }
     expect(isMemoryDraftDirty(dialog, draft)).toBe(false)
   })
 
   it('returns true in create mode when any field changes from the empty default', () => {
     const dialog: MemoryDialogState = { mode: 'create' }
-    expect(isMemoryDraftDirty(dialog, { content: 'hello', scope: 'user', targetPath: '', tags: '', confidence: 1 })).toBe(true)
-    expect(isMemoryDraftDirty(dialog, { content: '', scope: 'user', targetPath: '', tags: 'tag', confidence: 1 })).toBe(true)
-    expect(isMemoryDraftDirty(dialog, { content: '', scope: 'workspace', targetPath: '', tags: '', confidence: 1 })).toBe(true)
+    expect(isMemoryDraftDirty(dialog, { content: 'hello', scope: 'user', category: 'long', targetPath: '', tags: '', confidence: 1 })).toBe(true)
+    expect(isMemoryDraftDirty(dialog, { content: '', scope: 'user', category: 'long', targetPath: '', tags: 'tag', confidence: 1 })).toBe(true)
+    expect(isMemoryDraftDirty(dialog, { content: '', scope: 'workspace', category: 'long', targetPath: '', tags: '', confidence: 1 })).toBe(true)
   })
 })
 
@@ -296,6 +305,7 @@ describe('attemptCloseMemoryDialog', () => {
     const draft: MemoryDraft = {
       content: record.content,
       scope: record.scope,
+      category: 'long',
       targetPath: record.workspace ?? '',
       tags: 'summary',
       confidence: 1
@@ -313,7 +323,7 @@ describe('attemptCloseMemoryDialog', () => {
     const close = vi.fn()
     const result = await attemptCloseMemoryDialog({
       dialog: null,
-      draft: { content: 'anything', scope: 'workspace', targetPath: '', tags: '', confidence: 1 },
+      draft: { content: 'anything', scope: 'workspace', category: 'long', targetPath: '', tags: '', confidence: 1 },
       confirm,
       close
     })
@@ -328,6 +338,7 @@ describe('attemptCloseMemoryDialog', () => {
     const draft: MemoryDraft = {
       content: 'EDITED content',
       scope: record.scope,
+      category: 'long',
       targetPath: record.workspace ?? '',
       tags: 'summary',
       confidence: 1
@@ -345,6 +356,7 @@ describe('attemptCloseMemoryDialog', () => {
     const draft: MemoryDraft = {
       content: 'half-typed thought',
       scope: 'workspace',
+      category: 'long',
       targetPath: '',
       tags: '',
       confidence: 1

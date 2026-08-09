@@ -1111,7 +1111,8 @@ export function createThreadActions(
         ...(attachmentIds.length ? { attachmentIds } : {}),
         ...(workspaceCheckpointId ? { workspaceCheckpointId } : {}),
         ...(fileReferences.length ? { fileReferences } : {}),
-        ...(composerContexts.length ? { composerContexts } : {})
+        ...(composerContexts.length ? { composerContexts } : {}),
+        ...(channel ? { imContext: true } : {})
       })
       if (!queued && composerContexts.length > 0) {
         set((state) => ({

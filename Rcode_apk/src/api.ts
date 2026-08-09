@@ -54,11 +54,19 @@ export interface RemoteWorkspaceProject {
   sessions: RemoteWorkspaceSession[];
 }
 
+export interface RemoteWorkspaceProvider {
+  id: string;
+  displayName: string;
+  model: string;
+  models: string[];
+}
+
 export interface RemoteWorkspace {
   projects: RemoteWorkspaceProject[];
   models: string[];
   defaultModel?: string;
   activeProjectId?: string;
+  providers?: RemoteWorkspaceProvider[];
 }
 
 export type CommandStatus = "queued" | "running" | "awaiting_approval" | "completed" | "failed";

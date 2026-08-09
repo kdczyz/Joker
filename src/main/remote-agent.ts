@@ -47,12 +47,22 @@ export interface AgentRunResult {
 /*  Deps injected from main process                                    */
 /* ------------------------------------------------------------------ */
 
+export interface RemoteAgentExecuteOptions {
+  /** Provider id chosen on the controller (may not match desktop providers). */
+  providerId?: string | null
+  /** Model chosen on the controller (e.g. "mimo-v2.5"). */
+  model?: string | null
+  /** Thinking mode chosen on the controller: fast | balanced | deep. */
+  thinkingMode?: string | null
+}
+
 export interface RemoteAgentDeps {
   /** Execute an agent prompt headlessly via Rcode runtime. */
   executeAgent: (
     prompt: string,
     mode: ScheduleRunMode,
-    signal: AbortSignal
+    signal: AbortSignal,
+    options?: RemoteAgentExecuteOptions
   ) => Promise<AgentRunResult>
   /** Push status change to renderer. */
   onStatusChange: (state: RemoteAgentState, message?: string) => void
@@ -94,6 +104,18 @@ function buildDeviceMetadata(deviceId: string, settings: AppSettingsV1): RemoteD
   const providers = settings.provider?.providers ?? []
   const models = providers.flatMap((p) => p.models ?? [])
   const defaultModel = settings.agents?.Rcode?.model || models[0] || ''
+  // Sync lightweight provider info (no apiKey/baseUrl) so the controller can
+  // pick a providerId that matches the desktop's configured providers — this
+  // is critical for correct model→provider routing on the agent side.
+  const workspaceProviders = providers
+    .map((p) => ({
+      id: p.id,
+      displayName: p.name || p.id,
+      model: p.models?.[0] || '',
+      models: [...new Set((p.models ?? []).filter((m) => typeof m === 'string' && m))].slice(0, 40)
+    }))
+    .filter((p) => p.id)
+    .slice(0, 20)
   return {
     id: deviceId,
     name: hostname() || 'Desktop',
@@ -104,7 +126,8 @@ function buildDeviceMetadata(deviceId: string, settings: AppSettingsV1): RemoteD
     workspace: {
       projects: [],
       models: [...new Set(models.filter((m) => typeof m === 'string' && m))].slice(0, 60),
-      defaultModel: defaultModel || undefined
+      defaultModel: defaultModel || undefined,
+      providers: workspaceProviders
     }
   }
 }
@@ -339,6 +362,9 @@ export class RemoteAgent {
 
     const prompt = typeof payload.prompt === 'string' ? payload.prompt : ''
     const mode = typeof payload.mode === 'string' ? payload.mode : 'default'
+    const providerId = typeof payload.providerId === 'string' ? payload.providerId : null
+    const model = typeof payload.model === 'string' ? payload.model : null
+    const thinkingMode = typeof payload.thinkingMode === 'string' ? payload.thinkingMode : null
     if (!prompt) {
       this.send({ type: 'command.updated', command: { ...command, status: 'failed', summary: 'Empty prompt' } })
       this.send({ type: 'command.event', commandId, event: { type: 'error', message: '任务内容为空' } })
@@ -362,7 +388,12 @@ export class RemoteAgent {
     this.pendingTasks.set(commandId, task)
 
     try {
-      const result = await this.deps.executeAgent(prompt, mapRemoteMode(mode), controller.signal)
+      const result = await this.deps.executeAgent(
+        prompt,
+        mapRemoteMode(mode),
+        controller.signal,
+        { providerId, model, thinkingMode }
+      )
 
       if (result.ok) {
         // Send final text as a text_delta event

@@ -117,7 +117,6 @@ describe('InitialSessionUsageHeatmap', () => {
   it('renders populated usage with accessible day summaries without starter actions', () => {
     const html = render(state({ usage: usage(), loaded: true }))
 
-    expect(html).toContain('ds-runtime-wake-stage')
     expect(html).toContain('Overview')
     expect(html).toContain('Models')
     expect(html).toContain('All')
@@ -126,7 +125,6 @@ describe('InitialSessionUsageHeatmap', () => {
     expect(html).toContain('Sessions')
     expect(html).toContain('Messages')
     expect(html).toContain('Current streak')
-    expect(html).toContain('Collapse calendar')
     expect(html).toContain('2026-05-01')
     expect(html).toContain('10.0k')
     expect(html).toContain('You&#x27;ve used 11.2k tokens across 2 active days.')
@@ -134,8 +132,8 @@ describe('InitialSessionUsageHeatmap', () => {
     expect(html).not.toContain('Explain this project&#x27;s structure')
   })
 
-  it('renders the usage panel without the animated hero in focus mode', () => {
-    const html = render(state({ usage: usage(), loaded: true }), { hideHero: true })
+  it('renders the usage panel directly without the animated hero', () => {
+    const html = render(state({ usage: usage(), loaded: true }))
 
     expect(html).toContain('Daily Rcode usage calendar')
     expect(html).toContain('aria-label="2026-05-02')
@@ -143,7 +141,6 @@ describe('InitialSessionUsageHeatmap', () => {
     expect(html).toContain('Models')
     expect(html).toContain('Sessions')
     expect(html).toContain('Messages')
-    expect(html).toContain('Collapse calendar')
     expect(html).toContain('You&#x27;ve used 11.2k tokens across 2 active days.')
     expect(html).not.toContain('ds-runtime-wake-stage')
   })
@@ -222,34 +219,22 @@ describe('InitialSessionUsageHeatmap', () => {
     expect(html).not.toContain('You&#x27;ve used 11.2k tokens across 2 active days.')
   })
 
-  it('renders loading, empty, and error states as calendar-only warmup states', () => {
+  it('renders the calendar directly for loading, empty, and error states without warmup transitions', () => {
     const loadingHtml = render(state({ loading: true }))
-    expect(loadingHtml).toContain('Preparing your usage calendar')
-    expect(loadingHtml).toContain('Checking history')
-    expect(loadingHtml).toContain('Collapse calendar')
-    expect(loadingHtml).not.toContain('Daily Rcode usage calendar')
+    expect(loadingHtml).toContain('Daily Rcode usage calendar')
+    expect(loadingHtml).toContain('Refresh')
+    expect(loadingHtml).not.toContain('Preparing your usage calendar')
     expect(loadingHtml).not.toContain('Explain this project&#x27;s structure')
 
     const emptyHtml = render(state({ usage: usage([bucket('2026-05-01', 0, 0)]), loaded: true }))
-    expect(emptyHtml).toContain('Start your agent rhythm')
-    expect(emptyHtml).toContain('No usage has been recorded yet')
-    expect(emptyHtml).not.toContain('aria-label="2026-05-01')
+    expect(emptyHtml).toContain('Daily Rcode usage calendar')
+    expect(emptyHtml).toContain('aria-label="2026-05-01')
     expect(emptyHtml).not.toContain('Explain this project&#x27;s structure')
 
     const errorHtml = render(state({ loaded: true, error: 'boom' }))
-    expect(errorHtml).toContain('Start now, sync usage later')
-    expect(errorHtml).toContain('Usage can be retried later')
+    expect(errorHtml).toContain('Daily Rcode usage calendar')
+    expect(errorHtml).toContain('Refresh')
     expect(errorHtml).not.toContain('Explain this project&#x27;s structure')
-  })
-
-  it('renders the Rcode hero with a collapsed calendar card', () => {
-    const html = render(state({ usage: usage(), loaded: true }), { initialCollapsed: true })
-
-    expect(html).toContain('Expand calendar')
-    expect(html).toContain('ds-runtime-wake-stage')
-    expect(html).toContain('ds-Rcode-state-sleep')
-    expect(html).not.toContain('Keep the canvas clear')
-    expect(html).not.toContain('Daily Rcode usage calendar')
   })
 
   it('uses turns as the intensity fallback when token totals are unavailable', () => {

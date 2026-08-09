@@ -307,6 +307,7 @@ export class RcodeRuntimeProvider implements AgentProvider {
       workspaceCheckpointId?: string
       fileReferences?: Array<{ path: string; relativePath: string; name: string; kind?: 'file' | 'directory' }>
       composerContexts?: ComposerContextAttachment[]
+      imContext?: boolean
     }
   ): Promise<{ turnId: string; threadId: string; userMessageItemId?: string }> {
     const settings = await rendererRuntimeClient.getSettings()
@@ -365,6 +366,9 @@ export class RcodeRuntimeProvider implements AgentProvider {
     }
     if (options?.composerContexts?.length) {
       body.composerContexts = options.composerContexts
+    }
+    if (options?.imContext) {
+      body.imContext = true
     }
     const response = await rendererRuntimeClient.runtimeRequest(
       RcodeThreadTurnsPath(threadId),
@@ -848,6 +852,7 @@ export class RcodeRuntimeProvider implements AgentProvider {
   async createMemory(input: {
     content: string
     scope?: 'user' | 'workspace' | 'project'
+    category?: 'long' | 'short' | 'session'
     workspace?: string
     project?: string
     tags?: string[]
@@ -869,7 +874,7 @@ export class RcodeRuntimeProvider implements AgentProvider {
 
   async updateMemory(
     memoryId: string,
-    patch: { content?: string; tags?: string[]; confidence?: number; disabled?: boolean },
+    patch: { content?: string; tags?: string[]; confidence?: number; disabled?: boolean; category?: 'long' | 'short' | 'session' | 'pinned' },
     options: { workspace?: string } = {}
   ): Promise<CoreMemoryRecordJson> {
     const query = buildQuery({ workspace: options.workspace })

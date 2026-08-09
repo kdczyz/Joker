@@ -357,7 +357,23 @@ export type AttachmentsCapabilityConfig = z.infer<typeof AttachmentsCapabilityCo
 
 export const MemoryCapabilityConfig = CapabilityToggleConfig.extend({
   scopes: z.array(z.enum(['user', 'workspace', 'project'])).default(['user', 'workspace', 'project']),
-  maxInjectedRecords: z.number().int().positive().default(8)
+  maxInjectedRecords: z.number().int().positive().default(8),
+  /**
+   * When true, the loop runs a lightweight model review after each completed
+   * turn. The current turn's model audits the conversation and may write
+   * long/short/session memories directly (no per-write approval). Pinned
+   * memories are never created or overwritten by the auto-review.
+   */
+  autoReview: z.boolean().default(false),
+  /**
+   * Optional model override for the auto-review call. Defaults to the current
+   * turn's model. Set to a cheaper/faster model id to reduce review cost.
+   */
+  autoReviewModel: z.string().min(1).optional(),
+  /** Default lifetime (days) for `short`-category memories created without ttl. */
+  shortTtlDays: z.number().int().positive().default(7),
+  /** Default lifetime (hours) for `session`-category memories created without ttl. */
+  sessionTtlHours: z.number().int().positive().default(24)
 }).strict()
 export type MemoryCapabilityConfig = z.infer<typeof MemoryCapabilityConfig>
 

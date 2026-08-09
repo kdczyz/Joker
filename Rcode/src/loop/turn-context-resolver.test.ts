@@ -64,7 +64,7 @@ describe('TurnContextResolver', () => {
     const retrieve = vi.fn(async (): Promise<MemoryRecord[]> => {
       resolutionOrder.push('memories')
       return [{
-      id: 'memory_1', content: 'Prefer tests', scope: 'workspace',
+      id: 'memory_1', content: 'Prefer tests', scope: 'workspace', category: 'long',
       tags: [], confidence: 1,
       createdAt: '2026-01-01T00:00:00.000Z', updatedAt: '2026-01-01T00:00:00.000Z'
       }]
@@ -199,6 +199,7 @@ describe('TurnContextResolver', () => {
         id: 'memory_live',
         content: 'live memory',
         scope: 'workspace',
+        category: 'long',
         createdAt: '2026-01-01T00:00:00.000Z',
         updatedAt: '2026-01-01T00:00:00.000Z',
         tags: [],

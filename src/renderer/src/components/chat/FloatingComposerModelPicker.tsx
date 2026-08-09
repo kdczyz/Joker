@@ -712,10 +712,15 @@ export function FloatingComposerModelPicker({
                     key={`${activeProviderGroup.providerId}:${id}`}
                     selected={selected}
                     title={id}
-                    rightSlot={
-                      modelSupportsImageInput(targetProfile)
-                        ? <ModelCapabilityBadge kind="vision" label={t('composerModelVision')} />
-                        : <ModelCapabilityBadge kind="text" label={t('composerModelTextOnly')} />
+                    metaSlot={
+                      <span className="flex items-center gap-1">
+                        {targetProfile?.contextWindowTokens ? (
+                          <ModelContextBadge tokens={targetProfile.contextWindowTokens} title={t('composerModelContextWindow')} />
+                        ) : null}
+                        {modelSupportsImageInput(targetProfile)
+                          ? <ModelCapabilityBadge kind="vision" label={t('composerModelVision')} />
+                          : <ModelCapabilityBadge kind="text" label={t('composerModelTextOnly')} />}
+                      </span>
                     }
                     onClick={() => {
                       onComposerModelChange(
@@ -1333,12 +1338,14 @@ function PickerRow({
   disabled = false,
   title,
   rightSlot,
+  metaSlot,
   onClick
 }: {
   selected: boolean
   disabled?: boolean
   title: string
   rightSlot?: ReactElement | null
+  metaSlot?: ReactElement | null
   onClick: () => void
 }): ReactElement {
   return (
@@ -1360,6 +1367,9 @@ function PickerRow({
     >
       <span className="min-w-0 flex-1">
         <span className="block truncate text-[13px] font-semibold">{title}</span>
+        {metaSlot ? (
+          <span className="mt-1 flex items-center gap-1">{metaSlot}</span>
+        ) : null}
       </span>
       {rightSlot}
       {selected ? <Check className="h-4 w-4 shrink-0 text-accent" strokeWidth={2} /> : null}
@@ -1385,6 +1395,30 @@ function ModelCapabilityBadge({
     >
       <Icon className="h-3 w-3" strokeWidth={1.9} />
       <span>{label}</span>
+    </span>
+  )
+}
+
+// 将 token 数格式化为紧凑的上下文窗口标签，如 128000 → "128K"，2000000 → "2M"。
+function formatContextWindow(tokens: number): string {
+  if (tokens >= 1_000_000) {
+    const millions = tokens / 1_000_000
+    return `${Number.isInteger(millions) ? millions : millions.toFixed(1)}M`
+  }
+  if (tokens >= 1000) {
+    const thousands = tokens / 1000
+    return `${Number.isInteger(thousands) ? thousands : Math.round(thousands)}K`
+  }
+  return String(tokens)
+}
+
+function ModelContextBadge({ tokens, title }: { tokens: number; title: string }): ReactElement {
+  return (
+    <span
+      className="inline-flex h-5 shrink-0 items-center rounded-full border border-ds-border bg-ds-surface-subtle px-1.5 text-[10.5px] font-semibold leading-none text-ds-muted"
+      title={`${title}: ${tokens.toLocaleString()}`}
+    >
+      {formatContextWindow(tokens)}
     </span>
   )
 }

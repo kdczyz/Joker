@@ -17,6 +17,7 @@ import {
   RcodeToolPermissionModeSettings
 } from '@shared/app-settings'
 import { runTrustedUserActivation } from '../../extensions/protected-user-activation'
+import { confirmDialog } from '../../lib/confirm-dialog'
 
 export type ComposerExecutionSettings = {
   approvalPolicy: ApprovalPolicy
@@ -175,6 +176,32 @@ export function FloatingComposerExecutionPicker({
     setOpenMenu((current) => (current === menu ? null : menu))
   }
 
+  // 切换到“完全访问(bypass)”需二次确认，避免误触高危模式。
+  // event.isTrusted 是事件对象的属性，await 原生确认弹窗后仍为 true，
+  // 因此 confirm 通过后继续走 applyTrustedComposerExecutionChange 仍可生效。
+  const handleApprovalSelect = (event: MouseEvent<HTMLButtonElement>, option: ApprovalOption): void => {
+    if (option.value === 'bypass' && permissionMode !== 'bypass') {
+      setOpenMenu(null)
+      void confirmDialog(
+        t('toolPermissionBypassConfirmMessage'),
+        t('toolPermissionBypassConfirmDetail')
+      ).then((confirmed) => {
+        if (!confirmed) return
+        applyTrustedComposerExecutionChange(
+          event,
+          RcodeToolPermissionModeSettings(option.value),
+          update
+        )
+      })
+      return
+    }
+    applyTrustedComposerExecutionChange(
+      event,
+      RcodeToolPermissionModeSettings(option.value),
+      update
+    )
+  }
+
   const menu =
     openMenu && typeof document !== 'undefined' ? (
       <div
@@ -192,11 +219,7 @@ export function FloatingComposerExecutionPicker({
             description={t(option.descriptionKey)}
             Icon={option.Icon}
             iconClass={option.iconClass}
-            onClick={(event) => applyTrustedComposerExecutionChange(
-              event,
-              RcodeToolPermissionModeSettings(option.value),
-              update
-            )}
+            onClick={(event) => handleApprovalSelect(event, option)}
           />
         ))}
       </div>

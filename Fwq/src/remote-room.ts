@@ -34,11 +34,19 @@ interface RemoteWorkspaceProject {
   sessions: RemoteWorkspaceSession[];
 }
 
+interface RemoteWorkspaceProvider {
+  id: string;
+  displayName: string;
+  model: string;
+  models: string[];
+}
+
 interface RemoteWorkspace {
   projects: RemoteWorkspaceProject[];
   models: string[];
   defaultModel?: string;
   activeProjectId?: string;
+  providers?: RemoteWorkspaceProvider[];
 }
 
 interface DeviceRow {
@@ -140,11 +148,27 @@ function parseWorkspace(value: unknown): RemoteWorkspace | undefined {
     const model = stringField(rawModel, 160);
     return model ? [model] : [];
   }).slice(0, 60);
+  const providers = Array.isArray(value.providers) ? value.providers.slice(0, 20).flatMap((rawProvider) => {
+    if (!isObject(rawProvider)) return [];
+    const providerId = stringField(rawProvider.id, 128);
+    if (!providerId) return [];
+    const providerModels = Array.isArray(rawProvider.models) ? rawProvider.models.flatMap((m: unknown) => {
+      const model = stringField(m, 160);
+      return model ? [model] : [];
+    }).slice(0, 40) : [];
+    return [{
+      id: providerId,
+      displayName: stringField(rawProvider.displayName, 160) || providerId,
+      model: stringField(rawProvider.model, 160) || providerModels[0] || '',
+      models: providerModels
+    }];
+  }) : undefined;
   return {
     projects,
     models: [...new Set(models)],
     defaultModel: stringField(value.defaultModel, 160),
-    activeProjectId: stringField(value.activeProjectId, 128)
+    activeProjectId: stringField(value.activeProjectId, 128),
+    ...(providers ? { providers } : {})
   };
 }
 

@@ -57,13 +57,16 @@ export class FileMemoryStore implements MemoryStore {
     await this.ensureRoot()
     const now = this.now()
     const scope = input.scope ?? 'workspace'
+    const category = input.category ?? 'long'
     const workspace = normalizeScopePath(input.workspace)
     const project = normalizeScopePath(input.project ?? (scope === 'project' ? input.workspace : undefined))
     const provenance = input.provenance ?? defaultProvenance(input)
+    const effectiveTtlMs = resolveCategoryTtlMs(category, input.ttlMs, this.options.config)
     const parsed = MemoryRecord.parse({
       id,
       content: input.content,
       scope,
+      category,
       ...(scope !== 'user' && workspace ? { workspace } : {}),
       ...(scope === 'project' && project ? { project } : {}),
       sourceThreadId: input.sourceThreadId,
@@ -73,7 +76,9 @@ export class FileMemoryStore implements MemoryStore {
       confidence: input.confidence ?? defaultConfidence(provenance.kind),
       createdAt: now,
       updatedAt: now,
-      ...(input.ttlMs ? { expiresAt: new Date(Date.parse(now) + input.ttlMs).toISOString() } : {}),
+      ...(effectiveTtlMs && category !== 'pinned'
+        ? { expiresAt: new Date(Date.parse(now) + effectiveTtlMs).toISOString() }
+        : {}),
       ...(input.supersedes ? { supersedes: input.supersedes } : {})
     })
     if (input.supersedes) {
@@ -91,9 +96,12 @@ export class FileMemoryStore implements MemoryStore {
     const current = await this.mustGet(id, access)
     const now = this.now()
     const corrected = patch.content !== undefined && patch.content !== current.content
+    const pinning = patch.category === 'pinned'
+    const unpinning = patch.category !== undefined && current.category === 'pinned' && patch.category !== 'pinned'
     const next = MemoryRecord.parse({
       ...current,
       ...(patch.content !== undefined ? { content: patch.content } : {}),
+      ...(patch.category !== undefined ? { category: patch.category } : {}),
       ...(patch.tags !== undefined ? { tags: patch.tags } : {}),
       ...(patch.confidence !== undefined
         ? { confidence: patch.confidence }
@@ -107,6 +115,15 @@ export class FileMemoryStore implements MemoryStore {
           }
         : {}),
       ...(patch.expiresAt !== undefined ? { expiresAt: patch.expiresAt ?? undefined } : {}),
+      // Pinning clears any expiry so the memory never auto-expires; unpinning
+      // back to a ttl-based category re-applies that category's default ttl.
+      ...(pinning ? { expiresAt: undefined } : {}),
+      ...(unpinning && patch.expiresAt === undefined
+        ? (() => {
+            const ttlMs = resolveCategoryTtlMs(patch.category!, undefined, this.options.config)
+            return ttlMs ? { expiresAt: new Date(Date.parse(now) + ttlMs).toISOString() } : {}
+          })()
+        : {}),
       ...(patch.disabled === true ? { disabledAt: current.disabledAt ?? now } : {}),
       ...(patch.disabled === false ? { disabledAt: undefined } : {}),
       updatedAt: now
@@ -156,9 +173,13 @@ export class FileMemoryStore implements MemoryStore {
     // zero keyword overlap with the stored content. Keyword retrieval will
     // always miss them, so inject every active user memory unconditionally and
     // reserve scored retrieval for the larger workspace/project pool.
-    const userMemories = active.filter((record) => record.scope === 'user')
+    // Pinned-category memories follow the same rule: they are high-value,
+    // user-curated facts that must always be present regardless of query
+    // overlap, and they are injected first (ahead of user-scope).
+    const pinnedMemories = active.filter((record) => record.category === 'pinned')
+    const userMemories = active.filter((record) => record.scope === 'user' && record.category !== 'pinned')
     const scored = active
-      .filter((record) => record.scope !== 'user')
+      .filter((record) => record.scope !== 'user' && record.category !== 'pinned')
       .map((record) => ({ record, score: scoreMemory(
         record,
         input.query,
@@ -168,7 +189,7 @@ export class FileMemoryStore implements MemoryStore {
       .filter((entry) => entry.score > 0)
       .sort((a, b) => b.score - a.score || b.record.updatedAt.localeCompare(a.record.updatedAt))
       .map((entry) => entry.record)
-    return [...userMemories, ...scored].slice(0, input.limit)
+    return [...pinnedMemories, ...userMemories, ...scored].slice(0, input.limit)
   }
 
   async diagnostics(): Promise<MemoryDiagnostics> {
@@ -275,7 +296,8 @@ export function isMemoryActive(
   halfLifeMs = DEFAULT_MEMORY_CONFIDENCE_HALF_LIFE_MS
 ): boolean {
   if (record.deletedAt || record.disabledAt || record.supersededAt) return false
-  if (record.expiresAt && Date.parse(record.expiresAt) <= nowMs) return false
+  // Pinned memories never auto-expire regardless of expiresAt.
+  if (record.category !== 'pinned' && record.expiresAt && Date.parse(record.expiresAt) <= nowMs) return false
   return effectiveMemoryConfidence(
     record,
     nowMs,
@@ -289,7 +311,8 @@ export function effectiveMemoryConfidence(
   halfLifeMs = DEFAULT_MEMORY_CONFIDENCE_HALF_LIFE_MS
 ): number {
   const provenance = record.provenance ?? defaultLegacyProvenance(record)
-  if (provenance.kind === 'user' || halfLifeMs <= 0) return record.confidence
+  // Pinned memories never decay — they keep full confidence forever.
+  if (record.category === 'pinned' || provenance.kind === 'user' || halfLifeMs <= 0) return record.confidence
   const createdAtMs = Date.parse(record.createdAt)
   if (!Number.isFinite(createdAtMs)) return record.confidence
   const ageMs = Math.max(0, nowMs - createdAtMs)
@@ -319,6 +342,30 @@ function defaultConfidence(kind: MemoryProvenance['kind']): number {
     case 'tool': return 0.7
     case 'web': return 0.5
     case 'inference': return 0.4
+  }
+}
+
+const MS_PER_HOUR = 60 * 60 * 1_000
+const MS_PER_DAY = 24 * MS_PER_HOUR
+
+/**
+ * Resolve the effective ttl (ms) for a memory given its category. An explicit
+ * `ttlMs` from the caller always wins. Otherwise `session`/`short` fall back
+ * to the capability config defaults; `long`/`pinned` have no auto-ttl (returns
+ * undefined, meaning "never auto-expire").
+ */
+function resolveCategoryTtlMs(
+  category: MemoryRecord['category'],
+  ttlMs: number | undefined,
+  config: MemoryCapabilityConfig
+): number | undefined {
+  if (typeof ttlMs === 'number' && Number.isFinite(ttlMs) && ttlMs > 0) return ttlMs
+  switch (category) {
+    case 'session': return config.sessionTtlHours * MS_PER_HOUR
+    case 'short': return config.shortTtlDays * MS_PER_DAY
+    case 'long':
+    case 'pinned':
+    default: return undefined
   }
 }
 

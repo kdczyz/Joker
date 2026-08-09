@@ -24,7 +24,7 @@ import { openWorkspacePathInEditor } from '../../lib/open-workspace-path'
 import { previewWorkspaceFile } from '../../lib/workspace-file-preview'
 import { DiffView } from '../DiffView'
 import { AssistantMarkdown } from './AssistantMarkdown'
-import { MessageBubble } from './message-timeline-bubbles'
+import { MessageBubble, WebSearchSources, isWebSearchTool } from './message-timeline-bubbles'
 import {
   blockHasPendingRuntimeWork,
   isBackgroundShellNoticeBlock,
@@ -530,6 +530,15 @@ function ProcessEntryRow({
   const wrapSummary = (block.kind === 'system' && !canExpand) || isAssistantProcessText
   const canToggle = canExpand && !forceOpen
   const RowIcon = processBlockIcon(block)
+  // For web search tools, show the search query as the summary and web sources below
+  const toolNameForSearch = block.kind === 'tool' ? toolNameForBlock(block) : ''
+  const isSearchTool = isWebSearchTool(toolNameForSearch)
+  const searchQuery = isSearchTool
+    ? (typeof block.meta?.query === 'string' && block.meta.query.trim()
+      ? block.meta.query.trim()
+      : (rest || summary))
+    : ''
+  const webSourcesForProcess = isSearchTool ? readMetaSources(block.meta) : []
   const handleToggle = (): void => {
     if (!canToggle) return
     setUserOpen(!open)
@@ -569,16 +578,29 @@ function ProcessEntryRow({
             rowActive && !isError ? 'ds-shiny-text' : ''
           }`}
         >
-          <span
-            className={`font-medium ${isError ? '' : rowActive ? '' : 'text-ds-muted'}`}
-          >
-            {verb}
-          </span>
-          {rest ? (
-            <span className="ml-1.5 font-mono text-[13px]">
-              <ProcessSummaryText block={block} summary={rest} workspaceRoot={workspaceRoot} />
-            </span>
-          ) : null}
+          {isSearchTool ? (
+            <>
+              <span className={`font-medium ${isError ? '' : rowActive ? '' : 'text-ds-muted'}`}>
+                {t('toolKindWebSearch', { defaultValue: 'Web Search' })}
+              </span>
+              {searchQuery ? (
+                <span className="ml-1.5 text-[13px] text-ds-ink">{searchQuery}</span>
+              ) : null}
+            </>
+          ) : (
+            <>
+              <span
+                className={`font-medium ${isError ? '' : rowActive ? '' : 'text-ds-muted'}`}
+              >
+                {verb}
+              </span>
+              {rest ? (
+                <span className="ml-1.5 font-mono text-[13px]">
+                  <ProcessSummaryText block={block} summary={rest} workspaceRoot={workspaceRoot} />
+                </span>
+              ) : null}
+            </>
+          )}
         </span>
         {canExpand ? (
           <button
@@ -610,6 +632,9 @@ function ProcessEntryRow({
             <ProcessEntryDetail block={block} detail={detail} processing={processing} />
           </div>
         )
+      ) : null}
+      {isSearchTool && webSourcesForProcess.length > 0 ? (
+        <WebSearchSources sources={webSourcesForProcess} />
       ) : null}
     </div>
   )
@@ -785,6 +810,9 @@ function toolBlockIcon(block: ToolBlock): LucideIcon {
 
   if (block.toolKind === 'command_execution') return Terminal
   if (block.toolKind === 'file_change') return PencilLine
+  // Web search tools use the Search icon
+  const name = toolNameForBlock(block)
+  if (isWebSearchTool(name)) return Search
   return Wrench
 }
 

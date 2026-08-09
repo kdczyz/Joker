@@ -132,6 +132,22 @@ export type AgentLoopOptions = {
   instructionRuntime?: InstructionRuntime
   attachmentStore?: AttachmentStore
   memoryStore?: MemoryStore
+  /**
+   * Optional post-turn memory auto-review service. When set and the memory
+   * capability's `autoReview` flag is on, the loop fires a lightweight model
+   * review after each completed turn to extract durable memories. The review
+   * runs fire-and-forget in the background and never blocks turn cleanup.
+   */
+  memoryReview?: {
+    reviewTurn(input: {
+      threadId: string
+      turnId: string
+      model: string
+      providerId?: string
+      accountId?: string
+      workspace: string
+    }): Promise<number>
+  }
   artifactStore?: ArtifactStore
   /** Rcode runtime data root for sandbox-safe background shell output reads. */
   runtimeDataDir?: string
@@ -621,6 +637,19 @@ export class AgentLoop {
           status: finalStatus ?? 'failed',
           ...(finalError ? { error: finalError } : {})
         })
+        // Fire-and-forget post-turn memory auto-review. Only runs on
+        // successful turns; failures are swallowed inside the service so they
+        // can never break turn cleanup or stall the next turn.
+        if (finalStatus === 'completed' && this.opts.memoryReview && owningThread) {
+          void this.opts.memoryReview.reviewTurn({
+            threadId,
+            turnId,
+            model: owningThread.model,
+            ...(owningThread.providerId ? { providerId: owningThread.providerId } : {}),
+            ...(owningThread.accountId ? { accountId: owningThread.accountId } : {}),
+            workspace: owningThread.workspace ?? ''
+          }).catch(() => undefined)
+        }
       }
     }
   }

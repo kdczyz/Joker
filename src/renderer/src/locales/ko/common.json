@@ -1584,8 +1584,6 @@
   "emptyHeroSub": "작업을 선택하거나 질문을 입력하세요.",
   "emptyHeroSubNoWorkspace": "먼저 로컬 작업 디렉터리를 선택한 다음 첫 번째 스레드를 시작하세요.",
   "usageHeatmapBadge": "쿤 사용법",
-  "usageHeatmapTitle": "최근 상담원 리듬",
-  "usageHeatmapSub": "이미 구축한 작업 패턴에서 시작하세요. 매일은 Rcode 토큰 사용량에 따라 색상이 지정되며 셀에서 사용할 수 있는 차례, 비용, 스레드 및 캐시 세부 정보가 포함됩니다.",
   "usageHeatmapTabOverview": "개요",
   "usageHeatmapTabModels": "모델",
   "usageHeatmapRange": {
@@ -1602,31 +1600,6 @@
   "usageHeatmapEmptySub": "첫 번째 Rcode 요청을 보내면 이 달력이 채워지기 시작합니다.",
   "usageHeatmapErrorTitle": "일시적으로 사용할 수 없습니다.",
   "usageHeatmapErrorSub": "아래 메시지에서 새로운 대화를 시작할 수 있습니다.",
-  "usageHeatmapHeroTitle": {
-    "loading": "사용 달력 준비",
-    "empty": "에이전트 리듬을 시작하세요",
-    "error": "지금 시작하고 나중에 사용량을 동기화하세요."
-  },
-  "usageHeatmapHeroSub": {
-    "loading": "쿤은 최근 활동을 확인하고 있다. 달력이 준비되는 동안 시작 메시지는 준비 상태를 유지하라는 메시지를 표시합니다.",
-    "empty": "첫 번째 Rcode 턴이 완료되면 이 공간은 일일 사용 달력으로 전환됩니다.",
-    "error": "사용 내역은 아직 제공되지 않지만 작업 영역은 새로운 대화를 위한 준비가 되어 있습니다."
-  },
-  "usageHeatmapWarmupBadge": {
-    "loading": "이력 확인 중",
-    "empty": "쿤 사용법",
-    "error": "사용 지연"
-  },
-  "usageHeatmapWarmupTitle": {
-    "loading": "최근 활동을 찾고 있습니다.",
-    "empty": "아직 사용량이 기록되지 않았습니다.",
-    "error": "나중에 다시 사용해 볼 수 있습니다."
-  },
-  "usageHeatmapWarmupSub": {
-    "loading": "이 문제는 일반적으로 Rcode이 답변한 후 빠르게 해결됩니다. 아래에서 메시지를 선택할 수도 있습니다.",
-    "empty": "요청을 보내고 턴을 마칩니다. 첫 번째 활성일이 여기에 자동으로 표시됩니다.",
-    "error": "사용 엔드포인트가 응답하지 않아 지금은 캘린더가 일시 중지됩니다. 새로운 채팅은 여전히 ​​작동합니다."
-  },
   "usageHeatmapCollapse": "캘린더 접기",
   "usageHeatmapExpand": "캘린더 펼치기",
   "usageHeatmapCollapsedTitle": "캔버스를 깨끗하게 유지하세요",

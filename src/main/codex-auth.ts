@@ -466,3 +466,85 @@ export function resolveCodexOAuthApiKey(rawApiKey: string): { apiKey: string; he
   if (codex) return { apiKey: codex.accessToken, headers: codexRequestHeaders(codex) }
   return { apiKey: key }
 }
+
+const CODEX_WHAM_USAGE_URL = 'https://chatgpt.com/backend-api/wham/usage'
+
+export type CodexAccountUsageResult =
+  | {
+      ok: true
+      planType?: string
+      primaryUsedPercent?: number
+      primaryWindowSeconds?: number
+      primaryResetAfterSeconds?: number
+      secondaryUsedPercent?: number
+      secondaryWindowSeconds?: number
+      secondaryResetAfterSeconds?: number
+    }
+  | { ok: false; message: string }
+
+// 调用 ChatGPT 网页端内部的 /wham/usage 接口，获取 OAuth 登录账号的
+// 速率限额用量百分比。primary_window 和 secondary_window 的实际窗口长度
+// 由 limit_window_seconds 决定（free 账号为 30 天月度窗口，Plus/Pro 为
+// 5h + 7d 双窗口）。originator/beta 头按 Codex Desktop 客户端的值覆盖
+// （与 sub2api 逆向一致），其余 sec-fetch-* 头用于通过 Cloudflare/WASM 校验。
+export async function fetchCodexAccountUsage(
+  creds: CodexOAuthCredentials
+): Promise<CodexAccountUsageResult> {
+  try {
+    const headers: Record<string, string> = {
+      authorization: `Bearer ${creds.accessToken}`,
+      'chatgpt-account-id': creds.accountId,
+      originator: 'Codex Desktop',
+      'openai-beta': 'codex-1',
+      'oai-language': 'zh-CN',
+      accept: 'application/json',
+      'sec-fetch-site': 'none',
+      'sec-fetch-mode': 'no-cors',
+      'sec-fetch-dest': 'empty',
+      priority: 'u=4, i'
+    }
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 20_000)
+    try {
+      const resp = await fetch(CODEX_WHAM_USAGE_URL, {
+        headers,
+        signal: controller.signal
+      })
+      if (!resp.ok) {
+        return { ok: false, message: `upstream ${resp.status}` }
+      }
+      const data = (await resp.json()) as {
+        plan_type?: string
+        rate_limit?: {
+          primary_window?: {
+            used_percent?: number
+            limit_window_seconds?: number
+            reset_after_seconds?: number
+          } | null
+          secondary_window?: {
+            used_percent?: number
+            limit_window_seconds?: number
+            reset_after_seconds?: number
+          } | null
+        } | null
+      }
+      const rl = data.rate_limit ?? undefined
+      const pw = rl?.primary_window ?? undefined
+      const sw = rl?.secondary_window ?? undefined
+      return {
+        ok: true,
+        planType: data.plan_type,
+        primaryUsedPercent: pw?.used_percent,
+        primaryWindowSeconds: pw?.limit_window_seconds,
+        primaryResetAfterSeconds: pw?.reset_after_seconds,
+        secondaryUsedPercent: sw?.used_percent,
+        secondaryWindowSeconds: sw?.limit_window_seconds,
+        secondaryResetAfterSeconds: sw?.reset_after_seconds
+      }
+    } finally {
+      clearTimeout(timeout)
+    }
+  } catch (error) {
+    return { ok: false, message: error instanceof Error ? error.message : String(error) }
+  }
+}

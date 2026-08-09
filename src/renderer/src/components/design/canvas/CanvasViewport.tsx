@@ -53,7 +53,6 @@ import {
 } from './canvas-viewport/helpers'
 import { useCanvasViewportDocumentSync } from './canvas-viewport/use-canvas-viewport-document-sync'
 import { useProjectDesignSystemSync } from '../../../design/canvas/use-project-design-system-sync'
-import { DesignSystemBoardOverlay } from './DesignSystemBoardOverlay'
 import { DesignSystemInspector } from './DesignSystemInspector'
 import { SvgFrameOverlay } from './SvgFrameOverlay'
 import type { CanvasDocument } from '../../../design/canvas/canvas-types'
@@ -590,10 +589,6 @@ export function CanvasViewport({
               onWheel={onWheel}
             >
               {gridVisible && <CanvasGrid zoom={zoom} />}
-
-              {surface === 'design' ? (
-                <DesignSystemBoardOverlay workspaceRoot={workspaceRoot} document={document} viewBox={vbox} />
-              ) : null}
 
               <g id="shape-layer">
                 {root?.children.map((childId) => {

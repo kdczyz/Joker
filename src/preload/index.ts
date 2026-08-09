@@ -113,6 +113,8 @@ const api = {
     ipcRenderer.invoke('codex:auth:poll', { deviceCode, userCode }),
   startCodexBrowserAuth: () =>
     ipcRenderer.invoke('codex:auth:browser'),
+  codexAccountUsage: () =>
+    ipcRenderer.invoke('codex:account:usage'),
   pickWorkspaceDirectory: (defaultPath) =>
     ipcRenderer.invoke('workspace:pick-directory', defaultPath),
   workspaceDirectoryExists: (workspaceRoot) =>
@@ -369,6 +371,8 @@ const api = {
     ipcRenderer.invoke('claw:channel:mirror', { threadId, text, direction }),
   mirrorClawChannelMessageToFeishu: (threadId, text, direction) =>
     ipcRenderer.invoke('claw:channel:mirror-to-feishu', { threadId, text, direction }),
+  deliverClawGeneratedFiles: (threadId, turnId) =>
+    ipcRenderer.invoke('claw:channel:deliver-files', { threadId, turnId }),
   createClawTaskFromText: (text, options) =>
     ipcRenderer.invoke('claw:task:create-from-text', {
       text,

@@ -104,18 +104,21 @@ export function InlineNoticeView({
 export function SettingsCard({
   title,
   children,
-  className = ''
+  className = '',
+  action
 }: {
   title: string
   children: ReactNode
   className?: string
+  action?: ReactNode
 }): ReactElement {
   return (
     <section
       className={`rounded-2xl border border-ds-border bg-ds-card/95 shadow-sm shadow-black/5 dark:shadow-black/25 ${className}`}
     >
-      <div className="border-b border-ds-border-muted px-5 py-3">
+      <div className="flex items-center justify-between gap-3 border-b border-ds-border-muted px-5 py-3">
         <h2 className="text-[16px] font-semibold text-ds-ink">{title}</h2>
+        {action}
       </div>
       <div className="divide-y divide-ds-border-muted px-2 py-1">{children}</div>
     </section>

@@ -1,10 +1,11 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import type { JsonSettingsStore } from './settings-store'
-import type { AppSettingsV1, ScheduleRunMode } from '../shared/app-settings'
+import type { AppSettingsV1, ScheduleReasoningEffort, ScheduleRunMode } from '../shared/app-settings'
 import { DEFAULT_SCHEDULE_REASONING_EFFORT } from '../shared/app-settings'
+import { getModelProviderSettings } from '../shared/app-settings-provider'
 import { runPromptViaRuntime, resolveScheduleModelConfig, type RuntimeRequestFn } from './schedule-runtime-helpers'
 import { runtimeRequestViaHost } from './runtime/Rcode-adapter'
-import { RemoteAgent, type RemoteAgentState, type RemoteCommand, type RemoteCommandEvent } from './remote-agent'
+import { RemoteAgent, type RemoteAgentExecuteOptions, type RemoteAgentState, type RemoteCommand, type RemoteCommandEvent } from './remote-agent'
 
 export interface RemoteAgentIpcDeps {
   store: JsonSettingsStore
@@ -32,18 +33,41 @@ export function registerRemoteAgentIpc(deps: RemoteAgentIpcDeps): void {
     return runtimeRequestViaHost(settings, pathAndQuery, init, ensureRuntime)
   }
 
+  /** Map the controller's thinking mode (fast|balanced|deep) to a reasoning effort. */
+  function thinkingModeToReasoningEffort(thinkingMode: string | null | undefined): ScheduleReasoningEffort | null {
+    if (thinkingMode === 'fast') return 'low'
+    if (thinkingMode === 'deep') return 'high'
+    if (thinkingMode === 'balanced') return 'medium'
+    return null
+  }
+
   /** Execute an agent prompt headlessly via Rcode runtime. */
   async function executeAgent(
     prompt: string,
     mode: ScheduleRunMode,
-    signal: AbortSignal
+    signal: AbortSignal,
+    options?: RemoteAgentExecuteOptions
   ): Promise<{ ok: boolean; text?: string; message: string }> {
     try {
       const settings = await store.load()
+      // Validate the controller-supplied providerId against the desktop's
+      // configured providers. If the id doesn't match any local provider,
+      // drop it so resolveScheduleModelConfig falls back to model-based
+      // lookup — this prevents routing a model to the wrong provider just
+      // because a stale/foreign providerId happened to collide.
+      const desktopProviderIds = new Set(
+        getModelProviderSettings(settings).providers
+          .map((p) => p.id)
+          .filter(Boolean)
+      )
+      const safeProviderId =
+        options?.providerId && desktopProviderIds.has(options.providerId)
+          ? options.providerId
+          : null
       const modelConfig = resolveScheduleModelConfig(settings, {
-        providerId: null,
-        model: null,
-        reasoningEffort: null
+        providerId: safeProviderId,
+        model: options?.model ?? null,
+        reasoningEffort: thinkingModeToReasoningEffort(options?.thinkingMode)
       })
       // Remote-agent permission override: fall back to the global agent policy
       // when the user hasn't explicitly configured a mode for mobile sessions.

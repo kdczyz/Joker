@@ -799,6 +799,12 @@ export function buildThreadEventSink(
               .catch(() => undefined)
           }
           break
+        case 'deliver_claw_files':
+          if (typeof window.RcodeGui?.deliverClawGeneratedFiles === 'function') {
+            void window.RcodeGui.deliverClawGeneratedFiles(effect.threadId, effect.turnId)
+              .catch(() => undefined)
+          }
+          break
         case 'notify_turn_complete':
           notifyTurnComplete(effect.threadId, effect.state, effect.dedupeKey)
           break
@@ -1014,6 +1020,9 @@ export function buildThreadEventSink(
         dedupeKey: completedKey,
         mirrorText: pendingMirror && assistantMirrorText ? assistantMirrorText : undefined,
         mirrorThreadId: pendingMirror?.threadId,
+        deliverClawFiles: pendingMirror && completedThreadId && completedTurnId
+          ? { threadId: completedThreadId, turnId: completedTurnId }
+          : undefined,
         reconcile: shouldReconcileCompletion,
         releaseWorktree: get().queuedMessages.length === 0
       }))

@@ -793,6 +793,7 @@ export function SettingsView(): ReactElement {
   const createMemoryRecord = async (input: {
     content: string
     scope?: 'user' | 'workspace' | 'project'
+    category?: 'long' | 'short' | 'session'
     targetPath?: string
     tags?: string[]
     confidence?: number
@@ -804,6 +805,7 @@ export function SettingsView(): ReactElement {
       const memory = await provider.createMemory({
         content: input.content,
         scope: input.scope,
+        category: input.category,
         tags: input.tags,
         confidence: input.confidence,
         ...(input.scope === 'user' ? {} : { workspace }),
@@ -822,7 +824,7 @@ export function SettingsView(): ReactElement {
 
   const updateMemoryRecord = async (
     memoryId: string,
-    patch: { content?: string; tags?: string[]; confidence?: number; disabled?: boolean }
+    patch: { content?: string; tags?: string[]; confidence?: number; disabled?: boolean; category?: 'long' | 'short' | 'session' | 'pinned' }
   ): Promise<boolean> => {
     const provider = getProvider()
     if (typeof provider.updateMemory !== 'function') return false

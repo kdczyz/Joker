@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import type { ReactElement } from 'react'
-import { Ban, BrainCircuit, Clipboard, Download, Eye, Pencil, Plus, RotateCcw, Trash2, Upload, X } from 'lucide-react'
+import { Ban, BrainCircuit, Clipboard, Download, Eye, Pencil, Pin, PinOff, Plus, RotateCcw, Trash2, Upload, X } from 'lucide-react'
 import {
   buildMemoryImportContent,
   buildMemoryMarkdownExport,
@@ -15,10 +15,12 @@ import { workspaceRootIdentityKey } from '../lib/workspace-path'
 import { SettingsCard, SettingRow, Toggle } from './settings-controls'
 
 type MemoryScope = 'user' | 'workspace' | 'project'
+type MemoryCategory = 'long' | 'short' | 'session' | 'pinned'
 
 export type MemoryDraft = {
   content: string
   scope: MemoryScope
+  category: MemoryCategory
   targetPath: string
   tags: string
   confidence: number
@@ -32,12 +34,14 @@ export type MemoryDialogState =
 const EMPTY_DRAFT: MemoryDraft = {
   content: '',
   scope: 'user',
+  category: 'long',
   targetPath: '',
   tags: '',
   confidence: 1
 }
 
 const DEFAULT_DRAFT_SCOPE: MemoryScope = EMPTY_DRAFT.scope
+const DEFAULT_DRAFT_CATEGORY: MemoryCategory = EMPTY_DRAFT.category
 
 /**
  * Canonicalize tag input/output so equality comparisons across the edit lifecycle
@@ -65,10 +69,12 @@ export function isMemoryDraftDirty(
   if (dialog.mode === 'edit') {
     const original = dialog.memory
     const originalTags = serializeMemoryTags(original.tags)
+    const originalCategory = (original.category ?? 'long') as MemoryCategory
     return (
       draft.content !== original.content ||
       draft.scope !== original.scope ||
-      draft.tags !== originalTags
+      draft.tags !== originalTags ||
+      draft.category !== originalCategory
     )
   }
   // create
@@ -76,7 +82,8 @@ export function isMemoryDraftDirty(
     draft.content.trim() !== '' ||
     draft.tags.trim() !== '' ||
     draft.targetPath.trim() !== '' ||
-    draft.scope !== DEFAULT_DRAFT_SCOPE
+    draft.scope !== DEFAULT_DRAFT_SCOPE ||
+    draft.category !== DEFAULT_DRAFT_CATEGORY
   )
 }
 
@@ -113,6 +120,28 @@ function memoryPreview(content: string): string {
   const compact = content.replace(/\s+/g, ' ').trim()
   if (compact.length <= 140) return compact
   return `${compact.slice(0, 140).trimEnd()}...`
+}
+
+function memoryCategoryLabel(
+  t: (key: string) => string,
+  category: MemoryCategory | undefined
+): string {
+  const resolved = (category ?? 'long') as MemoryCategory
+  return t(`memoryCategory_${resolved}`)
+}
+
+function memoryCategoryBadgeClass(category: MemoryCategory | undefined): string {
+  switch ((category ?? 'long') as MemoryCategory) {
+    case 'pinned':
+      return 'bg-amber-500/20 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300'
+    case 'short':
+      return 'bg-sky-500/15 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300'
+    case 'session':
+      return 'bg-violet-500/15 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300'
+    case 'long':
+    default:
+      return 'bg-ds-hover/60'
+  }
 }
 
 function memoryImportDedupKey(input: {
@@ -154,12 +183,19 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   const [memoryDialogNotice, setMemoryDialogNotice] = useState<string | null>(null)
   const [draft, setDraft] = useState<MemoryDraft>(EMPTY_DRAFT)
   const [scopeFilter, setScopeFilter] = useState<'all' | MemoryScope>('all')
+  const [categoryFilter, setCategoryFilter] = useState<'all' | MemoryCategory>('all')
 
   const filteredRecords = useMemo(() => {
     const records: CoreMemoryRecordJson[] = memoryRecords ?? []
-    if (scopeFilter === 'all') return records
-    return records.filter((record) => record.scope === scopeFilter)
-  }, [memoryRecords, scopeFilter])
+    return records.filter((record) => {
+      if (scopeFilter !== 'all' && record.scope !== scopeFilter) return false
+      if (categoryFilter !== 'all') {
+        const recordCategory = (record.category ?? 'long') as MemoryCategory
+        if (recordCategory !== categoryFilter) return false
+      }
+      return true
+    })
+  }, [memoryRecords, scopeFilter, categoryFilter])
 
   const parsedImportEntries = useMemo(() => parseMemoryProfileImport(importText), [importText])
   const expandImportTargetPath = typeof expandHomePath === 'function'
@@ -183,6 +219,7 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     setDraft({
       content: record.content,
       scope: record.scope,
+      category: (record.category ?? 'long') as MemoryCategory,
       targetPath: projectForMemory(record) ?? '',
       tags: (record.tags ?? []).join(', '),
       confidence: record.confidence ?? 1
@@ -316,6 +353,7 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
       ok = await createMemoryRecord({
         content: trimmed,
         scope: draft.scope,
+        category: draft.category,
         ...(draft.scope === 'user' ? {} : { targetPath }),
         tags: parseTags(draft.tags),
         confidence: draft.confidence
@@ -324,7 +362,8 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
       ok = await updateMemoryRecord(dialog.memory.id, {
         content: trimmed,
         tags: parseTags(draft.tags),
-        confidence: draft.confidence
+        confidence: draft.confidence,
+        category: draft.category
       })
     }
     if (ok) closeDialog()
@@ -384,23 +423,41 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                 {t('memoryDisabledHint')}
               </div>
             ) : null}
-            {/* Toolbar: scope filter + create button */}
+            {/* Toolbar: scope/category filter + create button */}
             <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-1 text-[12px]">
-                {(['all', 'user', 'workspace', 'project'] as const).map((scope) => (
-                  <button
-                    key={scope}
-                    type="button"
-                    onClick={() => setScopeFilter(scope)}
-                    className={`rounded-lg px-2 py-1 font-medium transition ${
-                      scopeFilter === scope
-                        ? 'bg-ds-ink text-ds-main'
-                        : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
-                    }`}
-                  >
-                    {t(`memoryScope_${scope}`)}
-                  </button>
-                ))}
+              <div className="flex flex-wrap items-center gap-3 text-[12px]">
+                <div className="flex items-center gap-1">
+                  {(['all', 'user', 'workspace', 'project'] as const).map((scope) => (
+                    <button
+                      key={scope}
+                      type="button"
+                      onClick={() => setScopeFilter(scope)}
+                      className={`rounded-lg px-2 py-1 font-medium transition ${
+                        scopeFilter === scope
+                          ? 'bg-ds-ink text-ds-main'
+                          : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
+                      }`}
+                    >
+                      {t(`memoryScope_${scope}`)}
+                    </button>
+                  ))}
+                </div>
+                <div className="flex items-center gap-1">
+                  {(['all', 'long', 'short', 'session', 'pinned'] as const).map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => setCategoryFilter(category)}
+                      className={`rounded-lg px-2 py-1 font-medium transition ${
+                        categoryFilter === category
+                          ? 'bg-ds-ink text-ds-main'
+                          : 'text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
+                      }`}
+                    >
+                      {t(`memoryCategory_${category}`)}
+                    </button>
+                  ))}
+                </div>
               </div>
               <div className="flex shrink-0 flex-wrap items-center gap-1.5">
                 <button
@@ -462,6 +519,9 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] text-ds-faint">
                           <span className="rounded bg-ds-hover/60 px-1.5 py-0.5 font-medium">{memory.scope}</span>
+                          <span className={`rounded px-1.5 py-0.5 font-medium ${memoryCategoryBadgeClass(memory.category)}`}>
+                            {memoryCategoryLabel(t, memory.category)}
+                          </span>
                           {memory.confidence !== undefined && memory.confidence !== 1 && (
                             <span className="font-mono">★ {memory.confidence.toFixed(2)}</span>
                           )}
@@ -490,6 +550,27 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         >
                           <Eye className="h-3.5 w-3.5" strokeWidth={1.8} />
                         </button>
+                        {memory.category === 'pinned' ? (
+                          <button
+                            type="button"
+                            onClick={() => void updateMemoryRecord(memory.id, { category: 'long' })}
+                            className="rounded-lg p-1.5 text-amber-600 transition hover:bg-amber-500/10 hover:text-amber-700"
+                            aria-label={t('memoryUnpin')}
+                            title={t('memoryUnpin')}
+                          >
+                            <PinOff className="h-3.5 w-3.5" strokeWidth={1.8} />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => void updateMemoryRecord(memory.id, { category: 'pinned' })}
+                            className="rounded-lg p-1.5 text-ds-muted transition hover:bg-amber-500/10 hover:text-amber-600"
+                            aria-label={t('memoryPin')}
+                            title={t('memoryPin')}
+                          >
+                            <Pin className="h-3.5 w-3.5" strokeWidth={1.8} />
+                          </button>
+                        )}
                         {memory.disabledAt ? (
                           <button
                             type="button"
@@ -793,6 +874,9 @@ function MemoryRecordDialog({
               <div className="mt-1 flex min-w-0 flex-col gap-1 text-[11px] text-ds-faint">
                 <div className="flex flex-wrap items-center gap-1.5">
                   <span className="rounded bg-ds-hover/60 px-1.5 py-0.5 font-medium">{memory.scope}</span>
+                  <span className={`rounded px-1.5 py-0.5 font-medium ${memoryCategoryBadgeClass(memory.category)}`}>
+                    {memoryCategoryLabel(t, memory.category)}
+                  </span>
                   {memory.tags?.length ? <span>{memory.tags.join(' · ')}</span> : null}
                   <span className="font-mono opacity-60">{memory.id}</span>
                 </div>
@@ -838,6 +922,16 @@ function MemoryRecordDialog({
                     <option value="project">{t('memoryScope_project')}</option>
                   </select>
                 ) : null}
+                <select
+                  value={draft.category}
+                  onChange={(e) => onDraftChange((prev) => ({ ...prev, category: e.target.value as MemoryCategory }))}
+                  className="rounded-lg border border-ds-border-muted bg-ds-surface-subtle px-2 py-1 text-[12px] text-ds-ink outline-none"
+                >
+                  <option value="long">{t('memoryCategory_long')}</option>
+                  <option value="short">{t('memoryCategory_short')}</option>
+                  <option value="session">{t('memoryCategory_session')}</option>
+                  {dialog.mode === 'edit' ? <option value="pinned">{t('memoryCategory_pinned')}</option> : null}
+                </select>
                 {dialog.mode === 'create' && draft.scope !== 'user' ? (
                   <input
                     type="text"

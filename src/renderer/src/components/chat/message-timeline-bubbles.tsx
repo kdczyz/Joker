@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { memo, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { ArrowDown, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Download, File, FileEdit, GitFork, ImageIcon, Loader2, MessageSquareQuote, PencilLine, RotateCcw, Terminal, Video, Wrench } from 'lucide-react'
+import { ArrowDown, Check, ChevronDown, ChevronLeft, ChevronRight, Copy, Download, File, FileEdit, GitFork, Globe, ImageIcon, Loader2, MessageSquareQuote, PencilLine, RotateCcw, Search, Terminal, Video, Wrench } from 'lucide-react'
 import type { AttachmentReference, ChatBlock, GeneratedFileReference, RuntimeDisclosureMetadata, ToolBlock, UserFileReference, UserInputAnswer } from '../../agent/types'
 import { extractUnifiedDiffText } from '../../lib/diff-stats'
 import { useChatStore } from '../../store/chat-store'
@@ -1227,6 +1227,175 @@ function metaSources(meta: Record<string, unknown> | undefined): Array<{ title?:
     .filter((entry): entry is { title?: string; url?: string } => entry !== null)
 }
 
+/** Fallback: parse sources from a tool detail string (JSON) when meta.sources is absent. */
+function parseDetailSources(detail: string | undefined): Array<{ title?: string; url?: string }> {
+  if (!detail || !detail.trim()) return []
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(detail)
+  } catch {
+    return []
+  }
+  const candidates: unknown[] = []
+  if (Array.isArray(parsed)) candidates.push(...parsed)
+  else if (parsed && typeof parsed === 'object') {
+    const obj = parsed as Record<string, unknown>
+    for (const key of ['results', 'sources', 'citations', 'search_results', 'organic_results', 'data', 'result']) {
+      const v = obj[key]
+      if (Array.isArray(v)) candidates.push(...v)
+      else if (v && typeof v === 'object') {
+        const inner = v as Record<string, unknown>
+        for (const innerKey of ['results', 'sources', 'citations']) {
+          const iv = inner[innerKey]
+          if (Array.isArray(iv)) candidates.push(...iv)
+        }
+      }
+    }
+  }
+  const sources: Array<{ title?: string; url?: string }> = []
+  for (const candidate of candidates) {
+    if (!candidate || typeof candidate !== 'object') continue
+    const raw = candidate as Record<string, unknown>
+    const url = typeof raw.url === 'string' ? raw.url.trim() :
+      typeof raw.link === 'string' ? raw.link.trim() :
+      typeof raw.href === 'string' ? raw.href.trim() : ''
+    const title = typeof raw.title === 'string' ? raw.title.trim() :
+      typeof raw.name === 'string' ? raw.name.trim() :
+      typeof raw.headline === 'string' ? raw.headline.trim() : ''
+    if (url || title) {
+      sources.push({ ...(url ? { url } : {}), ...(title ? { title } : {}) })
+    }
+  }
+  return sources
+}
+
+/** Extract a search query from tool meta.arguments or the summary/detail text. */
+function extractSearchQuery(
+  meta: Record<string, unknown> | undefined,
+  summary: string | undefined,
+  detail: string | undefined
+): string {
+  // Try meta.arguments (may be string or object)
+  const args = meta?.arguments
+  if (args) {
+    if (typeof args === 'string') {
+      try {
+        const parsed = JSON.parse(args)
+        const q = typeof parsed?.query === 'string' ? parsed.query.trim() :
+          typeof parsed?.q === 'string' ? parsed.q.trim() :
+          typeof parsed?.prompt === 'string' ? parsed.prompt.trim() : ''
+        if (q) return q
+      } catch {
+        if (args.trim()) return args.trim()
+      }
+    } else if (typeof args === 'object') {
+      const obj = args as Record<string, unknown>
+      const q = typeof obj.query === 'string' ? obj.query.trim() :
+        typeof obj.q === 'string' ? obj.q.trim() :
+        typeof obj.prompt === 'string' ? obj.prompt.trim() :
+        typeof obj.search_query === 'string' ? obj.search_query.trim() : ''
+      if (q) return q
+    }
+  }
+  // Try meta.query / meta.url
+  const metaQuery = typeof meta?.query === 'string' ? meta.query.trim() : ''
+  if (metaQuery) return metaQuery
+  const metaUrl = typeof meta?.url === 'string' ? meta.url.trim() : ''
+  if (metaUrl) return metaUrl
+  // Fall back to summary, stripped of tool-name prefix
+  if (summary && summary.trim()) {
+    return summary.trim()
+  }
+  // Last resort: detail (truncated)
+  if (detail && detail.trim()) {
+    return detail.trim().slice(0, 120)
+  }
+  return ''
+}
+
+const WEB_SEARCH_TOOL_NAMES = new Set([
+  'web_search', 'web_fetch',
+  'tavily-search', 'tavily_search', 'tavily',
+  'baidu-search', 'baidu_search', 'baidu'
+])
+
+export function isWebSearchTool(toolName: string): boolean {
+  const lower = toolName.toLowerCase().trim()
+  if (WEB_SEARCH_TOOL_NAMES.has(lower)) return true
+  return lower.includes('tavily') || lower.includes('baidu') ||
+    (lower.includes('search') && !lower.includes('file') && !lower.includes('code'))
+}
+
+function extractDomain(url: string): string {
+  try {
+    const parsed = new URL(url)
+    return parsed.hostname.replace(/^www\./, '')
+  } catch {
+    return ''
+  }
+}
+
+function faviconUrl(url: string): string {
+  const domain = extractDomain(url)
+  if (!domain) return ''
+  return `https://www.google.com/s2/favicons?domain=${encodeURIComponent(domain)}&sz=32`
+}
+
+export function WebSearchSources({ sources }: { sources: Array<{ title?: string; url?: string }> }): ReactElement {
+  const { t } = useTranslation('common')
+  return (
+    <div className="mt-2 flex flex-col gap-1">
+      {sources.slice(0, 6).map((source, index) => {
+        const url = source.url || ''
+        const domain = extractDomain(url)
+        const title = source.title || domain || url
+        const fav = faviconUrl(url)
+        return (
+          <a
+            key={`${url}-${index}`}
+            href={url || undefined}
+            target="_blank"
+            rel="noreferrer"
+            className="group flex min-w-0 items-center gap-2 rounded-lg border border-ds-border-muted bg-ds-card/70 px-2.5 py-1.5 text-[12px] transition hover:border-accent/30 hover:bg-ds-card"
+            title={url}
+          >
+            {fav ? (
+              <img
+                src={fav}
+                alt=""
+                className="h-4 w-4 shrink-0 rounded-sm"
+                loading="lazy"
+                onError={(e) => {
+                  const img = e.currentTarget
+                  img.style.display = 'none'
+                  const sibling = img.nextElementSibling as HTMLElement | null
+                  if (sibling) sibling.style.display = 'inline-flex'
+                }}
+              />
+            ) : null}
+            <Globe
+              className="h-4 w-4 shrink-0 rounded-sm text-ds-muted"
+              style={{ display: fav ? 'none' : 'inline-flex' }}
+              strokeWidth={1.8}
+            />
+            <span className="min-w-0 flex-1 truncate font-medium text-ds-ink group-hover:text-accent">
+              {title}
+            </span>
+            {domain ? (
+              <span className="shrink-0 text-[10px] text-ds-faint">{domain}</span>
+            ) : null}
+          </a>
+        )
+      })}
+      {sources.length > 6 ? (
+        <span className="px-1 text-[11px] text-ds-faint">
+          {t('webSearchMoreSources', { count: sources.length - 6, defaultValue: `+${sources.length - 6} more` })}
+        </span>
+      ) : null}
+    </div>
+  )
+}
+
 function metaComposerContextLabels(meta: Record<string, unknown> | undefined): string[] {
   const value = meta?.composerContexts
   if (!Array.isArray(value)) return []
@@ -1248,12 +1417,14 @@ function RuntimeMetaChips({
   meta,
   align = 'left',
   hideAttachments = false,
-  hideTurnDisclosure = false
+  hideTurnDisclosure = false,
+  hideSources = false
 }: {
   meta?: Record<string, unknown>
   align?: 'left' | 'right'
   hideAttachments?: boolean
   hideTurnDisclosure?: boolean
+  hideSources?: boolean
 }): ReactElement | null {
   const { t } = useTranslation('common')
   const attachmentIds = hideTurnDisclosure || hideAttachments ? [] : metaStringArray(meta, 'attachmentIds')
@@ -1261,7 +1432,7 @@ function RuntimeMetaChips({
   const injectedMemoryIds = hideTurnDisclosure ? [] : metaStringArray(meta, 'injectedMemoryIds')
   const injectedInstructionSources = hideTurnDisclosure ? [] : metaInstructionSources(meta)
   const composerContextLabels = hideTurnDisclosure ? [] : metaComposerContextLabels(meta)
-  const sources = metaSources(meta)
+  const sources = hideSources ? [] : metaSources(meta)
   const child = meta?.child && typeof meta.child === 'object' ? meta.child as Record<string, unknown> : null
   const childLabel =
     typeof child?.childLabel === 'string' && child.childLabel.trim()
@@ -1967,20 +2138,29 @@ function ToolEntry({ block, nested = false }: { block: ToolBlock; nested?: boole
         : 'border-ds-border bg-ds-subtle text-ds-ink'
 
   const toolName = typeof block.meta?.toolName === 'string' ? block.meta.toolName.trim() : ''
+  const isSearchTool = isWebSearchTool(toolName)
   const displaySummary =
     toolName === 'background_shell'
       ? summarizeBackgroundShellToolBlock(block, t)
       : block.summary
 
-  const Icon = block.toolKind === 'file_change' ? FileEdit : block.toolKind === 'command_execution' ? Terminal : Wrench
+  const Icon = block.toolKind === 'file_change'
+    ? FileEdit
+    : block.toolKind === 'command_execution'
+      ? Terminal
+      : isSearchTool
+        ? Search
+        : Wrench
   const kindLabel =
     toolName === 'background_shell'
       ? t('toolBuiltinBackgroundShell', { defaultValue: 'Background shell' })
-      : block.toolKind === 'file_change'
-        ? t('toolKindFile')
-        : block.toolKind === 'command_execution'
-          ? t('toolKindCommand')
-          : t('toolKindTool')
+      : isSearchTool
+        ? t('toolKindWebSearch', { defaultValue: 'Web Search' })
+        : block.toolKind === 'file_change'
+          ? t('toolKindFile')
+          : block.toolKind === 'command_execution'
+            ? t('toolKindCommand')
+            : t('toolKindTool')
 
   const exitCode = readNumber(block.meta, 'exit_code')
   const durationMs = readNumber(block.meta, 'duration_ms')
@@ -1990,6 +2170,13 @@ function ToolEntry({ block, nested = false }: { block: ToolBlock; nested?: boole
   const hasDetail = !!(block.detail && block.detail.trim().length > 0)
   const patchText = block.toolKind === 'file_change' ? extractUnifiedDiffText(block.detail) : undefined
   const canExpand = hasDetail || block.status === 'running'
+  // Web search sources: prefer meta.sources, fall back to parsing block.detail JSON
+  const webSources = isSearchTool
+    ? (metaSources(block.meta).length > 0 ? metaSources(block.meta) : parseDetailSources(block.detail))
+    : []
+  const hasWebSources = webSources.length > 0
+  // For web search tools, show the extracted query instead of the raw summary
+  const searchQuery = isSearchTool ? extractSearchQuery(block.meta, block.summary, block.detail) : ''
 
   return (
     <div className={`rounded-[22px] border shadow-[0_12px_30px_rgba(86,103,136,0.04)] ${tone}`}>
@@ -2040,9 +2227,14 @@ function ToolEntry({ block, nested = false }: { block: ToolBlock; nested?: boole
             {block.filePath ? (
               <span className="font-mono text-[12px] opacity-90">{block.filePath} — </span>
             ) : null}
-            <span>{displaySummary}</span>
+            {isSearchTool && searchQuery ? (
+              <span className="text-ds-ink">{searchQuery}</span>
+            ) : (
+              <span>{displaySummary}</span>
+            )}
           </div>
-          <RuntimeMetaChips meta={block.meta} hideTurnDisclosure />
+          <RuntimeMetaChips meta={block.meta} hideTurnDisclosure hideSources={hasWebSources} />
+          {hasWebSources ? <WebSearchSources sources={webSources} /> : null}
         </div>
         {canExpand ? (
           effectiveOpen ? (

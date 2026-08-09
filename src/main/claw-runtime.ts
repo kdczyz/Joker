@@ -1009,6 +1009,11 @@ export class ClawRuntime {
     const requestedModel = normalizeTaskModel(options.model) ?? (settings.agents.Rcode.model.trim() || DEFAULT_CLAW_MODEL)
     const runtimeSettings = settingsWithImModelProvider(settings, options.providerId, requestedModel)
     const model = effectiveImRuntimeModel(runtimeSettings, requestedModel)
+    // Pass the resolved providerId to the runtime so MultiProviderModelClient
+    // routes to the correct provider. Without this, the runtime falls back to
+    // the default client (often Codex) while the model belongs to a different
+    // provider, causing 400 errors like "model not supported when using Codex".
+    const providerId = options.providerId?.trim() || runtimeSettings.agents.Rcode.providerId.trim()
     // IM turns follow the per-IM permission policy when the user picked one,
     // otherwise they fall back to the global agent permission policy
     // (`agents.Rcode.approvalPolicy`/`sandboxMode`) — the historical behavior.
@@ -1016,6 +1021,7 @@ export class ClawRuntime {
     const imSandboxMode = settings.claw.im.sandboxMode ?? runtimeSettings.agents.Rcode.sandboxMode
     const createThread = async (): Promise<ThreadRecordJson | null> => {
       const body: Record<string, unknown> = { workspace, model, mode: options.mode }
+      if (providerId) body.providerId = providerId
       if (options.source === 'im') {
         body.approvalPolicy = imApprovalPolicy
         body.sandboxMode = imSandboxMode
@@ -1054,6 +1060,7 @@ export class ClawRuntime {
     }
     if (displayText && displayText !== runtimePrompt) turnBody.displayText = displayText
     if (model) turnBody.model = model
+    if (providerId) turnBody.providerId = providerId
     // IM senders can only reply in their chat app; they cannot answer
     // GUI prompts, so the runtime must not expose user-input tools.
     // Permission fields are pure passthrough from the agent settings so
@@ -2115,6 +2122,48 @@ export class ClawRuntime {
       direction
     })
   }
+
+  /**
+   * Pushes a GUI-originated claw turn's generated files (including
+   * `send_im_attachment` tool output) to the bound IM channel. This closes
+   * the gap where desktop claw-route turns set `imContext: true` so the tool
+   * executes, but the file delivery only existed for IM-inbound turns.
+   */
+  async deliverGeneratedFilesToIm(
+    threadId: string,
+    turnId?: string
+  ): Promise<{ ok: true; fileCount: number } | { ok: false; message: string }> {
+    const settings = await this.deps.store.load()
+    const target = this.findImChannelForThread(settings, threadId)
+    if (!target) return { ok: false, message: 'Channel not found.' }
+    const { channel, conversation } = target
+    const remoteSession = channel.remoteSession
+    const workspaceRoot = this.resolveIncomingWorkspaceRoot(
+      settings,
+      channel,
+      conversation,
+      remoteSession
+    )
+    const context: Record<string, unknown> = {
+      purpose: 'gui-claw-file-delivery',
+      channelId: channel.id,
+      threadId,
+      ...(turnId ? { turnId } : {})
+    }
+    const files = await this.recentGeneratedFilesForThread(
+      settings,
+      threadId,
+      workspaceRoot,
+      context,
+      turnId
+    )
+    if (files.length === 0) return { ok: true, fileCount: 0 }
+    const authorized = await this.resolveImGeneratedFiles(files, workspaceRoot, context)
+    if (authorized.length === 0) return { ok: true, fileCount: 0 }
+    await this.pushImGeneratedFiles(channel, remoteSession, authorized, context)
+    return { ok: true, fileCount: authorized.length }
+  }
+
   async mirrorThreadMessageToFeishu(
     threadId: string,
     text: string,

@@ -284,6 +284,9 @@ export type ClawChannelActivityPayload = {
 export type ClawChannelMirrorResult =
   | { ok: true }
   | { ok: false; message: string }
+export type ClawDeliverFilesResult =
+  | { ok: true; fileCount: number }
+  | { ok: false; message: string }
 export type UpstreamModelsResult =
   | { ok: true; modelIds: string[]; defaultModelId?: string; modelGroups?: ModelProviderModelGroup[] }
   | { ok: false; message: string }
@@ -339,6 +342,18 @@ export type CodexBrowserAuthErrorCode = 'port_in_use'
 export type CodexBrowserAuthResult =
   | { ok: true; credentials: CodexOAuthCredentials }
   | { ok: false; message: string; code?: CodexBrowserAuthErrorCode }
+export type CodexAccountUsageResult =
+  | {
+      ok: true
+      planType?: string
+      primaryUsedPercent?: number
+      primaryWindowSeconds?: number
+      primaryResetAfterSeconds?: number
+      secondaryUsedPercent?: number
+      secondaryWindowSeconds?: number
+      secondaryResetAfterSeconds?: number
+    }
+  | { ok: false; message: string }
 export type ClawImTelegramConnectErrorCode = 'invalid_format' | 'rejected' | 'network' | 'unknown'
 export type ClawImTelegramConnectResult =
   | { ok: true; botId: number; botUsername: string; botFirstName: string }
@@ -510,6 +525,7 @@ export type RcodeGuiApi = ExtensionIpcApi & {
   startCodexAuth: () => Promise<CodexAuthStartResult>
   pollCodexAuth: (deviceCode: string, userCode: string) => Promise<CodexAuthPollResult>
   startCodexBrowserAuth: () => Promise<CodexBrowserAuthResult>
+  codexAccountUsage: () => Promise<CodexAccountUsageResult>
   pickWorkspaceDirectory: (defaultPath?: string) => Promise<WorkspacePickResult>
   workspaceDirectoryExists: (workspaceRoot: string) => Promise<boolean>
   pickLocalFiles: (defaultPath?: string) => Promise<LocalFilesPickResult>
@@ -709,6 +725,10 @@ export type RcodeGuiApi = ExtensionIpcApi & {
     text: string,
     direction: 'user' | 'assistant'
   ) => Promise<ClawChannelMirrorResult>
+  deliverClawGeneratedFiles: (
+    threadId: string,
+    turnId?: string
+  ) => Promise<ClawDeliverFilesResult>
   createClawTaskFromText: (
     text: string,
     options?: { channelId?: string; providerId?: string; modelHint?: string; reasoningEffort?: string; mode?: 'agent' | 'plan' }

@@ -97,6 +97,7 @@ import { LlmDebugRecorder } from '../services/llm-debug-recorder.js'
 import { ThreadService } from '../services/thread-service.js'
 import { TurnService } from '../services/turn-service.js'
 import { ReviewService } from '../services/review-service.js'
+import { MemoryReviewService } from '../loop/memory-review-service.js'
 import { UsageService } from '../services/usage-service.js'
 import type { UsageEvent } from '../contracts/events.js'
 import type {
@@ -484,13 +485,20 @@ export async function createRcodeServeRuntime(
 	      })
 	    : undefined
 	  let memoryStore = activeOptions.capabilities?.memory.enabled
-	    ? new FileMemoryStore({
-	        rootDir: join(activeOptions.dataDir, 'memory'),
-	        config: activeOptions.capabilities.memory,
-	        nowIso
-	      })
-	    : undefined
-	  const migrationService = new RuntimeMigrationService({
+    ? new FileMemoryStore({
+        rootDir: join(activeOptions.dataDir, 'memory'),
+        config: activeOptions.capabilities.memory,
+        nowIso
+      })
+    : undefined
+  const memoryReviewService = new MemoryReviewService({
+    model: modelClient,
+    getMemoryStore: () => memoryStore,
+    sessionStore,
+    config: () => activeOptions.capabilities?.memory,
+    nowIso
+  })
+  const migrationService = new RuntimeMigrationService({
 	    rootDir: join(activeOptions.dataDir, 'migrations', 'exports'),
 	    threads: threadService,
 	    turns: turnService,
@@ -813,7 +821,8 @@ export async function createRcodeServeRuntime(
 	    ...(attachmentStore ? { attachmentStore } : {}),
 	    artifactStore,
 	    ...(memoryStore ? { memoryStore } : {}),
-	    runtimeDataDir: activeOptions.dataDir,
+    memoryReview: memoryReviewService,
+    runtimeDataDir: activeOptions.dataDir,
 	    onPlanWritten: async ({ threadId, planId, relativePath, markdown }) => {
 	      await threadService.syncTodosFromPlan(threadId, {
 	        planId,

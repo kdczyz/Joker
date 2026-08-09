@@ -608,6 +608,7 @@ export interface AgentProvider {
   createMemory?(input: {
     content: string
     scope?: 'user' | 'workspace' | 'project'
+    category?: 'long' | 'short' | 'session'
     workspace?: string
     project?: string
     tags?: string[]
@@ -615,7 +616,7 @@ export interface AgentProvider {
   }): Promise<CoreMemoryRecordJson>
   updateMemory?(
     memoryId: string,
-    patch: { content?: string; tags?: string[]; confidence?: number; disabled?: boolean },
+    patch: { content?: string; tags?: string[]; confidence?: number; disabled?: boolean; category?: 'long' | 'short' | 'session' | 'pinned' },
     options?: { workspace?: string }
   ): Promise<CoreMemoryRecordJson>
   deleteMemory?(memoryId: string, options?: { workspace?: string }): Promise<CoreMemoryRecordJson>

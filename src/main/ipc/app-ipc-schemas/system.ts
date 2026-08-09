@@ -88,6 +88,13 @@ export const clawMirrorPayloadSchema = z
   })
   .strict()
 
+export const clawDeliverFilesPayloadSchema = z
+  .object({
+    threadId: trimmedString(MAX_ID_LENGTH),
+    turnId: trimmedString(MAX_ID_LENGTH).optional()
+  })
+  .strict()
+
 export const clawTaskFromTextPayloadSchema = z
   .object({
     text: z.string().trim().min(1).max(MAX_CHANNEL_TEXT_LENGTH),

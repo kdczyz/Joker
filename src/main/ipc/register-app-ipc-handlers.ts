@@ -42,6 +42,7 @@ import type {
 import type { WorkspaceFileSaveAsResult } from '../../shared/workspace-file'
 import {
   clawMirrorPayloadSchema,
+  clawDeliverFilesPayloadSchema,
   clawImInstallPollPayloadSchema,
   clawImTelegramTokenPayloadSchema,
   alertDialogPayloadSchema,
@@ -149,7 +150,15 @@ import type { ClawRuntime } from '../claw-runtime'
 import type { ScheduleRuntime } from '../schedule-runtime'
 import { reloadRenderer } from '../dev-renderer-cache'
 import { verifyTelegramBotToken } from '../telegram-runtime'
-import { startCodexDeviceAuth, pollCodexDeviceAuth, startCodexBrowserAuth } from '../codex-auth'
+import {
+  startCodexDeviceAuth,
+  pollCodexDeviceAuth,
+  startCodexBrowserAuth,
+  parseCodexCredentials,
+  refreshCodexToken,
+  encodeCodexCredentials,
+  fetchCodexAccountUsage
+} from '../codex-auth'
 import type { WorkflowRuntime } from '../workflow-runtime'
 import { checkWorkflowCode } from '../workflow-runtime'
 import {
@@ -972,6 +981,16 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   )
 
   ipcMain.handle(
+    'claw:channel:deliver-files',
+    async (_, payload: unknown) => {
+      const request = parseIpcPayload('claw:channel:deliver-files', clawDeliverFilesPayloadSchema, payload)
+      const clawRuntime = getClawRuntime()
+      if (!clawRuntime) return { ok: false as const, message: 'Claw runtime is not initialized.' }
+      return clawRuntime.deliverGeneratedFilesToIm(request.threadId, request.turnId)
+    }
+  )
+
+  ipcMain.handle(
     'claw:task:create-from-text',
     async (_, payload: unknown): Promise<ClawTaskFromTextResult> => {
       const request = parseIpcPayload(
@@ -1072,6 +1091,35 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     return startCodexBrowserAuth(async (url: string) => {
       await shell.openExternal(url)
     })
+  })
+
+  ipcMain.handle('codex:account:usage', async () => {
+    try {
+      const settings = await store.load()
+      const provider = settings.provider.providers.find((p) => p.id === 'codex')
+      if (!provider || !provider.apiKey) {
+        return { ok: false, message: 'Codex provider not configured' }
+      }
+      let creds = parseCodexCredentials(provider.apiKey)
+      if (!creds) {
+        return { ok: false, message: 'Not an OAuth account' }
+      }
+      // access_token 即将过期时刷新；回写新凭据以应对 refresh_token rotation。
+      if (creds.expiresAt <= Date.now() + 60_000) {
+        const refreshed = await refreshCodexToken(creds)
+        if (refreshed) {
+          creds = refreshed
+          const updatedProviders = settings.provider.providers.map((p) =>
+            p.id === 'codex' ? { ...p, apiKey: encodeCodexCredentials(refreshed) } : p
+          )
+          await store.save({ ...settings, provider: { ...settings.provider, providers: updatedProviders } })
+        }
+      }
+      const usageResult = await fetchCodexAccountUsage(creds)
+      return usageResult
+    } catch (error) {
+      return { ok: false, message: error instanceof Error ? error.message : String(error) }
+    }
   })
 
   ipcMain.handle('workspace:pick-directory', async (_, defaultPath: unknown): Promise<WorkspacePickResult> => {

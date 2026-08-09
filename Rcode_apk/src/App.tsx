@@ -417,8 +417,23 @@ export function App() {
       imageModels: workConfig.imageModels ?? []
     }];
   }, [workConfig]);
-  const currentProviderId = selectedSession?.providerId || workConfig.selectedProviderId || sharedAiProviders[0]?.id || "";
-  const currentProvider = sharedAiProviders.find((provider) => provider.id === currentProviderId) || sharedAiProviders[0];
+  // Desktop-synced providers take priority in remote-agent mode — their ids
+  // match the desktop's configured providers so model→provider routing works.
+  const remoteProviders = useMemo<WorkAiProvider[]>(() => {
+    const workspaceProviders = selectedDevice?.workspace?.providers;
+    if (!workspaceProviders?.length) return [];
+    return workspaceProviders.map((p) => ({
+      id: p.id,
+      displayName: p.displayName || p.id,
+      baseUrl: "",
+      chatCompletionsPath: "/chat/completions",
+      model: p.model,
+      models: p.models?.length ? p.models : [p.model]
+    }));
+  }, [selectedDevice?.workspace?.providers]);
+  const activeProviders = remoteProviders.length ? remoteProviders : sharedAiProviders;
+  const currentProviderId = selectedSession?.providerId || workConfig.selectedProviderId || activeProviders[0]?.id || "";
+  const currentProvider = activeProviders.find((provider) => provider.id === currentProviderId) || activeProviders[0];
   const models = currentProvider?.models?.length ? currentProvider.models : selectedDevice?.workspace?.models ?? [];
   const currentModel = selectedSession?.model && models.includes(selectedSession.model)
     ? selectedSession.model
@@ -884,13 +899,13 @@ export function App() {
         approval={selectedApproval}
         models={models}
         model={currentModel}
-        providers={sharedAiProviders}
+        providers={activeProviders}
         providerId={currentProvider?.id || currentProviderId}
         canSend={connection === "online" && selectedDevice.online && selectedDevice.ready}
         initialMode={preferences.runMode}
         initialThinkingMode={preferences.thinkingMode}
         onProviderChange={(providerId) => {
-          const provider = sharedAiProviders.find((item) => item.id === providerId);
+          const provider = activeProviders.find((item) => item.id === providerId);
           if (provider) updateSavedSession({ deviceId: selectedDevice.id, projectId: selectedProject.id, ...selectedSession, providerId, model: provider.model });
         }}
         onModelChange={(model) => updateSavedSession({ deviceId: selectedDevice.id, projectId: selectedProject.id, ...selectedSession, providerId: currentProvider?.id, model })}

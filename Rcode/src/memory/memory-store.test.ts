@@ -21,7 +21,7 @@ describe('FileMemoryStore', () => {
     let tick = 0
     const store = new FileMemoryStore({
       rootDir: await makeTempDir(),
-      config: { enabled: true, scopes: ['workspace'], maxInjectedRecords: 8 },
+      config: { enabled: true, scopes: ['workspace'], maxInjectedRecords: 8, autoReview: false, shortTtlDays: 7, sessionTtlHours: 24 },
       idGenerator: () => 'mem_toggle',
       nowIso: () => `2026-06-21T00:00:0${tick++}.000Z`
     })

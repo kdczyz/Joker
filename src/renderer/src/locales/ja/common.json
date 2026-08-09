@@ -1584,8 +1584,6 @@
   "emptyHeroSub": "タスクを選択するか、質問を入力してください",
   "emptyHeroSubNoWorkspace": "まずローカルの作業ディレクトリを選択してから、最初のスレッドを開始します。",
   "usageHeatmapBadge": "くんの使い方",
-  "usageHeatmapTitle": "最近のエージェントのリズム",
-  "usageHeatmapSub": "すでに構築されている作業パターンから始めてください。毎日は Rcode トークンの使用量によって色分けされており、ターン、コスト、スレッド、キャッシュの詳細がセルから確認できます。",
   "usageHeatmapTabOverview": "概要",
   "usageHeatmapTabModels": "モデル",
   "usageHeatmapRange": {
@@ -1602,31 +1600,6 @@
   "usageHeatmapEmptySub": "最初の Rcode リクエストを送信すると、このカレンダーに入力が始まります。",
   "usageHeatmapErrorTitle": "一時的にご利用いただけません",
   "usageHeatmapErrorSub": "以下のプロンプトから新しい会話を開始することもできます。",
-  "usageHeatmapHeroTitle": {
-    "loading": "使用状況カレンダーの準備",
-    "empty": "エージェントのリズムを開始する",
-    "error": "今すぐ開始し、後で使用状況を同期する"
-  },
-  "usageHeatmapHeroSub": {
-    "loading": "くんは最近のアクティビティをチェックしています。カレンダーがウォームアップしている間、スターター プロンプトは準備完了状態を保ちます。",
-    "empty": "最初のくんのターンが完了すると、このスペースは日別の使用カレンダーに変わります。",
-    "error": "使用履歴はまだ利用できませんが、ワークスペースは新しい会話の準備ができています。"
-  },
-  "usageHeatmapWarmupBadge": {
-    "loading": "履歴を確認する",
-    "empty": "くんの使い方",
-    "error": "使用の遅れ"
-  },
-  "usageHeatmapWarmupTitle": {
-    "loading": "最近のアクティビティを探しています",
-    "empty": "使用状況はまだ記録されていません",
-    "error": "使用は後で再試行できます"
-  },
-  "usageHeatmapWarmupSub": {
-    "loading": "通常、これは Rcode が応答するとすぐに解決します。以下のプロンプトを選択することもできます。",
-    "empty": "リクエストを送信してターンを終了します。最初のアクティブな日がここに自動的に表示されます。",
-    "error": "使用エンドポイントが応答しなかったため、カレンダーは一時停止されています。新しいチャットは引き続き機能します。"
-  },
   "usageHeatmapCollapse": "カレンダーを折りたたむ",
   "usageHeatmapExpand": "カレンダーを展開する",
   "usageHeatmapCollapsedTitle": "キャンバスをきれいにしておいてください",

@@ -40,6 +40,7 @@ import { useTranslation } from 'react-i18next'
 import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
 import type { AttachmentReference, ReviewTarget } from '../../agent/types'
 import { useChatStore } from '../../store/chat-store'
+import { CodexUsageBadge } from './CodexUsageBadge'
 import type { AppRoute } from '../../store/chat-store-types'
 import { normalizeWorkspaceRoot } from '../../lib/workspace-path'
 import {
@@ -1777,6 +1778,7 @@ export function FloatingComposer({
                     runtimeToolCount={runtimeToolCount}
                     runtimeSkillCount={runtimeSkillCount}
                   />
+                  <CodexUsageBadge providerId={composerProviderId} />
                   {hideModelPicker ? null : (
                     <FloatingComposerModelPicker
                       compact={compact}
