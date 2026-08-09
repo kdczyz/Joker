@@ -13,7 +13,7 @@ dist-server
 dist-server-bundle
 dist-worker
 release
-artifacts
+/artifacts/
 coverage
 data
 generated-images
