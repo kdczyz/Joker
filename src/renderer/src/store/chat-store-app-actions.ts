@@ -114,12 +114,15 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
       const nextProviderId = providerId?.trim() || providerIdForComposerModel(get().composerModelGroups, modelId)
       const state = get()
       const activeThreadId = state.activeThreadId
+      // Remember the selection for this thread (session-scoped) so reopening
+      // the thread restores it.
       if (activeThreadId) {
         rememberThreadComposerSelection(activeThreadId, modelId, nextProviderId)
-      } else {
-        persistComposerModel(modelId)
-        persistComposerProviderId(nextProviderId)
       }
+      // Always persist locally as the composer default used when no thread is
+      // active, so the picked model survives a reload.
+      persistComposerModel(modelId)
+      persistComposerProviderId(nextProviderId)
       set({
         composerModel: modelId,
         composerProviderId: nextProviderId,
@@ -133,8 +136,12 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
       const extensionProvider = state.composerModelGroups.find(
         (group) => group.providerId === nextProviderId
       )?.extensionProvider
+      // Persist the chosen model as the desktop's DEFAULT model
+      // (settings.agents.Rcode.model). Every entry point that follows the
+      // desktop default — IM/WeChat, remote device sessions, scheduled tasks —
+      // reads this value, so the composer model picker now acts as
+      // "set default model": whichever model you switch to becomes the default.
       if (
-        !activeThreadId &&
         !extensionProvider &&
         trimmed &&
         trimmed.toLowerCase() !== 'auto' &&

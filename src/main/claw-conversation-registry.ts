@@ -105,8 +105,14 @@ export function bindClawConversationToThread(input: {
           senderName: input.remoteSession.senderName || currentConversation.senderName,
           localThreadId: input.threadId,
           workspaceRoot: input.workspaceRoot || currentConversation.workspaceRoot,
-          providerId: currentConversation.providerId?.trim() || input.providerId,
-          model: currentConversation.model?.trim() || input.model,
+          // NOTE: we intentionally do NOT copy the resolved model/providerId into the
+          // conversation here. Persisting the resolved model is what poisoned IM
+          // conversations into sticking to an old default (e.g. mimo) forever. IM model
+          // selection now follows the desktop's current model, so the auto-bound
+          // conversation must stay model-agnostic. Explicit `/model` choices are still
+          // written via setClawConversationModelSelection.
+          providerId: currentConversation.providerId?.trim() || '',
+          model: currentConversation.model?.trim() || '',
           updatedAt: input.now
         }
       : {
@@ -118,8 +124,9 @@ export function bindClawConversationToThread(input: {
           senderName: input.remoteSession.senderName,
           localThreadId: input.threadId,
           workspaceRoot: input.workspaceRoot,
-          providerId: input.providerId,
-          model: input.model,
+          // Keep new conversations model-agnostic; IM follows the desktop model.
+          providerId: '',
+          model: '',
           createdAt: input.now,
           updatedAt: input.now
         }

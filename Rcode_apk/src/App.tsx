@@ -437,7 +437,7 @@ export function App() {
   const models = currentProvider?.models?.length ? currentProvider.models : selectedDevice?.workspace?.models ?? [];
   const currentModel = selectedSession?.model && models.includes(selectedSession.model)
     ? selectedSession.model
-    : currentProvider?.model || selectedDevice?.workspace?.defaultModel || models[0] || "Agent";
+    : selectedDevice?.workspace?.defaultModel || currentProvider?.model || models[0] || "Agent";
 
   const selectedCommands = useMemo(() => snapshot.commands.filter((command) =>
     command.deviceId === selectedDeviceId && command.projectId === selectedProjectId && command.sessionId === selectedSessionId
@@ -740,7 +740,7 @@ export function App() {
       title: "新会话",
       updatedAt: new Date().toISOString(),
       providerId: currentProvider?.id,
-      model: currentProvider?.model || selectedDevice.workspace?.defaultModel || models[0]
+      model: selectedDevice.workspace?.defaultModel || currentProvider?.model || models[0]
     };
     updateSavedSession(session);
     setSelectedProjectId(project.id);

@@ -125,10 +125,12 @@ function currentImModel(
   channel?: ClawImChannelV1,
   conversation?: ClawImConversationV1
 ): string {
-  return conversation?.model?.trim() ||
-    channel?.model?.trim() ||
-    settings.claw.im.model.trim() ||
-    getRcodeRuntimeSettings(settings).model.trim() ||
+  // IM messages ALWAYS use the desktop's CURRENT selected model
+  // (settings.agents.Rcode.model, kept in sync with the composer model picker).
+  // We intentionally ignore the model bound to the IM conversation/channel at
+  // connect time — that binding is what made WeChat keep calling an old default
+  // (e.g. mimo) even after the desktop model was switched to something else.
+  return getRcodeRuntimeSettings(settings).model.trim() ||
     DEFAULT_CLAW_MODEL
 }
 
@@ -137,10 +139,9 @@ function currentImProviderId(
   channel?: ClawImChannelV1,
   conversation?: ClawImConversationV1
 ): string {
-  return conversation?.providerId?.trim() ||
-    channel?.providerId?.trim() ||
-    settings.claw.im.providerId?.trim() ||
-    getRcodeRuntimeSettings(settings).providerId.trim() ||
+  // Same as currentImModel: follow the desktop's current provider so the selected
+  // model routes to the correct provider instead of the IM channel's old binding.
+  return getRcodeRuntimeSettings(settings).providerId?.trim() ||
     DEFAULT_MODEL_PROVIDER_ID
 }
 

@@ -151,17 +151,13 @@ export function useWorkbenchChatComposerProps({
         : runtimeInfo.capabilities.mcp.toolCount
       : undefined,
     runtimeSkillCount: runtimeInfo?.capabilities.skills.discoveredSkills,
-    composerModel: route === 'claw' ? activeClawChannelModel ?? 'auto' : composerModel,
-    composerProviderId: route === 'chat' ? composerProviderId : undefined,
+    composerModel,
+    composerProviderId,
     composerPickList,
     composerModelGroups,
     composerReasoningEffort: route === 'chat' || route === 'claw' ? composerReasoningEffort : undefined,
     modelControlVariant: route === 'chat' && !activeSddDraft ? 'split' : 'combined',
     onComposerModelChange: (modelId, providerId) => {
-      if (route === 'claw' && activeClawChannelId) {
-        void setClawChannelModel(activeClawChannelId, modelId, providerId)
-        return
-      }
       setComposerModel(modelId, providerId)
     },
     onComposerReasoningEffortChange: route === 'chat' || route === 'claw'
@@ -221,8 +217,6 @@ export function useWorkbenchChatComposerProps({
       openSideConversationDraft()
     }
   }), [
-    activeClawChannelId,
-    activeClawChannelModel,
     activeSddDraft,
     activeSkillWorkspace,
     activeThreadId,
@@ -271,7 +265,6 @@ export function useWorkbenchChatComposerProps({
     runtimeInfo,
     runtimeSkills,
     selectedContextWindowTokens,
-    setClawChannelModel,
     setComposerMode,
     setComposerModel,
     setComposerReasoningEffort,
