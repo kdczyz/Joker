@@ -80,18 +80,36 @@ export async function getLocalWhisperModelStatus(
 }
 
 async function readLocalWhisperDiskStatus(model: LocalWhisperModel): Promise<LocalWhisperModelStatus | null> {
-  const path = localWhisperModelPath(model.id)
-  try {
-    const info = await stat(path)
-    if (!info.isFile()) return null
-    return baseStatus(model.id, 'ready', {
-      path,
-      downloadedBytes: info.size,
-      totalBytes: info.size
-    })
-  } catch {
-    return null
+  const candidates = [localWhisperModelPath(model.id), localWhisperBundledModelPath(model.id)].filter(Boolean)
+  for (const candidate of candidates) {
+    try {
+      const info = await stat(candidate)
+      if (!info.isFile()) continue
+      return baseStatus(model.id, 'ready', {
+        path: candidate,
+        downloadedBytes: info.size,
+        totalBytes: info.size
+      })
+    } catch {
+      // try the next candidate
+    }
   }
+  return null
+}
+
+/**
+ * Built-in models ship inside the app bundle (resources/whisper/models/<id>/<file>).
+ * They are read-only and never deleted or overwritten by downloads, which always
+ * target the userData path returned by localWhisperModelPath.
+ */
+function localWhisperBundledModelPath(modelId: LocalWhisperModelId): string {
+  const model = localWhisperModelById(modelId)
+  const candidates = [
+    process.resourcesPath ? join(process.resourcesPath, 'whisper', 'models', model.id, model.fileName) : '',
+    join(app.getAppPath(), 'resources', 'whisper', 'models', model.id, model.fileName),
+    join(process.cwd(), 'resources', 'whisper', 'models', model.id, model.fileName)
+  ].filter(Boolean)
+  return candidates[0] ?? ''
 }
 
 export async function downloadLocalWhisperModel(

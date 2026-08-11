@@ -1,6 +1,5 @@
 import { Suspense, type ComponentProps, type PointerEventHandler, type ReactElement } from 'react'
 import type { SettingsRouteSection } from '../../store/chat-store'
-import { DesignSidebar } from '../design/DesignSidebar'
 import { Sidebar } from '../chat/Sidebar'
 import { WriteSidebar } from '../write/WriteSidebar'
 import type { RegisteredContribution } from '../../extensions/contribution-registry'
@@ -41,8 +40,6 @@ export type WorkbenchLeftSidebarProps = {
   onToggleConnectPhone: CodeSidebarProps['onToggleConnectPhone']
   onCodeOpen: CodeSidebarProps['onCodeOpen']
   onWriteOpen: CodeSidebarProps['onWriteOpen']
-  onDesignOpen: CodeSidebarProps['onDesignOpen']
-  onClawOpen: CodeSidebarProps['onClawOpen']
   onScheduleOpen: CodeSidebarProps['onScheduleOpen']
   onWorkflowOpen: CodeSidebarProps['onWorkflowOpen']
   onNewConversation: CodeSidebarProps['onNewConversation']
@@ -86,8 +83,6 @@ export function WorkbenchLeftSidebar({
   onToggleConnectPhone,
   onCodeOpen,
   onWriteOpen,
-  onDesignOpen,
-  onClawOpen,
   onScheduleOpen,
   onWorkflowOpen,
   onNewConversation,
@@ -103,15 +98,6 @@ export function WorkbenchLeftSidebar({
             workspaceRoot={workspaceRoot}
             onClose={onCloseExtensionView}
           />
-        ) : route === 'design' ? (
-          <DesignSidebar
-            onCodeOpen={onCodeOpen}
-            onWriteOpen={onWriteOpen}
-            onDesignOpen={onDesignOpen}
-            onClawOpen={onClawOpen}
-            onOpenSettings={onOpenSettings}
-            onToggleTheme={onToggleTheme}
-          />
         ) : route === 'write' ? (
           <Suspense fallback={<SidebarFallback />}>
             <WriteSidebar
@@ -119,8 +105,6 @@ export function WorkbenchLeftSidebar({
               connectPhoneSidebarOpen={connectPhoneSidebarOpen}
               onCodeOpen={onCodeOpen}
               onWriteOpen={onWriteOpen}
-              onDesignOpen={onDesignOpen}
-              onClawOpen={onClawOpen}
               onOpenSettings={onOpenSettings}
               onToggleConnectPhone={onToggleConnectPhone}
             />
@@ -154,8 +138,6 @@ export function WorkbenchLeftSidebar({
             onToggleConnectPhone={onToggleConnectPhone}
             onCodeOpen={onCodeOpen}
             onWriteOpen={onWriteOpen}
-            onDesignOpen={onDesignOpen}
-            onClawOpen={onClawOpen}
             onScheduleOpen={onScheduleOpen}
             onWorkflowOpen={onWorkflowOpen}
             onNewConversation={onNewConversation}

@@ -81,9 +81,6 @@ const DesignSettingsSection = lazy(() =>
 const MediaGenerationSettingsSection = lazy(() =>
   import('./settings-section-media-generation').then((module) => ({ default: module.MediaGenerationSettingsSection }))
 )
-const SpeechToTextSettingsSection = lazy(() =>
-  import('./settings-section-speech-to-text').then((module) => ({ default: module.SpeechToTextSettingsSection }))
-)
 const AgentsSettingsSection = lazy(() =>
   import('./settings-section-agents').then((module) => ({ default: module.AgentsSettingsSection }))
 )
@@ -440,10 +437,6 @@ export function SettingsView(): ReactElement {
       setCategory('mediaGeneration')
       return
     }
-    if (settingsSection === 'speechToText') {
-      setCategory('speechToText')
-      return
-    }
     if (settingsSection === 'permissions') {
       setCategory('agents')
       return
@@ -488,7 +481,6 @@ export function SettingsView(): ReactElement {
       settingsSection === 'design' ||
       settingsSection === 'imageGeneration' ||
       settingsSection === 'mediaGeneration' ||
-      settingsSection === 'speechToText' ||
       settingsSection === 'subagents' ||
       settingsSection === 'archives' ||
       settingsSection === 'claw' ||
@@ -1422,7 +1414,6 @@ export function SettingsView(): ReactElement {
             {category === 'write' ? <WriteSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'design' ? <DesignSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'mediaGeneration' ? <MediaGenerationSettingsSection ctx={settingsSectionContext} /> : null}
-            {category === 'speechToText' ? <SpeechToTextSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'agents' ? (
               <LoadedAgentsSettingsSection ctx={settingsSectionContext} onReady={markAgentsSectionReady} />
             ) : null}

@@ -1217,6 +1217,44 @@ describe('model provider settings', () => {
     }))
   })
 
+  it('keeps the local-whisper provider self-contained and never routes to a remote provider', () => {
+    const resolved = resolveRcodeSpeechToTextSettings({
+      ...settings(),
+      provider: defaultModelProviderSettings(),
+      agents: {
+        Rcode: {
+          ...defaultRcodeRuntimeSettings(),
+          speechToText: {
+            ...defaultRcodeRuntimeSettings().speechToText,
+            enabled: true,
+            providerId: 'local-whisper',
+            protocol: 'local-whisper',
+            model: 'whisper-small-q5_1'
+          }
+        }
+      }
+    })
+
+    expect(resolved).toEqual(expect.objectContaining({
+      enabled: true,
+      providerId: 'local-whisper',
+      protocol: 'local-whisper',
+      baseUrl: '',
+      apiKey: '',
+      model: 'whisper-small-q5_1'
+    }))
+    // Must not fall back to a remote provider (which would 404 on openresty).
+    expect(resolved.baseUrl).not.toMatch(/xiaomimimo|openresty|http/)
+  })
+
+  it('resolves the default speech-to-text settings to the bundled local-whisper model', () => {
+    const resolved = resolveRcodeSpeechToTextSettings(settings())
+    expect(resolved.protocol).toBe('local-whisper')
+    expect(resolved.providerId).toBe('local-whisper')
+    expect(resolved.baseUrl).toBe('')
+    expect(resolved.apiKey).toBe('')
+  })
+
   it('preserves a cleared default base URL while resolving the official runtime endpoint', () => {
     const state = settings()
     const normalized = normalizeModelProviderSettings({

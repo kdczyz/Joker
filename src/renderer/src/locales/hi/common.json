@@ -1759,6 +1759,8 @@
   "composerNoMatchingModels": "कोई मेल खाता मॉडल नहीं",
   "composerModelVision": "दृष्टि",
   "composerModelTextOnly": "पाठ",
+  "composerImageModel": "छवि मॉडल",
+  "composerImageModelEmpty": "कॉन्फ़िगर नहीं",
   "composerReasoning": "तर्क",
   "composerReasoningAuto": "अनुकूली",
   "composerReasoningOff": "बंद",

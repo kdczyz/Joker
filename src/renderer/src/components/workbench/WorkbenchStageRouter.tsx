@@ -1,5 +1,4 @@
-import { lazy, Suspense, type ComponentProps, type ReactElement, type ReactNode } from 'react'
-import { WorkbenchDesignStage } from './WorkbenchDesignStage'
+import { lazy, Suspense, type ReactElement, type ReactNode } from 'react'
 import { WorkbenchConversationStage, type WorkbenchConversationStageProps } from './WorkbenchConversationStage'
 
 const PluginMarketplaceView = lazy(() =>
@@ -23,8 +22,6 @@ const ExtensionManagementCenter = lazy(() =>
   }))
 )
 
-type DesignStageProps = ComponentProps<typeof WorkbenchDesignStage>
-
 type WriteStageProps = {
   runtimeBanner: ReactNode
   leftSidebarCollapsed: boolean
@@ -41,7 +38,6 @@ export type WorkbenchStageRouterProps = {
   leftSidebarCollapsed: boolean
   onToggleLeftSidebar: () => void
   onOpenThread: (threadId: string) => void
-  design: DesignStageProps
   write: WriteStageProps
   conversation: WorkbenchConversationStageProps
   imageAnnotationHost: ReactNode
@@ -62,7 +58,6 @@ export function WorkbenchStageRouter({
   leftSidebarCollapsed,
   onToggleLeftSidebar,
   onOpenThread,
-  design,
   write,
   conversation,
   imageAnnotationHost,
@@ -110,8 +105,6 @@ export function WorkbenchStageRouter({
               onOpenThread={onOpenThread}
             />
           </Suspense>
-        ) : route === 'design' ? (
-          <WorkbenchDesignStage {...design} />
         ) : route === 'write' ? (
           <Suspense fallback={<WorkbenchPaneFallback />}>
             {write.runtimeBanner}

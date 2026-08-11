@@ -12,13 +12,13 @@ export type WorkbenchImageAnnotationOverlayProps = {
   route: string
   activeSddDraft: boolean
   canvasDocumentKey?: string | null
-  canvasDocument: CanvasDocument
-  activeCodeCanvasWorkspace: string
-  designWorkspaceRoot: string
+  canvasDocument?: CanvasDocument
+  activeCodeCanvasWorkspace?: string
+  designWorkspaceRoot?: string
   fallbackWorkspaceRoot: string
   setError: (error: string | null) => void
-  sendCodeCanvasPrompt: (value: string, options?: { displayText?: string }) => Promise<void>
-  sendDesignPrompt: (
+  sendCodeCanvasPrompt?: (value: string, options?: { displayText?: string }) => Promise<void>
+  sendDesignPrompt?: (
     value: string,
     options?: { displayText?: string }
   ) => void
@@ -47,7 +47,7 @@ export function WorkbenchImageAnnotationOverlay({
       shapeId: useImageAnnotationStore.getState().editingShapeId,
       currentDocumentKey: useCanvasShapeStore.getState().documentKey,
       route,
-      activeCodeCanvasWorkspace,
+      activeCodeCanvasWorkspace: activeCodeCanvasWorkspace ?? '',
       designWorkspaceRoot: useDesignWorkspaceStore.getState().workspaceRoot || fallbackWorkspaceRoot,
       workspaceRequiredMessage: t('workspaceRequiredToCreateThread'),
       unsupportedSaveMessage: '当前环境不支持保存批注图片',
@@ -55,8 +55,8 @@ export function WorkbenchImageAnnotationOverlay({
       setError,
       setAnnotationBusy: setBusy,
       closeImageAnnotation,
-      sendCodeCanvasPrompt,
-      sendDesignPrompt
+      sendCodeCanvasPrompt: sendCodeCanvasPrompt ?? (async () => {}),
+      sendDesignPrompt: sendDesignPrompt ?? (() => {})
     })
   }
 

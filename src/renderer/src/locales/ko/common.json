@@ -1759,6 +1759,8 @@
   "composerNoMatchingModels": "일치하는 모델이 없습니다.",
   "composerModelVision": "비전",
   "composerModelTextOnly": "텍스트",
+  "composerImageModel": "이미지 모델",
+  "composerImageModelEmpty": "구성되지 않음",
   "composerReasoning": "추론",
   "composerReasoningAuto": "적응형",
   "composerReasoningOff": "끄기",

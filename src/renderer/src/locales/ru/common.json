@@ -1759,6 +1759,8 @@
   "composerNoMatchingModels": "Нет подходящих моделей",
   "composerModelVision": "Видение",
   "composerModelTextOnly": "Текст",
+  "composerImageModel": "Модель изображений",
+  "composerImageModelEmpty": "Не настроена",
   "composerReasoning": "Рассуждение",
   "composerReasoningAuto": "Адаптивный",
   "composerReasoningOff": "Выкл.",

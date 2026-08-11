@@ -17,8 +17,8 @@ export type ResolveImageAnnotationOverlayOptions = {
   activeSddDraft: boolean
   canvasDocumentKey?: string | null
   annotatingShapeId?: string | null
-  canvasDocument: CanvasDocument
-  activeCodeCanvasWorkspace: string
+  canvasDocument?: CanvasDocument
+  activeCodeCanvasWorkspace?: string
   designWorkspaceRoot?: string | null
   fallbackWorkspaceRoot?: string | null
 }
@@ -32,13 +32,13 @@ export function resolveImageAnnotationOverlayModel(
   if (options.route !== 'design' && !(options.route === 'chat' && isCodeCanvasAnnotation)) return null
   if (options.route === 'chat' && options.activeSddDraft) return null
   const annotatingShape = options.annotatingShapeId
-    ? options.canvasDocument.objects[options.annotatingShapeId]
+    ? options.canvasDocument?.objects[options.annotatingShapeId]
     : undefined
   if (!annotatingShape || annotatingShape.type !== 'image' || !annotatingShape.imageUrl) {
     return null
   }
   const workspaceRoot = isCodeCanvasAnnotation
-    ? options.activeCodeCanvasWorkspace
+    ? (options.activeCodeCanvasWorkspace ?? '')
     : options.designWorkspaceRoot || options.fallbackWorkspaceRoot || ''
   return {
     imageUrl: annotatingShape.imageUrl,

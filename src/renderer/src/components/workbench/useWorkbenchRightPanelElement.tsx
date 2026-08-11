@@ -20,6 +20,40 @@ type ComposerModelProps<T extends {
   setComposerModel: (modelId: string, providerId?: string) => void
 }> = Pick<T, 'composerModel' | 'composerProviderId' | 'composerPickList' | 'setComposerModel'>
 
+type WorkbenchRightPanelDesignOptions = {
+  implementOpen: boolean
+  assistantOpen: boolean
+  implementTitle: DesignImplementProps['title']
+  implementationWorkspaceRoot: DesignImplementProps['workspaceRoot']
+  implementationComposer: ComposerModelProps<DesignImplementProps>
+  assistantComposer: ComposerModelProps<DesignAssistantProps>
+  contextChips: DesignAssistantProps['contextChips']
+  input: string
+  onRemoveContextChip: DesignAssistantProps['onRemoveContextChip']
+  onSendPrompt: (prompt: string) => void
+  createThread: (workspaceRoot?: string, docId?: string) => Promise<string | null>
+  threads: DesignAssistantProps['designThreads']
+  onSwitchThread: DesignAssistantProps['onSwitchThread']
+  fallbackWorkspaceRoot: string
+}
+
+const EMPTY_DESIGN_PANEL: WorkbenchRightPanelDesignOptions = {
+  implementOpen: false,
+  assistantOpen: false,
+  implementTitle: '',
+  implementationWorkspaceRoot: '',
+  implementationComposer: { composerModel: '', composerProviderId: undefined, composerPickList: [], setComposerModel: () => {} },
+  assistantComposer: { composerModel: '', composerProviderId: undefined, composerPickList: [], setComposerModel: () => {} },
+  contextChips: [],
+  input: '',
+  onRemoveContextChip: () => {},
+  onSendPrompt: () => {},
+  createThread: async () => null,
+  threads: [],
+  onSwitchThread: () => {},
+  fallbackWorkspaceRoot: ''
+}
+
 type WorkbenchRightPanelElementOptions = Pick<
   RightPanelHostProps,
   'visible' | 'width' | 'route' | 'rightPanelMode' | 'onBeginResize' | 'writeAssistantOpen'
@@ -29,22 +63,7 @@ type WorkbenchRightPanelElementOptions = Pick<
   onCollapse: () => void
   openSettings: (section?: SettingsRouteSection) => void
   onSend: () => void
-  design: {
-    implementOpen: boolean
-    assistantOpen: boolean
-    implementTitle: DesignImplementProps['title']
-    implementationWorkspaceRoot: DesignImplementProps['workspaceRoot']
-    implementationComposer: ComposerModelProps<DesignImplementProps>
-    assistantComposer: ComposerModelProps<DesignAssistantProps>
-    contextChips: DesignAssistantProps['contextChips']
-    input: string
-    onRemoveContextChip: DesignAssistantProps['onRemoveContextChip']
-    onSendPrompt: (prompt: string) => void
-    createThread: (workspaceRoot?: string, docId?: string) => Promise<string | null>
-    threads: DesignAssistantProps['designThreads']
-    onSwitchThread: DesignAssistantProps['onSwitchThread']
-    fallbackWorkspaceRoot: string
-  }
+  design?: WorkbenchRightPanelDesignOptions
   write: Pick<
     WriteAssistantProps,
     | 'composerModel'
@@ -134,10 +153,11 @@ export function useWorkbenchRightPanelElement({
   code,
   workspaceRoot
 }: WorkbenchRightPanelElementOptions): ReactElement | null {
+  const designValue = design ?? EMPTY_DESIGN_PANEL
   const designPanelMode = resolveDesignPanelMode({
     route,
-    implementOpen: design.implementOpen,
-    assistantOpen: design.assistantOpen
+    implementOpen: designValue.implementOpen,
+    assistantOpen: designValue.assistantOpen
   })
 
   return (
@@ -151,26 +171,26 @@ export function useWorkbenchRightPanelElement({
         panelMode: designPanelMode,
         shared,
         implement: {
-          title: design.implementTitle,
-          workspaceRoot: design.implementationWorkspaceRoot,
-          ...design.implementationComposer,
+          title: designValue.implementTitle,
+          workspaceRoot: designValue.implementationWorkspaceRoot,
+          ...designValue.implementationComposer,
           onSend,
           onOpenSettings: () => openSettings('agents'),
           onClose: onCollapse
         },
         assistant: {
-          ...design.assistantComposer,
-          contextChips: design.contextChips,
-          onRemoveContextChip: design.onRemoveContextChip,
-          onSend: () => design.onSendPrompt(design.input),
+          ...designValue.assistantComposer,
+          contextChips: designValue.contextChips,
+          onRemoveContextChip: designValue.onRemoveContextChip,
+          onSend: () => designValue.onSendPrompt(designValue.input),
           onOpenSettings: (section) => openSettings((section ?? 'design') as SettingsRouteSection),
           onNewConversation: () => {
             const designStore = useDesignWorkspaceStore.getState()
-            const root = designStore.workspaceRoot || design.fallbackWorkspaceRoot
-            if (root) void design.createThread(root, designStore.ensureActiveDocument())
+            const root = designStore.workspaceRoot || designValue.fallbackWorkspaceRoot
+            if (root) void designValue.createThread(root, designStore.ensureActiveDocument())
           },
-          designThreads: design.threads,
-          onSwitchThread: (id) => void design.onSwitchThread(id),
+          designThreads: designValue.threads,
+          onSwitchThread: (id) => void designValue.onSwitchThread(id),
           onCollapse
         }
       }}

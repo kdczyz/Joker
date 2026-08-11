@@ -115,7 +115,6 @@ export function workbenchContextForRoute(
     workspaceOpen: Boolean(workspaceRoot),
     'workbench.mode': route === 'chat' ? 'code' : route,
     'workbench.code': route === 'chat',
-    'workbench.design': route === 'design',
     'workbench.write': route === 'write',
     'workbench.connect': route === 'claw',
     'workbench.settings': route === 'settings',

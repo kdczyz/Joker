@@ -43,8 +43,11 @@ type Props = {
   controlVariant?: 'combined' | 'split'
   stretch?: boolean
   composerReasoningEffort?: string
+  imageModelGroups?: ModelProviderModelGroup[]
+  imageModel?: string
   onComposerModelChange: (modelId: string, providerId?: string) => void
   onComposerReasoningEffortChange?: (effort: ComposerReasoningEffort) => void
+  onImageModelChange?: (modelId: string, providerId: string) => void
   onConfigureProviders?: () => void
 }
 
@@ -134,8 +137,11 @@ export function FloatingComposerModelPicker({
   controlVariant = 'combined',
   stretch = false,
   composerReasoningEffort = 'max',
+  imageModelGroups = [],
+  imageModel = '',
   onComposerModelChange,
   onComposerReasoningEffortChange,
+  onImageModelChange,
   onConfigureProviders
 }: Props): ReactElement {
   const { t } = useTranslation('common')
@@ -147,9 +153,11 @@ export function FloatingComposerModelPicker({
   const reasoningPopoverRef = useRef<HTMLDivElement | null>(null)
   const reasoningDragPointerRef = useRef<number | null>(null)
   const reasoningRowRef = useRef<HTMLButtonElement | null>(null)
+  const imageRowRef = useRef<HTMLButtonElement | null>(null)
   const providerRowRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
   const [menuOpen, setMenuOpen] = useState(false)
   const [reasoningPanelOpen, setReasoningPanelOpen] = useState(false)
+  const [imagePanelOpen, setImagePanelOpen] = useState(false)
   const [reasoningPopoverOpen, setReasoningPopoverOpen] = useState(false)
   const [activeProviderId, setActiveProviderId] = useState<string | null>(null)
   const [modelFilter, setModelFilter] = useState('')
@@ -163,6 +171,10 @@ export function FloatingComposerModelPicker({
       modelOptions
     })
   }, [composerModelGroups, modelOptions])
+  const imageModelMenuGroups = useMemo<ComposerModelMenuGroup[]>(() => {
+    return buildImageModelMenuGroups(imageModelGroups)
+  }, [imageModelGroups])
+  const imageModelEnabled = imageModelMenuGroups.length > 0 && Boolean(onImageModelChange)
   const currentModel = composerModel.trim()
   const selectedProviderGroup = providerMenuGroups.find((group) =>
     group.providerId === composerProviderId.trim() &&
@@ -250,6 +262,7 @@ export function FloatingComposerModelPicker({
       setMenuPlacement(null)
       setSubmenuPlacement(null)
       setReasoningPanelOpen(false)
+      setImagePanelOpen(false)
       setModelFilter('')
       return
     }
@@ -345,7 +358,7 @@ export function FloatingComposerModelPicker({
   }, [menuOpen, providerMenuGroups])
 
   useEffect(() => {
-    if (!menuOpen || (!reasoningPanelOpen && !activeProviderGroup)) {
+    if (!menuOpen || (!reasoningPanelOpen && !imagePanelOpen && !activeProviderGroup)) {
       setSubmenuPlacement(null)
       return
     }
@@ -353,9 +366,11 @@ export function FloatingComposerModelPicker({
     const updatePlacement = (): void => {
       const row = reasoningPanelOpen
         ? reasoningRowRef.current
-        : activeProviderGroup
-          ? providerRowRefs.current.get(activeProviderGroup.providerId)
-          : null
+        : imagePanelOpen
+          ? imageRowRef.current
+          : activeProviderGroup
+            ? providerRowRefs.current.get(activeProviderGroup.providerId)
+            : null
       if (!row) return
 
       setSubmenuPlacement(
@@ -365,7 +380,9 @@ export function FloatingComposerModelPicker({
             submenuRef.current?.offsetHeight
             || (reasoningPanelOpen
               ? estimatedReasoningSubmenuHeight(reasoningOptions.length)
-              : estimatedModelSubmenuHeight(activeProviderModelIds.length)),
+              : imagePanelOpen
+                ? estimatedImageModelSubmenuHeight(imageModelMenuGroups)
+                : estimatedModelSubmenuHeight(activeProviderModelIds.length)),
           viewportHeight: window.innerHeight,
           viewportWidth: window.innerWidth,
           coordinateScale: currentBodyZoom()
@@ -383,7 +400,7 @@ export function FloatingComposerModelPicker({
       window.removeEventListener('resize', updatePlacement)
       window.removeEventListener('scroll', updatePlacement, true)
     }
-  }, [activeProviderGroup, activeProviderModelIds.length, menuOpen, reasoningOptions.length, reasoningPanelOpen])
+  }, [activeProviderGroup, activeProviderModelIds.length, imageModelMenuGroups, imagePanelOpen, menuOpen, reasoningOptions.length, reasoningPanelOpen])
 
   const menuStyle: CSSProperties = menuPlacement
     ? {
@@ -584,11 +601,39 @@ export function FloatingComposerModelPicker({
                 subtitle={currentReasoningLabel}
                 onClick={() => {
                   setActiveProviderId(null)
+                  setImagePanelOpen(false)
                   setReasoningPanelOpen((open) => !open)
                 }}
                 onMouseEnter={() => {
                   setActiveProviderId(null)
+                  setImagePanelOpen(false)
                   setReasoningPanelOpen(true)
+                }}
+              />
+              <MenuSeparator />
+            </>
+          ) : null}
+
+          {imageModelEnabled ? (
+            <>
+              <SubmenuRow
+                refNode={(node) => {
+                  imageRowRef.current = node
+                }}
+                active={imagePanelOpen}
+                selected={false}
+                icon={<ImageIcon className="h-4 w-4 shrink-0 text-ds-faint" strokeWidth={1.9} />}
+                title={t('composerImageModel')}
+                subtitle={imageModel.trim() || t('composerImageModelEmpty')}
+                onClick={() => {
+                  setActiveProviderId(null)
+                  setReasoningPanelOpen(false)
+                  setImagePanelOpen((open) => !open)
+                }}
+                onMouseEnter={() => {
+                  setActiveProviderId(null)
+                  setReasoningPanelOpen(false)
+                  setImagePanelOpen(true)
                 }}
               />
               <MenuSeparator />
@@ -640,10 +685,12 @@ export function FloatingComposerModelPicker({
                     subtitle={selectedModel}
                     onClick={() => {
                       setReasoningPanelOpen(false)
+                      setImagePanelOpen(false)
                       setActiveProviderId(group.providerId)
                     }}
                     onMouseEnter={() => {
                       setReasoningPanelOpen(false)
+                      setImagePanelOpen(false)
                       setActiveProviderId(group.providerId)
                     }}
                   />
@@ -674,6 +721,41 @@ export function FloatingComposerModelPicker({
                     setMenuOpen(false)
                   }}
                 />
+              ))}
+            </div>
+          </div>
+        ) : imagePanelOpen && imageModelEnabled ? (
+          <div
+            ref={submenuRef}
+            role="menu"
+            aria-label={t('composerImageModel')}
+            style={submenuStyle}
+            className="fixed z-[1001] overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-ds-card"
+          >
+            <div className="px-2.5 pb-1 pt-1 text-[11px] font-bold uppercase tracking-[0.08em] text-ds-faint">
+              {t('composerImageModel')}
+            </div>
+            <div className="flex flex-col gap-3">
+              {imageModelMenuGroups.map((group) => (
+                <div key={group.providerId} className="flex flex-col gap-1">
+                  <div className="px-2.5 text-[11.5px] font-semibold text-ds-faint">
+                    {group.label}
+                  </div>
+                  {group.modelIds.map((id) => {
+                    const selected = imageModel.trim().toLowerCase() === id.trim().toLowerCase()
+                    return (
+                      <PickerRow
+                        key={`${group.providerId}:${id}`}
+                        selected={selected}
+                        title={id}
+                        onClick={() => {
+                          onImageModelChange?.(id, group.providerId)
+                          setMenuOpen(false)
+                        }}
+                      />
+                    )
+                  })}
+                </div>
               ))}
             </div>
           </div>
@@ -905,6 +987,32 @@ export function buildComposerModelMenuGroups({
           if (!key || seenInProvider.has(key)) return false
           if (!composerMenuSupportsModel(group, id)) return false
           markModelSeen(seenInProvider, group, id)
+          return true
+        })
+      return {
+        ...group,
+        label: group.label.trim() || group.providerId,
+        modelIds: ids,
+        modelProfiles: group.modelProfiles
+      }
+    })
+    .filter((group) => group.modelIds.length > 0)
+
+  return groups
+}
+
+export function buildImageModelMenuGroups(
+  imageModelGroups: readonly ModelProviderModelGroup[]
+): ComposerModelMenuGroup[] {
+  const groups = imageModelGroups
+    .map((group) => {
+      const seenInProvider = new Set<string>()
+      const ids = group.modelIds
+        .map((id) => id.trim())
+        .filter((id) => {
+          const key = normalizeModelCapabilityKey(id)
+          if (!key || seenInProvider.has(key)) return false
+          seenInProvider.add(key)
           return true
         })
       return {
@@ -1223,6 +1331,12 @@ function estimatedModelSubmenuHeight(modelCount: number): number {
 
 function estimatedReasoningSubmenuHeight(optionCount: number): number {
   return 34 + Math.max(1, optionCount) * 36 + 12
+}
+
+function estimatedImageModelSubmenuHeight(groups: readonly ComposerModelMenuGroup[]): number {
+  const headerCount = groups.length
+  const rowCount = groups.reduce((sum, group) => sum + Math.max(1, group.modelIds.length), 0)
+  return 34 + headerCount * 20 + rowCount * 36 + 12
 }
 
 function normalizeModelCapabilityKey(modelId: string): string {

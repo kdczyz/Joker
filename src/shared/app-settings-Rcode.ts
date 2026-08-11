@@ -70,6 +70,9 @@ import {
 } from './app-settings-provider'
 import {
   LOCAL_WHISPER_DEFAULT_DOWNLOAD_SOURCE_ID,
+  LOCAL_WHISPER_DEFAULT_MODEL_ID,
+  LOCAL_WHISPER_PROVIDER_ID,
+  LOCAL_WHISPER_PROTOCOL,
   isLocalWhisperDownloadSourceId
 } from './local-whisper'
 
@@ -230,12 +233,12 @@ export function defaultRcodeImageGenerationSettings(): RcodeImageGenerationSetti
 
 export function defaultRcodeSpeechToTextSettings(): RcodeSpeechToTextSettingsV1 {
   return {
-    enabled: false,
-    providerId: '',
-    protocol: DEFAULT_SPEECH_TO_TEXT_PROTOCOL,
+    enabled: true,
+    providerId: LOCAL_WHISPER_PROVIDER_ID,
+    protocol: LOCAL_WHISPER_PROTOCOL,
     baseUrl: '',
     apiKey: '',
-    model: '',
+    model: LOCAL_WHISPER_DEFAULT_MODEL_ID,
     localWhisperDownloadSource: LOCAL_WHISPER_DEFAULT_DOWNLOAD_SOURCE_ID,
     language: '',
     timeoutMs: 60_000

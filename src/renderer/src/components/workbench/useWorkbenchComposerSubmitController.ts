@@ -60,7 +60,7 @@ type UseWorkbenchComposerSubmitControllerParams = {
   activeSddDraft: boolean
   activeThreadId: string | null
   attachmentUploadEnabled: boolean
-  buildCodeCanvasOutboundPrompt: (input: CodeCanvasOutboundPromptInput) => Promise<string>
+  buildCodeCanvasOutboundPrompt?: (input: CodeCanvasOutboundPromptInput) => Promise<string>
   clearComposerAttachments: (scope?: ComposerAttachmentScope) => void
   removeComposerAttachments: (ids: readonly string[], scope?: ComposerAttachmentScope) => void
   clearComposerFileReferences: () => void
@@ -669,7 +669,7 @@ export function useWorkbenchComposerSubmitController({
         whiteboardOpen: rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.canvas,
         hasSelection: useCanvasSelectionStore.getState().selectedIds.size > 0
       })
-      if (codeCanvasRoute) {
+      if (codeCanvasRoute && buildCodeCanvasOutboundPrompt) {
         outboundText = await buildCodeCanvasOutboundPrompt({
           baseText: codeCanvasRoute.baseText,
           canvasBrief: codeCanvasRoute.canvasBrief

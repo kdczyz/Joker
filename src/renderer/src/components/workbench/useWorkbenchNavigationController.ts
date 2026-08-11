@@ -3,7 +3,6 @@ import type { WorkspaceFileTarget } from '@shared/workspace-file'
 import type { NormalizedThread, RuntimeConnectionStatus } from '../../agent/types'
 import { useChatStore } from '../../store/chat-store'
 import type { ChatState } from '../../store/chat-store-types'
-import { useDesignWorkspaceStore } from '../../design/design-workspace-store'
 import { useWriteWorkspaceStore } from '../../write/write-workspace-store'
 import type { SddDraft } from '../../sdd/sdd-draft-store'
 import { useSddDraftStore } from '../../sdd/sdd-draft-store'
@@ -39,7 +38,6 @@ type UseWorkbenchNavigationControllerParams = {
   ) => Promise<SddDraft | null>
   openClaw: ChatState['openClaw']
   openCode: ChatState['openCode']
-  openDesign: ChatState['openDesign']
   openPlugins: ChatState['openPlugins']
   openSchedule: ChatState['openSchedule']
   openWorkflow: ChatState['openWorkflow']
@@ -47,7 +45,6 @@ type UseWorkbenchNavigationControllerParams = {
   openSddRequirementDraftFromHistory: (draft: SddDraft) => Promise<void>
   selectThread: ChatState['selectThread']
   setConnectPhoneSidebarOpen: Dispatch<SetStateAction<boolean>>
-  setDesignAssistantOpen: (open: boolean) => void
   setFilePreviewTarget: (target: WorkspaceFileTarget | null) => void
   setInput: (value: string) => void
   setRightPanelMode: (mode: RightPanelMode) => void
@@ -58,7 +55,6 @@ type UseWorkbenchNavigationControllerParams = {
 
 export type WorkbenchNavigationController = {
   closeRightPanel: () => void
-  exploreSddRequirementInDesign: () => void
   openCodeMode: () => void
   openPluginsView: () => void
   openExtensionsView: () => void
@@ -97,7 +93,6 @@ export function useWorkbenchNavigationController({
   findSddDraftForSidebarThread,
   openClaw,
   openCode,
-  openDesign,
   openPlugins,
   openSchedule,
   openWorkflow,
@@ -105,7 +100,6 @@ export function useWorkbenchNavigationController({
   openSddRequirementDraftFromHistory,
   selectThread,
   setConnectPhoneSidebarOpen,
-  setDesignAssistantOpen,
   setFilePreviewTarget,
   setInput,
   setRightPanelMode,
@@ -208,13 +202,6 @@ export function useWorkbenchNavigationController({
     openClaw()
   }, [openClaw, setConnectPhoneSidebarOpen])
 
-  const exploreSddRequirementInDesign = useCallback((): void => {
-    const requirement = sddDraftContent.trim()
-    dismissActiveSddDraft({ closeAssistant: true })
-    setInput(requirement)
-    openDesign()
-  }, [dismissActiveSddDraft, openDesign, sddDraftContent, setInput])
-
   const openPluginsView = useCallback((): void => {
     setConnectPhoneSidebarOpen(false)
     openPlugins(sidebarView === 'claw' ? 'claw' : 'chat')
@@ -252,16 +239,6 @@ export function useWorkbenchNavigationController({
       setWriteAssistantOpen(false)
       return
     }
-    if (route === 'design') {
-      const designState = useDesignWorkspaceStore.getState()
-      if (designState.implementOpen) {
-        designState.closeImplementPanel()
-        setDesignAssistantOpen(true)
-      } else {
-        setDesignAssistantOpen(false)
-      }
-      return
-    }
     if (rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.file) clearFilePreviewTargets()
     setRightPanelMode(null)
     setFilePreviewTarget(null)
@@ -269,7 +246,6 @@ export function useWorkbenchNavigationController({
     clearFilePreviewTargets,
     rightPanelMode,
     route,
-    setDesignAssistantOpen,
     setFilePreviewTarget,
     setRightPanelMode,
     setWriteAssistantOpen
@@ -304,7 +280,6 @@ export function useWorkbenchNavigationController({
 
   return {
     closeRightPanel,
-    exploreSddRequirementInDesign,
     openCodeMode,
     openClawMode,
     openPluginsView,

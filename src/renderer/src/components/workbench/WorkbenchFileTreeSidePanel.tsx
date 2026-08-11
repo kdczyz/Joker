@@ -13,8 +13,8 @@ export type WorkbenchFileTreeSidePanelProps = {
   view: WorkbenchFileTreeSidePanelView
   width: number
   workspaceRoot: string
-  designWorkspaceRoot: string
-  designDocuments: readonly DesignDocument[]
+  designWorkspaceRoot?: string
+  designDocuments?: readonly DesignDocument[]
   activeDesignDocumentId?: string | null
   selectedTarget?: WorkspaceFileTarget | null
   onViewChange: (view: WorkbenchFileTreeSidePanelView) => void
@@ -83,7 +83,7 @@ export function WorkbenchFileTreeSidePanel({
               designWorkspaceRoot ? (
                 <ChatDesignTreePanel
                   workspaceRoot={designWorkspaceRoot}
-                  documents={designDocuments}
+                  documents={designDocuments ?? []}
                   activeDocumentId={activeDesignDocumentId}
                   onAddReference={onAddReference}
                   t={t}

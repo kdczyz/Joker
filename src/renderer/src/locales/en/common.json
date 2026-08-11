@@ -1761,6 +1761,8 @@
   "composerModelVision": "Vision",
   "composerModelTextOnly": "Text",
   "composerModelContextWindow": "Context window",
+  "composerImageModel": "Image model",
+  "composerImageModelEmpty": "Not configured",
   "composerReasoning": "Reasoning",
   "composerReasoningAuto": "Adaptive",
   "composerReasoningOff": "Off",

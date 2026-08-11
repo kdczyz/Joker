@@ -38,7 +38,7 @@ type UseWorkbenchChatComposerPropsInput = {
   attachmentUploadError: string | null
   activeSddDraft: boolean
   composerFileReferences: ComposerProps['fileReferences']
-  extraFileMentionCandidates: ComposerProps['extraFileMentionCandidates']
+  extraFileMentionCandidates?: ComposerProps['extraFileMentionCandidates']
   webAccessAvailable: boolean
   composerExecutionSettings: ComposerProps['executionSettings']
   composerExecutionApplying: boolean
@@ -51,7 +51,7 @@ type UseWorkbenchChatComposerPropsInput = {
   addComposerFileReference: NonNullable<ComposerProps['onAddFileReference']>
   pickComposerFileReferences: () => void | Promise<unknown>
   openFileTreeSidePanel: () => void
-  openDesignFileTreeSidePanel: () => void
+  openDesignFileTreeSidePanel?: () => void
   removeComposerFileReference: NonNullable<ComposerProps['onRemoveFileReference']>
   queuedMessages: QueuedUserMessage[]
   removeQueuedMessage: ComposerProps['onRemoveQueuedMessage']
@@ -103,7 +103,7 @@ export function useWorkbenchChatComposerProps({
   attachmentUploadError,
   activeSddDraft,
   composerFileReferences,
-  extraFileMentionCandidates,
+  extraFileMentionCandidates = [],
   webAccessAvailable,
   composerExecutionSettings,
   composerExecutionApplying,
@@ -191,7 +191,7 @@ export function useWorkbenchChatComposerProps({
     onAddFileReference: addComposerFileReference,
     onPickFileReferences: () => void pickComposerFileReferences(),
     onOpenFileReferencePicker: openFileTreeSidePanel,
-    onOpenDesignReferencePicker: openDesignFileTreeSidePanel,
+    onOpenDesignReferencePicker: openDesignFileTreeSidePanel ?? (() => {}),
     onRemoveFileReference: removeComposerFileReference,
     queuedMessages: queuedMessages.map((message) => ({
       id: message.id,

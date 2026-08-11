@@ -13,8 +13,8 @@ export type WorkbenchComposerCapabilitiesOptions = {
   route: string
   rightPanelMode: RightPanelMode | null
   activeClawModel?: string | null
-  designAssistantModel: string
-  resolvedDesignAssistantProviderId: string
+  designAssistantModel?: string
+  resolvedDesignAssistantProviderId?: string
   writeAssistantModel: string
   resolvedWriteAssistantProviderId: string
   composerModel: string
@@ -102,14 +102,14 @@ export function useWorkbenchComposerCapabilities({
   const selectedComposerModel =
     route === 'claw'
       ? activeClawModel ?? 'auto'
-      : route === 'design'
-        ? designAssistantModel
-        : route === 'write' || rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.sddAi
+    : route === 'design'
+      ? (designAssistantModel ?? '')
+      : route === 'write' || rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.sddAi
           ? writeAssistantModel
           : composerModel
   const selectedComposerProviderId =
     route === 'design'
-      ? resolvedDesignAssistantProviderId
+      ? (resolvedDesignAssistantProviderId ?? '')
       : route === 'write' || rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.sddAi
         ? resolvedWriteAssistantProviderId
         : route === 'chat'

@@ -1761,6 +1761,8 @@
   "composerModelVision": "识图",
   "composerModelTextOnly": "文本",
   "composerModelContextWindow": "上下文窗口",
+  "composerImageModel": "生图模型",
+  "composerImageModelEmpty": "未配置",
   "composerReasoning": "推理",
   "composerReasoningAuto": "自适应",
   "composerReasoningOff": "关闭",

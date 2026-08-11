@@ -53,6 +53,11 @@ import {
   type TextToSpeechProtocol,
   type VideoGenerationProtocol
 } from './app-settings-types'
+import {
+  LOCAL_WHISPER_PROVIDER_ID,
+  LOCAL_WHISPER_PROTOCOL,
+  LOCAL_WHISPER_DEFAULT_MODEL_ID
+} from './local-whisper'
 import { normalizeModelEndpointFormat, type ModelEndpointFormat } from '../../Rcode/src/contracts/model-endpoint-format.js'
 import { getRcodeRuntimeSettings } from './app-settings-Rcode'
 import { normalizeModelProviderBaseUrl as normalizeBaseUrl } from './app-settings-normalizers'
@@ -534,11 +539,27 @@ export function resolveRcodeSpeechToTextSettings(settings: AppSettingsV1): Rcode
   const runtime = getRcodeRuntimeSettings(settings)
   const speechToText = runtime.speechToText
   const providerId = normalizeModelProviderId(speechToText.providerId)
+  const protocol = normalizeSpeechToTextProtocol(speechToText.protocol)
+  // Local Whisper is fully self-contained: it resolves its model from disk and
+  // never goes through a remote provider profile. Short-circuit before
+  // getModelProviderProfile, which would otherwise fail to find a `local-whisper`
+  // provider and fall back to providers[0] (a remote endpoint such as mimo),
+  // routing transcription requests to a remote URL and 404-ing.
+  if (providerId === LOCAL_WHISPER_PROVIDER_ID || protocol === LOCAL_WHISPER_PROTOCOL) {
+    return {
+      ...speechToText,
+      providerId: LOCAL_WHISPER_PROVIDER_ID,
+      protocol: LOCAL_WHISPER_PROTOCOL,
+      baseUrl: '',
+      apiKey: '',
+      model: speechToText.model || LOCAL_WHISPER_DEFAULT_MODEL_ID
+    }
+  }
   if (!providerId || providerId === CUSTOM_SPEECH_TO_TEXT_PROVIDER_ID) {
     return {
       ...speechToText,
       providerId,
-      protocol: normalizeSpeechToTextProtocol(speechToText.protocol)
+      protocol
     }
   }
   const provider = getModelProviderProfile(settings, providerId)

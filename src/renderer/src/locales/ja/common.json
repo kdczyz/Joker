@@ -1759,6 +1759,8 @@
   "composerNoMatchingModels": "一致するモデルがありません",
   "composerModelVision": "ビジョン",
   "composerModelTextOnly": "テキスト",
+  "composerImageModel": "画像モデル",
+  "composerImageModelEmpty": "未設定",
   "composerReasoning": "推論",
   "composerReasoningAuto": "アダプティブ",
   "composerReasoningOff": "オフ",

@@ -1759,6 +1759,8 @@
   "composerNoMatchingModels": "ไม่มีรุ่นที่ตรงกัน",
   "composerModelVision": "วิสัยทัศน์",
   "composerModelTextOnly": "ข้อความ",
+  "composerImageModel": "โมเดลภาพ",
+  "composerImageModelEmpty": "ไม่ได้กำหนดค่า",
   "composerReasoning": "การใช้เหตุผล",
   "composerReasoningAuto": "ปรับตัวได้",
   "composerReasoningOff": "ปิด",

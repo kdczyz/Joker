@@ -9,23 +9,23 @@ describe('WorkspaceModeTabs', () => {
     await i18n.changeLanguage('en')
   })
 
-  function props(activeView: 'chat' | 'workflow' | 'write' | 'design' = 'chat') {
+  function props(
+    activeView: 'chat' | 'write' | 'claw' | 'schedule' | 'workflow' | 'subagents' = 'chat'
+  ) {
     return {
       activeView,
       onCodeOpen: vi.fn(),
-      onWriteOpen: vi.fn(),
-      onDesignOpen: vi.fn()
+      onWriteOpen: vi.fn()
     }
   }
 
-  it('renders three top-level mode tab buttons', () => {
+  it('renders two top-level mode tab buttons (Code and Write)', () => {
     const html = renderToStaticMarkup(createElement(WorkspaceModeTabs, props()))
 
     expect(html).toContain('Code')
     expect(html).toContain('Write')
-    expect(html).toContain('Design')
-    expect(html).not.toContain('Loop')
-    expect(html.match(/role="tab"/g)?.length).toBe(3)
+    expect(html).not.toContain('Design')
+    expect(html.match(/role="tab"/g)?.length).toBe(2)
   })
 
   it('uses horizontal row layout not vertical column', () => {
@@ -44,22 +44,22 @@ describe('WorkspaceModeTabs', () => {
     )
 
     const flex1Matches = html.match(/flex-1/g)
-    expect(flex1Matches?.length).toBe(3)
+    expect(flex1Matches?.length).toBe(2)
   })
 
   it('marks active button with aria-selected true', () => {
-    for (const activeView of ['chat', 'write', 'design'] as const) {
+    for (const activeView of ['chat', 'write'] as const) {
       const html = renderToStaticMarkup(createElement(WorkspaceModeTabs, props(activeView)))
       expect(html.match(/aria-selected="true"/g)?.length).toBe(1)
-      expect(html.match(/aria-selected="false"/g)?.length).toBe(2)
+      expect(html.match(/aria-selected="false"/g)?.length).toBe(1)
     }
   })
 
-  it('does not mark a top tab active while the moved Loop view is active', () => {
+  it('does not mark a top tab active while another view is active', () => {
     const html = renderToStaticMarkup(createElement(WorkspaceModeTabs, props('workflow')))
 
     expect(html).not.toContain('aria-selected="true"')
-    expect(html.match(/aria-selected="false"/g)?.length).toBe(3)
+    expect(html.match(/aria-selected="false"/g)?.length).toBe(2)
   })
 
   it('uses all-or-icon labels instead of truncating tab text', () => {
@@ -85,7 +85,7 @@ describe('WorkspaceModeTabs', () => {
     )
 
     expect(html).toContain('role="tablist"')
-    expect(html).toContain('Code / Write / Design')
+    expect(html).toContain('Code / Write')
   })
 
   it('does not render secondary switches in the sidebar mode tabs', () => {
@@ -94,6 +94,6 @@ describe('WorkspaceModeTabs', () => {
     )
 
     expect(html).not.toContain('role="switch"')
-    expect(html.match(/role="tab"/g)?.length).toBe(3)
+    expect(html.match(/role="tab"/g)?.length).toBe(2)
   })
 })

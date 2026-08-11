@@ -11,7 +11,6 @@ import { useWorkbenchSddThreadController } from './workbench/useWorkbenchSddThre
 import { useWorkbenchSddTurnController } from './workbench/useWorkbenchSddTurnController'
 import { useWorkbenchComposerSubmitController } from './workbench/useWorkbenchComposerSubmitController'
 import { useWorkbenchNavigationController } from './workbench/useWorkbenchNavigationController'
-import { useWorkbenchDesignRuntime } from './workbench/useWorkbenchDesignRuntime'
 import { useWorkbenchRuntimeMetadata } from './workbench/useWorkbenchRuntimeMetadata'
 import { useWorkbenchExecutionSettings } from './workbench/useWorkbenchExecutionSettings'
 import { useWorkbenchKeyboardShortcuts } from './workbench/useWorkbenchKeyboardShortcuts'
@@ -25,7 +24,6 @@ import { useWorkbenchPlanPanelRuntime } from './workbench/useWorkbenchPlanPanelR
 import { useWorkbenchWriteAssistantRuntime } from './workbench/useWorkbenchWriteAssistantRuntime'
 import { useWorkbenchUiRuntime } from './workbench/useWorkbenchUiRuntime'
 import { useWorkbenchAttachmentRuntime } from './workbench/useWorkbenchAttachmentRuntime'
-import { useWorkbenchDesignAgentRuntime } from './workbench/useWorkbenchDesignAgentRuntime'
 import { WorkbenchImageAnnotationHost } from './workbench/WorkbenchImageAnnotationHost'
 import { isWriteThreadId } from '../write/write-thread-registry'
 import { useSddDraftStore } from '../sdd/sdd-draft-store'
@@ -38,8 +36,6 @@ import { normalizeWorkspaceRoot, workspaceRootScopeKey } from '../lib/workspace-
 import {
   relativeWorkspacePath,
 } from '../lib/composer-file-references'
-import { useDesignWorkspaceStore } from '../design/design-workspace-store'
-import { designDocumentComposerFileReferences } from '../design/design-document-file-reference'
 import {
   readBrowserStorageItem,
   removeBrowserStorageItem,
@@ -109,8 +105,8 @@ export function Workbench(): ReactElement {
     activeThreadParentId, selectThread, createThread, createConversation, blocks,
     liveReasoning, liveAssistant, error, runtimeErrorDetail, runtimeStatus, busy,
     route, pluginHostRoute, workspaceRoot, conversationWorkspaceRoot, runtimeConnection,
-    setRoute, openCode, openWrite, openDesign, ensureWriteThreadForWorkspace,
-    ensureDesignThreadForWorkspace, createWriteThread, createDesignThread, openSettings,
+    setRoute, openCode, openWrite, ensureWriteThreadForWorkspace,
+    createWriteThread, openSettings,
     openPlugins, openClaw, openSchedule, openWorkflow, chooseWorkspace, clawChannels,
     activeClawChannelId, selectClawChannel, resetClawChannelSession, setClawChannelModel,
     appendLocalClawTurn, setError, sendMessage, reviewActiveThread, queuedMessages,
@@ -153,7 +149,6 @@ export function Workbench(): ReactElement {
   const [useWorktreePool, setUseWorktreePool] = useState(false)
   const [worktreeBranch, setWorktreeBranch] = useState('')
   const [connectPhoneSidebarOpen, setConnectPhoneSidebarOpen] = useState(false)
-  const designDocuments = useDesignWorkspaceStore((s) => s.documents)
   const { runtimeLogPath, toggleTheme, uiModeCameosEnabled } =
     useWorkbenchUiRuntime()
   const contributionContext = useMemo(
@@ -269,23 +264,6 @@ export function Workbench(): ReactElement {
     composerPickList,
     composerModelGroups
   })
-  const {
-    designWorkspaceRoot, designAssistantOpen, setDesignAssistantOpen, designImplementOpen,
-    designImplementTitle, designActiveDocumentId, designAssistantModel, setDesignAssistantModel,
-    canvasDocument, canvasDocumentKey, canvasSelectedIds, designAssistantPickList,
-    resolvedDesignAssistantProviderId, selectCanvasShape, designContextChips,
-    designContextSuppressedIds, designHtmlElementContext, removeDesignContextChip,
-    handleDesignHtmlElementAsContext
-  } = useWorkbenchDesignRuntime({
-    route,
-    composerPickList,
-    composerModelGroups,
-    setInput
-  })
-  const designDocumentFileMentionCandidates = useMemo(() => {
-    const root = normalizeWorkspaceRoot(designWorkspaceRoot || workspaceRoot)
-    return root ? designDocumentComposerFileReferences(designDocuments, root) : []
-  }, [designDocuments, designWorkspaceRoot, workspaceRoot])
 
   useEffect(() => {
     busyRef.current = busy
@@ -332,8 +310,6 @@ export function Workbench(): ReactElement {
     setRightSidebarWidth, shellRef, terminalHeight, terminalOpen, toggleLeftSidebar, toggleTerminal,
   } = useWorkbenchLayout({
     activeThreadId,
-    designAssistantOpen,
-    designImplementOpen,
     latestAutoOpenDevPreviewUrl,
     latestDevPreviewUrl,
     route,
@@ -520,7 +496,7 @@ export function Workbench(): ReactElement {
     removeComposerFileReference, openWorkspaceFilePreviewTarget, previewWorkspaceFileFromSidebar,
     closeWorkspaceFilePreviewTarget, togglePinnedFilePreviewTarget, closeOtherFilePreviewTargets,
     togglePreserveFilePreviewTargets, addWorkspaceReferenceFromSidebar,
-    openFileTreeSidePanel, openDesignFileTreeSidePanel, setFileTreeSidePanelView,
+    openFileTreeSidePanel, setFileTreeSidePanelView,
     clearFilePreviewTargets
   } = useWorkbenchFileTreeController({
     route,
@@ -619,11 +595,6 @@ export function Workbench(): ReactElement {
     openRightPanelTab(BUILTIN_RIGHT_PANEL_IDS.files)
   }, [openFileTreeSidePanel, openRightPanelTab])
 
-  const openDesignFileTreeTab = useCallback((): void => {
-    openDesignFileTreeSidePanel()
-    openRightPanelTab(BUILTIN_RIGHT_PANEL_IDS.files)
-  }, [openDesignFileTreeSidePanel, openRightPanelTab])
-
   const openCodeRightTool = useCallback((id: RightPanelContributionId): void => {
     if (id === BUILTIN_RIGHT_PANEL_IDS.terminal) {
       toggleTerminal()
@@ -682,8 +653,6 @@ export function Workbench(): ReactElement {
     route,
     rightPanelMode,
     activeClawModel: activeClawChannel?.model,
-    designAssistantModel,
-    resolvedDesignAssistantProviderId,
     writeAssistantModel,
     resolvedWriteAssistantProviderId,
     composerModel,
@@ -707,8 +676,6 @@ export function Workbench(): ReactElement {
     webAccessAvailable
   } = useWorkbenchAttachmentRuntime({
     activeThreadId,
-    canvasDocument,
-    canvasSelectedIds,
     composerMode,
     modelUnsupportedMessage: t('composerAttachmentModelUnsupported'),
     rightPanelMode,
@@ -716,50 +683,6 @@ export function Workbench(): ReactElement {
     runtimeConnection,
     runtimeInfo,
     selectedModelSupportsImageInput,
-    threads,
-    workspaceRoot
-  })
-
-  const {
-    buildCodeCanvasOutboundPrompt,
-    designThreads,
-    handleDesignQualityRepairRequest,
-    handleDesignRuntimeQualityFindings,
-    implementDesignInCode,
-    openDesignMode,
-    sendCodeCanvasPrompt,
-    sendDesignPrompt,
-    switchDesignThread
-  } = useWorkbenchDesignAgentRuntime({
-    activeCodeCanvasWorkspace,
-    activeDocumentId: designActiveDocumentId,
-    activeThreadId,
-    attachmentUploadEnabled,
-    busy,
-    clearHtmlElementContext: () => handleDesignHtmlElementAsContext(null),
-    clearComposerAttachments,
-    composerAttachments,
-    composerModelGroups,
-    composerReasoningEffort,
-    createThread,
-    designContextSuppressedIds,
-    designHtmlElementContext,
-    designWorkspaceRoot,
-    ensureDesignThreadForWorkspace,
-    getAttachmentScope,
-    clearActiveThreadSelection,
-    openDesign,
-    rightPanelMode,
-    route,
-    runtimeConnection,
-    selectThread,
-    sendMessage,
-    setAttachmentUploadError,
-    setConnectPhoneSidebarOpen,
-    setDesignAssistantOpen,
-    setError,
-    setInput,
-    setRightPanelMode,
     threads,
     workspaceRoot
   })
@@ -781,7 +704,7 @@ export function Workbench(): ReactElement {
     activeClawChannelId, activeClawChannelModel: activeClawChannel?.model,
     activeClawChannelProviderId: activeClawChannel?.providerId,
     activeSddDraft: Boolean(activeSddDraft), activeThreadId, attachmentUploadEnabled,
-    buildCodeCanvasOutboundPrompt, clearComposerAttachments, removeComposerAttachments, clearComposerFileReferences,
+    clearComposerAttachments, removeComposerAttachments, clearComposerFileReferences,
     composerAttachments, composerFileReferences, composerMode, composerModelGroups,
     composerReasoningEffort, getAttachmentScope,
     handleGuiPlanCommand, input, resetClawChannelSession, rightPanelMode, route,
@@ -791,7 +714,7 @@ export function Workbench(): ReactElement {
   })
 
   const {
-    closeRightPanel, exploreSddRequirementInDesign, openClawMode, openCodeMode, openPluginsView, openExtensionsView, openScheduleView,
+    closeRightPanel, openCodeMode, openPluginsView, openExtensionsView, openScheduleView,
     openThread, openWorkflowView, openWriteMode, pickWriteAssistantWorkspace, sidebarView,
     startNewChat, startNewChatInWorkspace, startNewConversation, startNewWriteAssistantConversation,
     toggleConnectPhone
@@ -799,9 +722,9 @@ export function Workbench(): ReactElement {
     activeSddDraft: Boolean(activeSddDraft), activeThreadId, pluginHostRoute, rightPanelMode, route,
     runtimeConnection, sddDraftContent, threads, useWorktreePool, workspaceRoot, worktreeBranch,
     clearFilePreviewTargets, createConversation, createThread, createWriteThread, dismissActiveSddDraft,
-    ensureWriteThreadForWorkspace, findSddDraftForSidebarThread, openClaw, openCode, openDesign,
+    ensureWriteThreadForWorkspace, findSddDraftForSidebarThread, openClaw, openCode,
     openPlugins, openSchedule, openWorkflow, openWrite, openSddRequirementDraftFromHistory,
-    selectThread, setConnectPhoneSidebarOpen, setDesignAssistantOpen, setFilePreviewTarget, setInput,
+    selectThread, setConnectPhoneSidebarOpen, setFilePreviewTarget, setInput,
     setRightPanelMode, setRoute, setUseWorktreePool, setWriteAssistantOpen
   })
 
@@ -816,11 +739,10 @@ export function Workbench(): ReactElement {
     removeContextChip: removeExtensionComposerContext,
     attachmentUploadEnabled, attachmentUploadBusy, attachmentUploadError,
     activeSddDraft: Boolean(activeSddDraft), composerFileReferences,
-    extraFileMentionCandidates: designDocumentFileMentionCandidates, webAccessAvailable,
+    webAccessAvailable,
     composerExecutionSettings, composerExecutionApplying, composerChangeSummary, runtimeSkills, disabledSkillIds,
     handlePickAttachments, handlePasteClipboardImage, removeComposerAttachment, addComposerFileReference,
     pickComposerFileReferences, openFileTreeSidePanel: openWorkspaceFileTreeTab,
-    openDesignFileTreeSidePanel: openDesignFileTreeTab,
     removeComposerFileReference, queuedMessages,
     removeQueuedMessage, guideQueuedMessage, interrupt, handleGuiPlanCommand, useWorktreePool, worktreeBranch, setWorktreeBranch,
     setUseWorktreePool, createThread, activeSkillWorkspace, reviewActiveThread, updateComposerExecutionSettings,
@@ -878,14 +800,8 @@ export function Workbench(): ReactElement {
     <WorkbenchImageAnnotationHost
       route={route}
       activeSddDraft={Boolean(activeSddDraft)}
-      canvasDocumentKey={canvasDocumentKey}
-      canvasDocument={canvasDocument}
-      activeCodeCanvasWorkspace={activeCodeCanvasWorkspace}
-      designWorkspaceRoot={designWorkspaceRoot}
       fallbackWorkspaceRoot={workspaceRoot}
       setError={setError}
-      sendCodeCanvasPrompt={sendCodeCanvasPrompt}
-      sendDesignPrompt={sendDesignPrompt}
     />
   )
 
@@ -901,32 +817,6 @@ export function Workbench(): ReactElement {
     onCollapse: route === 'chat' ? collapseRightPanel : closeRightPanel,
     openSettings,
     onSend: handleSend,
-    design: {
-      implementOpen: designImplementOpen,
-      assistantOpen: designAssistantOpen,
-      implementTitle: designImplementTitle,
-      implementationWorkspaceRoot: workspaceRoot,
-      implementationComposer: {
-        composerModel,
-        composerProviderId,
-        composerPickList,
-        setComposerModel
-      },
-      assistantComposer: {
-        composerModel: designAssistantModel,
-        composerProviderId: resolvedDesignAssistantProviderId,
-        composerPickList: designAssistantPickList,
-        setComposerModel: setDesignAssistantModel
-      },
-      contextChips: designContextChips,
-      input,
-      onRemoveContextChip: removeDesignContextChip,
-      onSendPrompt: sendDesignPrompt,
-      createThread: createDesignThread,
-      threads: designThreads,
-      onSwitchThread: switchDesignThread,
-      fallbackWorkspaceRoot: workspaceRoot
-    },
     write: {
       composerModel: writeAssistantModel,
       composerProviderId: resolvedWriteAssistantProviderId,
@@ -978,9 +868,6 @@ export function Workbench(): ReactElement {
         view: fileTreeSidePanelView,
         width: FILE_TREE_SIDEBAR_WIDTH,
         workspaceRoot: fileTreeWorkspaceRoot,
-        designWorkspaceRoot: normalizeWorkspaceRoot(designWorkspaceRoot || workspaceRoot),
-        designDocuments,
-        activeDesignDocumentId: designActiveDocumentId,
         selectedTarget: filePreviewTarget,
         onViewChange: setFileTreeSidePanelView,
         onPreviewFile: previewWorkspaceFileFromSidebar,
@@ -1009,7 +896,7 @@ export function Workbench(): ReactElement {
         const viewRoot = target?.closest<HTMLElement>('.ds-extension-view')
         const location = viewRoot
           ? 'view'
-          : activeExtensionCenterView || route === 'design' || route === 'write'
+          : activeExtensionCenterView || route === 'write'
             ? 'editor'
             : 'workspace'
         if (!extensionHostContextMenus.some((item) => item.payload.location === location)) return
@@ -1056,8 +943,6 @@ export function Workbench(): ReactElement {
         onToggleConnectPhone={toggleConnectPhone}
         onCodeOpen={openCodeMode}
         onWriteOpen={openWriteMode}
-        onDesignOpen={openDesignMode}
-        onClawOpen={openClawMode}
         onScheduleOpen={openScheduleView}
         onWorkflowOpen={openWorkflowView}
         onNewConversation={startNewConversation}
@@ -1081,29 +966,6 @@ export function Workbench(): ReactElement {
         leftSidebarCollapsed={leftSidebarCollapsed}
         onToggleLeftSidebar={toggleLeftSidebar}
         onOpenThread={openThread}
-        design={{
-          leftSidebarCollapsed,
-          onToggleLeftSidebar: toggleLeftSidebar,
-          busy,
-          onOpenAgentSettings: () => openSettings('design'),
-          onImplementDesign: implementDesignInCode,
-          onUseElementAsContext: handleDesignHtmlElementAsContext,
-          onScreenCreated: (shapeId, userPrompt, brief) => {
-            selectCanvasShape(shapeId)
-            // Prefer the agent's expanded screen brief over the raw user prompt.
-            const screenPrompt = brief?.trim() || userPrompt || 'Design this screen'
-            sendDesignPrompt(screenPrompt, { screenShapeId: shapeId })
-          },
-          onSvgCreated: async (artifactId, shapeId, userPrompt, brief) => {
-            selectCanvasShape(shapeId)
-            return sendDesignPrompt(brief || userPrompt || 'Create this SVG motion design', {
-              svgArtifactId: artifactId
-            })
-          },
-          onRuntimeQualityFindings: handleDesignRuntimeQualityFindings,
-          onRequestQualityRepair: handleDesignQualityRepairRequest,
-          rightPanel
-        }}
         write={{
           runtimeBanner: writeRuntimeBanner,
           leftSidebarCollapsed,
@@ -1125,7 +987,6 @@ export function Workbench(): ReactElement {
             onToggleAssistant: () => void toggleSddAssistantPanel(),
             onAssistantQuote: quoteToSddAssistant,
             onPrototypeTurn: sendSddPrototypeTurn,
-            onExploreInDesign: exploreSddRequirementInDesign,
             onNext: () => void handleSddNextStep(),
             onClose: () => dismissActiveSddDraft({ closeAssistant: true }),
             nextDisabled: busy || runtimeConnection !== 'ready' || sddDraftOperationStatus === 'upgrading'
@@ -1188,23 +1049,7 @@ export function Workbench(): ReactElement {
               return result
             }
           },
-          rightPanel,
-          sideRail: {
-            rightPanelMode,
-            onToggleRightPanelMode: openCodeRightTool,
-            planPanelEnabled: Boolean(activeGuiPlan),
-            canvasEnabled: true,
-            sideChatCount: currentSideConversations.length,
-            sideChatRunningCount: currentSideRunningCount,
-            sideChatOpen: rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.sideConversations,
-            sideChatEnabled: runtimeConnection === 'ready' && Boolean(activeThreadId),
-            fileTreeOpen: rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.files,
-            fileTreeEnabled: Boolean(fileTreeWorkspaceRoot),
-            onToggleFileTree: () => openCodeRightTool(BUILTIN_RIGHT_PANEL_IDS.files),
-            onOpenSideChat: () => openCodeRightTool(BUILTIN_RIGHT_PANEL_IDS.sideConversations),
-            extensionItems: extensionRightRailItems,
-            onSelectExtension: selectRightRailExtension
-          }
+          rightPanel
         }}
         imageAnnotationHost={imageAnnotationHost}
         planOverlay={planOverlay}

@@ -121,6 +121,7 @@ import { FloatingComposerFileMentionMenu } from './FloatingComposerFileMentionMe
 import { useComposerSlashCommandMenu } from './use-composer-slash-command-menu'
 import { FloatingComposerSlashCommandMenu } from './FloatingComposerSlashCommandMenu'
 import { FloatingComposerTodoProgress } from './FloatingComposerTodoProgress'
+import { useComposerImageModelSelection } from './use-composer-image-model-selection'
 
 export type { ComposerFileReference } from '../../lib/composer-file-references'
 export type { ComposerExecutionSettings } from './FloatingComposerExecutionPicker'
@@ -384,6 +385,7 @@ export function FloatingComposer({
       }
     }
   })
+  const imageModelSelection = useComposerImageModelSelection()
   const showVoiceDictation = Boolean(
     speechToTextSettings?.enabled &&
     speechToTextSettings.model.trim() &&
@@ -1791,8 +1793,11 @@ export function FloatingComposer({
                       canChangeModel={canChangeModel}
                       controlVariant={modelControlVariant}
                       stretch={stretchModelPicker || showToolbarStartControls}
+                      imageModelGroups={imageModelSelection.groups}
+                      imageModel={imageModelSelection.currentModel}
                       onComposerModelChange={onComposerModelChange}
                       onComposerReasoningEffortChange={onComposerReasoningEffortChange}
+                      onImageModelChange={imageModelSelection.select}
                       onConfigureProviders={onConfigureProviders}
                     />
                   )}

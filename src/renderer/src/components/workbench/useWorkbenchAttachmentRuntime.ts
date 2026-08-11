@@ -21,8 +21,8 @@ import { BUILTIN_RIGHT_PANEL_IDS } from '../../extensions/contribution-ids'
 
 type WorkbenchAttachmentRuntimeOptions = {
   activeThreadId: string | null
-  canvasDocument: CanvasDocument
-  canvasSelectedIds: ReadonlySet<string>
+  canvasDocument?: CanvasDocument
+  canvasSelectedIds?: ReadonlySet<string>
   composerMode: 'plan' | 'agent'
   modelUnsupportedMessage: string
   rightPanelMode: RightPanelMode | null
@@ -105,8 +105,8 @@ export function useWorkbenchAttachmentRuntime({
 
   const { clearAutoAttachment: clearCanvasImageAutoAttachment } = useCanvasImageAutoAttachment({
     route,
-    selectedIds: canvasSelectedIds,
-    document: canvasDocument,
+    selectedIds: canvasSelectedIds ?? new Set<string>(),
+    document: canvasDocument ?? ({} as CanvasDocument),
     workspaceRoot,
     activeThreadId,
     attachmentCapabilities: runtimeInfo?.capabilities.attachments,

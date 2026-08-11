@@ -283,16 +283,16 @@ export function fitWorkbenchWidths(
 
 export function useWorkbenchLayout({
   activeThreadId,
-  designAssistantOpen,
-  designImplementOpen,
+  designAssistantOpen = false,
+  designImplementOpen = false,
   latestAutoOpenDevPreviewUrl,
   latestDevPreviewUrl,
   route,
   workspaceRoot
 }: {
   activeThreadId: string | null
-  designAssistantOpen: boolean
-  designImplementOpen: boolean
+  designAssistantOpen?: boolean
+  designImplementOpen?: boolean
   latestAutoOpenDevPreviewUrl: string | null
   latestDevPreviewUrl: string | null
   route: AppRoute

@@ -55,10 +55,6 @@ export type QueuedUserMessage = {
     sourceRequest?: string
     title?: string
   }
-  guiDesignCanvas?: boolean
-  /** True only for the product Design surface; Code whiteboards leave this unset. */
-  guiDesignMode?: boolean
-  guiDesignArtifact?: GuiDesignArtifactMessageContext
   writeContext?: WriteAssistantMessageContext
 }
 
@@ -74,12 +70,6 @@ export type GuiPlanMessageContext = {
   planId: string
   sourceRequest?: string
   title?: string
-}
-
-export type GuiDesignArtifactMessageContext = {
-  kind: 'svg'
-  artifactId: string
-  relativePath: string
 }
 
 /** Renderer-only routing context that keeps a Write send bound to the file and
@@ -102,9 +92,6 @@ export type SendMessageOverrides = {
   reasoningEffort?: string
   displayText?: string
   guiPlan?: GuiPlanMessageContext
-  guiDesignCanvas?: boolean
-  guiDesignMode?: boolean
-  guiDesignArtifact?: GuiDesignArtifactMessageContext
   attachmentIds?: string[]
   attachments?: AttachmentReference[]
   fileReferences?: UserFileReference[]
@@ -117,7 +104,6 @@ export type SettingsRouteSection =
   | 'general'
   | 'providers'
   | 'write'
-  | 'design'
   | 'imageGeneration'
   | 'mediaGeneration'
   | 'speechToText'
@@ -134,7 +120,7 @@ export type SettingsRouteSection =
   | 'updates'
   | 'terminal'
   | 'dataMigration'
-export type AppRoute = 'chat' | 'write' | 'design' | 'settings' | 'plugins' | 'extensions' | 'claw' | 'schedule' | 'workflow'
+export type AppRoute = 'chat' | 'write' | 'settings' | 'plugins' | 'extensions' | 'claw' | 'schedule' | 'workflow'
 export type PluginHostRoute = 'chat' | 'claw'
 
 /**
@@ -268,15 +254,12 @@ export type ChatState = {
   openCode: () => Promise<void>
   ensureWriteThreadForWorkspace: (workspaceRoot?: string, activeFilePath?: string) => Promise<string | null>
   createWriteThread: (workspaceRoot?: string, activeFilePath?: string) => Promise<string | null>
-  ensureDesignThreadForWorkspace: (workspaceRoot?: string, docId?: string) => Promise<string | null>
-  createDesignThread: (workspaceRoot?: string, docId?: string) => Promise<string | null>
   selectWriteThread: (threadId: string, workspaceRoot?: string) => Promise<void>
   openSettings: (section?: SettingsRouteSection) => void
   openPlugins: (host?: PluginHostRoute) => void
   openClaw: () => void
   openSchedule: () => void
   openWorkflow: () => void
-  openDesign: () => void
   clearActiveThreadSelection: () => void
   refreshClawChannels: () => Promise<void>
   addClawChannel: (

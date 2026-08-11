@@ -50,3 +50,7 @@ openspec/
 
 ### Large binaries (exceed GitHub 100MB limit; keep local only)
 resources/grok-runtime/
+resources/whisper/models/
+
+### Transient electron-vite generated configs
+electron.vite.config.*.mjs
