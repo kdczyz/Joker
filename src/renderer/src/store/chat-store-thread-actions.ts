@@ -793,10 +793,13 @@ export function createThreadActions(
       const threadSnap = activeThreadId
         ? get().threads.find((thread) => thread.id === activeThreadId)
         : undefined
-      const clawModel = activeClawChannel(get())?.model
       const overrideModel = overrides?.model?.trim()
-      const composerModel =
-        overrideModel ?? (get().route === 'claw' && clawModel ? clawModel : get().composerModel.trim())
+      // Claw/IM composer picker writes to the desktop default
+      // (`settings.agents.Rcode.model`) via setComposerModel, so the channel's
+      // bound model is always stale and must NOT shadow the global default.
+      // Ignore `channel.model` here; only an explicit override or the global
+      // composer model should drive the runtime call.
+      const composerModel = overrideModel ?? get().composerModel.trim()
       const composerProviderId =
         overrides?.providerId?.trim() || fallbackComposerProviderIdForSend(get())
       const composerAccountId = overrides?.accountId?.trim() || accountIdForComposerSelection(
@@ -887,10 +890,14 @@ export function createThreadActions(
       get().blocks.every((block) => block.kind !== 'user') &&
       shouldAutoTitleThread(activeThread)
     const threadSnap = get().threads.find((thread) => thread.id === activeThreadId)
-    const clawModel = activeClawChannel(get())?.model
     const overrideModel = overrides?.model?.trim()
+    // Claw/IM composer picker writes to the desktop default
+    // (`settings.agents.Rcode.model`) via setComposerModel, so the channel's
+    // bound model is always stale and must NOT shadow the global default.
+    // Only an explicit override (queued or call-site), or the global composer
+    // model, should drive the runtime call.
     const composerModel =
-      queued?.model ?? overrideModel ?? (get().route === 'claw' && clawModel ? clawModel : get().composerModel.trim())
+      queued?.model ?? overrideModel ?? get().composerModel.trim()
     const composerProviderId =
       queued?.providerId ?? overrides?.providerId?.trim() ?? fallbackComposerProviderIdForSend(get())
     const composerAccountId =
