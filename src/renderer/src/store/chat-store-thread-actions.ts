@@ -42,8 +42,7 @@ import {
 import type {
   ChatState,
   ChatStoreGet,
-  ChatStoreSet,
-  WriteAssistantMessageContext
+  ChatStoreSet
 } from './chat-store-types'
 import { canGuideQueuedMessage } from './queued-message-guidance'
 import {
@@ -74,21 +73,6 @@ import {
   threadBelongsToWorkspace
 } from './chat-store-runtime-helpers'
 import {
-  WRITE_ASSISTANT_THREAD_TITLE,
-  activeWriteThreadForWorkspace,
-  forgetWriteThread,
-  hydrateWriteThreadRegistry,
-  isWriteThreadId,
-  markWriteThread,
-  pruneWriteThreadRegistry,
-  readWriteThreadRegistry,
-  saveWriteThreadRegistry,
-  writeFileKey,
-  writeThreadBelongsToWorkspace,
-  writeWorkspaceForThreadId
-} from '../write/write-thread-registry'
-import { useWriteWorkspaceStore } from '../write/write-workspace-store'
-import {
   clearBusyWatchdog,
   resetBusyRecoveryAttempts,
   scheduleStartupRuntimeProbe,
@@ -106,8 +90,6 @@ import {
   isCodeThread,
   latestThread,
   looksLikeActiveTurnError,
-  readActiveWriteWorkspace,
-  readWriteWorkspaceRoots,
   rememberPendingClawFeishuMirror,
   runtimeErrorDetail,
   runtimeStreamRecoveringMessage,
@@ -168,23 +150,13 @@ function withoutConsumedComposerContexts(
   ].join(':')))
 }
 
-function activeWriteMessageContextMatches(context: WriteAssistantMessageContext): boolean {
-  const state = useWriteWorkspaceStore.getState()
-  return (
-    writeFileKey(state.workspaceRoot) === writeFileKey(context.workspaceRoot) &&
-    writeFileKey(state.activeFilePath) === writeFileKey(context.activeFilePath) &&
-    state.documentEpoch === context.documentEpoch &&
-    state.contentRevision === context.contentRevision &&
-    state.saveStatus === 'saved' &&
-    state.fileContent === state.persistedContent &&
-    state.pendingAgentReview === null &&
-    !state.reviewActive
-  )
-}
-
 export function createThreadActions(
   { set, get, sseAbortRef }: StoreActionContext
 ): Pick<ChatState, 'createThread' | 'createConversation' | 'recoverActiveTurn' | 'selectThread' | 'subscribeThreadEventsLive' | 'drainQueuedMessages' | 'removeQueuedMessage' | 'guideQueuedMessage' | 'sendMessage' | 'reviewActiveThread'> {
+  // A detail request is intentionally independent from the SSE subscription.
+  // Keep its own generation so a late response from a previously selected
+  // thread cannot restore stale content after the user has moved on.
+  let threadSelectionGeneration = 0
   return {
   createThread: async (options = {}) => {
     if (get().runtimeConnection !== 'ready') {
@@ -439,6 +411,8 @@ export function createThreadActions(
   },
 
   selectThread: async (id) => {
+    const selectionGeneration = ++threadSelectionGeneration
+    const isLatestSelection = () => selectionGeneration === threadSelectionGeneration
     if (get().runtimeConnection !== 'ready') {
       set({ error: i18n.t('common:runtimeActionNeedsConnection') })
       return
@@ -457,6 +431,21 @@ export function createThreadActions(
 
     sseAbortRef.current?.abort()
     sseAbortRef.current = null
+    // Switch the visible selection before fetching its history. Previously the
+    // old conversation stayed on screen until getThreadDetail resolved, making
+    // a valid Claw sidebar click look like it had done nothing.
+    set({
+      activeThreadId: id,
+      blocks: [],
+      liveReasoning: '',
+      liveAssistant: '',
+      error: null,
+      busy: false,
+      currentTurnId: null,
+      currentTurnUserId: null,
+      inspectorSelectedId: null,
+      queuedMessages: []
+    })
     const p = getProvider()
     try {
       resetBusyRecoveryAttempts()
@@ -475,6 +464,7 @@ export function createThreadActions(
         goal,
         todos
       } = await p.getThreadDetail(id)
+      if (!isLatestSelection()) return
       // A subagent's `side` thread has no locally-stored per-turn model labels
       // (it was never sent through the composer). Backfill the user blocks with
       // the child thread's resolved model so the session shows "which model",
@@ -541,6 +531,7 @@ export function createThreadActions(
       subscribeThreadEventsWithRecovery(p, id, latestSeq, sink, ac.signal, get)
       if (busy) armBusyWatchdog(set, get)
     } catch (e) {
+      if (!isLatestSelection()) return
       set({
         error: formatRuntimeError(e),
         ...(shouldOpenSettingsForError(e)
@@ -731,14 +722,6 @@ export function createThreadActions(
     const trimmedText = text.trim()
     if (!trimmedText) return false
     const queued = overrides?.queued
-    let writeContext = queued?.writeContext ?? overrides?.writeContext
-    const requireActiveWriteContext = Boolean(writeContext && !queued)
-    const activeWriteContextIsValid = (): boolean => Boolean(
-      !writeContext ||
-      !requireActiveWriteContext ||
-      (get().route === 'write' && activeWriteMessageContextMatches(writeContext))
-    )
-    if (!activeWriteContextIsValid()) return false
     if (get().runtimeConnection !== 'ready') {
       set({ error: i18n.t('common:runtimeActionNeedsConnection') })
       return false
@@ -748,43 +731,20 @@ export function createThreadActions(
       const activeThread = state.activeThreadId
         ? state.threads.find((thread) => thread.id === state.activeThreadId) ?? null
         : null
-      let workspaceRoot = writeContext
-        ? normalizeWorkspaceRoot(writeContext.workspaceRoot)
-        : state.route === 'write'
-          ? await readActiveWriteWorkspace(state.workspaceRoot)
-          : normalizeWorkspaceRoot(activeThread?.workspace)
-      if (!activeWriteContextIsValid()) return false
+      let workspaceRoot = normalizeWorkspaceRoot(activeThread?.workspace)
       if (!workspaceRoot) {
         workspaceRoot = normalizeWorkspaceRoot((await rendererRuntimeClient.getSettings()).workspaceRoot)
-        if (!activeWriteContextIsValid()) return false
       }
       if (workspaceRoot && !(await workspaceDirectoryExists(workspaceRoot))) {
         set({ error: workspaceMissingError() })
         await showWorkspaceMissingDialog(workspaceRoot)
         return false
       }
-      if (!activeWriteContextIsValid()) return false
     }
     const p = getProvider()
-    if (writeContext || get().route === 'write') {
-      const writeThreadId = await get().ensureWriteThreadForWorkspace(
-        writeContext?.workspaceRoot,
-        writeContext ? writeContext.activeFilePath ?? '' : undefined
-      )
-      if (!writeThreadId) return false
-      if (writeContext?.threadId && writeThreadId !== writeContext.threadId) return false
-      // ensureWriteThreadForWorkspace may await selectThread. If the user
-      // selects another conversation before it resolves, never fall through to
-      // the provider with that newer activeThreadId.
-      if (get().activeThreadId !== writeThreadId) return false
-      if (writeContext && !writeContext.threadId) {
-        writeContext = { ...writeContext, threadId: writeThreadId }
-      }
-      if (!activeWriteContextIsValid()) return false
-    }
     const hasPendingActiveTurn = threadHasPendingRuntimeWork(get().blocks)
     if (get().busy || hasPendingActiveTurn) {
-      if (overrides?.guiPlan || writeContext) {
+      if (overrides?.guiPlan) {
         set({ error: i18n.t('common:composerQueuePlaceholder') })
         return false
       }
@@ -838,7 +798,6 @@ export function createThreadActions(
             ...(overrides?.guiDesignCanvas ? { guiDesignCanvas: true } : {}),
             ...(overrides?.guiDesignMode ? { guiDesignMode: true } : {}),
             ...(overrides?.guiDesignArtifact ? { guiDesignArtifact: overrides.guiDesignArtifact } : {}),
-            ...(writeContext ? { writeContext } : {}),
             ...(attachmentIds?.length ? { attachmentIds } : {}),
             ...(attachments?.length ? { attachments } : {}),
             ...(fileReferences?.length ? { fileReferences } : {}),

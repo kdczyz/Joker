@@ -1,17 +1,16 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useMemo, useState } from 'react'
 import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
-import {
-  buildComposerAssistantPickList,
-  resolveComposerAssistantProviderId
-} from '../chat/composer-model-selection'
-import { useWriteWorkspaceStore } from '../../write/write-workspace-store'
-import { useChatStore } from '../../store/chat-store'
-import {
-  activeWriteThreadForWorkspace,
-  readWriteThreadRegistry
-} from '../../write/write-thread-registry'
 
-type WorkbenchWriteAssistantRuntimeOptions = {
+/**
+ * Shared model/provider selection state for the document-assistant rail.
+ *
+ * NOTE: the dedicated "写作台" (Write) workspace was removed, but the SDD
+ * assistant panel still reuses this model picker, so the hook is kept (minus
+ * any write-route-only wiring) to back `writeAssistantModel` /
+ * `resolvedWriteAssistantProviderId` consumed by the SDD turn controller,
+ * composer capabilities, and the right-panel `sdd` slot.
+ */
+type UseWorkbenchWriteAssistantRuntimeParams = {
   composerPickList: string[]
   composerModelGroups: ModelProviderModelGroup[]
 }
@@ -19,61 +18,26 @@ type WorkbenchWriteAssistantRuntimeOptions = {
 export function useWorkbenchWriteAssistantRuntime({
   composerPickList,
   composerModelGroups
-}: WorkbenchWriteAssistantRuntimeOptions) {
-  const writeAssistantOpen = useWriteWorkspaceStore((s) => s.assistantOpen)
-  const setWriteAssistantOpen = useWriteWorkspaceStore((s) => s.setAssistantOpen)
-  const writeAssistantModel = useWriteWorkspaceStore((s) => s.assistantModel)
-  const writeAssistantProviderId = useWriteWorkspaceStore((s) => s.assistantProviderId)
-  const writeWorkspaceRoot = useWriteWorkspaceStore((s) => s.workspaceRoot)
-  const activeWriteFilePath = useWriteWorkspaceStore((s) => s.activeFilePath)
-  const setWriteAssistantModel = useWriteWorkspaceStore((s) => s.setAssistantModel)
-  const route = useChatStore((s) => s.route)
-  const runtimeConnection = useChatStore((s) => s.runtimeConnection)
-  const activeThreadId = useChatStore((s) => s.activeThreadId)
-  const threads = useChatStore((s) => s.threads)
-  const pendingThreadIdRef = useRef<string | null>(null)
-  const writeAssistantPickList = useMemo(() => {
-    return buildComposerAssistantPickList({
-      composerPickList
-    })
-  }, [composerPickList])
+}: UseWorkbenchWriteAssistantRuntimeParams): {
+  resolvedWriteAssistantProviderId: string
+  setWriteAssistantModel: (model: string, providerId?: string) => void
+  setWriteAssistantOpen: (open: boolean) => void
+  writeAssistantModel: string
+  writeAssistantOpen: boolean
+  writeAssistantPickList: string[]
+} {
+  const [writeAssistantModel, setWriteAssistantModel] = useState('')
+  const [writeAssistantOpen, setWriteAssistantOpen] = useState(false)
+  const writeAssistantPickList = useMemo(() => composerPickList, [composerPickList])
   const resolvedWriteAssistantProviderId = useMemo(() => {
-    return resolveComposerAssistantProviderId({
-      composerModelGroups,
-      model: writeAssistantModel,
-      storedProviderId: writeAssistantProviderId
-    })
-  }, [composerModelGroups, writeAssistantModel, writeAssistantProviderId])
-
-  useEffect(() => {
-    if (route !== 'write' || !writeWorkspaceRoot) return
-    const chatState = useChatStore.getState()
-    if (!activeWriteFilePath) {
-      if (activeThreadId) chatState.clearActiveThreadSelection()
-      return
+    if (!writeAssistantModel) return ''
+    for (const group of composerModelGroups) {
+      if (group.modelIds.some((modelId) => modelId === writeAssistantModel)) {
+        return group.providerId
+      }
     }
-    if (runtimeConnection !== 'ready') {
-      if (activeThreadId) chatState.clearActiveThreadSelection()
-      return
-    }
-
-    const target = activeWriteThreadForWorkspace(
-      writeWorkspaceRoot,
-      threads,
-      readWriteThreadRegistry(),
-      activeWriteFilePath
-    )
-    if (target?.id === activeThreadId) return
-    if (target) {
-      if (pendingThreadIdRef.current === target.id) return
-      pendingThreadIdRef.current = target.id
-      void chatState.selectWriteThread(target.id, writeWorkspaceRoot).finally(() => {
-        if (pendingThreadIdRef.current === target.id) pendingThreadIdRef.current = null
-      })
-    } else if (activeThreadId) {
-      chatState.clearActiveThreadSelection()
-    }
-  }, [activeThreadId, activeWriteFilePath, route, runtimeConnection, threads, writeWorkspaceRoot])
+    return ''
+  }, [writeAssistantModel, composerModelGroups])
 
   return {
     resolvedWriteAssistantProviderId,

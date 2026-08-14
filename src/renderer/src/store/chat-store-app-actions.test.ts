@@ -91,7 +91,6 @@ function buildHarness(fetchModelsResult: FetchModelsResult): {
       applyChatContentMaxWidth: () => undefined,
       applyCursorSpotlight: () => undefined,
       applyCursorSpotlightColor: () => undefined,
-      applyWriteTypography: () => undefined,
       applyDocumentLocale: () => undefined,
       workspaceLabelFromPath: (workspaceRoot) => workspaceRoot,
       normalizeWorkspaceRoot: (workspaceRoot) => workspaceRoot?.trim() ?? ''

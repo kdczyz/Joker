@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { parseUsageResponse } from './usage-response'
 
 export type ThreadUsageSummary = {
@@ -242,4 +242,89 @@ export function useThreadUsage(
   refreshKey: unknown
 ): ThreadUsageSummary | null {
   return useThreadUsageState(threadId, enabled, refreshKey).usage
+}
+
+export type ThreadUsageSeriesPoint = {
+  /** 1-based turn ordinal within the captured session window. */
+  turn: number
+  /** Epoch ms when this sample was captured. */
+  at: number
+  totalTokens: number
+  cachedTokens: number
+  cacheMissTokens: number
+  cacheHitRate: number | null
+  costUsd: number | null
+  costCny: number | null
+}
+
+/**
+ * Captures a per-turn token-usage series for the active thread *during the
+ * current app session*. The runtime reports one cumulative `ThreadUsageSummary`
+ * per completed turn (via `usageRefreshKey`), and `useThreadUsageState` reloads
+ * `threadUsage` on each bump. We append a sample whenever the cumulative total
+ * grows, so the line chart grows live as the conversation proceeds.
+ *
+ * Historical turns from prior sessions are not exposed without a backend
+ * change, so the first sample is the loaded cumulative baseline.
+ *
+ * Robustness: when the active thread changes, `useThreadUsageState` keeps
+ * returning the *previous* thread's usage object for a render or two (stale
+ * echo) before the new thread loads. We detect that window via object identity
+ * (`staleRef`) and never append a bogus point for the wrong thread.
+ */
+export function useThreadUsageSeries(
+  threadId: string | null | undefined,
+  usage: ThreadUsageSummary | null
+): ThreadUsageSeriesPoint[] {
+  const [series, setSeries] = useState<ThreadUsageSeriesPoint[]>([])
+  const ref = useRef<{
+    threadId?: string
+    lastTotal: number
+    lastUsage: ThreadUsageSummary | null
+    switched: boolean
+    staleRef: ThreadUsageSummary | null
+  }>({ lastTotal: -1, lastUsage: null, switched: false, staleRef: null })
+
+  useEffect(() => {
+    if (!threadId) {
+      ref.current = { lastTotal: -1, lastUsage: null, switched: false, staleRef: null }
+      setSeries([])
+      return
+    }
+    if (ref.current.threadId !== threadId) {
+      ref.current = {
+        threadId,
+        lastTotal: -1,
+        lastUsage: null,
+        switched: true,
+        staleRef: usage
+      }
+      setSeries([])
+      return
+    }
+    if (!usage) return
+    if (ref.current.switched) {
+      if (usage === ref.current.staleRef) return
+      ref.current.switched = false
+    }
+    if (usage === ref.current.lastUsage) return
+    if (usage.totalTokens <= ref.current.lastTotal) return
+    ref.current.lastUsage = usage
+    ref.current.lastTotal = usage.totalTokens
+    setSeries((prev) => [
+      ...prev,
+      {
+        turn: prev.length + 1,
+        at: Date.now(),
+        totalTokens: usage.totalTokens,
+        cachedTokens: usage.cachedTokens,
+        cacheMissTokens: usage.cacheMissTokens,
+        cacheHitRate: usage.cacheHitRate,
+        costUsd: usage.costUsd,
+        costCny: usage.costCny
+      }
+    ])
+  }, [threadId, usage])
+
+  return series
 }

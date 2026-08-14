@@ -23,7 +23,6 @@ import {
   emptyWriteThreadRegistry,
   markWriteThread
 } from '../write/write-thread-registry'
-import { useWriteWorkspaceStore } from '../write/write-workspace-store'
 
 function makeSinkHarness(overrides: Partial<ChatState> = {}): {
   getState: () => ChatState
@@ -362,39 +361,6 @@ describe('thread event sink binding', () => {
     expect(refreshThreads).toHaveBeenCalledTimes(1)
     expect(drainQueuedMessages).toHaveBeenCalledTimes(1)
     vi.unstubAllGlobals()
-  })
-
-  it('refreshes the active Write workspace exactly for a successful in-workspace file change', () => {
-    const originalWriteState = useWriteWorkspaceStore.getState()
-    const refreshWorkspace = vi.fn(async () => undefined)
-    const syncActiveFileFromDisk = vi.fn(async () => true)
-    useWriteWorkspaceStore.setState({
-      workspaceRoot: '/workspace/write',
-      activeFilePath: '/workspace/write/draft.md',
-      refreshWorkspace,
-      syncActiveFileFromDisk
-    })
-    const { set, get } = makeSinkHarness({ route: 'write' })
-    const sink = buildThreadEventSink(set, get, { threadId: 'thread-current' })
-
-    sink.onTool({
-      itemId: 'tool-write',
-      summary: 'write_file',
-      status: 'success',
-      toolKind: 'file_change',
-      filePath: 'draft.md'
-    })
-
-    expect(refreshWorkspace).toHaveBeenCalledOnce()
-    expect(refreshWorkspace).toHaveBeenCalledWith('/workspace/write')
-    expect(syncActiveFileFromDisk).toHaveBeenCalledOnce()
-    expect(syncActiveFileFromDisk).toHaveBeenCalledWith('/workspace/write', {
-      path: '/workspace/write/draft.md',
-      animate: true,
-      force: true,
-      reviewAsDiff: true
-    })
-    useWriteWorkspaceStore.setState(originalWriteState, true)
   })
 })
 

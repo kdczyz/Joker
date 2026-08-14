@@ -919,11 +919,9 @@ describe('FloatingComposer image transfer helpers', () => {
 })
 
 describe('FloatingComposer capability controls', () => {
-  it('surfaces user-input requests in Chat, Design, and the compact Write composer', () => {
+  it('surfaces user-input requests in Chat and Design but not in Claw', () => {
     expect(shouldSurfaceComposerUserInput('chat', false)).toBe(true)
     expect(shouldSurfaceComposerUserInput('design', false)).toBe(true)
-    expect(shouldSurfaceComposerUserInput('write', false)).toBe(true)
-    expect(shouldSurfaceComposerUserInput('write', true)).toBe(true)
     expect(shouldSurfaceComposerUserInput('claw', false)).toBe(false)
     expect(shouldSurfaceComposerUserInput('design', true)).toBe(false)
   })

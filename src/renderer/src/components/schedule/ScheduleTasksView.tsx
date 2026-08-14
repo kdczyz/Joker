@@ -291,7 +291,7 @@ export function scheduleImChannelOptionLabel(
 }
 
 function configuredScheduleImChannels(channels: ClawImChannelV1[]): ClawImChannelV1[] {
-  return channels.filter((channel) => channel.enabled)
+  return channels.filter((channel) => channel.enabled !== false)
 }
 
 export function preferredScheduleImChannel(channels: ClawImChannelV1[]): ClawImChannelV1 | null {

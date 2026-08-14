@@ -36,11 +36,13 @@ import {
   Type as TypeIcon,
   X
 } from 'lucide-react'
+import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
 import type { AttachmentReference, ReviewTarget } from '../../agent/types'
 import { useChatStore } from '../../store/chat-store'
 import { CodexUsageBadge } from './CodexUsageBadge'
+import { ThreadUsageChart } from './ThreadUsageChart'
 import type { AppRoute } from '../../store/chat-store-types'
 import { normalizeWorkspaceRoot } from '../../lib/workspace-path'
 import {
@@ -68,7 +70,8 @@ import {
   formatCost,
   formatPercent,
   cumulativeCacheHitRate,
-  useThreadUsageState
+  useThreadUsageState,
+  useThreadUsageSeries
 } from '../../hooks/use-thread-usage'
 import { FloatingComposerContextCapacity } from './FloatingComposerContextCapacity'
 export { calculateContextCapacityPopoverPlacement } from './FloatingComposerContextCapacity'
@@ -127,10 +130,8 @@ export type { ComposerFileReference } from '../../lib/composer-file-references'
 export type { ComposerExecutionSettings } from './FloatingComposerExecutionPicker'
 
 export function shouldSurfaceComposerUserInput(route: AppRoute, compact: boolean): boolean {
-  // Write owns a single compact composer in its assistant rail, so it must
-  // surface the same runtime gate there. Other compact composers mirror a main
-  // Chat/Design surface and would duplicate the prompt if they rendered it.
-  if (route === 'write') return true
+  // Other compact composers mirror a main Chat/Design surface and would
+  // duplicate the prompt if they rendered it.
   return !compact && (route === 'chat' || route === 'design')
 }
 export type { DesignComposerContext } from '../../design/design-composer-context'
@@ -410,6 +411,55 @@ export function FloatingComposer({
     `${activeThread?.updatedAt ?? ''}:${busy ? 'busy' : 'idle'}:${usageRefreshKey}`
   )
   const threadUsage = threadUsageState.usage
+  const usageSeries = useThreadUsageSeries(activeThreadId, threadUsage)
+  const [usageChartOpen, setUsageChartOpen] = useState(false)
+  const usageChipRef = useRef<HTMLButtonElement>(null)
+  const usagePopoverRef = useRef<HTMLDivElement>(null)
+  const [usagePopoverPos, setUsagePopoverPos] = useState<{ top: number; left: number } | null>(null)
+
+  useEffect(() => {
+    if (!usageChartOpen) return
+    const updatePosition = () => {
+      const el = usageChipRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const width = 360
+      const heightEstimate = 300
+      let left = rect.left
+      left = Math.min(left, window.innerWidth - width - 12)
+      left = Math.max(12, left)
+      let top = rect.top - heightEstimate - 10
+      if (top < 12) top = rect.bottom + 10
+      setUsagePopoverPos({ top, left })
+    }
+    updatePosition()
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [usageChartOpen])
+
+  useEffect(() => {
+    if (!usageChartOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setUsageChartOpen(false)
+    }
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (usageChipRef.current?.contains(target)) return
+      if (usagePopoverRef.current?.contains(target)) return
+      setUsageChartOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('mousedown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('mousedown', onPointerDown)
+    }
+  }, [usageChartOpen])
+
   const effectiveWorkspaceRoot = normalizeWorkspaceRoot(activeThreadWorkspace || workspaceRootOverride || workspaceRoot)
   const clawAgentName =
     activeClawChannel?.agentProfile.name.trim()
@@ -444,7 +494,7 @@ export function FloatingComposer({
   const canAddFileReference = canCompose && fileReferenceEnabled && Boolean(effectiveWorkspaceRoot) && Boolean(onAddFileReference)
   const showIntentToolbar = !compact && route === 'chat'
   const showComposerMenuButton = showIntentToolbar
-  const showExecutionSettingsPicker = (showIntentToolbar || route === 'write' || route === 'claw')
+  const showExecutionSettingsPicker = (showIntentToolbar || route === 'claw')
     && Boolean(executionSettings)
     && Boolean(onExecutionSettingsChange)
   const canTogglePlanMode = canCompose && Boolean(onPlanCommand)
@@ -1109,85 +1159,6 @@ export function FloatingComposer({
         onRemove={onRemoveQueuedMessage}
         onGuide={onGuideQueuedMessage}
       />
-
-      {showThreadUsageFooter ? (
-        <div className="flex justify-center px-3 pb-2">
-          <div
-            className="ds-composer-usage ds-no-drag inline-flex min-h-7 max-w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 overflow-visible rounded-lg border border-ds-border-muted bg-ds-card px-2.5 py-0.5 text-[12.5px] font-medium leading-5 text-ds-muted shadow-sm"
-            title={
-              threadUsage
-                ? t(
-                    threadUsage.lastTurnCacheHitRate != null
-                      ? 'sessionUsageDetailsTitleWithLatestCache'
-                      : 'sessionUsageDetailsTitle',
-                    {
-                    tokens: formatCompactNumber(threadUsage.totalTokens),
-                    cost: formatCost(threadUsage.costUsd, i18n.language, threadUsage.costCny),
-                    saved: formatCompactNumber(threadUsage.tokenEconomySavingsTokens),
-                    cache: formatPercent(threadUsage.cacheHitRate),
-                    latestCache: formatPercent(threadUsage.lastTurnCacheHitRate),
-                    cached: formatCompactNumber(threadUsage.cachedTokens),
-                    miss: formatCompactNumber(threadUsage.cacheMissTokens),
-                    turns: threadUsage.turns
-                    }
-                  )
-                : t('sessionUsageUnavailable')
-            }
-          >
-            <BarChart3 className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.9} />
-            {threadUsage ? (
-              <>
-                <span className="ds-composer-usage-tokens shrink-0 truncate tabular-nums">
-                  {t('sessionUsageTokens', {
-                    tokens: formatCompactNumber(threadUsage.totalTokens)
-                  })}
-                </span>
-                <span className="ds-composer-usage-cost-separator text-ds-faint">·</span>
-                <span className="ds-composer-usage-cost shrink-0 truncate tabular-nums">
-                  {t('sessionUsageCost', {
-                    cost: formatCost(threadUsage.costUsd, i18n.language, threadUsage.costCny)
-                  })}
-                </span>
-                {threadUsage.tokenEconomySavingsTokens > 0 ? (
-                  <>
-                    <span className="ds-composer-usage-context-savings-separator text-ds-faint">·</span>
-                    <span
-                      className="ds-composer-usage-context-savings shrink-0 tabular-nums text-emerald-700 dark:text-emerald-300"
-                      title={t('sessionUsageContextSavingsTitle', {
-                        tokens: formatCompactNumber(threadUsage.tokenEconomySavingsTokens)
-                      })}
-                    >
-                      {t('sessionUsageContextSavings', {
-                        tokens: formatCompactNumber(threadUsage.tokenEconomySavingsTokens)
-                      })}
-                    </span>
-                  </>
-                ) : null}
-                {threadUsage.turns > 1 ? (
-                  <>
-                    <span className="ds-composer-usage-cache-separator text-ds-faint">·</span>
-                    <span className="ds-composer-usage-cache shrink-0 truncate tabular-nums">
-                      {t('sessionUsageCache', {
-                        cache: formatPercent(cumulativeCacheHitRate(threadUsage))
-                      })}
-                    </span>
-                  </>
-                ) : null}
-                <span className="ds-composer-usage-turns-separator text-ds-faint">·</span>
-                <span className="ds-composer-usage-turns shrink-0 truncate tabular-nums">
-                  {t('sessionUsageTurns', { turns: threadUsage.turns })}
-                </span>
-              </>
-            ) : (
-              <span className="shrink-0 text-ds-faint">
-                {threadUsageState.loading
-                  ? t('sessionUsageLoading')
-                  : t('sessionUsageUnavailable')}
-              </span>
-            )}
-          </div>
-        </div>
-      ) : null}
 
       <div className="relative">
         <div className="pointer-events-none absolute inset-x-0 bottom-full z-30 mb-2 flex flex-col items-center gap-2">
@@ -1899,7 +1870,92 @@ export function FloatingComposer({
                 </select>
               </label>
             ) : null}
-            
+            {showThreadUsageFooter ? (
+              <button
+                ref={usageChipRef}
+                type="button"
+                onClick={() => setUsageChartOpen((value) => !value)}
+                aria-haspopup="dialog"
+                aria-expanded={usageChartOpen}
+                className="ds-composer-usage ds-no-drag inline-flex min-h-7 max-w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 overflow-visible rounded-lg border border-ds-border-muted bg-ds-card px-2.5 py-0.5 text-[12.5px] font-medium leading-5 text-ds-muted shadow-sm transition hover:border-accent/40 hover:text-ds-ink"
+                title={
+                  threadUsage
+                    ? t(
+                        threadUsage.lastTurnCacheHitRate != null
+                          ? 'sessionUsageDetailsTitleWithLatestCache'
+                          : 'sessionUsageDetailsTitle',
+                        {
+                          tokens: formatCompactNumber(threadUsage.totalTokens),
+                          cost: formatCost(threadUsage.costUsd, i18n.language, threadUsage.costCny),
+                          saved: formatCompactNumber(threadUsage.tokenEconomySavingsTokens),
+                          cache: formatPercent(threadUsage.cacheHitRate),
+                          latestCache: formatPercent(threadUsage.lastTurnCacheHitRate),
+                          cached: formatCompactNumber(threadUsage.cachedTokens),
+                          miss: formatCompactNumber(threadUsage.cacheMissTokens),
+                          turns: threadUsage.turns
+                        }
+                      )
+                    : t('sessionUsageUnavailable')
+                }
+              >
+                <BarChart3 className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.9} />
+                {threadUsage ? (
+                  <>
+                    <span className="ds-composer-usage-tokens shrink-0 truncate tabular-nums">
+                      {t('sessionUsageTokens', {
+                        tokens: formatCompactNumber(threadUsage.totalTokens)
+                      })}
+                    </span>
+                    <span className="ds-composer-usage-cost-separator text-ds-faint">·</span>
+                    <span className="ds-composer-usage-cost shrink-0 truncate tabular-nums">
+                      {t('sessionUsageCost', {
+                        cost: formatCost(threadUsage.costUsd, i18n.language, threadUsage.costCny)
+                      })}
+                    </span>
+                    {threadUsage.tokenEconomySavingsTokens > 0 ? (
+                      <>
+                        <span className="ds-composer-usage-context-savings-separator text-ds-faint">·</span>
+                        <span
+                          className="ds-composer-usage-context-savings shrink-0 tabular-nums text-emerald-700 dark:text-emerald-300"
+                          title={t('sessionUsageContextSavingsTitle', {
+                            tokens: formatCompactNumber(threadUsage.tokenEconomySavingsTokens)
+                          })}
+                        >
+                          {t('sessionUsageContextSavings', {
+                            tokens: formatCompactNumber(threadUsage.tokenEconomySavingsTokens)
+                          })}
+                        </span>
+                      </>
+                    ) : null}
+                    <span className="ds-composer-usage-cached-separator text-ds-faint">·</span>
+                    <span className="ds-composer-usage-cached shrink-0 truncate tabular-nums">
+                      {t('sessionUsageCached', {
+                        tokens: formatCompactNumber(threadUsage.cachedTokens)
+                      })}
+                    </span>
+                    <span className="ds-composer-usage-miss-separator text-ds-faint">·</span>
+                    <span className="ds-composer-usage-miss shrink-0 truncate tabular-nums">
+                      {t('sessionUsageMiss', {
+                        tokens: formatCompactNumber(threadUsage.cacheMissTokens)
+                      })}
+                    </span>
+                    <span className="ds-composer-usage-cache-separator text-ds-faint">·</span>
+                    <span className="ds-composer-usage-cache shrink-0 truncate tabular-nums">
+                      {t('sessionUsageCache', {
+                        cache: formatPercent(cumulativeCacheHitRate(threadUsage))
+                      })}
+                    </span>
+                  </>
+                ) : (
+                  <span className="shrink-0 text-ds-faint">
+                    {threadUsageState.loading
+                      ? t('sessionUsageLoading')
+                      : t('sessionUsageUnavailable')}
+                  </span>
+                )}
+              </button>
+            ) : null}
+
           </div>
           {footerHint ? (
             <div className="ds-composer-footer-hint min-w-0 flex-1 text-right text-[12.5px] font-medium text-ds-faint">
@@ -1908,6 +1964,31 @@ export function FloatingComposer({
           ) : null}
         </div>
       )}
+      {usageChartOpen && usagePopoverPos
+        ? createPortal(
+            <div
+              ref={usagePopoverRef}
+              role="dialog"
+              aria-label={t('usageChartTitle')}
+              className="fixed z-[100] w-[360px] max-w-[calc(100vw-24px)] rounded-2xl border border-ds-border bg-ds-card p-4 shadow-[0_24px_60px_rgba(20,47,95,0.18)]"
+              style={{ top: usagePopoverPos.top, left: usagePopoverPos.left }}
+            >
+              <div className="mb-3 flex items-center justify-between gap-2">
+                <span className="text-[13px] font-semibold text-ds-ink">{t('usageChartTitle')}</span>
+                <button
+                  type="button"
+                  onClick={() => setUsageChartOpen(false)}
+                  aria-label={t('usageChartClose')}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-ds-faint transition hover:bg-ds-subtle hover:text-ds-ink"
+                >
+                  <X className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </div>
+              <ThreadUsageChart series={usageSeries} locale={i18n.language} />
+            </div>,
+            document.body
+          )
+        : null}
     </div>
   )
 }

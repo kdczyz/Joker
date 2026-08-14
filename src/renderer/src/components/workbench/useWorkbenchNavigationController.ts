@@ -3,7 +3,6 @@ import type { WorkspaceFileTarget } from '@shared/workspace-file'
 import type { NormalizedThread, RuntimeConnectionStatus } from '../../agent/types'
 import { useChatStore } from '../../store/chat-store'
 import type { ChatState } from '../../store/chat-store-types'
-import { useWriteWorkspaceStore } from '../../write/write-workspace-store'
 import type { SddDraft } from '../../sdd/sdd-draft-store'
 import { useSddDraftStore } from '../../sdd/sdd-draft-store'
 import { markSddAssistantThread } from '../../sdd/sdd-thread-registry'
@@ -11,7 +10,7 @@ import { formatWorkspacePickerError } from '../../lib/format-workspace-picker-er
 import type { RightPanelMode } from '../chat/WorkbenchTopBar'
 import { BUILTIN_RIGHT_PANEL_IDS } from '../../extensions/contribution-ids'
 
-export type WorkbenchSidebarView = 'chat' | 'write' | 'claw' | 'schedule' | 'workflow' | 'subagents'
+export type WorkbenchSidebarView = 'chat' | 'claw' | 'schedule' | 'workflow' | 'subagents'
 
 type UseWorkbenchNavigationControllerParams = {
   activeSddDraft: boolean
@@ -29,9 +28,7 @@ type UseWorkbenchNavigationControllerParams = {
   clearFilePreviewTargets: () => void
   createConversation: ChatState['createConversation']
   createThread: ChatState['createThread']
-  createWriteThread: ChatState['createWriteThread']
   dismissActiveSddDraft: (options?: { closeAssistant?: boolean }) => void
-  ensureWriteThreadForWorkspace: ChatState['ensureWriteThreadForWorkspace']
   findSddDraftForSidebarThread: (
     threadId: string,
     thread: NormalizedThread | null
@@ -41,7 +38,6 @@ type UseWorkbenchNavigationControllerParams = {
   openPlugins: ChatState['openPlugins']
   openSchedule: ChatState['openSchedule']
   openWorkflow: ChatState['openWorkflow']
-  openWrite: ChatState['openWrite']
   openSddRequirementDraftFromHistory: (draft: SddDraft) => Promise<void>
   selectThread: ChatState['selectThread']
   setConnectPhoneSidebarOpen: Dispatch<SetStateAction<boolean>>
@@ -50,7 +46,6 @@ type UseWorkbenchNavigationControllerParams = {
   setRightPanelMode: (mode: RightPanelMode) => void
   setRoute: ChatState['setRoute']
   setUseWorktreePool: Dispatch<SetStateAction<boolean>>
-  setWriteAssistantOpen: (open: boolean) => void
 }
 
 export type WorkbenchNavigationController = {
@@ -61,14 +56,11 @@ export type WorkbenchNavigationController = {
   openScheduleView: () => void
   openThread: (id: string) => void
   openWorkflowView: () => void
-  openWriteMode: () => void
   openClawMode: () => void
-  pickWriteAssistantWorkspace: () => Promise<void>
   sidebarView: WorkbenchSidebarView
   startNewChat: () => void
   startNewChatInWorkspace: (workspaceRoot: string) => void
   startNewConversation: () => void
-  startNewWriteAssistantConversation: () => void
   toggleConnectPhone: () => void
 }
 
@@ -87,16 +79,13 @@ export function useWorkbenchNavigationController({
   clearFilePreviewTargets,
   createConversation,
   createThread,
-  createWriteThread,
   dismissActiveSddDraft,
-  ensureWriteThreadForWorkspace,
   findSddDraftForSidebarThread,
   openClaw,
   openCode,
   openPlugins,
   openSchedule,
   openWorkflow,
-  openWrite,
   openSddRequirementDraftFromHistory,
   selectThread,
   setConnectPhoneSidebarOpen,
@@ -104,8 +93,7 @@ export function useWorkbenchNavigationController({
   setInput,
   setRightPanelMode,
   setRoute,
-  setUseWorktreePool,
-  setWriteAssistantOpen
+  setUseWorktreePool
 }: UseWorkbenchNavigationControllerParams): WorkbenchNavigationController {
   const connectPhoneReturnRouteRef = useRef<ChatState['route']>('chat')
 
@@ -117,7 +105,6 @@ export function useWorkbenchNavigationController({
     if (route === 'claw' || (route === 'plugins' && pluginHostRoute === 'claw')) return 'claw'
     if (route === 'schedule') return 'schedule'
     if (route === 'workflow') return 'workflow'
-    if (route === 'write') return 'write'
     return 'chat'
   }, [pluginHostRoute, route])
 
@@ -192,11 +179,6 @@ export function useWorkbenchNavigationController({
     void openCode()
   }, [openCode, setConnectPhoneSidebarOpen])
 
-  const openWriteMode = useCallback((): void => {
-    setConnectPhoneSidebarOpen(false)
-    void openWrite()
-  }, [openWrite, setConnectPhoneSidebarOpen])
-
   const openClawMode = useCallback((): void => {
     setConnectPhoneSidebarOpen(false)
     openClaw()
@@ -235,48 +217,15 @@ export function useWorkbenchNavigationController({
   }, [activeSddDraft, dismissActiveSddDraft, openClaw, route, setConnectPhoneSidebarOpen, setRoute])
 
   const closeRightPanel = useCallback((): void => {
-    if (route === 'write') {
-      setWriteAssistantOpen(false)
-      return
-    }
     if (rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.file) clearFilePreviewTargets()
     setRightPanelMode(null)
     setFilePreviewTarget(null)
   }, [
     clearFilePreviewTargets,
     rightPanelMode,
-    route,
     setFilePreviewTarget,
-    setRightPanelMode,
-    setWriteAssistantOpen
+    setRightPanelMode
   ])
-
-  const startNewWriteAssistantConversation = useCallback((): void => {
-    const writeState = useWriteWorkspaceStore.getState()
-    const writeWorkspaceRoot = writeState.workspaceRoot || workspaceRoot
-    setInput('')
-    writeState.clearQuotedSelections()
-    void createWriteThread(writeWorkspaceRoot, writeState.activeFilePath ?? undefined)
-  }, [createWriteThread, setInput, workspaceRoot])
-
-  const pickWriteAssistantWorkspace = useCallback(async (): Promise<void> => {
-    try {
-      const writeState = useWriteWorkspaceStore.getState()
-      writeState.setFileError(null)
-      if (typeof window.RcodeGui?.pickWorkspaceDirectory !== 'function') {
-        throw new Error('workspace:pick-directory unavailable')
-      }
-      const picked = await window.RcodeGui.pickWorkspaceDirectory(
-        writeState.workspaceRoot || writeState.defaultWorkspaceRoot || workspaceRoot || undefined
-      )
-      if (!picked.canceled && picked.path) {
-        await useWriteWorkspaceStore.getState().addWriteWorkspace(picked.path)
-        if (runtimeConnection === 'ready') void ensureWriteThreadForWorkspace(picked.path)
-      }
-    } catch (error) {
-      useWriteWorkspaceStore.getState().setFileError(formatWorkspacePickerError(error))
-    }
-  }, [ensureWriteThreadForWorkspace, runtimeConnection, workspaceRoot])
 
   return {
     closeRightPanel,
@@ -287,13 +236,10 @@ export function useWorkbenchNavigationController({
     openScheduleView,
     openThread,
     openWorkflowView,
-    openWriteMode,
-    pickWriteAssistantWorkspace,
     sidebarView,
     startNewChat,
     startNewChatInWorkspace,
     startNewConversation,
-    startNewWriteAssistantConversation,
     toggleConnectPhone
   }
 }

@@ -42,7 +42,6 @@ import { isDesignThreadId, type DesignThreadRegistry } from '../design/design-th
 import { readThreadWorktreeRegistry, saveThreadWorktreeRegistry, forgetThreadWorktree } from '../lib/thread-worktree-registry'
 import { notifySddChatTranscriptMirror } from '../sdd/sdd-chat-transcript'
 import { notifyDesignChatTranscriptMirror } from '../design/design-chat-transcript'
-import { useWriteWorkspaceStore } from '../write/write-workspace-store'
 import {
   mergeToolProjectionEvents,
   reduceChatProjection,
@@ -464,36 +463,6 @@ function resolveWriteToolFilePath(filePath: string | undefined, workspaceRoot: s
   return `${normalizeFilePathForMatch(workspaceRoot)}/${raw.replace(/^\.?\//, '')}`
 }
 
-function notifyWriteWorkspaceFileRefresh(
-  get: () => ChatState,
-  event?: Pick<ToolEventPayload, 'filePath' | 'status' | 'toolKind'>
-): void {
-  if (get().route !== 'write') return
-  if (event && (event.toolKind !== 'file_change' || event.status !== 'success')) return
-
-  const writeState = useWriteWorkspaceStore.getState()
-  const workspaceRoot = normalizeFilePathForMatch(writeState.workspaceRoot)
-  const activeFilePath = normalizeFilePathForMatch(writeState.activeFilePath)
-  if (!workspaceRoot || !activeFilePath) return
-
-  const candidatePath = resolveWriteToolFilePath(event?.filePath, workspaceRoot)
-  const hasCandidate = candidatePath.length > 0
-  const candidateInWorkspace = hasCandidate
-    ? candidatePath === workspaceRoot || candidatePath.startsWith(`${workspaceRoot}/`)
-    : true
-  if (!candidateInWorkspace) return
-
-  void useWriteWorkspaceStore.getState().refreshWorkspace(workspaceRoot)
-
-  if (hasCandidate && candidatePath !== activeFilePath) return
-  void useWriteWorkspaceStore.getState().syncActiveFileFromDisk(workspaceRoot, {
-    path: activeFilePath,
-    animate: true,
-    force: true,
-    reviewAsDiff: true
-  })
-}
-
 function runtimeStatusText(event: RuntimeStatusEventPayload): string {
   if (event.kind === 'tool_result_upload_wait') {
     return i18n.t('common:toolUploadWaitStatus', { count: event.toolResultCount ?? 0 })
@@ -789,9 +758,6 @@ export function buildThreadEventSink(
       switch (effect.type) {
         case 'arm_stream_watchdog':
           armBusyWatchdog(set, get)
-          break
-        case 'refresh_write_workspace':
-          notifyWriteWorkspaceFileRefresh(get, effect.event)
           break
         case 'mirror_claw_reply':
           if (typeof window.RcodeGui?.mirrorClawChannelMessage === 'function') {

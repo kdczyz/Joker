@@ -58,42 +58,42 @@ const APPROVAL_OPTIONS: ApprovalOption[] = [
     labelKey: 'toolPermissionAlwaysAskShort',
     descriptionKey: 'toolPermissionAlwaysAskDesc',
     Icon: Hand,
-    iconClass: 'border-sky-400/30 bg-sky-500/10 text-sky-700 dark:text-sky-200'
+    iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
   },
   {
     value: 'read-only',
     labelKey: 'toolPermissionReadOnlyShort',
     descriptionKey: 'toolPermissionReadOnlyDesc',
     Icon: Eye,
-    iconClass: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200'
+    iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
   },
   {
     value: 'sensitive-ask',
     labelKey: 'toolPermissionSensitiveAskShort',
     descriptionKey: 'toolPermissionSensitiveAskDesc',
     Icon: ShieldQuestion,
-    iconClass: 'border-amber-400/35 bg-amber-500/10 text-amber-700 dark:text-amber-200'
+    iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
   },
   {
     value: 'workspace-write',
     labelKey: 'toolPermissionWorkspaceWriteShort',
     descriptionKey: 'toolPermissionWorkspaceWriteDesc',
     Icon: FolderPen,
-    iconClass: 'border-indigo-400/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-200'
+    iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
   },
   {
     value: 'trusted-workspace',
     labelKey: 'toolPermissionTrustedWorkspaceShort',
     descriptionKey: 'toolPermissionTrustedWorkspaceDesc',
     Icon: ShieldCheck,
-    iconClass: 'border-teal-400/30 bg-teal-500/10 text-teal-700 dark:text-teal-200'
+    iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
   },
   {
     value: 'bypass',
     labelKey: 'toolPermissionBypassShort',
     descriptionKey: 'toolPermissionBypassDesc',
     Icon: LockKeyholeOpen,
-    iconClass: 'border-orange-400/35 bg-orange-500/10 text-orange-700 dark:text-orange-200'
+    iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
   }
 ]
 
@@ -241,10 +241,10 @@ export function FloatingComposerExecutionPicker({
             event,
             () => toggleMenu('approval')
           )}
-          className={`ds-composer-permission-button inline-flex min-h-7 items-center gap-1.5 rounded-lg border px-2.5 py-0.5 text-[12.5px] font-semibold shadow-sm transition disabled:cursor-not-allowed disabled:opacity-55 ${
+          className={`ds-composer-permission-button inline-flex min-h-7 items-center gap-1.5 rounded-lg px-2.5 py-0.5 text-[12.5px] font-semibold transition disabled:cursor-not-allowed disabled:opacity-55 ${
             bypass
-              ? 'border-orange-300/70 bg-orange-50 text-orange-700 hover:bg-orange-100 dark:border-orange-800/70 dark:bg-orange-950/30 dark:text-orange-200'
-              : 'border-ds-border-muted bg-ds-card/72 text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
+              ? 'bg-ds-card text-ds-ink hover:bg-ds-hover'
+              : 'bg-ds-card/72 text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
           }`}
           title={`${t(permissionLabelKey(permissionMode))}. ${t(permissionDescriptionKey(permissionMode))}`}
           aria-expanded={openMenu === 'approval'}

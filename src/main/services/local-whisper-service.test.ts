@@ -102,6 +102,34 @@ describe('local-whisper-service helpers', () => {
     expect(status.path).toBe(path)
   })
 
+  it('finds the bundled model via app.getAppPath when process.resourcesPath has none (dev run)', async () => {
+    const model = localWhisperModelById(LOCAL_WHISPER_SMALL_MODEL_ID)
+    // Simulate a dev launch: process.resourcesPath points at Electron's framework
+    // Resources (no bundled model), but the repo's bundled model is reachable via
+    // app.getAppPath(). This is the exact scenario that previously reported
+    // "local Whisper model is not downloaded".
+    const fakeResources = await mkdtemp(join(tmpdir(), 'Rcode-whisper-res-'))
+    const prevResourcesPath = (process as { resourcesPath?: string }).resourcesPath
+    ;(process as { resourcesPath?: string }).resourcesPath = fakeResources
+
+    const appRoot = await mkdtemp(join(tmpdir(), 'Rcode-whisper-app-'))
+    const modelPath = join(appRoot, 'resources', 'whisper', 'models', model.id, model.fileName)
+    await mkdir(dirname(modelPath), { recursive: true })
+    await writeFile(modelPath, 'bundled', 'utf8')
+    const prevGetAppPath = (app as unknown as { getAppPath?: () => string }).getAppPath
+    ;(app as unknown as { getAppPath: () => string }).getAppPath = () => appRoot
+
+    try {
+      const status = await getLocalWhisperModelStatus(model.id)
+      expect(status.state).toBe('ready')
+      expect(status.state).toBe('ready')
+      expect(status.path).toBe(modelPath)
+    } finally {
+      ;(process as { resourcesPath?: string }).resourcesPath = prevResourcesPath
+      ;(app as unknown as { getAppPath?: () => string }).getAppPath = prevGetAppPath
+    }
+  })
+
   it('kills and awaits an active Whisper runner during shutdown', async () => {
     const child = new EventEmitter() as EventEmitter & {
       stdout: EventEmitter

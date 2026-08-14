@@ -534,6 +534,17 @@ export function newClawChannel(
   }
 }
 
+/**
+ * A Claw IM channel is considered enabled unless it is explicitly disabled.
+ * Older or migrated channel records may omit the `enabled` field, which would
+ * otherwise make `!channel.enabled` evaluate to `true` and silently disable the
+ * row in the sidebar (clicks do nothing). Treat a missing value as enabled to
+ * match the default produced by `newClawChannel`.
+ */
+export function isClawChannelEnabled(channel: ClawImChannelV1): boolean {
+  return channel.enabled !== false
+}
+
 export function normalizeClawComposerModel(raw: string): string {
   const trimmed = raw.trim()
   return trimmed || 'auto'

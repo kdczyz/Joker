@@ -1,11 +1,14 @@
 import { Suspense, type ComponentProps, type PointerEventHandler, type ReactElement } from 'react'
 import type { SettingsRouteSection } from '../../store/chat-store'
 import { Sidebar } from '../chat/Sidebar'
-import { WriteSidebar } from '../write/WriteSidebar'
 import type { RegisteredContribution } from '../../extensions/contribution-registry'
 import { ExtensionViewOutlet } from '../../extensions/ControlledContributionSurfaces'
 
 type CodeSidebarProps = ComponentProps<typeof Sidebar>
+
+// 左侧栏独立缩放系数 —— 必须与 base-shell.css 中 --ds-ui-scale-sidebar 保持一致。
+// 渲染时把内联宽度除以该系数,配合 CSS 的 zoom,使内容放大但布局占位不变。
+const LEFT_SIDEBAR_ZOOM = 1.08
 
 export type WorkbenchLeftSidebarProps = {
   collapsed: boolean
@@ -39,7 +42,6 @@ export type WorkbenchLeftSidebarProps = {
   onToggleTheme: CodeSidebarProps['onToggleTheme']
   onToggleConnectPhone: CodeSidebarProps['onToggleConnectPhone']
   onCodeOpen: CodeSidebarProps['onCodeOpen']
-  onWriteOpen: CodeSidebarProps['onWriteOpen']
   onScheduleOpen: CodeSidebarProps['onScheduleOpen']
   onWorkflowOpen: CodeSidebarProps['onWorkflowOpen']
   onNewConversation: CodeSidebarProps['onNewConversation']
@@ -82,7 +84,6 @@ export function WorkbenchLeftSidebar({
   onToggleTheme,
   onToggleConnectPhone,
   onCodeOpen,
-  onWriteOpen,
   onScheduleOpen,
   onWorkflowOpen,
   onNewConversation,
@@ -91,24 +92,13 @@ export function WorkbenchLeftSidebar({
   if (collapsed) return null
   return (
     <>
-      <div className="min-h-0 shrink-0" style={{ width }}>
+      <div className="min-h-0 shrink-0 ds-workbench-left-sidebar" style={{ width: width / LEFT_SIDEBAR_ZOOM }}>
         {extensionView ? (
           <ExtensionViewOutlet
             contribution={extensionView}
             workspaceRoot={workspaceRoot}
             onClose={onCloseExtensionView}
           />
-        ) : route === 'write' ? (
-          <Suspense fallback={<SidebarFallback />}>
-            <WriteSidebar
-              activeView="write"
-              connectPhoneSidebarOpen={connectPhoneSidebarOpen}
-              onCodeOpen={onCodeOpen}
-              onWriteOpen={onWriteOpen}
-              onOpenSettings={onOpenSettings}
-              onToggleConnectPhone={onToggleConnectPhone}
-            />
-          </Suspense>
         ) : (
           <Sidebar
             threads={codeThreads}
@@ -137,7 +127,6 @@ export function WorkbenchLeftSidebar({
             onToggleTheme={onToggleTheme}
             onToggleConnectPhone={onToggleConnectPhone}
             onCodeOpen={onCodeOpen}
-            onWriteOpen={onWriteOpen}
             onScheduleOpen={onScheduleOpen}
             onWorkflowOpen={onWorkflowOpen}
             onNewConversation={onNewConversation}

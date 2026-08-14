@@ -46,8 +46,8 @@ export type RcodeToolPermissionMode = (typeof RCODE_TOOL_PERMISSION_MODES)[numbe
  */
 export type UiFontScale = number
 export const UI_FONT_SCALE_MIN = 0.7
-export const UI_FONT_SCALE_MAX = 1.4
-export const DEFAULT_UI_FONT_SCALE = 0.82
+export const UI_FONT_SCALE_MAX = 3.0
+export const DEFAULT_UI_FONT_SCALE = 1.0
 /** Maps the retired small/medium/large presets to their old zoom factors. */
 export const LEGACY_UI_FONT_SCALE_FACTORS = { small: 0.82, medium: 0.88, large: 1 } as const
 /** Coerce any stored/legacy value into a valid numeric scale factor. */

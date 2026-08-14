@@ -4,6 +4,9 @@
   --ds-collapsed-sidebar-titlebar-extra-inset: 0px;
   --ds-write-titlebar-extra-inset: 0px;
   --ds-ui-scale: 1;
+  /* 左侧栏独立缩放系数(需求:左侧栏 108% / 右侧对话框 100%)。
+     修改此处时务必同步 WorkbenchLeftSidebar.tsx 中的 LEFT_SIDEBAR_ZOOM 常量(用于补偿占位宽度)。 */
+  --ds-ui-scale-sidebar: 1.08;
   /* 黑白灰配色:亮色主题 = 黑灰(中性底色 + 黑灰文字/主色),仅保留少量语义色 */
   --bg-app: #f4f4f5;
   --bg-sidebar: #ececee;
@@ -612,6 +615,12 @@ body {
   zoom: var(--ds-ui-scale);
 }
 
+/* 左侧栏独立缩放:内容放大到 --ds-ui-scale-sidebar,但布局占位保持原宽
+   (组件渲染时已把内联 width 除以该系数,故净占用宽度不变,不会挤压右侧)。 */
+.ds-workbench-left-sidebar {
+  zoom: var(--ds-ui-scale-sidebar);
+}
+
 body::before {
   content: '';
   position: fixed;
@@ -780,12 +789,11 @@ pre {
 }
 
 .ds-composer-toolbar {
-  border-top: 1px solid rgba(20, 47, 95, 0.065);
   padding-top: 0.375rem;
 }
 
 [data-theme='dark'] .ds-composer-toolbar {
-  border-top-color: rgba(255, 255, 255, 0.075);
+  /* border-top removed for a seamless input-to-toolbar transition */
 }
 
 [data-theme='dark'] .ds-user-message-bubble {
@@ -2928,6 +2936,14 @@ body.ds-workbench-resizing webview {
   min-width: 0;
 }
 
+.ds-composer-usage-cached {
+  min-width: 0;
+}
+
+.ds-composer-usage-miss {
+  min-width: 0;
+}
+
 .ds-composer-footer-hint {
   flex: 0 1 auto;
   max-width: min(14rem, 34%);
@@ -3023,22 +3039,24 @@ body.ds-workbench-resizing webview {
   }
 }
 
+@container (max-width: 480px) {
+  .ds-composer-usage-cached,
+  .ds-composer-usage-cached-separator {
+    display: none;
+  }
+}
+
 @container (max-width: 440px) {
   .ds-composer-usage-context-savings,
-  .ds-composer-usage-context-savings-separator {
+  .ds-composer-usage-context-savings-separator,
+  .ds-composer-usage-miss,
+  .ds-composer-usage-miss-separator {
     display: none;
   }
 }
 
 @container (max-width: 390px) {
   .ds-composer-intent-label {
-    display: none;
-  }
-}
-
-@container (max-width: 360px) {
-  .ds-composer-usage-turns,
-  .ds-composer-usage-turns-separator {
     display: none;
   }
 }

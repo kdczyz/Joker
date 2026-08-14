@@ -69,7 +69,6 @@ const CONTENT_SCRIPT_CSP =
 export function workbenchSurfaceForRoute(route: AppRoute): WorkbenchSurfaceToken | null {
   if (route === 'chat') return 'workbench:code'
   if (route === 'design') return 'workbench:design'
-  if (route === 'write') return 'workbench:write'
   if (route === 'claw') return 'workbench:connect'
   return null
 }

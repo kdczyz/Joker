@@ -98,8 +98,6 @@ export function useWorkbenchAttachmentRuntime({
     if (rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.sddAi && sddDraft?.workspaceRoot) return sddDraft.workspaceRoot
     const designWorkspace = useDesignWorkspaceStore.getState().workspaceRoot
     if (route === 'design' && designWorkspace.trim()) return designWorkspace
-    const writeWorkspace = useWriteWorkspaceStore.getState().workspaceRoot
-    if (route === 'write' && writeWorkspace.trim()) return writeWorkspace
     return threads.find((thread) => thread.id === activeThreadId)?.workspace || workspaceRoot || undefined
   }
 

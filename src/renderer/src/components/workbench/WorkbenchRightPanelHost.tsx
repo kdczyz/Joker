@@ -10,7 +10,6 @@ export type WorkbenchRightPanelHostProps = Pick<
   | 'width'
   | 'route'
   | 'rightPanelMode'
-  | 'writeAssistantOpen'
   | 'changes'
   | 'todo'
   | 'browser'
@@ -30,7 +29,6 @@ export type WorkbenchRightPanelHostProps = Pick<
     implement: WorkbenchRightPanelProps['design']['implement']
     assistant: WorkbenchRightPanelProps['design']['assistant']
   }
-  write: Omit<WorkbenchRightPanelProps['write'], SharedKey>
   sdd: Omit<WorkbenchRightPanelProps['sdd'], SharedKey>
 }
 
@@ -41,8 +39,6 @@ export function WorkbenchRightPanelHost({
   rightPanelMode,
   onBeginResize,
   design,
-  writeAssistantOpen,
-  write,
   sdd,
   changes,
   todo,
@@ -64,8 +60,6 @@ export function WorkbenchRightPanelHost({
       rightPanelMode={rightPanelMode}
       onBeginResize={onBeginResize}
       design={design}
-      writeAssistantOpen={writeAssistantOpen}
-      write={{ ...design.shared, ...write }}
       sdd={{ ...design.shared, ...sdd }}
       changes={changes}
       todo={todo}

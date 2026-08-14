@@ -55,7 +55,6 @@ export type QueuedUserMessage = {
     sourceRequest?: string
     title?: string
   }
-  writeContext?: WriteAssistantMessageContext
 }
 
 /**
@@ -72,17 +71,6 @@ export type GuiPlanMessageContext = {
   title?: string
 }
 
-/** Renderer-only routing context that keeps a Write send bound to the file and
- * conversation selected when the user submitted it. */
-export type WriteAssistantMessageContext = {
-  workspaceRoot: string
-  activeFilePath: string | null
-  documentEpoch: number
-  contentRevision: number
-  /** Filled after the first explicit ensure; queued sends keep this identity. */
-  threadId?: string
-}
-
 export type SendMessageOverrides = {
   queued?: QueuedUserMessage
   model?: string
@@ -96,14 +84,13 @@ export type SendMessageOverrides = {
   attachments?: AttachmentReference[]
   fileReferences?: UserFileReference[]
   composerContexts?: ComposerContextAttachment[]
-  writeContext?: WriteAssistantMessageContext
 }
 
 export type InitialSetupMode = 'required' | 'preview'
 export type SettingsRouteSection =
   | 'general'
   | 'providers'
-  | 'write'
+  | 'design'
   | 'imageGeneration'
   | 'mediaGeneration'
   | 'speechToText'
@@ -120,7 +107,7 @@ export type SettingsRouteSection =
   | 'updates'
   | 'terminal'
   | 'dataMigration'
-export type AppRoute = 'chat' | 'write' | 'settings' | 'plugins' | 'extensions' | 'claw' | 'schedule' | 'workflow'
+export type AppRoute = 'chat' | 'design' | 'settings' | 'plugins' | 'extensions' | 'claw' | 'schedule' | 'workflow'
 export type PluginHostRoute = 'chat' | 'claw'
 
 /**
@@ -250,11 +237,7 @@ export type ChatState = {
   setComposerAgentId: (agentId: string) => void
   loadComposerModels: () => Promise<void>
   setRoute: (r: AppRoute) => void
-  openWrite: () => Promise<void>
   openCode: () => Promise<void>
-  ensureWriteThreadForWorkspace: (workspaceRoot?: string, activeFilePath?: string) => Promise<string | null>
-  createWriteThread: (workspaceRoot?: string, activeFilePath?: string) => Promise<string | null>
-  selectWriteThread: (threadId: string, workspaceRoot?: string) => Promise<void>
   openSettings: (section?: SettingsRouteSection) => void
   openPlugins: (host?: PluginHostRoute) => void
   openClaw: () => void

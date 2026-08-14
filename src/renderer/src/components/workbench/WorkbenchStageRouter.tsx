@@ -13,32 +13,17 @@ const WorkflowView = lazy(() =>
 const WorkflowRunPanel = lazy(() =>
   import('../workflow/WorkflowRunPanel').then((module) => ({ default: module.WorkflowRunPanel }))
 )
-const WriteWorkspaceView = lazy(() =>
-  import('../write/WriteWorkspaceView').then((module) => ({ default: module.WriteWorkspaceView }))
-)
 const ExtensionManagementCenter = lazy(() =>
   import('../../extensions/ExtensionManagementCenter').then((module) => ({
     default: module.ExtensionManagementCenter
   }))
 )
 
-type WriteStageProps = {
-  runtimeBanner: ReactNode
-  leftSidebarCollapsed: boolean
-  onToggleLeftSidebar: () => void
-  input: string
-  setInput: (value: string) => void
-  onSubmitPrompt?: (value: string) => void
-  onOpenAgentSettings?: () => void
-  rightPanel: ReactNode
-}
-
 export type WorkbenchStageRouterProps = {
   route: string
   leftSidebarCollapsed: boolean
   onToggleLeftSidebar: () => void
   onOpenThread: (threadId: string) => void
-  write: WriteStageProps
   conversation: WorkbenchConversationStageProps
   imageAnnotationHost: ReactNode
   planOverlay: ReactNode
@@ -58,7 +43,6 @@ export function WorkbenchStageRouter({
   leftSidebarCollapsed,
   onToggleLeftSidebar,
   onOpenThread,
-  write,
   conversation,
   imageAnnotationHost,
   planOverlay,
@@ -104,21 +88,6 @@ export function WorkbenchStageRouter({
               onToggleLeftSidebar={onToggleLeftSidebar}
               onOpenThread={onOpenThread}
             />
-          </Suspense>
-        ) : route === 'write' ? (
-          <Suspense fallback={<WorkbenchPaneFallback />}>
-            {write.runtimeBanner}
-            <div className="flex min-h-0 flex-1">
-              <WriteWorkspaceView
-                leftSidebarCollapsed={write.leftSidebarCollapsed}
-                onToggleLeftSidebar={write.onToggleLeftSidebar}
-                input={write.input}
-                setInput={write.setInput}
-                onSubmitPrompt={write.onSubmitPrompt}
-                onOpenAgentSettings={write.onOpenAgentSettings}
-              />
-              {write.rightPanel}
-            </div>
           </Suspense>
         ) : (
           <WorkbenchConversationStage {...conversation} />

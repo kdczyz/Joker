@@ -12,7 +12,6 @@ export function canGuideQueuedMessage(message: QueuedUserMessage): boolean {
     !message.guiPlan &&
     message.guiDesignCanvas !== true &&
     message.guiDesignMode !== true &&
-    !message.guiDesignArtifact &&
-    !message.writeContext
+    !message.guiDesignArtifact
   )
 }

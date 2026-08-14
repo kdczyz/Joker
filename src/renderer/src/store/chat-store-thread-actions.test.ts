@@ -129,205 +129,6 @@ describe('chat-store-thread-actions queued messages', () => {
     expect(state.error).toBeTruthy()
   })
 
-  it('rejects a busy Write send instead of accepting a queue that can lose file identity', async () => {
-    vi.stubGlobal('window', { RcodeGui: {} })
-    useWriteWorkspaceStore.setState({
-      workspaceRoot: '/workspace/deepseek-gui',
-      activeFilePath: '/workspace/deepseek-gui/draft.md',
-      activeFileKind: 'text',
-      documentEpoch: 4,
-      contentRevision: 2,
-      fileContent: 'saved draft',
-      persistedContent: 'saved draft',
-      saveStatus: 'saved'
-    })
-    const { actions, state } = buildHarness()
-    const ensureWriteThreadForWorkspace = vi.fn(async () => 'thr_existing')
-    state.route = 'write'
-    state.busy = true
-    state.ensureWriteThreadForWorkspace = ensureWriteThreadForWorkspace as ChatState['ensureWriteThreadForWorkspace']
-
-    await expect(actions.sendMessage('revise this', 'agent', {
-      writeContext: {
-        workspaceRoot: '/workspace/deepseek-gui',
-        activeFilePath: '/workspace/deepseek-gui/draft.md',
-        documentEpoch: 4,
-        contentRevision: 2
-      }
-    })).resolves.toBe(false)
-
-    expect(ensureWriteThreadForWorkspace).toHaveBeenCalledOnce()
-    expect(ensureWriteThreadForWorkspace).toHaveBeenCalledWith(
-      '/workspace/deepseek-gui',
-      '/workspace/deepseek-gui/draft.md'
-    )
-    expect(state.queuedMessages).toEqual([])
-  })
-
-  it('rejects a Write send whose captured revision is no longer active', async () => {
-    vi.stubGlobal('window', { RcodeGui: {} })
-    useWriteWorkspaceStore.setState({
-      workspaceRoot: '/workspace/deepseek-gui',
-      activeFilePath: '/workspace/deepseek-gui/draft.md',
-      activeFileKind: 'text',
-      documentEpoch: 4,
-      contentRevision: 3,
-      fileContent: 'new local edit',
-      persistedContent: 'saved draft',
-      saveStatus: 'dirty'
-    })
-    const { actions, state } = buildHarness()
-    const ensureWriteThreadForWorkspace = vi.fn(async () => 'thr_existing')
-    state.route = 'write'
-    state.busy = false
-    state.ensureWriteThreadForWorkspace = ensureWriteThreadForWorkspace as ChatState['ensureWriteThreadForWorkspace']
-
-    await expect(actions.sendMessage('revise this', 'agent', {
-      writeContext: {
-        workspaceRoot: '/workspace/deepseek-gui',
-        activeFilePath: '/workspace/deepseek-gui/draft.md',
-        documentEpoch: 4,
-        contentRevision: 2
-      }
-    })).resolves.toBe(false)
-
-    expect(ensureWriteThreadForWorkspace).not.toHaveBeenCalled()
-  })
-
-  it('ensures the captured Write file exactly once and sends on that thread', async () => {
-    const provider = {
-      sendUserMessage: vi.fn(async () => ({
-        threadId: 'thr_existing',
-        turnId: 'turn_1',
-        userMessageItemId: 'user_1'
-      })),
-      subscribeThreadEvents: vi.fn(async () => undefined)
-    }
-    registryMock.getProvider.mockReturnValue(provider)
-    vi.stubGlobal('window', {
-      RcodeGui: {
-        getSettings: vi.fn(async () => ({
-          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
-          codePromptPrefix: ''
-        })),
-        logError: vi.fn(async () => undefined)
-      }
-    })
-    useWriteWorkspaceStore.setState({
-      workspaceRoot: '/workspace/deepseek-gui',
-      activeFilePath: '/workspace/deepseek-gui/draft.md',
-      activeFileKind: 'text',
-      documentEpoch: 4,
-      contentRevision: 2,
-      fileContent: 'saved draft',
-      persistedContent: 'saved draft',
-      saveStatus: 'saved'
-    })
-    const { actions, state } = buildHarness()
-    const ensureWriteThreadForWorkspace = vi.fn(async () => 'thr_existing')
-    state.route = 'write'
-    state.busy = false
-    state.ensureWriteThreadForWorkspace = ensureWriteThreadForWorkspace as ChatState['ensureWriteThreadForWorkspace']
-
-    await expect(actions.sendMessage('revise this', 'agent', {
-      writeContext: {
-        workspaceRoot: '/workspace/deepseek-gui',
-        activeFilePath: '/workspace/deepseek-gui/draft.md',
-        documentEpoch: 4,
-        contentRevision: 2
-      }
-    })).resolves.toBe(true)
-
-    expect(ensureWriteThreadForWorkspace).toHaveBeenCalledTimes(1)
-    expect(ensureWriteThreadForWorkspace).toHaveBeenCalledWith(
-      '/workspace/deepseek-gui',
-      '/workspace/deepseek-gui/draft.md'
-    )
-    expect(provider.sendUserMessage).toHaveBeenCalledWith(
-      'thr_existing',
-      expect.stringContaining('revise this'),
-      expect.any(Object)
-    )
-  })
-
-  it('fails closed when another thread becomes active while the Write ensure resolves', async () => {
-    const provider = { sendUserMessage: vi.fn() }
-    registryMock.getProvider.mockReturnValue(provider)
-    vi.stubGlobal('window', { RcodeGui: {} })
-    useWriteWorkspaceStore.setState({
-      workspaceRoot: '/workspace/deepseek-gui',
-      activeFilePath: '/workspace/deepseek-gui/draft.md',
-      activeFileKind: 'text',
-      documentEpoch: 4,
-      contentRevision: 2,
-      fileContent: 'saved draft',
-      persistedContent: 'saved draft',
-      saveStatus: 'saved'
-    })
-    const { actions, state } = buildHarness()
-    state.route = 'write'
-    state.busy = false
-    const ensureWriteThreadForWorkspace = vi.fn(async () => {
-      state.activeThreadId = 'thr_selected_elsewhere'
-      return 'thr_existing'
-    })
-    state.ensureWriteThreadForWorkspace = ensureWriteThreadForWorkspace as ChatState['ensureWriteThreadForWorkspace']
-
-    await expect(actions.sendMessage('revise this', 'agent', {
-      writeContext: {
-        workspaceRoot: '/workspace/deepseek-gui',
-        activeFilePath: '/workspace/deepseek-gui/draft.md',
-        documentEpoch: 4,
-        contentRevision: 2
-      }
-    })).resolves.toBe(false)
-
-    expect(ensureWriteThreadForWorkspace).toHaveBeenCalledTimes(1)
-    expect(provider.sendUserMessage).not.toHaveBeenCalled()
-    expect(state.blocks).toEqual([])
-  })
-
-  it.each([
-    ['route', { route: 'chat' as const }],
-    ['file', { activeFilePath: '/workspace/deepseek-gui/other.md' }],
-    ['epoch', { documentEpoch: 5 }],
-    ['revision', { contentRevision: 3 }]
-  ])('rejects a Write send with a mismatched %s before ensuring a thread', async (_label, mismatch) => {
-    const provider = { sendUserMessage: vi.fn() }
-    registryMock.getProvider.mockReturnValue(provider)
-    vi.stubGlobal('window', { RcodeGui: {} })
-    useWriteWorkspaceStore.setState({
-      workspaceRoot: '/workspace/deepseek-gui',
-      activeFilePath: '/workspace/deepseek-gui/draft.md',
-      activeFileKind: 'text',
-      documentEpoch: 4,
-      contentRevision: 2,
-      fileContent: 'saved draft',
-      persistedContent: 'saved draft',
-      saveStatus: 'saved',
-      ...('activeFilePath' in mismatch ? { activeFilePath: mismatch.activeFilePath } : {}),
-      ...('documentEpoch' in mismatch ? { documentEpoch: mismatch.documentEpoch } : {}),
-      ...('contentRevision' in mismatch ? { contentRevision: mismatch.contentRevision } : {})
-    })
-    const { actions, state } = buildHarness()
-    const ensureWriteThreadForWorkspace = vi.fn(async () => 'thr_existing')
-    state.route = 'route' in mismatch ? mismatch.route : 'write'
-    state.busy = false
-    state.ensureWriteThreadForWorkspace = ensureWriteThreadForWorkspace as ChatState['ensureWriteThreadForWorkspace']
-
-    await expect(actions.sendMessage('revise this', 'agent', {
-      writeContext: {
-        workspaceRoot: '/workspace/deepseek-gui',
-        activeFilePath: '/workspace/deepseek-gui/draft.md',
-        documentEpoch: 4,
-        contentRevision: 2
-      }
-    })).resolves.toBe(false)
-
-    expect(ensureWriteThreadForWorkspace).not.toHaveBeenCalled()
-    expect(provider.sendUserMessage).not.toHaveBeenCalled()
-  })
-
   it('removes stale queued GUI plan messages before draining normal queued messages', async () => {
     const { actions, state } = buildHarness()
     const sendMessage = vi.fn(async (_text, _mode, overrides) => {
@@ -668,53 +469,6 @@ describe('chat-store-thread-actions queued messages', () => {
     expect(state.queuedMessages).toEqual([])
   })
 
-  it('sends an override provider from the write route without switching the global runtime provider', async () => {
-    const provider = {
-      connect: vi.fn(async () => undefined),
-      sendUserMessage: vi.fn(async () => ({
-        threadId: 'thr_existing',
-        turnId: 'turn_1',
-        userMessageItemId: 'user_1'
-      })),
-      subscribeThreadEvents: vi.fn(async () => undefined)
-    }
-    registryMock.getProvider.mockReturnValue(provider)
-    const setSettings = vi.fn(async () => ({
-      agents: { Rcode: { providerId: 'minimax-token-plan', model: 'MiniMax-M3' } },
-      codePromptPrefix: ''
-    }))
-    const restartRuntime = vi.fn(async () => undefined)
-    vi.stubGlobal('window', {
-      RcodeGui: {
-        getSettings: vi.fn(async () => ({
-          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
-          codePromptPrefix: ''
-        })),
-        setSettings,
-        restartRuntime,
-        logError: vi.fn(async () => undefined)
-      }
-    })
-    const { actions, state } = buildHarness()
-    state.route = 'write'
-    state.busy = false
-    state.ensureWriteThreadForWorkspace = vi.fn(async () => 'thr_existing') as never
-
-    await expect(actions.sendMessage('make a prototype', 'agent', {
-      model: 'MiniMax-M3',
-      providerId: 'minimax-token-plan'
-    })).resolves.toBe(true)
-
-    expect(setSettings).not.toHaveBeenCalled()
-    expect(restartRuntime).not.toHaveBeenCalled()
-    expect(provider.connect).not.toHaveBeenCalled()
-    expect(provider.sendUserMessage).toHaveBeenCalledWith(
-      'thr_existing',
-      'make a prototype',
-      expect.objectContaining({ model: 'MiniMax-M3', providerId: 'minimax-token-plan' })
-    )
-  })
-
   it('snapshots the selected composer provider when creating the first thread', async () => {
     const provider = {
       connect: vi.fn(async () => undefined),
@@ -780,6 +534,57 @@ describe('chat-store-thread-actions queued messages', () => {
         accountId: 'account-extension-1'
       })
     )
+  })
+})
+
+describe('chat-store-thread-actions selectThread', () => {
+  beforeEach(() => {
+    rendererRuntimeClient.invalidateSettings()
+    registryMock.getProvider.mockReset()
+  })
+
+  afterEach(() => {
+    rendererRuntimeClient.invalidateSettings()
+    vi.unstubAllGlobals()
+  })
+
+  it('keeps the most recently selected history when an earlier detail request finishes late', async () => {
+    let releaseFirstDetail: (() => void) | undefined
+    const firstDetail = new Promise<void>((resolve) => { releaseFirstDetail = resolve })
+    const provider = {
+      getThreadDetail: vi.fn(async (id: string) => {
+        if (id === 'thr_first') await firstDetail
+        return {
+          blocks: [{ kind: 'user' as const, id: `user-${id}`, text: id }],
+          latestSeq: 0,
+          threadStatus: 'idle'
+        }
+      }),
+      subscribeThreadEvents: vi.fn(async () => ({ streamId: 'stream_1' }))
+    }
+    registryMock.getProvider.mockReturnValue(provider)
+
+    const { actions, state } = buildHarness()
+    state.threads = [thread('thr_first'), thread('thr_second')]
+    state.composerModelGroups = []
+    state.composerPickList = []
+
+    const firstSelection = actions.selectThread('thr_first')
+    await actions.selectThread('thr_second')
+
+    expect(state.activeThreadId).toBe('thr_second')
+    expect(state.error).toBeNull()
+    expect(state.blocks).toEqual([
+      expect.objectContaining({ id: 'user-thr_second', text: 'thr_second' })
+    ])
+
+    releaseFirstDetail?.()
+    await firstSelection
+
+    expect(state.activeThreadId).toBe('thr_second')
+    expect(state.blocks).toEqual([
+      expect.objectContaining({ id: 'user-thr_second', text: 'thr_second' })
+    ])
   })
 })
 

@@ -72,9 +72,6 @@ import { useActiveExtensionWorkspaceRoot } from '../extensions/active-extension-
 const ProvidersSettingsSection = lazy(() =>
   import('./settings-section-providers').then((module) => ({ default: module.ProvidersSettingsSection }))
 )
-const WriteSettingsSection = lazy(() =>
-  import('./settings-section-write').then((module) => ({ default: module.WriteSettingsSection }))
-)
 const DesignSettingsSection = lazy(() =>
   import('./settings-section-design').then((module) => ({ default: module.DesignSettingsSection }))
 )
@@ -147,7 +144,7 @@ function SettingsSectionFallback(): ReactElement {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'write' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch'
 type SettingsPatch = AppSettingsPatch
 type InlineNotice = {
   tone: 'success' | 'error' | 'info'
@@ -170,7 +167,6 @@ export function SettingsView(): ReactElement {
   const settingsReturnRoute = useChatStore((s) => s.settingsReturnRoute)
   const settingsSection = useChatStore((s) => s.settingsSection)
   const openCode = useChatStore((s) => s.openCode)
-  const openWrite = useChatStore((s) => s.openWrite)
   const openClaw = useChatStore((s) => s.openClaw)
   const openSchedule = useChatStore((s) => s.openSchedule)
   const openInitialSetup = useChatStore((s) => s.openInitialSetup)
@@ -396,7 +392,7 @@ export function SettingsView(): ReactElement {
   }, [])
 
   useEffect(() => {
-    if (category !== 'write') return
+    if ((category as string) !== 'write') return
     void loadWriteDebugEntries()
   }, [category, loadWriteDebugEntries])
 
@@ -419,10 +415,6 @@ export function SettingsView(): ReactElement {
     }
     if (settingsSection === 'providers') {
       setCategory('providers')
-      return
-    }
-    if (settingsSection === 'write') {
-      setCategory('write')
       return
     }
     if (settingsSection === 'design') {
@@ -477,7 +469,6 @@ export function SettingsView(): ReactElement {
     if (
       settingsSection === 'general' ||
       settingsSection === 'providers' ||
-      settingsSection === 'write' ||
       settingsSection === 'design' ||
       settingsSection === 'imageGeneration' ||
       settingsSection === 'mediaGeneration' ||
@@ -494,7 +485,7 @@ export function SettingsView(): ReactElement {
     }
     if (!agentsSectionReady) return
     const refs: Record<
-      Exclude<SettingsRouteSection, 'general' | 'providers' | 'write' | 'design' | 'imageGeneration' | 'mediaGeneration' | 'speechToText' | 'subagents' | 'archives' | 'claw' | 'shortcuts' | 'updates' | 'terminal' | 'dataMigration'>,
+      Exclude<SettingsRouteSection, 'general' | 'providers' | 'design' | 'imageGeneration' | 'mediaGeneration' | 'speechToText' | 'subagents' | 'archives' | 'claw' | 'shortcuts' | 'updates' | 'terminal' | 'dataMigration'>,
       HTMLDivElement | null
     > = {
       agents: agentsSectionRef.current,
@@ -1018,10 +1009,6 @@ export function SettingsView(): ReactElement {
     void (async () => {
       await flushPendingSave()
       await reloadUiSettings()
-      if (settingsReturnRoute === 'write') {
-        await openWrite()
-        return
-      }
       if (settingsReturnRoute === 'claw') {
         openClaw()
         return
@@ -1411,7 +1398,6 @@ export function SettingsView(): ReactElement {
           ) : null}
           <Suspense fallback={<SettingsSectionFallback />}>
             {category === 'providers' ? <ProvidersSettingsSection ctx={settingsSectionContext} /> : null}
-            {category === 'write' ? <WriteSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'design' ? <DesignSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'mediaGeneration' ? <MediaGenerationSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'agents' ? (

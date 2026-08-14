@@ -10,14 +10,6 @@ import type { ChatState, SendMessageOverrides } from '../../store/chat-store-typ
 import { useChatStore } from '../../store/chat-store'
 import { providerIdForComposerModel } from '../../store/chat-store-helpers'
 import { parseClawCommand } from '@shared/claw-commands'
-import { useWriteWorkspaceStore } from '../../write/write-workspace-store'
-import {
-  captureWriteDocumentContext,
-  writeDocumentContextMatches
-} from '../../write/write-document-context'
-import type { WriteRetrievalContext } from '@shared/write-retrieval'
-import { composeWritePrompt } from '../../write/quoted-selection'
-import { resolveWriteAgentPreset } from '../../write/agent-presets'
 import { parseGuiPlanCommand } from '../../plan/plan-command'
 import { normalizeWorkspaceRoot } from '../../lib/workspace-path'
 import {
@@ -126,7 +118,6 @@ function resolveClawComposerModelByIndex(
 
 export type WorkbenchComposerSubmitController = {
   handleSend: () => void
-  sendWritePrompt: (value: string) => void
 }
 
 export function useWorkbenchComposerSubmitController({
@@ -277,204 +268,11 @@ export function useWorkbenchComposerSubmitController({
     return entries
   }, [t])
 
-  const sendWritePrompt = useCallback((value: string): void => {
-    const v = value.trim()
-    const attachmentScope = getAttachmentScope()
-    const attachments = composerAttachments
-    const documentAttachments = attachments.filter((attachment) => attachment.kind === 'document')
-    const attachmentIds = attachments.map((attachment) => attachment.id)
-    const publicAttachments = stripTransientAttachmentFields(attachments)
-    if (!v && attachmentIds.length === 0 && documentAttachments.length === 0) return
-    if (attachmentIds.length > 0 && !attachmentUploadEnabled) {
-      setAttachmentUploadError(t('composerAttachmentModelUnsupported'))
-      return
-    }
-    const writeState = useWriteWorkspaceStore.getState()
-    const writeWorkspaceRoot = writeState.workspaceRoot || workspaceRoot
-    const writeDocumentContext = captureWriteDocumentContext({
-      ...writeState,
-      workspaceRoot: writeWorkspaceRoot
-    })
-    const writeActiveFilePath = writeState.activeFilePath
-    const writeDocumentEpoch = writeState.documentEpoch
-    const writeContentRevision = writeState.contentRevision
-    const quotedSelections = writeState.quotedSelections.map((selection) => ({
-      ...selection,
-      ...(selection.rects ? { rects: selection.rects.map((rect) => ({ ...rect })) } : {})
-    }))
-    const writeContextStillMatches = (): boolean => {
-      if (useChatStore.getState().route !== 'write') return false
-      const latest = useWriteWorkspaceStore.getState()
-      if (writeDocumentContext) return writeDocumentContextMatches(latest, writeDocumentContext)
-      return (
-        normalizeWorkspaceRoot(latest.workspaceRoot || workspaceRoot) === normalizeWorkspaceRoot(writeWorkspaceRoot) &&
-        latest.activeFilePath === writeActiveFilePath &&
-        latest.documentEpoch === writeDocumentEpoch
-      )
-    }
-    const restorePrompt = (): void => {
-      // The composer state is shared across routes. Never prepend a stale
-      // Write prompt to text the user has started composing in Chat/Design.
-      if (useChatStore.getState().route !== 'write') return
-      setInput((current) => {
-        if (!v) return current
-        if (!current) return v
-        if (current.trim() === v || current.startsWith(`${v}\n\n`)) return current
-        return `${v}\n\n${current}`
-      })
-    }
-    const writeDraftStillMatches = (): boolean => {
-      const latest = useWriteWorkspaceStore.getState()
-      return (
-        writeContextStillMatches() &&
-        latest.contentRevision === writeContentRevision &&
-        latest.saveStatus === 'saved' &&
-        latest.fileContent === latest.persistedContent &&
-        latest.pendingAgentReview === null &&
-        !latest.reviewActive
-      )
-    }
-    const saveActiveDraft = async (): Promise<boolean> => {
-      if (!writeContextStillMatches()) return false
-      const beforeSave = useWriteWorkspaceStore.getState()
-      if (beforeSave.contentRevision !== writeContentRevision) return false
-      if (beforeSave.pendingAgentReview || beforeSave.reviewActive) {
-        beforeSave.setFileError(t('writeExternalChangeConflict'))
-        return false
-      }
-      // Clean read-only/truncated (or non-text) documents are safe to ask
-      // about. Their flushSave path intentionally rejects/no-ops, so avoid it.
-      // Normal text files still flush below to drain an older queued save.
-      const cleanDocument = beforeSave.fileContent === beforeSave.persistedContent
-      if (
-        cleanDocument &&
-        (beforeSave.fileTruncated || beforeSave.activeFileKind !== 'text' || !beforeSave.activeFilePath)
-      ) {
-        if (beforeSave.saveStatus !== 'saved') {
-          useWriteWorkspaceStore.setState((current) => (
-            writeContextStillMatches() &&
-            current.contentRevision === writeContentRevision &&
-            current.fileContent === current.persistedContent
-              ? { saveStatus: 'saved' }
-              : {}
-          ))
-        }
-        return writeDraftStillMatches()
-      }
-      const saved = await beforeSave.flushSave(writeWorkspaceRoot)
-      if (!saved) {
-        const latest = useWriteWorkspaceStore.getState()
-        if (writeContextStillMatches() && !latest.fileError) {
-          latest.setFileError(t('writeAssistantSaveBeforeSendFailed'))
-        }
-        return false
-      }
-      return writeDraftStillMatches()
-    }
-    setInput('')
-    void (async () => {
-      if (!await saveActiveDraft()) {
-        restorePrompt()
-        return
-      }
-      const retrievalQuery = [
-        ...quotedSelections.map((selection) => selection.text),
-        v
-      ].join('\n\n').trim()
-      let retrieval: WriteRetrievalContext | null = null
-      if (retrievalQuery && typeof window.RcodeGui?.retrieveWriteContext === 'function') {
-        try {
-          const result = await window.RcodeGui.retrieveWriteContext({
-            workspaceRoot: writeWorkspaceRoot,
-            currentFilePath: writeActiveFilePath ?? undefined,
-            query: retrievalQuery,
-            maxSnippets: 4,
-            includeCurrentFile: true
-          })
-          if (result.ok) retrieval = result.context
-        } catch (error) {
-          void window.RcodeGui?.logError?.('write-retrieval', 'Failed to retrieve write context', {
-            message: error instanceof Error ? error.message : String(error)
-          })
-        }
-      }
-      if (!writeDraftStillMatches()) {
-        restorePrompt()
-        return
-      }
-      // Retrieval can take long enough for another edit to land. The revision
-      // gate above aborts in that case; otherwise this final no-op/flush check
-      // guarantees the exact captured draft is still persisted before send.
-      if (!await saveActiveDraft()) {
-        restorePrompt()
-        return
-      }
-      const messageText = buildComposerDocumentContextPrompt(
-        v || (documentAttachments.length > 0 ? t('composerFileOnlyPrompt') : t('composerImageOnlyPrompt')),
-        documentAttachments
-      )
-      const activeAgentPreset = writeState.agentPresets.find(
-        (preset) => preset.id === writeState.assistantAgentPresetId
-      )
-      const agentPersona = activeAgentPreset ? resolveWriteAgentPreset(activeAgentPreset).persona : ''
-      const prompt = composeWritePrompt(messageText, quotedSelections, {
-        workspaceRoot: writeWorkspaceRoot,
-        activeFilePath: writeActiveFilePath,
-        retrieval,
-        ...(agentPersona ? { agentPersona } : {})
-      })
-      const model = writeState.assistantModel.trim()
-      const providerId =
-        writeState.assistantProviderId.trim() || providerIdForComposerModel(composerModelGroups, model)
-      const reasoningEffort = composerReasoningEffortRequestValue(composerReasoningEffort)
-      const sent = await sendMessage(prompt, composerMode === 'plan' ? 'plan' : 'agent', {
-        ...(!v && documentAttachments.length > 0
-          ? { displayText: t('composerFileOnlyDisplay', { count: documentAttachments.length }) }
-          : !v && attachmentIds.length > 0
-            ? { displayText: t('composerImageOnlyDisplay') }
-            : {}),
-        ...(model ? { model } : {}),
-        ...(providerId ? { providerId } : {}),
-        ...(reasoningEffort ? { reasoningEffort } : {}),
-        ...(attachmentIds.length ? { attachmentIds } : {}),
-        ...(publicAttachments.length ? { attachments: publicAttachments } : {}),
-        writeContext: {
-          workspaceRoot: writeWorkspaceRoot,
-          activeFilePath: writeActiveFilePath,
-          documentEpoch: writeDocumentEpoch,
-          contentRevision: writeContentRevision
-        }
-      })
-      if (sent) {
-        // Consume only the captured ids. Quotes/attachments added while the
-        // runtime starts remain in the composer, even if the active file moved.
-        const latest = useWriteWorkspaceStore.getState()
-        quotedSelections.forEach((selection) => latest.removeQuotedSelection(selection.id))
-        if (attachmentIds.length > 0) removeComposerAttachments(attachmentIds, attachmentScope)
-      } else {
-        restorePrompt()
-      }
-    })()
-  }, [
-    attachmentUploadEnabled,
-    removeComposerAttachments,
-    composerAttachments,
-    composerMode,
-    composerModelGroups,
-    composerReasoningEffort,
-    getAttachmentScope,
-    sendMessage,
-    setAttachmentUploadError,
-    setInput,
-    t,
-    workspaceRoot
-  ])
-
   const handleSend = useCallback((): void => {
     void (async (): Promise<void> => {
       const v = input.trim()
       const attachmentScope = getAttachmentScope()
-      const attachments = route === 'chat' || route === 'write' ? composerAttachments : []
+      const attachments = route === 'chat' ? composerAttachments : []
       const documentAttachments = attachments.filter((attachment) => attachment.kind === 'document')
       const attachmentIds = attachments.map((attachment) => attachment.id)
       const publicAttachments = stripTransientAttachmentFields(attachments)
@@ -551,10 +349,6 @@ export function useWorkbenchComposerSubmitController({
           ...(publicAttachments.length ? { attachments: publicAttachments } : {}),
           ...(userFileReferences.length ? { fileReferences: userFileReferences } : {})
         })
-        return
-      }
-      if (route === 'write') {
-        sendWritePrompt(v)
         return
       }
       if (route === 'claw') {
@@ -715,7 +509,6 @@ export function useWorkbenchComposerSubmitController({
     sendMessage,
     sendPlanTurn,
     sendSddAssistantPrompt,
-    sendWritePrompt,
     setAttachmentUploadError,
     setClawChannelModel,
     setError,
@@ -725,5 +518,5 @@ export function useWorkbenchComposerSubmitController({
     workspaceRoot
   ])
 
-  return { handleSend, sendWritePrompt }
+  return { handleSend }
 }

@@ -75,7 +75,7 @@ const PERMISSION_OPTIONS: PermissionOption[] = RCODE_TOOL_PERMISSION_MODES.map((
         labelKey: 'toolPermissionAlwaysAsk',
         descriptionKey: 'toolPermissionAlwaysAskDesc',
         Icon: Hand,
-        iconClass: 'border-sky-400/30 bg-sky-500/10 text-sky-700 dark:text-sky-200'
+        iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
       }
     case 'read-only':
       return {
@@ -83,7 +83,7 @@ const PERMISSION_OPTIONS: PermissionOption[] = RCODE_TOOL_PERMISSION_MODES.map((
         labelKey: 'toolPermissionReadOnly',
         descriptionKey: 'toolPermissionReadOnlyDesc',
         Icon: Eye,
-        iconClass: 'border-emerald-400/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-200'
+        iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
       }
     case 'sensitive-ask':
       return {
@@ -91,7 +91,7 @@ const PERMISSION_OPTIONS: PermissionOption[] = RCODE_TOOL_PERMISSION_MODES.map((
         labelKey: 'toolPermissionSensitiveAsk',
         descriptionKey: 'toolPermissionSensitiveAskDesc',
         Icon: ShieldQuestion,
-        iconClass: 'border-amber-400/35 bg-amber-500/10 text-amber-700 dark:text-amber-200'
+        iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
       }
     case 'workspace-write':
       return {
@@ -99,7 +99,7 @@ const PERMISSION_OPTIONS: PermissionOption[] = RCODE_TOOL_PERMISSION_MODES.map((
         labelKey: 'toolPermissionWorkspaceWrite',
         descriptionKey: 'toolPermissionWorkspaceWriteDesc',
         Icon: FolderPen,
-        iconClass: 'border-indigo-400/30 bg-indigo-500/10 text-indigo-700 dark:text-indigo-200'
+        iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
       }
     case 'trusted-workspace':
       return {
@@ -107,7 +107,7 @@ const PERMISSION_OPTIONS: PermissionOption[] = RCODE_TOOL_PERMISSION_MODES.map((
         labelKey: 'toolPermissionTrustedWorkspace',
         descriptionKey: 'toolPermissionTrustedWorkspaceDesc',
         Icon: ShieldCheck,
-        iconClass: 'border-teal-400/30 bg-teal-500/10 text-teal-700 dark:text-teal-200'
+        iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
       }
     case 'bypass':
       return {
@@ -115,7 +115,7 @@ const PERMISSION_OPTIONS: PermissionOption[] = RCODE_TOOL_PERMISSION_MODES.map((
         labelKey: 'toolPermissionBypass',
         descriptionKey: 'toolPermissionBypassDesc',
         Icon: LockKeyholeOpen,
-        iconClass: 'border-orange-400/35 bg-orange-500/10 text-orange-700 dark:text-orange-200'
+        iconClass: 'border-slate-300/70 bg-slate-100/70 text-slate-500 dark:border-white/15 dark:bg-white/[0.06] dark:text-slate-300'
       }
   }
 })
@@ -388,6 +388,13 @@ export function InitialSetupDialog(): ReactElement {
         ? 'border-[#1388ff] bg-[#1388ff]/[0.07] shadow-[0_0_0_1px_rgba(19,136,255,0.12),0_8px_18px_rgba(19,136,255,0.07)] dark:border-[#3aa0ff] dark:bg-[#3aa0ff]/[0.12]'
         : 'border-slate-300/80 bg-white/72 hover:border-slate-400/80 hover:bg-white dark:border-white/10 dark:bg-white/[0.035] dark:hover:border-white/16 dark:hover:bg-white/[0.055]'
     ].join(' ')
+  const permissionCardClass = (active: boolean): string =>
+    [
+      'flex min-w-0 flex-col items-start gap-1 rounded-xl border px-3 py-2.5 text-left transition-all duration-200',
+      active
+        ? 'border-slate-400 bg-slate-100/80 text-slate-900 shadow-[0_0_0_1px_rgba(15,23,42,0.06)] dark:border-white/25 dark:bg-white/[0.1] dark:text-white dark:shadow-none'
+        : 'border-slate-300/80 bg-white/72 hover:border-slate-400/80 hover:bg-white dark:border-white/10 dark:bg-white/[0.035] dark:hover:border-white/16 dark:hover:bg-white/[0.055]'
+    ].join(' ')
   const fieldClass =
     'w-full rounded-xl border border-slate-300/75 bg-white/88 px-4 py-3 text-[15px] text-slate-800 shadow-[inset_0_1px_0_rgba(255,255,255,0.72)] outline-none transition focus:border-[#1388ff]/70 focus:ring-2 focus:ring-[#1388ff]/15 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-100 dark:shadow-none dark:focus:border-[#3aa0ff]/70 dark:focus:ring-[#3aa0ff]/15 dark:placeholder:text-slate-500'
   const labelClass = 'text-sm font-semibold text-slate-700 dark:text-slate-200'
@@ -554,7 +561,7 @@ export function InitialSetupDialog(): ReactElement {
                     key={option.value}
                     type="button"
                     onClick={() => selectPermissionMode(option.value)}
-                    className={cardButtonClass(isActive)}
+                    className={permissionCardClass(isActive)}
                   >
                     <span className="flex min-w-0 items-center gap-2 text-sm font-semibold text-slate-800 dark:text-slate-100">
                       <span className={`inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border ${option.iconClass}`}>
@@ -569,7 +576,7 @@ export function InitialSetupDialog(): ReactElement {
                 )
               })}
             </div>
-            <div className="rounded-xl border border-orange-300/60 bg-orange-50/80 px-4 py-3 text-[12.5px] leading-5 text-orange-800 dark:border-orange-800/60 dark:bg-orange-950/30 dark:text-orange-200">
+            <div className="rounded-xl border border-slate-300/70 bg-slate-50/80 px-4 py-3 text-[12.5px] leading-5 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300">
               {t('firstRunPermissionFullAccessRisk')}
             </div>
           </div>
@@ -637,8 +644,8 @@ export function InitialSetupDialog(): ReactElement {
               <div
                 className={
                   wireNote.tone === 'success'
-                    ? 'rounded-xl border border-emerald-300/60 bg-emerald-50/80 px-4 py-2.5 text-[12.5px] leading-5 text-emerald-700 dark:border-emerald-800/60 dark:bg-emerald-950/30 dark:text-emerald-300'
-                    : 'rounded-xl border border-amber-300/60 bg-amber-50/80 px-4 py-2.5 text-[12.5px] leading-5 text-amber-700 dark:border-amber-800/60 dark:bg-amber-950/30 dark:text-amber-300'
+                    ? 'rounded-xl border border-slate-300/70 bg-slate-50/80 px-4 py-2.5 text-[12.5px] leading-5 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300'
+                    : 'rounded-xl border border-slate-300/70 bg-slate-50/80 px-4 py-2.5 text-[12.5px] leading-5 text-slate-600 dark:border-white/10 dark:bg-white/[0.04] dark:text-slate-300'
                 }
               >
                 {wireNote.text}

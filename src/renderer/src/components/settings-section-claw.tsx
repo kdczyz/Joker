@@ -397,15 +397,15 @@ export function ClawSettingsSection({ ctx }: { ctx: ClawSettingsContext }): Reac
                       <div className="min-w-0">
                         <div className="text-[13px] font-semibold text-ds-ink">{providerLabel}</div>
                         <div className="mt-1 text-[12px] leading-5 text-ds-faint">
-                          {channel.enabled ? t('clawManageAgentEnabled') : t('clawManageAgentDisabled')}
+                          {channel.enabled !== false ? t('clawManageAgentEnabled') : t('clawManageAgentDisabled')}
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <span className="text-[12px] font-medium text-ds-muted">
-                          {channel.enabled ? t('clawManageAgentEnabled') : t('clawManageAgentDisabled')}
+                          {channel.enabled !== false ? t('clawManageAgentEnabled') : t('clawManageAgentDisabled')}
                         </span>
                         <Toggle
-                          checked={channel.enabled}
+                          checked={channel.enabled !== false}
                           onChange={(value) => updateChannel(form, update, channel.id, { enabled: value })}
                         />
                       </div>

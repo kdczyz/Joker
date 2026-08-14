@@ -879,7 +879,12 @@ export function resolveRcodeImageGenerationSettings(settings: AppSettingsV1): Rc
     providerId: provider.id,
     protocol: image.protocol,
     baseUrl: resolveProviderCapabilityBaseUrl(provider, image, 'image'),
-    apiKey: provider.apiKey.trim(),
+    // Mirror the chat resolution (resolveRcodeRuntimeSettings): a keyless
+    // provider profile must fall back to the agent's runtime.apiKey, otherwise
+    // image generation authenticates with an empty Bearer token while chat
+    // (which uses the fallback) works. Codex is the canonical case — its
+    // provider profile has no apiKey and relies on the runtime session token.
+    apiKey: provider.apiKey.trim() || runtime.apiKey?.trim() || '',
     model: resolveImageProviderCapabilityModel(imageGeneration.model, image)
   }
 }

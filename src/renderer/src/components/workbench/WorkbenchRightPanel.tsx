@@ -49,9 +49,6 @@ const CodeCanvasPanel = lazy(() =>
 const SubagentDetailPanel = lazy(() =>
   import('../subagents/SubagentDetailPanel').then((module) => ({ default: module.SubagentDetailPanel }))
 )
-const WriteAssistantPanel = lazy(() =>
-  import('../write/WriteAssistantPanel').then((module) => ({ default: module.WriteAssistantPanel }))
-)
 const SddAssistantPanel = lazy(() =>
   import('../sdd/SddAssistantPanel').then((module) => ({ default: module.SddAssistantPanel }))
 )
@@ -62,7 +59,6 @@ const McpSkillsPanel = lazy(() =>
   import('./McpSkillsPanel').then((module) => ({ default: module.McpSkillsPanel }))
 )
 
-type WriteAssistantPanelProps = ComponentProps<typeof WriteAssistantPanel>
 type SddAssistantPanelProps = ComponentProps<typeof SddAssistantPanel>
 type ChangeInspectorProps = ComponentProps<typeof ChangeInspector>
 type TodoPanelProps = ComponentProps<typeof TodoPanel>
@@ -88,8 +84,6 @@ export type WorkbenchRightPanelProps = {
   rightPanelMode: RightPanelMode | null
   onBeginResize: PointerEventHandler<HTMLDivElement>
   design: DesignRightPanelContentProps
-  writeAssistantOpen: boolean
-  write: Omit<WriteAssistantPanelProps, 'className'>
   sdd: Omit<SddAssistantPanelProps, 'draft' | 'className'> & {
     draft: SddAssistantPanelProps['draft'] | null
   }
@@ -115,7 +109,6 @@ export function WorkbenchRightPanel({
   rightPanelMode,
   onBeginResize,
   design,
-  write,
   sdd,
   changes,
   todo,
@@ -162,8 +155,6 @@ export function WorkbenchRightPanel({
         <Suspense fallback={<div className="h-full w-full bg-ds-sidebar" />}>
           {design.panelMode !== 'hidden' ? (
             <DesignRightPanelContent {...design} />
-          ) : route === 'write' ? (
-            <WriteAssistantPanel {...write} className="h-full max-h-full w-full" />
           ) : rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.sddAi && sdd.draft ? (
             <SddAssistantPanel {...sdd} draft={sdd.draft} className="h-full max-h-full w-full" />
           ) : rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.subagents ? (

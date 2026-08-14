@@ -10,7 +10,7 @@ import {
 import { rendererRuntimeClient } from '../agent/runtime-client'
 import type { ChatState, ChatStoreGet, ChatStoreSet } from './chat-store-types'
 import type { ChatBlock, NormalizedThread } from '../agent/types'
-import { clawThreadTitleLooksManaged, clawThreadIdsFromChannels } from './chat-store-helpers'
+import { clawThreadTitleLooksManaged, clawThreadIdsFromChannels, isClawChannelEnabled } from './chat-store-helpers'
 import { emitRendererSettingsChanged } from '../lib/keyboard-shortcut-settings'
 
 type ClawAgentProviderLike = {
@@ -194,6 +194,12 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
     sseAbortRef,
     clearBusyWatchdog
   } = options
+  // Opening a Claw channel performs several asynchronous lookups before it
+  // reaches selectThread.  A startup refresh can therefore finish after a
+  // user clicks another channel and re-select the old conversation.  Keep a
+  // per-store generation so only the most recently requested channel is
+  // allowed to complete that final selection.
+  let clawChannelSelectionGeneration = 0
 
   return {
     appendLocalClawTurn: (userText, replyText) =>
@@ -226,9 +232,9 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
       const settings = await rendererRuntimeClient.getSettings()
       const channels = settings.claw.channels
       const current = get().activeClawChannelId
-      const activeId = current && channels.some((channel) => channel.id === current && channel.enabled)
+      const activeId = current && channels.some((channel) => channel.id === current && isClawChannelEnabled(channel))
         ? current
-        : channels.find((channel) => channel.enabled)?.id ?? ''
+        : channels.find((channel) => isClawChannelEnabled(channel))?.id ?? ''
       set({ clawChannels: channels, activeClawChannelId: activeId })
       if (get().route === 'claw' && !activeId) {
         sseAbortRef.current?.abort()
@@ -332,12 +338,15 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
     },
 
     selectClawChannel: async (channelId) => {
+      const selectionGeneration = ++clawChannelSelectionGeneration
+      const isLatestSelection = () => selectionGeneration === clawChannelSelectionGeneration
       if (get().runtimeConnection !== 'ready') {
         set({ activeClawChannelId: channelId, error: i18n.t('common:runtimeActionNeedsConnection') })
         return
       }
       if (typeof window.RcodeGui === 'undefined') return
       const settings = await rendererRuntimeClient.getSettings()
+      if (!isLatestSelection()) return
       const channels = settings.claw.channels
       const channel = channels.find((item) => item.id === channelId)
       if (!channel) {
@@ -358,8 +367,10 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
       let threadId = clawThreadIdForProvider(channel, latestConversation)
       const recoveredThread = findRecoverableClawThread(get().threads, channels, channel)
       const configuredThreadExists = threadId ? await threadExists(provider, threadId) : false
+      if (!isLatestSelection()) return
       const configuredThreadHasUserMessages =
         threadId && configuredThreadExists ? await threadHasUserMessages(provider, threadId) : false
+      if (!isLatestSelection()) return
       const configuredThreadId = threadId
       threadId = resolveClawThreadId({
         configuredThreadId,
@@ -429,17 +440,24 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
           ? state.threads
           : [createdThread ?? recoveredThread ?? placeholder, ...state.threads]
       }))
+      // Do not let a slower earlier request overwrite a channel the user has
+      // selected while its thread metadata was loading.
+      if (!isLatestSelection()) return
       await get().selectThread(threadId)
+      if (!isLatestSelection()) return
       set({ route: 'claw', activeClawChannelId: channel.id })
     },
 
     selectClawConversation: async (channelId, threadId) => {
+      const selectionGeneration = ++clawChannelSelectionGeneration
+      const isLatestSelection = () => selectionGeneration === clawChannelSelectionGeneration
       if (get().runtimeConnection !== 'ready') {
         set({ activeClawChannelId: channelId, error: i18n.t('common:runtimeActionNeedsConnection') })
         return
       }
       if (typeof window.RcodeGui === 'undefined') return
       const settings = await rendererRuntimeClient.getSettings()
+      if (!isLatestSelection()) return
       const channels = settings.claw.channels
       const channel = channels.find((item) => item.id === channelId)
       if (!channel) {
@@ -469,6 +487,7 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
       let targetThreadId = clawThreadIdForProvider(channel, conversation)
       const configuredThreadId = targetThreadId
       const configuredThreadExists = targetThreadId ? await threadExists(provider, targetThreadId) : false
+      if (!isLatestSelection()) return
       if (!configuredThreadExists) {
         targetThreadId = ''
       }
@@ -509,9 +528,12 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
             : item
         )
         const saved = await rendererRuntimeClient.setSettings({ claw: { channels: nextChannels } })
+        if (!isLatestSelection()) return
         set({ clawChannels: saved.claw.channels })
       }
+      if (!isLatestSelection()) return
       await get().selectThread(targetThreadId)
+      if (!isLatestSelection()) return
       set({ route: 'claw', activeClawChannelId: channel.id })
     },
 

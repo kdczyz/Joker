@@ -95,7 +95,7 @@ export function hasEnabledClawPhoneChannel(
   provider?: ClawImProvider
 ): boolean {
   return channels.some((channel) =>
-    (provider ? channel.provider === provider : true) && channel.enabled
+    (provider ? channel.provider === provider : true) && channel.enabled !== false
   )
 }
 
@@ -988,7 +988,7 @@ export function ConnectPhoneSidebarPanel({
                   channel.provider === 'telegram' ? 'telegram'
                     : channel.provider === 'weixin' ? 'weixin' : 'feishu'
                 const active = channel.provider === targetProvider
-                const disabled = !channel.enabled
+                const disabled = channel.enabled === false
                 const sortedConversations = [...channel.conversations].sort(
                   (a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt)
                 )
@@ -1093,7 +1093,7 @@ export function ConnectPhoneSidebarPanel({
                   {connectedChannel.label}
                 </span>
                 <span className="mt-1 block truncate text-[12px] text-ds-faint">
-                  {connectedChannel.enabled
+                  {connectedChannel.enabled !== false
                     ? t('clawManageImConnected')
                     : t('clawImDisabledSidebar')}
                 </span>

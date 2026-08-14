@@ -1,7 +1,7 @@
 import type { Dispatch, ReactElement, SetStateAction } from 'react'
-import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, GitBranch, Globe, Keyboard, Palette, PencilLine, Puzzle, RefreshCw, Search, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
+import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, GitBranch, Globe, Keyboard, Palette, Puzzle, RefreshCw, Search, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
 
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'write' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch'
 
 export function SettingsSidebar({
   category,
@@ -85,15 +85,6 @@ export function SettingsSidebar({
             {t('extensions')}
           </button>
         ) : null}
-        <button
-          type="button"
-          data-cursor-spotlight-target
-          className={catCls('write')}
-          onClick={() => setCategory('write')}
-        >
-          <PencilLine className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
-          {t('write')}
-        </button>
         <button
           type="button"
           data-cursor-spotlight-target

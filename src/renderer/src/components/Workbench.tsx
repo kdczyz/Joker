@@ -25,7 +25,6 @@ import { useWorkbenchWriteAssistantRuntime } from './workbench/useWorkbenchWrite
 import { useWorkbenchUiRuntime } from './workbench/useWorkbenchUiRuntime'
 import { useWorkbenchAttachmentRuntime } from './workbench/useWorkbenchAttachmentRuntime'
 import { WorkbenchImageAnnotationHost } from './workbench/WorkbenchImageAnnotationHost'
-import { isWriteThreadId } from '../write/write-thread-registry'
 import { useSddDraftStore } from '../sdd/sdd-draft-store'
 import {
   releaseSddAssistantThread,
@@ -105,8 +104,7 @@ export function Workbench(): ReactElement {
     activeThreadParentId, selectThread, createThread, createConversation, blocks,
     liveReasoning, liveAssistant, error, runtimeErrorDetail, runtimeStatus, busy,
     route, pluginHostRoute, workspaceRoot, conversationWorkspaceRoot, runtimeConnection,
-    setRoute, openCode, openWrite, ensureWriteThreadForWorkspace,
-    createWriteThread, openSettings,
+    setRoute, openCode, openSettings,
     openPlugins, openClaw, openSchedule, openWorkflow, chooseWorkspace, clawChannels,
     activeClawChannelId, selectClawChannel, resetClawChannelSession, setClawChannelModel,
     appendLocalClawTurn, setError, sendMessage, reviewActiveThread, queuedMessages,
@@ -258,8 +256,8 @@ export function Workbench(): ReactElement {
   const routeRef = useRef(route)
   const runtimeConnectionRef = useRef(runtimeConnection)
   const {
-    resolvedWriteAssistantProviderId, setWriteAssistantModel, setWriteAssistantOpen,
-    writeAssistantModel, writeAssistantOpen, writeAssistantPickList
+    resolvedWriteAssistantProviderId, setWriteAssistantModel,
+    writeAssistantModel, writeAssistantPickList
   } = useWorkbenchWriteAssistantRuntime({
     composerPickList,
     composerModelGroups
@@ -700,7 +698,7 @@ export function Workbench(): ReactElement {
     startNewSddAssistantConversation: startNewSddThreadConversation
   })
 
-  const { handleSend, sendWritePrompt } = useWorkbenchComposerSubmitController({
+  const { handleSend } = useWorkbenchComposerSubmitController({
     activeClawChannelId, activeClawChannelModel: activeClawChannel?.model,
     activeClawChannelProviderId: activeClawChannel?.providerId,
     activeSddDraft: Boolean(activeSddDraft), activeThreadId, attachmentUploadEnabled,
@@ -715,17 +713,17 @@ export function Workbench(): ReactElement {
 
   const {
     closeRightPanel, openCodeMode, openPluginsView, openExtensionsView, openScheduleView,
-    openThread, openWorkflowView, openWriteMode, pickWriteAssistantWorkspace, sidebarView,
-    startNewChat, startNewChatInWorkspace, startNewConversation, startNewWriteAssistantConversation,
+    openThread, openWorkflowView, sidebarView,
+    startNewChat, startNewChatInWorkspace, startNewConversation,
     toggleConnectPhone
   } = useWorkbenchNavigationController({
     activeSddDraft: Boolean(activeSddDraft), activeThreadId, pluginHostRoute, rightPanelMode, route,
     runtimeConnection, sddDraftContent, threads, useWorktreePool, workspaceRoot, worktreeBranch,
-    clearFilePreviewTargets, createConversation, createThread, createWriteThread, dismissActiveSddDraft,
-    ensureWriteThreadForWorkspace, findSddDraftForSidebarThread, openClaw, openCode,
-    openPlugins, openSchedule, openWorkflow, openWrite, openSddRequirementDraftFromHistory,
+    clearFilePreviewTargets, createConversation, createThread, dismissActiveSddDraft,
+    findSddDraftForSidebarThread, openClaw, openCode,
+    openPlugins, openSchedule, openWorkflow, openSddRequirementDraftFromHistory,
     selectThread, setConnectPhoneSidebarOpen, setFilePreviewTarget, setInput,
-    setRightPanelMode, setRoute, setUseWorktreePool, setWriteAssistantOpen
+    setRightPanelMode, setRoute, setUseWorktreePool
   })
 
   const chatComposerProps = useWorkbenchChatComposerProps({
@@ -763,7 +761,7 @@ export function Workbench(): ReactElement {
     onConfigureProviders: () => openSettings('providers')
   })
 
-  const { writeRuntimeBanner, conversationRuntimeBanner } = useWorkbenchRuntimeBanners({
+  const { conversationRuntimeBanner } = useWorkbenchRuntimeBanners({
     runtimeStatus,
     runtimeConnection,
     runtimeLogPath,
@@ -811,25 +809,11 @@ export function Workbench(): ReactElement {
     route,
     rightPanelMode,
     onBeginResize: beginRightResize,
-    writeAssistantOpen,
     shared: rightPanelSharedProps,
     planPanelProps,
     onCollapse: route === 'chat' ? collapseRightPanel : closeRightPanel,
     openSettings,
     onSend: handleSend,
-    write: {
-      composerModel: writeAssistantModel,
-      composerProviderId: resolvedWriteAssistantProviderId,
-      composerPickList: writeAssistantPickList,
-      skillCommands: runtimeSkills,
-      disabledSkillIds,
-      setComposerModel: setWriteAssistantModel,
-      onNewConversation: startNewWriteAssistantConversation,
-      onPickWorkspace: () => void pickWriteAssistantWorkspace(),
-      executionSettings: composerExecutionSettings,
-      executionSettingsApplying: composerExecutionApplying,
-      onExecutionSettingsChange: updateComposerExecutionSettings
-    },
     sdd: {
       draft: activeSddDraft,
       composerModel: writeAssistantModel,
@@ -896,7 +880,7 @@ export function Workbench(): ReactElement {
         const viewRoot = target?.closest<HTMLElement>('.ds-extension-view')
         const location = viewRoot
           ? 'view'
-          : activeExtensionCenterView || route === 'write'
+            : activeExtensionCenterView
             ? 'editor'
             : 'workspace'
         if (!extensionHostContextMenus.some((item) => item.payload.location === location)) return
@@ -942,7 +926,6 @@ export function Workbench(): ReactElement {
         onToggleTheme={toggleTheme}
         onToggleConnectPhone={toggleConnectPhone}
         onCodeOpen={openCodeMode}
-        onWriteOpen={openWriteMode}
         onScheduleOpen={openScheduleView}
         onWorkflowOpen={openWorkflowView}
         onNewConversation={startNewConversation}
@@ -966,16 +949,6 @@ export function Workbench(): ReactElement {
         leftSidebarCollapsed={leftSidebarCollapsed}
         onToggleLeftSidebar={toggleLeftSidebar}
         onOpenThread={openThread}
-        write={{
-          runtimeBanner: writeRuntimeBanner,
-          leftSidebarCollapsed,
-          onToggleLeftSidebar: toggleLeftSidebar,
-          input,
-          setInput,
-          onSubmitPrompt: sendWritePrompt,
-          onOpenAgentSettings: () => openSettings('write'),
-          rightPanel
-        }}
         conversation={{
           route,
           runtimeBanner: conversationRuntimeBanner,

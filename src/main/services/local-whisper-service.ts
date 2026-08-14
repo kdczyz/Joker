@@ -80,7 +80,7 @@ export async function getLocalWhisperModelStatus(
 }
 
 async function readLocalWhisperDiskStatus(model: LocalWhisperModel): Promise<LocalWhisperModelStatus | null> {
-  const candidates = [localWhisperModelPath(model.id), localWhisperBundledModelPath(model.id)].filter(Boolean)
+  const candidates = [localWhisperModelPath(model.id), ...localWhisperBundledModelCandidates(model.id)]
   for (const candidate of candidates) {
     try {
       const info = await stat(candidate)
@@ -98,18 +98,32 @@ async function readLocalWhisperDiskStatus(model: LocalWhisperModel): Promise<Loc
 }
 
 /**
- * Built-in models ship inside the app bundle (resources/whisper/models/<id>/<file>).
- * They are read-only and never deleted or overwritten by downloads, which always
- * target the userData path returned by localWhisperModelPath.
+ * The whisper bundle (built-in models + whisper-cli runner) lives under a
+ * `resources/whisper/` folder that can be located in three different roots
+ * depending on how the app is launched:
+ *   1. process.resourcesPath — packaged build (electron-builder extraResources)
+ *   2. app.getAppPath()      — dev run: the project / app directory
+ *   3. process.cwd()         — dev run started from the repo root
+ *
+ * Centralizing the roots here guarantees the model-status check and the runner
+ * resolver always search the SAME set of locations. Previously each enumerated the
+ * roots independently and the model check only inspected `process.resourcesPath`
+ * — which in a dev run points at Electron's own framework Resources folder and
+ * does NOT contain the repo's bundled model, making it invisible outside a
+ * packaged build.
+ *
+ * Built-in models are read-only and never deleted or overwritten by downloads,
+ * which always target the userData path returned by localWhisperModelPath.
  */
-function localWhisperBundledModelPath(modelId: LocalWhisperModelId): string {
+function whisperResourceRoots(): string[] {
+  const appPath = typeof app.getAppPath === 'function' ? app.getAppPath() : ''
+  const raw = [process.resourcesPath ?? '', appPath, process.cwd()]
+  return [...new Set(raw.filter(Boolean))]
+}
+
+function localWhisperBundledModelCandidates(modelId: LocalWhisperModelId): string[] {
   const model = localWhisperModelById(modelId)
-  const candidates = [
-    process.resourcesPath ? join(process.resourcesPath, 'whisper', 'models', model.id, model.fileName) : '',
-    join(app.getAppPath(), 'resources', 'whisper', 'models', model.id, model.fileName),
-    join(process.cwd(), 'resources', 'whisper', 'models', model.id, model.fileName)
-  ].filter(Boolean)
-  return candidates[0] ?? ''
+  return whisperResourceRoots().map((root) => join(root, 'resources', 'whisper', 'models', model.id, model.fileName))
 }
 
 export async function downloadLocalWhisperModel(
@@ -479,11 +493,7 @@ async function resolveWhisperRunner(): Promise<RunnerCommand> {
   if (explicit) return { command: explicit, argsPrefix: [] }
   const executable = process.platform === 'win32' ? 'whisper-cli.exe' : 'whisper-cli'
   const platformDir = `${process.platform}-${process.arch}`
-  const candidates = [
-    process.resourcesPath ? join(process.resourcesPath, 'whisper', platformDir, executable) : '',
-    join(app.getAppPath(), 'resources', 'whisper', platformDir, executable),
-    join(process.cwd(), 'resources', 'whisper', platformDir, executable)
-  ].filter(Boolean)
+  const candidates = whisperResourceRoots().map((root) => join(root, 'resources', 'whisper', platformDir, executable))
   for (const candidate of candidates) {
     if (await canExecute(candidate)) {
       const runnerDir = dirname(candidate)
@@ -616,6 +626,8 @@ export const _internals = {
   checkLocalWhisperDownloadSource,
   localWhisperDownloadUrl,
   localWhisperModelPath,
+  whisperResourceRoots,
+  localWhisperBundledModelCandidates,
   runWhisper,
   resetShutdownForTest(): void {
     whisperShuttingDown = false

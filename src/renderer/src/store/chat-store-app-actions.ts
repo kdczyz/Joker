@@ -7,6 +7,7 @@ import type { ChatState, ChatStoreGet, ChatStoreSet, InitialSetupMode, PluginHos
 import type { ComposerPlanMode } from './chat-store-helpers'
 import {
   composerModelSelectable,
+  isClawChannelEnabled,
   composerModeForThread,
   composerReasoningEffortForSelection,
   persistComposerMode,
@@ -46,7 +47,6 @@ type CreateAppActionsOptions = {
   applyChatContentMaxWidth: (widthPx: AppSettingsV1['chatContentMaxWidthPx']) => void
   applyCursorSpotlight: (enabled: boolean) => void
   applyCursorSpotlightColor: (color: AppSettingsV1['cursorSpotlightColor']) => void
-  applyWriteTypography: (typography: AppSettingsV1['write']['typography']) => void
   applyDocumentLocale: (locale: AppSettingsV1['locale']) => void
   workspaceLabelFromPath: (workspaceRoot: string) => string
   normalizeWorkspaceRoot: (workspaceRoot?: string | null) => string
@@ -61,7 +61,6 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
   | 'setComposerAgentId'
   | 'loadComposerModels'
   | 'setRoute'
-  | 'openWrite'
   | 'openSettings'
   | 'openPlugins'
   | 'openClaw'
@@ -91,7 +90,6 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
     applyChatContentMaxWidth,
     applyCursorSpotlight,
     applyCursorSpotlightColor,
-    applyWriteTypography,
     applyDocumentLocale,
     workspaceLabelFromPath,
     normalizeWorkspaceRoot
@@ -278,10 +276,6 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
 
     setRoute: (route) => set({ route }),
 
-    openWrite: async () => {
-      set({ route: 'write' })
-    },
-
     openSettings: (section: SettingsRouteSection = 'general') =>
       set((state) => ({
         route: 'settings',
@@ -329,7 +323,6 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
       applyChatContentMaxWidth(settings.chatContentMaxWidthPx)
       applyCursorSpotlight(settings.cursorSpotlight !== false)
       applyCursorSpotlightColor(settings.cursorSpotlightColor)
-      if (settings.write?.typography) applyWriteTypography(settings.write.typography)
       set({
         workspaceRoot,
         workspaceLabel: workspaceLabelFromPath(workspaceRoot),
@@ -337,10 +330,10 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
         disabledSkillIds: settings.disabledSkillIds,
         clawChannels: settings.claw.channels,
         activeClawChannelId: settings.claw.channels.some(
-          (channel) => channel.id === get().activeClawChannelId && channel.enabled
+          (channel) => channel.id === get().activeClawChannelId && isClawChannelEnabled(channel)
         )
           ? get().activeClawChannelId
-          : settings.claw.channels.find((channel) => channel.enabled)?.id ?? ''
+          : settings.claw.channels.find((channel) => isClawChannelEnabled(channel))?.id ?? ''
       })
       await get().applyI18nFromSettings(settings.locale)
       if (get().runtimeConnection === 'ready') {

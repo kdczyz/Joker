@@ -9,8 +9,7 @@ import {
   applyCursorSpotlightColor,
   applyDocumentLocale,
   applyTheme,
-  applyUiFontScale,
-  applyWriteTypography
+  applyUiFontScale
 } from '../lib/apply-theme'
 import { formatWorkspacePickerError } from '../lib/format-workspace-picker-error'
 import { formatRuntimeError, getRuntimeErrorCode } from '../lib/format-runtime-error'
@@ -70,19 +69,6 @@ import {
   findReusableEmptyThreadId,
   threadBelongsToWorkspace
 } from './chat-store-runtime-helpers'
-import {
-  WRITE_ASSISTANT_THREAD_TITLE,
-  activeWriteThreadForWorkspace,
-  forgetWriteThread,
-  hydrateWriteThreadRegistry,
-  isWriteThreadId,
-  markWriteThread,
-  pruneWriteThreadRegistry,
-  readWriteThreadRegistry,
-  saveWriteThreadRegistry,
-  writeThreadBelongsToWorkspace,
-  writeWorkspaceForThreadId
-} from '../write/write-thread-registry'
 import {
   clearBusyWatchdog,
   resetBusyRecoveryAttempts,
@@ -173,7 +159,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     applyChatContentMaxWidth,
     applyCursorSpotlight,
     applyCursorSpotlightColor,
-    applyWriteTypography,
     applyDocumentLocale,
     workspaceLabelFromPath,
     normalizeWorkspaceRoot: (workspaceRoot) => normalizeWorkspaceRoot(workspaceRoot ?? undefined)

@@ -215,6 +215,82 @@ describe('chat-store Claw actions helpers', () => {
     })
   })
 
+  it('does not let a slower empty-channel lookup clear the newer selection', async () => {
+    rendererRuntimeClient.invalidateSettings()
+    const first = channel({
+      id: 'channel-a',
+      threadId: 'thread-a',
+      conversations: []
+    })
+    const second = channel({
+      id: 'channel-b',
+      threadId: 'thread-b',
+      conversations: [{ ...channel().conversations[0], id: 'conversation-b', localThreadId: 'thread-b' }]
+    })
+    const settings = {
+      workspaceRoot: '/Users/zxy/project',
+      claw: {
+        enabled: true,
+        im: { enabled: true, provider: 'feishu' as const, workspaceRoot: '/Users/zxy/project' },
+        channels: [first, second]
+      }
+    }
+    vi.stubGlobal('window', { RcodeGui: { getSettings: vi.fn(async () => settings) } })
+
+    let releaseFirstLookup: (() => void) | undefined
+    const firstLookup = new Promise<void>((resolve) => { releaseFirstLookup = resolve })
+    const provider = {
+      createThread: vi.fn(),
+      getThreadDetail: vi.fn(async (id: string) => {
+        if (id === 'thread-a') {
+          await firstLookup
+          throw new Error('thread not found: thread-a')
+        }
+        return { blocks: [{ kind: 'user' as const, id: `user-${id}`, text: 'hello' }] }
+      }),
+      deleteThread: vi.fn()
+    }
+    const selectThread = vi.fn(async () => undefined)
+    let state: Record<string, unknown> = {
+      runtimeConnection: 'ready',
+      route: 'claw',
+      clawChannels: settings.claw.channels,
+      activeClawChannelId: 'channel-a',
+      activeThreadId: 'thread-a',
+      threads: [],
+      selectThread,
+      error: null
+    }
+    const set = (partial: Record<string, unknown> | ((current: typeof state) => Record<string, unknown>)) => {
+      const patch = typeof partial === 'function' ? partial(state) : partial
+      state = { ...state, ...patch }
+    }
+    const actions = createClawActions({
+      set: set as never,
+      get: (() => state) as never,
+      i18n: { t: (key: string) => key },
+      getProvider: () => provider,
+      newClawChannel: vi.fn() as never,
+      normalizeClawComposerModel: (raw: string) => raw as never,
+      activeClawChannel: vi.fn() as never,
+      normalizeWorkspaceRoot: (workspaceRoot?: string | null) => workspaceRoot?.trim() ?? '',
+      formatRuntimeError: (error: unknown) => error instanceof Error ? error.message : String(error),
+      shouldOpenSettingsForError: () => false,
+      clearedThreadSelection: vi.fn() as never,
+      sseAbortRef: { current: null },
+      clearBusyWatchdog: vi.fn()
+    })
+
+    const staleSelection = actions.selectClawChannel('channel-a')
+    await actions.selectClawChannel('channel-b')
+    releaseFirstLookup?.()
+    await staleSelection
+
+    expect(selectThread).toHaveBeenCalledTimes(1)
+    expect(selectThread).toHaveBeenCalledWith('thread-b')
+    expect(state.activeClawChannelId).toBe('channel-b')
+  })
+
   it('saves the resolved provider and model when changing a Claw channel model', async () => {
     rendererRuntimeClient.invalidateSettings()
     let settings = {

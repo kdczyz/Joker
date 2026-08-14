@@ -7,6 +7,7 @@ import {
   Settings
 } from 'lucide-react'
 import type { ClawImChannelV1 } from '@shared/app-settings'
+import { isClawChannelEnabled } from '../../store/chat-store-helpers'
 import {
   SidebarIconButton,
   SidebarSectionHeader,
@@ -93,7 +94,7 @@ export function ClawSidebarContent({
               const running = sortedConversations.some(
                 (conversation) => conversation.localThreadId.trim() === activeThreadId
               )
-              const disabled = !channel.enabled
+              const disabled = !isClawChannelEnabled(channel)
               const providerLabel = clawProviderDisplayLabel(channel.provider)
               const secondaryLabel = latestConversation?.senderName.trim()
                 || latestConversation?.chatId.trim()

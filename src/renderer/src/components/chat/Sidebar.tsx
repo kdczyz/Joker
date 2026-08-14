@@ -39,7 +39,7 @@ import {
 type Props = {
   threads: NormalizedThread[]
   activeThreadId: string | null
-  activeView: 'chat' | 'write' | 'claw' | 'schedule' | 'workflow' | 'subagents'
+  activeView: 'chat' | 'claw' | 'schedule' | 'workflow' | 'subagents'
   connectPhoneSidebarOpen: boolean
   pluginsActive: boolean
   extensionsActive: boolean
@@ -63,7 +63,6 @@ type Props = {
   onToggleTheme: () => void
   onToggleConnectPhone: () => void
   onCodeOpen: () => void
-  onWriteOpen: () => void
   onScheduleOpen: () => void
   onWorkflowOpen: () => void
   onNewConversation: () => void
@@ -96,7 +95,6 @@ export function Sidebar({
   onToggleTheme,
   onToggleConnectPhone,
   onCodeOpen,
-  onWriteOpen,
   onScheduleOpen,
   onWorkflowOpen,
   onNewConversation
@@ -178,7 +176,6 @@ export function Sidebar({
         <WorkspaceModeTabs
           activeView={activeView}
           onCodeOpen={onCodeOpen}
-          onWriteOpen={onWriteOpen}
         />
 
         {activeView !== 'claw' && activeView !== 'schedule' && activeView !== 'workflow' ? (
@@ -296,7 +293,7 @@ export function Sidebar({
       <>
       <SidebarProjectsSection
         threads={threads}
-        activeView={activeView === 'write' ? 'write' : 'chat'}
+        activeView="chat"
         activeThreadId={activeThreadId}
         runtimeReady={runtimeReady}
         searchQuery={threadSearch}

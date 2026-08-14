@@ -7,7 +7,6 @@ import { WorkbenchRightPanelHost } from './WorkbenchRightPanelHost'
 type RightPanelHostProps = ComponentProps<typeof WorkbenchRightPanelHost>
 type DesignImplementProps = RightPanelHostProps['design']['implement']
 type DesignAssistantProps = RightPanelHostProps['design']['assistant']
-type WriteAssistantProps = RightPanelHostProps['write']
 type SddAssistantProps = RightPanelHostProps['sdd']
 type BrowserPanelProps = RightPanelHostProps['browser']
 type FilePanelProps = RightPanelHostProps['file']
@@ -56,7 +55,7 @@ const EMPTY_DESIGN_PANEL: WorkbenchRightPanelDesignOptions = {
 
 type WorkbenchRightPanelElementOptions = Pick<
   RightPanelHostProps,
-  'visible' | 'width' | 'route' | 'rightPanelMode' | 'onBeginResize' | 'writeAssistantOpen'
+  'visible' | 'width' | 'route' | 'rightPanelMode' | 'onBeginResize'
 > & {
   shared: RightPanelHostProps['design']['shared']
   planPanelProps: WorkbenchPlanPanelProps
@@ -64,20 +63,6 @@ type WorkbenchRightPanelElementOptions = Pick<
   openSettings: (section?: SettingsRouteSection) => void
   onSend: () => void
   design?: WorkbenchRightPanelDesignOptions
-  write: Pick<
-    WriteAssistantProps,
-    | 'composerModel'
-    | 'composerProviderId'
-    | 'composerPickList'
-    | 'skillCommands'
-    | 'disabledSkillIds'
-    | 'setComposerModel'
-    | 'onNewConversation'
-    | 'onPickWorkspace'
-    | 'executionSettings'
-    | 'executionSettingsApplying'
-    | 'onExecutionSettingsChange'
-  >
   sdd: Pick<
     SddAssistantProps,
     | 'draft'
@@ -135,14 +120,12 @@ export function useWorkbenchRightPanelElement({
   route,
   rightPanelMode,
   onBeginResize,
-  writeAssistantOpen,
   shared,
   planPanelProps,
   onCollapse,
   openSettings,
   onSend,
   design,
-  write,
   sdd,
   changes,
   todo,
@@ -193,13 +176,6 @@ export function useWorkbenchRightPanelElement({
           onSwitchThread: (id) => void designValue.onSwitchThread(id),
           onCollapse
         }
-      }}
-      writeAssistantOpen={writeAssistantOpen}
-      write={{
-        ...write,
-        onSend,
-        onOpenSettings: () => openSettings('agents'),
-        onCollapse
       }}
       sdd={{
         ...sdd,

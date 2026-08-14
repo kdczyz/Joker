@@ -332,11 +332,9 @@ export function useWorkbenchLayout({
   const rightPanelMode = route === 'chat'
     ? transientRightPanelMode ?? (codeRightTabs.expanded ? codeRightTabs.activeId : null)
     : null
-  const rightPanelVisible = route === 'write'
-    ? true
-    : route === 'design'
-      ? designAssistantOpen || designImplementOpen
-      : codeRightTabs.expanded || rightPanelMode !== null
+  const rightPanelVisible = route === 'design'
+    ? designAssistantOpen || designImplementOpen
+    : codeRightTabs.expanded || rightPanelMode !== null
   const widthConstraints = workbenchWidthConstraintsForRightPanel(route, rightPanelMode)
   const ensureInitialCodePanelWidth = useCallback((): void => {
     if (codeRightTabsRef.current.tabs.length === 0) {
