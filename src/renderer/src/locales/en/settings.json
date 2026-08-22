@@ -1548,6 +1548,8 @@
   "dataMigrationReportLocation": "Local report",
   "profile": "Account",
   "webSearch": "Web Search",
+  "github": "GitHub Repositories",
+  "githubDesc": "Connect your GitHub account to list, clone, and push your repositories and open pull requests.",
   "webSearchDesc": "Configure search engine API keys to enable AI-powered real-time web search.",
   "webSearchEnable": "Enable Web Search",
   "webSearchEnableDesc": "Allow the AI assistant to proactively search the web for the latest information.",

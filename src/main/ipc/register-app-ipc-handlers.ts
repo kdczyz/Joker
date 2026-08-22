@@ -159,6 +159,30 @@ import {
   encodeCodexCredentials,
   fetchCodexAccountUsage
 } from '../codex-auth'
+import { startGithubOAuth } from '../github-oauth'
+import {
+  syncGithubAccountToEnvironment,
+  clearGithubAccountFromEnvironment
+} from '../github-environment-bridge'
+import { enableGithubMcp, disableGithubMcp, isGithubMcpEnabled } from '../github-mcp'
+import { resolveRcodeMcpJsonPath } from '../claw-schedule-mcp-config'
+import {
+  storeGithubCredentials,
+  getGithubCredentials,
+  clearGithubCredentials,
+  storeGithubClientId,
+  getGithubClientId,
+  storeGithubClientSecret,
+  getGithubClientSecret,
+  clearGithubClientSecret
+} from '../services/github-credential-store'
+import {
+  listUserRepos,
+  cloneRepository,
+  pushRepository,
+  pullRepository,
+  createPullRequest
+} from '../services/github-service'
 import type { WorkflowRuntime } from '../workflow-runtime'
 import { checkWorkflowCode } from '../workflow-runtime'
 import {
@@ -1091,6 +1115,225 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     return startCodexBrowserAuth(async (url: string) => {
       await shell.openExternal(url)
     })
+  })
+
+  // --- GitHub OAuth + 仓库接管 ---
+  ipcMain.handle('github:oauth:connect', async (_, payload: unknown) => {
+    const { clientId, clientSecret } = parseIpcPayload(
+      'github:oauth:connect',
+      z.object({
+        clientId: z.string().optional(),
+        clientSecret: z.string().optional()
+      }).strict(),
+      payload
+    )
+    if (clientId?.trim()) {
+      await storeGithubClientId(clientId.trim())
+    }
+    // 若用户在 UI 输入 secret（不持久化也走一次性传入），主进程优先使用它；
+    // 否则任何此前持久化的 secret 都通过 main 的 getGithubClientSecret 兜底。
+    // 这里不再重复持久化，避免 UI 误输入把磁盘上正确 secret 覆盖掉。
+    const result = await startGithubOAuth(
+      async (url: string) => {
+        await shell.openExternal(url)
+      },
+      clientId,
+      clientSecret
+    )
+    if (!result.ok) return { ok: false, message: result.message }
+    await storeGithubCredentials(result.credentials)
+    // 把新 GitHub 身份推给 runtime prefix，然后触发重启让 prefix 重建。
+    // 不重启会让 agent 仍然按旧的（无身份 / 旧账号）上下文行动。
+    await syncGithubAccountToEnvironment()
+    await restartRuntime()
+    return { ok: true, user: result.credentials.user }
+  })
+
+  // --- 登录界面 GitHub OAuth 登录（纯本地身份，不依赖账号服务器） ---
+  // 复用「仓库接管」已连接的 GitHub 凭据（避免重复授权）；否则发起新的 PKCE 流程。
+  // 仅把 GitHub 用户资料回传渲染层用于建立本地账号会话；GitHub token 全程留在主进程。
+  ipcMain.handle('auth:github:login', async () => {
+    let credentials = await getGithubCredentials()
+    if (!credentials) {
+      const result = await startGithubOAuth(async (url: string) => {
+        await shell.openExternal(url)
+      })
+      if (!result.ok) return { ok: false, message: result.message }
+      credentials = result.credentials
+      await storeGithubCredentials(credentials)
+      // 让 runtime 在下一轮初始化时拿到该 GitHub 身份（登录阶段不主动重启 runtime）。
+      await syncGithubAccountToEnvironment()
+    } else {
+      // 复用旧凭据时也确保 env 同步（程序刚启动、credentials 已存在但 env 未设置的情况）。
+      await syncGithubAccountToEnvironment()
+    }
+    const user = credentials.user
+    return {
+      ok: true,
+      profile: {
+        id: user.id,
+        login: user.login,
+        name: user.name,
+        email: user.email,
+        avatarUrl: user.avatarUrl
+      }
+    }
+  })
+
+  ipcMain.handle('github:get-client-id', async () => {
+    const clientId = await getGithubClientId()
+    return { clientId }
+  })
+
+  ipcMain.handle('github:set-client-id', async (_, payload: unknown) => {
+    const { clientId } = parseIpcPayload(
+      'github:set-client-id',
+      z.object({ clientId: z.string().min(1) }).strict(),
+      payload
+    )
+    await storeGithubClientId(clientId.trim())
+    return { ok: true }
+  })
+
+  ipcMain.handle('github:get-client-secret', async () => {
+    // 只回传是否有 secret，不回传明文（避免在 renderer 内存或日志中泄漏）。
+    const secret = await getGithubClientSecret()
+    return { hasSecret: Boolean(secret) }
+  })
+
+  ipcMain.handle('github:set-client-secret', async (_, payload: unknown) => {
+    const { secret } = parseIpcPayload(
+      'github:set-client-secret',
+      z.object({ secret: z.string().min(1) }).strict(),
+      payload
+    )
+    await storeGithubClientSecret(secret)
+    return { ok: true }
+  })
+
+  ipcMain.handle('github:clear-client-secret', async () => {
+    await clearGithubClientSecret()
+    return { ok: true }
+  })
+
+  ipcMain.handle('github:oauth:disconnect', async () => {
+    await clearGithubCredentials()
+    clearGithubAccountFromEnvironment()
+    await restartRuntime()
+    return { ok: true }
+  })
+
+  ipcMain.handle('github:status', async () => {
+    const creds = await getGithubCredentials()
+    return {
+      connected: Boolean(creds),
+      user: creds?.user ?? null,
+      scope: creds?.scope ?? null
+    }
+  })
+
+  ipcMain.handle('github:list-repos', async () => {
+    const creds = await getGithubCredentials()
+    if (!creds) throw new Error('尚未连接 GitHub')
+    return listUserRepos(creds.accessToken)
+  })
+
+  ipcMain.handle('github:clone-repo', async (_, payload: unknown) => {
+    const creds = await getGithubCredentials()
+    if (!creds) throw new Error('尚未连接 GitHub')
+    const request = parseIpcPayload(
+      'github:clone-repo',
+      z.object({ cloneUrl: z.string().min(1), repoName: z.string().min(1) }).strict(),
+      payload
+    )
+    const chosen = dialog.showOpenDialogSync({
+      title: '选择克隆位置',
+      properties: ['openDirectory', 'createDirectory', 'showHiddenFiles']
+    })
+    if (!chosen || chosen.length === 0) return { cancelled: true }
+    const targetDir = join(chosen[0], request.repoName)
+    const result = await cloneRepository({
+      token: creds.accessToken,
+      cloneUrl: request.cloneUrl,
+      targetDir
+    })
+    return { ...result, cancelled: false }
+  })
+
+  ipcMain.handle('github:push', async (_, payload: unknown) => {
+    const creds = await getGithubCredentials()
+    if (!creds) throw new Error('尚未连接 GitHub')
+    const request = parseIpcPayload(
+      'github:push',
+      z.object({ cwd: z.string().min(1), branch: z.string().min(1).optional() }).strict(),
+      payload
+    )
+    await pushRepository({ token: creds.accessToken, cwd: request.cwd, branch: request.branch })
+    return { ok: true }
+  })
+
+  ipcMain.handle('github:pull', async (_, payload: unknown) => {
+    const creds = await getGithubCredentials()
+    if (!creds) throw new Error('尚未连接 GitHub')
+    const request = parseIpcPayload(
+      'github:pull',
+      z.object({ cwd: z.string().min(1), branch: z.string().min(1).optional() }).strict(),
+      payload
+    )
+    await pullRepository({ token: creds.accessToken, cwd: request.cwd, branch: request.branch })
+    return { ok: true }
+  })
+
+  ipcMain.handle('github:create-pr', async (_, payload: unknown) => {
+    const creds = await getGithubCredentials()
+    if (!creds) throw new Error('尚未连接 GitHub')
+    const request = parseIpcPayload(
+      'github:create-pr',
+      z.object({
+        owner: z.string().min(1),
+        repo: z.string().min(1),
+        title: z.string().min(1),
+        head: z.string().min(1),
+        base: z.string().min(1),
+        body: z.string().optional()
+      }).strict(),
+      payload
+    )
+    const result = await createPullRequest({
+      token: creds.accessToken,
+      owner: request.owner,
+      repo: request.repo,
+      title: request.title,
+      head: request.head,
+      base: request.base,
+      body: request.body
+    })
+    return { ok: true, htmlUrl: result.htmlUrl }
+  })
+
+  // --- GitHub MCP 服务器（一键把已登录 token 注入 Rcode MCP 配置）---
+  ipcMain.handle('github:mcp:enable', async () => {
+    try {
+      await enableGithubMcp()
+      // 关键：写完 mcp.json 后必须触发与 GUI MCP 设置页相同的同步链路，
+      // 否则运行中的 agent 运行时（config.json + 已 spawn 的 MCP 进程）不会
+      // 感知到新服务器，对话里也就调不到 GitHub 工具。
+      await onRcodeMcpConfigWritten?.(resolveRcodeMcpJsonPath(), '')
+      return { ok: true as const }
+    } catch (err) {
+      return { ok: false as const, message: err instanceof Error ? err.message : String(err) }
+    }
+  })
+
+  ipcMain.handle('github:mcp:disable', async () => {
+    await disableGithubMcp()
+    await onRcodeMcpConfigWritten?.(resolveRcodeMcpJsonPath(), '')
+    return { ok: true as const }
+  })
+
+  ipcMain.handle('github:mcp:status', async () => {
+    const enabled = await isGithubMcpEnabled()
+    return { enabled }
   })
 
   ipcMain.handle('codex:account:usage', async () => {

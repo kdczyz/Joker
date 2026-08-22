@@ -141,6 +141,45 @@ const api = {
     ipcRenderer.invoke('skill:save-file', { rootPath, skillName, content, manifestContent }),
   importSkillsFromGitHub: (rootPath, url) =>
     ipcRenderer.invoke('skill:import-github', { rootPath, url }),
+  // --- GitHub OAuth + 仓库接管 ---
+  // 命名：保留标准 "OAuth" 全大写（行业规范），与 IPC channel 名（github:oauth:connect）区分。
+  githubOAuthConnect: (options?: { clientId?: string; clientSecret?: string }) =>
+    ipcRenderer.invoke('github:oauth:connect', {
+      clientId: options?.clientId,
+      clientSecret: options?.clientSecret
+    }),
+  githubOAuthDisconnect: () =>
+    ipcRenderer.invoke('github:oauth:disconnect'),
+  githubGetClientId: () =>
+    ipcRenderer.invoke('github:get-client-id'),
+  githubSetClientId: (clientId: string) =>
+    ipcRenderer.invoke('github:set-client-id', { clientId }),
+  githubGetClientSecret: () =>
+    ipcRenderer.invoke('github:get-client-secret'),
+  githubSetClientSecret: (secret: string) =>
+    ipcRenderer.invoke('github:set-client-secret', { secret }),
+  githubClearClientSecret: () =>
+    ipcRenderer.invoke('github:clear-client-secret'),
+  githubStatus: () =>
+    ipcRenderer.invoke('github:status'),
+  githubListRepos: () =>
+    ipcRenderer.invoke('github:list-repos'),
+  githubCloneRepo: (cloneUrl, repoName) =>
+    ipcRenderer.invoke('github:clone-repo', { cloneUrl, repoName }),
+  githubPush: (cwd, branch) =>
+    ipcRenderer.invoke('github:push', { cwd, branch }),
+  githubPull: (cwd, branch) =>
+    ipcRenderer.invoke('github:pull', { cwd, branch }),
+  githubCreatePr: (payload) =>
+    ipcRenderer.invoke('github:create-pr', payload),
+  githubEnableMcp: () =>
+    ipcRenderer.invoke('github:mcp:enable'),
+  githubDisableMcp: () =>
+    ipcRenderer.invoke('github:mcp:disable'),
+  githubMcpStatus: () =>
+    ipcRenderer.invoke('github:mcp:status'),
+  authGithubLogin: () =>
+    ipcRenderer.invoke('auth:github:login'),
   ensurePptMaster: () => ipcRenderer.invoke('ppt-master:ensure'),
   openSkillRoot: (rootPath) =>
     ipcRenderer.invoke('skill:open-root', rootPath),

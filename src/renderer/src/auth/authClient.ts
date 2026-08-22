@@ -6,6 +6,8 @@ export interface AuthUser {
   createdAt: string;
   lastLoginAt?: string;
   isGuest?: boolean;
+  isGithub?: boolean;
+  avatarUrl?: string;
 }
 
 export interface AuthSession {
@@ -29,6 +31,7 @@ type AuthResponse = AuthSession & { token?: string };
 
 const webTokenKey = "rcode.auth.session.v1";
 const guestSessionKey = "rcode.auth.guest-session.v1";
+const githubSessionKey = "rcode.auth.github-session.v1";
 const defaultAuthApiUrl = "https://lxqandlzy.me";
 
 function authApiUrl() {
@@ -61,6 +64,23 @@ function writeGuestSession(session?: AuthSession) {
   else localStorage.removeItem(guestSessionKey);
 }
 
+function readGithubSession(): AuthSession | undefined {
+  try {
+    const value = localStorage.getItem(githubSessionKey);
+    if (!value) return undefined;
+    const session = JSON.parse(value) as AuthSession;
+    return session.user?.isGithub ? session : undefined;
+  } catch {
+    localStorage.removeItem(githubSessionKey);
+    return undefined;
+  }
+}
+
+function writeGithubSession(session?: AuthSession) {
+  if (session) localStorage.setItem(githubSessionKey, JSON.stringify(session));
+  else localStorage.removeItem(githubSessionKey);
+}
+
 function canUseWebFallback() {
   return window.location.protocol === "http:" || window.location.protocol === "https:";
 }
@@ -86,6 +106,8 @@ async function webRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
 export async function restoreAuthSession(): Promise<AuthSession | undefined> {
   const guestSession = readGuestSession();
   if (guestSession) return guestSession;
+  const githubSession = readGithubSession();
+  if (githubSession) return githubSession;
   if (window.agentDesktop?.authSession) {
     try {
       const desktopSession = await window.agentDesktop.authSession();
@@ -157,7 +179,41 @@ export async function signUp(details: RegistrationDetails): Promise<AuthSession>
   return result;
 }
 
+export async function signInWithGithub(): Promise<AuthSession> {
+  writeGuestSession()
+  if (!window.RcodeGui?.authGithubLogin) {
+    throw new Error("当前环境不支持 GitHub 登录")
+  }
+  const result = await window.RcodeGui.authGithubLogin()
+  if (!result.ok || !result.profile) {
+    throw new Error(result.message || "GitHub 登录失败")
+  }
+  const profile = result.profile
+  const now = new Date()
+  const session: AuthSession = {
+    user: {
+      id: `github:${profile.id}`,
+      email: profile.email || `${profile.login}@users.noreply.github.com`,
+      username: profile.login,
+      displayName: profile.name || profile.login,
+      createdAt: now.toISOString(),
+      lastLoginAt: now.toISOString(),
+      avatarUrl: profile.avatarUrl ?? undefined,
+      isGithub: true
+    },
+    expiresAt: "9999-12-31T23:59:59.999Z"
+  }
+  writeWebToken()
+  writeGithubSession(session)
+  return session
+}
+
 export async function signOut(): Promise<void> {
+  if (readGithubSession()) {
+    writeGithubSession();
+    writeWebToken();
+    return;
+  }
   if (readGuestSession()) {
     writeGuestSession();
     writeWebToken();

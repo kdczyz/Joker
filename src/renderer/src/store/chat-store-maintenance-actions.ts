@@ -759,11 +759,13 @@ export function createMaintenanceActions(
     const turnDurationByUserId = { ...state.turnDurationByUserId }
     const turnReasoningFirstAtByUserId = { ...state.turnReasoningFirstAtByUserId }
     const turnReasoningLastAtByUserId = { ...state.turnReasoningLastAtByUserId }
+    const turnTtftMsByUserId = { ...state.turnTtftMsByUserId }
     for (const id of droppedUserIds) {
       delete turnStartedAtByUserId[id]
       delete turnDurationByUserId[id]
       delete turnReasoningFirstAtByUserId[id]
       delete turnReasoningLastAtByUserId[id]
+      delete turnTtftMsByUserId[id]
     }
 
     sseAbortRef.current?.abort()
@@ -793,6 +795,7 @@ export function createMaintenanceActions(
         turnDurationByUserId,
         turnReasoningFirstAtByUserId,
         turnReasoningLastAtByUserId,
+        turnTtftMsByUserId,
         queuedMessages: [],
         error: null
       })

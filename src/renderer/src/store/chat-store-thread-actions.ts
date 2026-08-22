@@ -509,6 +509,7 @@ export function createThreadActions(
         turnDurationByUserId,
         turnReasoningFirstAtByUserId: {},
         turnReasoningLastAtByUserId: {},
+        turnTtftMsByUserId: {},
         inspectorSelectedId: null,
         queuedMessages: [],
         composerMode,
@@ -585,6 +586,7 @@ export function createThreadActions(
       turnDurationByUserId: {},
       turnReasoningFirstAtByUserId: {},
       turnReasoningLastAtByUserId: {},
+      turnTtftMsByUserId: {},
       inspectorSelectedId: null,
       queuedMessages: []
     })
@@ -877,6 +879,7 @@ export function createThreadActions(
     const previousTurnDurationByUserId = get().turnDurationByUserId
     const previousTurnReasoningFirstAtByUserId = get().turnReasoningFirstAtByUserId
     const previousTurnReasoningLastAtByUserId = get().turnReasoningLastAtByUserId
+    const previousTurnTtftMsByUserId = get().turnTtftMsByUserId
     const previousQueuedMessages = get().queuedMessages
     resetBusyRecoveryAttempts()
     set((s) => ({
@@ -995,6 +998,7 @@ export function createThreadActions(
           turnDurationByUserId: previousTurnDurationByUserId,
           turnReasoningFirstAtByUserId: previousTurnReasoningFirstAtByUserId,
           turnReasoningLastAtByUserId: previousTurnReasoningLastAtByUserId,
+          turnTtftMsByUserId: previousTurnTtftMsByUserId,
           queuedMessages: previousQueuedMessages,
           error: formatRuntimeError(e),
           ...(shouldOpenSettingsForError(e)
@@ -1141,6 +1145,15 @@ export function createThreadActions(
             }
             delete next[userBlockId]
             return next
+          })(),
+          turnTtftMsByUserId: (() => {
+            if (s.turnTtftMsByUserId[userBlockId] === undefined) return s.turnTtftMsByUserId
+            const next = {
+              ...s.turnTtftMsByUserId,
+              [userMessageItemId]: s.turnTtftMsByUserId[userBlockId]
+            }
+            delete next[userBlockId]
+            return next
           })()
         }))
       }
@@ -1202,6 +1215,7 @@ export function createThreadActions(
           turnDurationByUserId: previousTurnDurationByUserId,
           turnReasoningFirstAtByUserId: previousTurnReasoningFirstAtByUserId,
           turnReasoningLastAtByUserId: previousTurnReasoningLastAtByUserId,
+          turnTtftMsByUserId: previousTurnTtftMsByUserId,
           queuedMessages: previousQueuedMessages,
           error: i18n.t('common:runtimeActiveTurn')
         })

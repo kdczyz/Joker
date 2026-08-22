@@ -121,7 +121,7 @@
   container-type: inline-size;
 }
 
-@container (max-width: 430px) {
+@container (max-width: 60px) {
   .workspace-mode-tab {
     gap: 0;
     padding-left: 0.5rem;
@@ -4337,36 +4337,103 @@ body.ds-workbench-resizing webview {
   }
 }
 
-/* Code composer: borderless model/reasoning controls and the reference energy rail. */
+/* ==========================================================================
+   Code composer: APPLE HIG CUPERTINO STYLE (苹果精致设计风格) Reasoning Controls
+   ========================================================================== */
+
 .ds-composer-reasoning-popover {
   box-sizing: border-box;
-  min-height: 110px;
-  padding: 17px 18px 14px;
-  border: 0;
-  border-radius: 12px;
-  background: var(--ds-surface-elevated);
+  min-height: 122px;
+  padding: 14px 16px 15px;
+  border-radius: 16px;
+  background: rgba(30, 30, 34, 0.88);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  color: #f5f5f7;
+  border: 0.5px solid rgba(255, 255, 255, 0.14);
   box-shadow:
-    0 16px 40px rgba(20, 47, 95, 0.1),
-    0 2px 8px rgba(20, 47, 95, 0.04);
-  animation: ds-composer-reasoning-popover-in 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    0 20px 48px rgba(0, 0, 0, 0.45),
+    0 1px 2px rgba(0, 0, 0, 0.2),
+    inset 0 0.5px 0.5px rgba(255, 255, 255, 0.2);
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  animation: ds-composer-apple-spring-in 240ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.ds-composer-reasoning-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.ds-composer-reasoning-header-left {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.ds-composer-reasoning-title-text {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f5f5f7;
+  letter-spacing: -0.01em;
+}
+
+.ds-composer-reasoning-value-glow {
+  font-size: 13px;
+  font-weight: 600;
+  color: #0a84ff;
+  letter-spacing: -0.01em;
+  transition: color 180ms ease, opacity 180ms ease;
+}
+
+.ds-composer-reasoning-value-glow.is-ultra {
+  color: #bf5af2;
+  text-shadow: 0 0 12px rgba(191, 90, 242, 0.45);
+}
+
+.ds-composer-reasoning-header-right {
+  display: flex;
+  align-items: center;
+}
+
+.ds-composer-reasoning-help-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(235, 235, 245, 0.4);
+  cursor: pointer;
+  transition: color 150ms ease, transform 150ms ease;
+}
+
+.ds-composer-reasoning-help-icon:hover {
+  color: rgba(235, 235, 245, 0.85);
+  transform: scale(1.08);
 }
 
 .ds-composer-reasoning-scale {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: var(--ds-text-muted);
-  font-size: 13px;
+  margin-bottom: 7px;
+  font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0;
-  line-height: 18px;
+  color: rgba(235, 235, 245, 0.48);
+  letter-spacing: -0.01em;
 }
 
+.ds-composer-reasoning-scale-item.is-fast,
+.ds-composer-reasoning-scale-item.is-smart {
+  color: rgba(235, 235, 245, 0.48);
+}
+
+/* Apple iOS Slider Pill Rail */
 .ds-composer-reasoning-rail {
   position: relative;
-  height: 56px;
-  margin-top: 2px;
-  border-radius: 14px;
+  height: 32px;
+  margin-top: 1px;
+  border-radius: 999px;
   cursor: pointer;
   outline: none;
   touch-action: none;
@@ -4374,12 +4441,12 @@ body.ds-workbench-resizing webview {
 }
 
 .ds-composer-reasoning-rail:focus-visible {
-  box-shadow: 0 0 0 2px var(--ds-surface-elevated), 0 0 0 4px var(--ds-accent-soft);
+  box-shadow: 0 0 0 3px rgba(10, 132, 255, 0.45);
 }
 
 .ds-composer-reasoning-rail.is-disabled {
   cursor: not-allowed;
-  opacity: 0.55;
+  opacity: 0.38;
 }
 
 .ds-composer-reasoning-rail-inner {
@@ -4389,95 +4456,71 @@ body.ds-workbench-resizing webview {
 
 .ds-composer-reasoning-rail-track {
   position: absolute;
-  top: 50%;
-  right: 0;
-  left: 0;
-  height: 30px;
-  overflow: hidden;
+  inset: 0;
   border-radius: 999px;
-  background: #e9edf5;
-  box-shadow: inset 0 0 0 1px rgba(96, 109, 137, 0.03);
-  transform: translateY(-50%);
+  overflow: hidden;
+  background: rgba(120, 120, 128, 0.24);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
 }
 
+/* Apple Standard iOS Blue Pill Fill */
+.ds-composer-reasoning-normal-fill {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    #0066cc 0%,
+    #0a84ff 100%
+  );
+  box-shadow: 0 1px 4px rgba(10, 132, 255, 0.35);
+  transition: opacity 180ms ease;
+}
+
+/* Apple ULTRA Mode: Smooth Radiant Violet/Indigo Gradient */
 .ds-composer-reasoning-rail-fill {
   position: absolute;
   inset: 0 auto 0 0;
   display: block;
   min-width: 0;
+  border-radius: 999px;
   overflow: hidden;
-  border-radius: inherit;
-  background: #389bff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
-  isolation: isolate;
-  transition: width 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  transition: width 200ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.ds-composer-reasoning-rail-fill.is-energized {
-  background: linear-gradient(
-    100deg,
-    #269cff 0%,
-    #487fff 27%,
-    #6f65ff 51%,
-    #9857ff 75%,
-    #c653f0 100%
-  );
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -8px 18px rgba(74, 32, 207, 0.12);
-}
-
-.ds-composer-reasoning-rail-fill::before,
-.ds-composer-reasoning-rail-fill::after {
+.ds-composer-reasoning-dot-matrix {
   position: absolute;
-  display: none;
+  inset: 0;
+  /* Apple Pro Violet-Indigo-White Fluid Spectrum */
+  background: linear-gradient(
+    90deg,
+    rgba(94, 92, 230, 0.3) 0%,
+    #5e5ce6 35%,
+    #bf5af2 70%,
+    #ff375f 95%,
+    #ffffff 100%
+  );
+  background-size: 140% 100%;
+  background-position: 100% 0;
+  filter: drop-shadow(0 1px 6px rgba(191, 90, 242, 0.4));
+  animation: ds-composer-apple-ultra-pulse 3s ease-in-out infinite alternate;
+}
+
+/* Apple Subtle Shimmer Sheen */
+.ds-composer-reasoning-dot-matrix::after {
   content: '';
+  position: absolute;
+  inset: 0;
   pointer-events: none;
-}
-
-.ds-composer-reasoning-rail-fill.is-energized::before,
-.ds-composer-reasoning-rail-fill.is-energized::after {
-  display: block;
-}
-
-.ds-composer-reasoning-rail-fill::before {
-  z-index: 0;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 200%;
   background: linear-gradient(
-    100deg,
-    rgba(38, 164, 255, 0.96) 0%,
-    rgba(75, 117, 255, 0.94) 12.5%,
-    rgba(143, 88, 255, 0.94) 25%,
-    rgba(211, 75, 232, 0.94) 37.5%,
-    rgba(38, 164, 255, 0.96) 50%,
-    rgba(75, 117, 255, 0.94) 62.5%,
-    rgba(143, 88, 255, 0.94) 75%,
-    rgba(211, 75, 232, 0.94) 87.5%,
-    rgba(38, 164, 255, 0.96) 100%
+    180deg,
+    rgba(255, 255, 255, 0.35) 0%,
+    rgba(255, 255, 255, 0) 55%,
+    rgba(0, 0, 0, 0.12) 100%
   );
-  filter: saturate(1.08);
-  will-change: transform;
-  animation: ds-composer-reasoning-gradient-cycle 5.6s linear infinite;
 }
 
-.ds-composer-reasoning-rail-fill::after {
-  z-index: 1;
-  inset: -6px -54px;
-  background: linear-gradient(
-    108deg,
-    transparent 27%,
-    rgba(255, 255, 255, 0.03) 38%,
-    rgba(255, 255, 255, 0.34) 50%,
-    rgba(255, 255, 255, 0.06) 62%,
-    transparent 73%
-  );
-  transform: translate3d(-88%, 0, 0);
-  animation: ds-composer-reasoning-energy-sweep 3.8s cubic-bezier(0.45, 0, 0.25, 1) infinite;
-}
-
+/* Apple Tick Stop Dots */
 .ds-composer-reasoning-stops {
   position: absolute;
   inset: 0;
@@ -4487,174 +4530,355 @@ body.ds-workbench-resizing webview {
 .ds-composer-reasoning-stops > i {
   position: absolute;
   top: 50%;
-  width: 5px;
-  height: 5px;
-  border-radius: 999px;
-  background: rgba(96, 101, 113, 0.44);
+  width: 3.5px;
+  height: 3.5px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.28);
   transform: translate(-50%, -50%);
-  transition: background-color 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+  transition: background-color 160ms ease, transform 160ms ease, opacity 160ms ease;
 }
 
 .ds-composer-reasoning-stops > i.is-filled {
-  background: rgba(222, 237, 255, 0.58);
-  box-shadow: 0 0 6px rgba(227, 239, 255, 0.5);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 0 4px rgba(255, 255, 255, 0.6);
 }
 
+/* Apple iOS Ceramic White Capsule Thumb */
 .ds-composer-reasoning-thumb {
   position: absolute;
   top: 50%;
-  width: 36px;
-  height: 36px;
+  width: 24px;
+  height: 28px;
   border-radius: 999px;
-  background: #fff;
+  background: #ffffff;
   box-shadow:
-    0 5px 12px rgba(20, 47, 95, 0.14),
-    0 0 0 1px rgba(20, 47, 95, 0.08);
+    0 3px 8px rgba(0, 0, 0, 0.24),
+    0 1px 2px rgba(0, 0, 0, 0.16),
+    inset 0 0.5px 0.5px rgba(255, 255, 255, 0.9);
   transform: translate(-50%, -50%);
-  transition: left 220ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 220ms ease;
+  transition: left 200ms cubic-bezier(0.16, 1, 0.3, 1), transform 140ms ease, box-shadow 160ms ease;
 }
 
 .ds-composer-reasoning-thumb-pulse {
   position: absolute;
-  inset: 0;
-  border-radius: inherit;
+  inset: -3px;
+  border-radius: 999px;
   pointer-events: none;
-  animation: ds-composer-reasoning-thumb-pulse 300ms cubic-bezier(0.22, 1, 0.36, 1);
+  animation: ds-composer-apple-thumb-pulse 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ds-composer-reasoning-thumb.is-ultra {
+  box-shadow:
+    0 3px 10px rgba(0, 0, 0, 0.3),
+    0 0 12px rgba(191, 90, 242, 0.5),
+    inset 0 0.5px 0.5px rgba(255, 255, 255, 0.9);
 }
 
 .ds-composer-reasoning-rail:not(.is-disabled):active .ds-composer-reasoning-thumb {
+  transform: translate(-50%, -50%) scale(1.06);
   box-shadow:
-    0 5px 14px rgba(20, 47, 95, 0.18),
-    0 0 0 1px rgba(20, 47, 95, 0.09),
-    0 0 0 6px rgba(110, 92, 242, 0.1);
+    0 4px 12px rgba(0, 0, 0, 0.32),
+    0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
-.ds-composer-reasoning-particle {
-  position: absolute;
-  z-index: 2;
-  display: block;
-  border-radius: 999px;
-  pointer-events: none;
-  background: radial-gradient(
-    circle at 34% 30%,
-    rgba(255, 255, 255, 1) 0%,
-    rgba(238, 247, 255, 0.92) 32%,
-    rgba(210, 224, 255, 0.4) 66%,
-    rgba(255, 255, 255, 0.08) 100%
+/* Apple Segmented Control Pill Chips */
+.ds-composer-reasoning-chips {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3px;
+  margin-top: 11px;
+  padding: 2px;
+  border-radius: 8px;
+  background: rgba(120, 120, 128, 0.16);
+}
+
+.ds-composer-reasoning-chip {
+  flex: 1;
+  min-width: 0;
+  height: 22px;
+  padding: 0 4px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: rgba(235, 235, 245, 0.65);
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  outline: none;
+  transition: all 150ms cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+.ds-composer-reasoning-chip:hover {
+  color: #f5f5f7;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ds-composer-reasoning-chip.is-active {
+  background: rgba(255, 255, 255, 0.18);
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.2),
+    0 0.5px 1px rgba(0, 0, 0, 0.15);
+}
+
+/* ==========================================================================
+   Light Theme Apple Style (Pure macOS / iOS Light Vibrant Glass)
+   ========================================================================== */
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-popover,
+[data-theme='light'] .ds-composer-reasoning-popover {
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(28px) saturate(190%);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  color: #1d1d1f;
+  border: 0.5px solid rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 18px 44px rgba(0, 0, 0, 0.14),
+    0 1px 3px rgba(0, 0, 0, 0.06),
+    inset 0 0.5px 0.5px rgba(255, 255, 255, 0.9);
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-title-text,
+[data-theme='light'] .ds-composer-reasoning-title-text {
+  color: #1d1d1f;
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-value-glow,
+[data-theme='light'] .ds-composer-reasoning-value-glow {
+  color: #0071e3;
+  text-shadow: none;
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-value-glow.is-ultra,
+[data-theme='light'] .ds-composer-reasoning-value-glow.is-ultra {
+  color: #af52de;
+  text-shadow: none;
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-help-icon,
+[data-theme='light'] .ds-composer-reasoning-help-icon {
+  color: rgba(60, 60, 67, 0.45);
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-help-icon:hover,
+[data-theme='light'] .ds-composer-reasoning-help-icon:hover {
+  color: rgba(60, 60, 67, 0.85);
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-scale,
+[data-theme='light'] .ds-composer-reasoning-scale {
+  color: rgba(60, 60, 67, 0.55);
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-scale-item.is-fast,
+:root:not([data-theme='dark']) .ds-composer-reasoning-scale-item.is-smart,
+[data-theme='light'] .ds-composer-reasoning-scale-item.is-fast,
+[data-theme='light'] .ds-composer-reasoning-scale-item.is-smart {
+  color: rgba(60, 60, 67, 0.55);
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-rail-track,
+[data-theme='light'] .ds-composer-reasoning-rail-track {
+  background: rgba(120, 120, 128, 0.16);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-normal-fill,
+[data-theme='light'] .ds-composer-reasoning-normal-fill {
+  background: linear-gradient(
+    90deg,
+    #0071e3 0%,
+    #2997ff 100%
   );
+  box-shadow: 0 1px 3px rgba(0, 113, 227, 0.25);
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-dot-matrix,
+[data-theme='light'] .ds-composer-reasoning-dot-matrix {
+  background: linear-gradient(
+    90deg,
+    #5856d6 0%,
+    #af52de 45%,
+    #ff2d55 90%,
+    #ffffff 100%
+  );
+  background-size: 140% 100%;
+  filter: drop-shadow(0 1px 4px rgba(175, 82, 222, 0.3));
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-stops > i,
+[data-theme='light'] .ds-composer-reasoning-stops > i {
+  background: rgba(60, 60, 67, 0.25);
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-stops > i.is-filled,
+[data-theme='light'] .ds-composer-reasoning-stops > i.is-filled {
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+:root:not([data-theme='dark']) .ds-composer-reasoning-thumb,
+[data-theme='light'] .ds-composer-reasoning-thumb {
+  background: #ffffff;
+  border: 0.5px solid rgba(0, 0, 0, 0.08);
   box-shadow:
-    0 0 4px rgba(255, 255, 255, 0.88),
-    0 0 10px rgba(211, 227, 255, 0.48);
-  mix-blend-mode: screen;
-  will-change: opacity, transform;
-  animation-name: ds-composer-reasoning-particle-drift;
-  animation-timing-function: ease-in-out;
-  animation-iteration-count: infinite;
-  animation-direction: alternate;
+    0 3px 8px rgba(0, 0, 0, 0.15),
+    0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-[data-theme='dark'] .ds-composer-reasoning-popover {
-  background: rgba(25, 25, 29, 0.98);
-  box-shadow: 0 18px 44px rgba(0, 0, 0, 0.42);
+:root:not([data-theme='dark']) .ds-composer-reasoning-chips,
+[data-theme='light'] .ds-composer-reasoning-chips {
+  background: rgba(120, 120, 128, 0.12);
 }
 
-[data-theme='dark'] .ds-composer-reasoning-rail-track {
-  background: rgba(151, 170, 205, 0.18);
+:root:not([data-theme='dark']) .ds-composer-reasoning-chip,
+[data-theme='light'] .ds-composer-reasoning-chip {
+  color: rgba(60, 60, 67, 0.7);
 }
 
-[data-theme='dark'] .ds-composer-reasoning-stops > i {
-  background: rgba(207, 217, 236, 0.42);
+:root:not([data-theme='dark']) .ds-composer-reasoning-chip:hover,
+[data-theme='light'] .ds-composer-reasoning-chip:hover {
+  color: #1d1d1f;
+  background: rgba(255, 255, 255, 0.5);
 }
 
-[data-theme='dark'] .ds-composer-reasoning-stops > i.is-filled {
-  background: rgba(225, 239, 255, 0.72);
+:root:not([data-theme='dark']) .ds-composer-reasoning-chip.is-active,
+[data-theme='light'] .ds-composer-reasoning-chip.is-active {
+  background: #ffffff;
+  color: #1d1d1f;
+  box-shadow:
+    0 1px 3px rgba(0, 0, 0, 0.12),
+    0 0.5px 1px rgba(0, 0, 0, 0.08);
 }
 
-@keyframes ds-composer-reasoning-popover-in {
-  from {
+/* ==========================================================================
+   Apple Style Animations
+   ========================================================================== */
+
+@keyframes ds-composer-apple-spring-in {
+  0% {
     opacity: 0;
-    transform: translateY(6px) scale(0.98);
+    transform: translateY(6px) scale(0.97);
   }
-  to {
+  100% {
     opacity: 1;
     transform: translateY(0) scale(1);
   }
 }
 
-@keyframes ds-composer-reasoning-particle-drift {
+@keyframes ds-composer-apple-ultra-pulse {
   0% {
-    opacity: 0.25;
-    transform: translate3d(0, 3px, 0) scale(0.62);
-  }
-  46% {
-    opacity: 0.96;
-    transform: translate3d(2px, -2px, 0) scale(1.2);
+    background-position: 100% 0;
   }
   100% {
-    opacity: 0.48;
-    transform: translate3d(
-      var(--ds-reasoning-particle-x, 4px),
-      var(--ds-reasoning-particle-y, -5px),
-      0
-    ) scale(0.82);
+    background-position: 75% 0;
   }
 }
 
-@keyframes ds-composer-reasoning-gradient-cycle {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(-50%, 0, 0);
-  }
-}
-
-@keyframes ds-composer-reasoning-energy-sweep {
-  0%,
-  14% {
-    opacity: 0;
-    transform: translate3d(-88%, 0, 0);
-  }
-  26% {
-    opacity: 0.78;
-  }
-  68% {
-    opacity: 0.55;
-  }
-  82%,
-  100% {
-    opacity: 0;
-    transform: translate3d(88%, 0, 0);
-  }
-}
-
-@keyframes ds-composer-reasoning-thumb-pulse {
+@keyframes ds-composer-apple-thumb-pulse {
   0% {
-    box-shadow: 0 0 0 0 rgba(110, 92, 242, 0.16);
-    opacity: 0.9;
-    transform: scale(0.94);
-  }
-  55% {
-    box-shadow: 0 0 0 7px rgba(110, 92, 242, 0.08);
+    box-shadow: 0 0 0 0 rgba(10, 132, 255, 0.4);
     opacity: 1;
-    transform: scale(1.03);
   }
   100% {
-    box-shadow: 0 0 0 0 rgba(110, 92, 242, 0);
+    box-shadow: 0 0 0 8px rgba(10, 132, 255, 0);
     opacity: 0;
+  }
+}
+
+/* ==========================================================================
+   Terminal Animations & Keyframes
+   ========================================================================== */
+
+@keyframes ds-composer-reasoning-terminal-in {
+  0% {
+    opacity: 0;
+    transform: translateY(3px) scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ds-composer-terminal-cursor-blink {
+  0%, 49% {
+    opacity: 1;
+  }
+  50%, 100% {
+    opacity: 0;
+  }
+}
+
+@keyframes ds-composer-terminal-data-stream {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -50% 0;
+  }
+}
+
+@keyframes ds-composer-terminal-matrix-pulse {
+  0% {
+    filter: drop-shadow(0 0 4px #00ff66) drop-shadow(0 0 8px #00ffff) brightness(0.95);
+  }
+  100% {
+    filter: drop-shadow(0 0 8px #00ff66) drop-shadow(0 0 16px #00ffff) brightness(1.2);
+  }
+}
+
+@keyframes ds-composer-terminal-flicker {
+  0% {
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 0.9;
+  }
+}
+
+@keyframes ds-composer-terminal-thumb-ping {
+  0% {
     transform: scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+@keyframes ds-composer-terminal-ultra-ping {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 255, 0.8);
+    opacity: 1;
+  }
+  100% {
+    box-shadow: 0 0 0 6px rgba(0, 255, 255, 0);
+    opacity: 0;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .ds-composer-reasoning-popover,
   .ds-composer-reasoning-rail-fill,
-  .ds-composer-reasoning-rail-fill::before,
-  .ds-composer-reasoning-rail-fill::after,
+  .ds-composer-reasoning-normal-fill,
+  .ds-composer-reasoning-dot-matrix,
   .ds-composer-reasoning-thumb,
   .ds-composer-reasoning-thumb-pulse,
-  .ds-composer-reasoning-stops > i,
-  .ds-composer-reasoning-particle {
+  .ds-composer-reasoning-particle,
+  .ds-composer-reasoning-stops > i {
     animation: none !important;
     transition-duration: 0ms !important;
   }

@@ -203,6 +203,12 @@ export type ChatState = {
   turnDurationByUserId: Record<string, number>
   turnReasoningFirstAtByUserId: Record<string, number>
   turnReasoningLastAtByUserId: Record<string, number>
+  /**
+   * Time-to-first-token (ms) per turn, keyed by the turn's user-block id. Set
+   * when the first assistant *text* delta arrives for that turn. Used by the
+   * composer token chip (session-average TTFT) and the usage line chart.
+   */
+  turnTtftMsByUserId: Record<string, number>
   inspectorSelectedId: string | null
   composerMode: 'plan' | 'agent'
   composerModel: string

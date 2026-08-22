@@ -281,6 +281,37 @@
   cursor: pointer;
 }
 
+.authGithubButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  width: 100%;
+  height: 44px;
+  border: 1px solid #30363d;
+  border-radius: 9px;
+  color: #f0f6fc;
+  background: #24292f;
+  font-size: 12.5px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.authGithubButton:hover:not(:disabled) {
+  background: #32383f;
+  border-color: #444c56;
+  transform: translateY(-1px);
+}
+
+.authGithubButton:active:not(:disabled) {
+  transform: translateY(0) scale(0.985);
+}
+
+.authGithubButton:disabled {
+  color: var(--auth-faint);
+  cursor: wait;
+}
+
 .authGuestButton:hover:not(:disabled) {
   border-color: rgba(255, 255, 255, 0.28);
   background: #1d2024;

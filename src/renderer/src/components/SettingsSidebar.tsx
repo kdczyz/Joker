@@ -1,7 +1,7 @@
 import type { Dispatch, ReactElement, SetStateAction } from 'react'
-import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, GitBranch, Globe, Keyboard, Palette, Puzzle, RefreshCw, Search, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
+import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, GitBranch, Github, Globe, Keyboard, Palette, Puzzle, RefreshCw, Search, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
 
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch' | 'github'
 
 export function SettingsSidebar({
   category,
@@ -55,6 +55,15 @@ export function SettingsSidebar({
         >
           <Search className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('webSearch')}
+        </button>
+        <button
+          type="button"
+          data-cursor-spotlight-target
+          className={catCls('github')}
+          onClick={() => setCategory('github')}
+        >
+          <Github className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
+          {t('github')}
         </button>
         <button
           type="button"

@@ -129,7 +129,9 @@ export function reduceChatProjection(
       let liveDeltaSeqFloor = state.liveDeltaSeqFloor
       let reasoningFirst = state.turnReasoningFirstAtByUserId
       let reasoningLast = state.turnReasoningLastAtByUserId
+      let ttft = state.turnTtftMsByUserId
       let sawReasoning = false
+      let sawAssistantText = false
       for (const delta of deltas) {
         if (typeof delta.seq === 'number') {
           if (delta.seq <= liveDeltaSeqFloor) continue
@@ -140,6 +142,7 @@ export function reduceChatProjection(
           sawReasoning = true
         } else {
           liveAssistant += delta.text
+          if (delta.text) sawAssistantText = true
         }
       }
       const userId = state.currentTurnUserId
@@ -148,6 +151,11 @@ export function reduceChatProjection(
           reasoningFirst = { ...reasoningFirst, [userId]: context.now }
         }
         reasoningLast = { ...reasoningLast, [userId]: context.now }
+      }
+      if (sawAssistantText && userId && typeof state.turnStartedAtByUserId[userId] === 'number') {
+        if (typeof ttft[userId] !== 'number') {
+          ttft = { ...ttft, [userId]: Math.max(0, context.now - state.turnStartedAtByUserId[userId]) }
+        }
       }
       return {
         ...patch,
@@ -159,7 +167,8 @@ export function reduceChatProjection(
           : {}),
         ...(reasoningLast !== state.turnReasoningLastAtByUserId
           ? { turnReasoningLastAtByUserId: reasoningLast }
-          : {})
+          : {}),
+        ...(ttft !== state.turnTtftMsByUserId ? { turnTtftMsByUserId: ttft } : {})
       }
     }
     case 'tool_updated': {

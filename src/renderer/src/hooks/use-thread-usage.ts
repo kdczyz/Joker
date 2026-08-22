@@ -75,6 +75,23 @@ export function formatCost(costUsd: number | null | undefined, locale = fallback
   return `￥${formatMoneyValue(cnyValue ?? 0)}`
 }
 
+/**
+ * True when the summary has any usable cost figure to render. Lets UI segments
+ * drop the cost placeholder entirely instead of showing a bare "-" dash when
+ * the backend hasn't reported a price.
+ */
+export function hasUsageCost(
+  usage: Pick<ThreadUsageSummary, 'costUsd' | 'costCny'> | null | undefined
+): boolean {
+  if (!usage) return false
+  const usd = usage.costUsd
+  const cny = usage.costCny
+  return (
+    (typeof usd === 'number' && Number.isFinite(usd) && usd > 0) ||
+    (typeof cny === 'number' && Number.isFinite(cny) && cny > 0)
+  )
+}
+
 export function formatPercent(value: number | null): string {
   if (value == null || !Number.isFinite(value)) return '-'
   const percent = Math.max(0, Math.min(100, value * 100))

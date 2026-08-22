@@ -126,6 +126,10 @@ import { registerRemoteAgentIpc } from './remote-agent-ipc'
 import { registerTerminalPtyIpc } from './terminal/terminal-pty-ipc'
 import { registerGrokIpc } from './ipc/register-grok-ipc'
 import {
+  syncGithubAccountToEnvironment,
+  clearGithubAccountFromEnvironment
+} from './github-environment-bridge'
+import {
   configureWeixinBridgeRuntimeContextProvider,
   ensureWeixinBridgeRpcUrl,
   getWeixinBridgeAccountUserId,
@@ -1786,6 +1790,9 @@ app.whenReady().then(async () => {
     resolveLogDirectory: () => resolveLogDirectory(app),
     logError
   })
+  // 启动时主动把已持久化的 GitHub 凭据同步到 process.env，让 runtime 第一轮
+  // 就用上正确的 GitHub 身份上下文，而不需要用户先「断开再连接」。
+  await syncGithubAccountToEnvironment()
   const dataMigrationController = new DataMigrationController({
     userDataPath: app.getPath('userData'),
     store,

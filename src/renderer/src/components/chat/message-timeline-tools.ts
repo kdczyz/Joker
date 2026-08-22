@@ -84,7 +84,7 @@ export function formatToolTitle(block: ToolBlock, t: (key: string) => string): s
 
 export function formatDuration(ms: number): string {
   if (ms < 1000) return `${Math.max(1, Math.round(ms))}ms`
-  if (ms < 60_000) return `${(ms / 1000).toFixed(ms < 10_000 ? 1 : 0)}s`
+  if (ms < 60_000) return `${Math.round(ms / 1000)}s`
   if (ms < 3_600_000) {
     const totalSeconds = Math.round(ms / 1000)
     const m = Math.floor(totalSeconds / 60)

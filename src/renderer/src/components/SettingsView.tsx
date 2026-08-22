@@ -123,6 +123,9 @@ const BackendSettingsSection = lazy(() =>
 const WebSearchSettingsSection = lazy(() =>
   import('./settings-section-web-search').then((module) => ({ default: module.WebSearchSettingsSection }))
 )
+const GithubSettingsSection = lazy(() =>
+  import('./settings-section-github').then((module) => ({ default: module.GithubSettingsSection }))
+)
 
 function LoadedAgentsSettingsSection({
   onReady,
@@ -144,7 +147,7 @@ function SettingsSectionFallback(): ReactElement {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch' | 'github'
 type SettingsPatch = AppSettingsPatch
 type InlineNotice = {
   tone: 'success' | 'error' | 'info'
@@ -1415,6 +1418,7 @@ export function SettingsView(): ReactElement {
             {category === 'debug' ? <LlmDebugSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'dataMigration' ? <DataMigrationSettingsSection /> : null}
             {category === 'webSearch' ? <WebSearchSettingsSection ctx={settingsSectionContext} /> : null}
+            {category === 'github' ? <GithubSettingsSection /> : null}
           </Suspense>
           </div>
         </div>

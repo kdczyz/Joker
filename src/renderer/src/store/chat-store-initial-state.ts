@@ -43,6 +43,7 @@ export function createInitialChatStoreState(workingDirectoryLabel: string) {
     turnDurationByUserId: {},
     turnReasoningFirstAtByUserId: {},
     turnReasoningLastAtByUserId: {},
+    turnTtftMsByUserId: {},
     inspectorSelectedId: null,
     composerMode: readStoredComposerMode(),
     composerModel: '',

@@ -47,6 +47,7 @@ import {
 } from '../adapters/tool/media-gen-tool-provider.js'
 import { LocalWorkspaceInspector } from '../adapters/workspace/local-workspace-inspector.js'
 import { createImmutablePrefix } from '../cache/immutable-prefix.js'
+import { getEnvironmentContextConstraints } from '../cache/environment-context.js'
 import {
   buildRuntimeCapabilityManifest,
   type RcodeCapabilitiesConfig
@@ -285,7 +286,8 @@ export async function createRcodeServeRuntime(
     pinnedConstraints: [
       'system: preserve user intent across compaction',
       'system: keep the HTTP/SSE contract stable for the GUI',
-      'system: keep the stable Rcode prefix byte-stable for prompt-cache reuse'
+      'system: keep the stable Rcode prefix byte-stable for prompt-cache reuse',
+      ...getEnvironmentContextConstraints()
     ]
   })
   let abortThreadExecution: ((threadId: string) => number) | undefined

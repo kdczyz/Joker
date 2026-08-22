@@ -548,6 +548,29 @@ export type RcodeGuiApi = ExtensionIpcApi & {
     manifestContent?: string
   ) => Promise<SkillSaveResult>
   importSkillsFromGitHub: (rootPath: string, url: string) => Promise<SkillGithubImportResult>
+  // --- GitHub OAuth + 仓库接管 ---
+  githubOAuthConnect: (options?: {
+    clientId?: string
+    /** Runtime client_secret for confidential OAuth Apps. Takes precedence over env / safeStorage / built-in. */
+    clientSecret?: string
+  }) => Promise<GithubConnectResult>
+  githubOAuthDisconnect: () => Promise<{ ok: boolean }>
+  githubGetClientId: () => Promise<{ clientId: string | null }>
+  githubSetClientId: (clientId: string) => Promise<{ ok: boolean }>
+  githubGetClientSecret: () => Promise<{ hasSecret: boolean }>
+  githubSetClientSecret: (secret: string) => Promise<{ ok: boolean }>
+  githubClearClientSecret: () => Promise<{ ok: boolean }>
+  githubStatus: () => Promise<GithubStatusResult>
+  githubListRepos: () => Promise<GithubRepoInfo[]>
+  githubCloneRepo: (cloneUrl: string, repoName: string) => Promise<GithubCloneResult>
+  githubPush: (cwd: string, branch?: string) => Promise<GithubGitResult>
+  githubPull: (cwd: string, branch?: string) => Promise<GithubGitResult>
+  githubCreatePr: (payload: GithubCreatePrPayload) => Promise<GithubCreatePrResult>
+  githubEnableMcp: () => Promise<{ ok: boolean; message?: string }>
+  githubDisableMcp: () => Promise<{ ok: boolean }>
+  githubMcpStatus: () => Promise<{ enabled: boolean }>
+  /** 登录界面「使用 GitHub 登录」：主进程跑 PKCE 拿到 token 后交后端换取 Rcode 会话。 */
+  authGithubLogin: () => Promise<AuthGithubLoginResult>
   /** Install/repair the managed PPT Master skill and its isolated Python environment. */
   ensurePptMaster: () => Promise<PptMasterEnsureResult>
   openSkillRoot: (rootPath: string) => Promise<PathOpenResult>
@@ -812,3 +835,64 @@ export type RcodeProtectedApprovalRequest = {
 export type RcodeProtectedApprovalResult =
   | { confirmed: false }
   | { confirmed: true; response: RuntimeRequestResult }
+
+// --- GitHub OAuth + 仓库接管 (shared contract) ---
+
+export interface GithubUserInfo {
+  login: string
+  id: number
+  name: string | null
+  email: string | null
+  avatarUrl: string | null
+}
+
+export type GithubConnectResult = { ok: true; user: GithubUserInfo } | { ok: false; message: string }
+
+export type GithubStatusResult = {
+  connected: boolean
+  user: GithubUserInfo | null
+  scope: string | null
+}
+
+export interface GithubRepoInfo {
+  id: number
+  name: string
+  fullName: string
+  private: boolean
+  description: string | null
+  htmlUrl: string
+  cloneUrl: string
+  defaultBranch: string
+  updatedAt: string
+}
+
+export type GithubCloneResult = { cancelled: boolean; targetDir?: string }
+
+export type GithubGitResult = { ok: boolean; message?: string }
+
+export interface GithubCreatePrPayload {
+  owner: string
+  repo: string
+  title: string
+  head: string
+  base: string
+  body?: string
+}
+
+export type GithubCreatePrResult = { ok: boolean; htmlUrl?: string; message?: string }
+
+// --- GitHub OAuth 登录（登录界面「使用 GitHub 登录」，纯本地身份，不依赖账号服务器） ---
+
+export interface AuthGithubLoginProfile {
+  id: number
+  login: string
+  name: string | null
+  email: string | null
+  avatarUrl: string | null
+}
+
+export interface AuthGithubLoginResult {
+  ok: boolean
+  profile?: AuthGithubLoginProfile
+  message?: string
+}

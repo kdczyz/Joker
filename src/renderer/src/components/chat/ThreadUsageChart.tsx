@@ -64,7 +64,7 @@ export function ThreadUsageChart({
     [maxY]
   )
 
-  if (count < 2) {
+  if (count === 0) {
     return (
       <div className="grid min-h-[150px] place-items-center rounded-lg bg-ds-subtle px-4 text-center text-[12.5px] leading-5 text-ds-faint">
         {t('usageChartEmpty')}

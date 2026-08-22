@@ -12,6 +12,7 @@ import type {
 } from '../../write/quoted-selection'
 import { DiffView } from '../DiffView'
 import { formatDuration } from './message-timeline-tools'
+import { ThinkingOrb } from './thinking-orb'
 
 /**
  * Inline "Review Plan" card rendered under a turn whose `create_plan`
@@ -339,22 +340,57 @@ export function WorkMetaRow({
 }): ReactElement {
   const { t } = useTranslation('common')
 
-  const mainLabel = processing
-    ? typeof durationMs === 'number'
-      ? `${t('processing')} ${formatDuration(durationMs)}`
-      : t('processing')
-    : typeof durationMs === 'number'
-      ? `${t('processed')} ${formatDuration(durationMs)}`
-      : t('processSteps', { count: stepCount })
+  /* ── Processing state: liquid glass orb + "Thinking…" ── */
+  if (processing) {
+    const label =
+      typeof durationMs === 'number'
+        ? `${t('thinkingNow')} ${formatDuration(durationMs)}`
+        : t('thinkingNow')
+
+    const orbContent = (
+      <>
+        <ThinkingOrb size={40} />
+        <span className="text-[15px] font-semibold tracking-wide text-ds-ink">{label}</span>
+      </>
+    )
+
+    if (!collapsible) {
+      return (
+        <div className="inline-flex items-center gap-2.5 rounded-full py-1 text-left">
+          {orbContent}
+        </div>
+      )
+    }
+
+    return (
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-expanded={expanded}
+        className="group inline-flex cursor-pointer items-center gap-2.5 rounded-full py-1 text-left transition hover:opacity-85"
+      >
+        {orbContent}
+        {expanded ? (
+          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-45" strokeWidth={1.8} />
+        ) : (
+          <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-40 transition group-hover:opacity-65" strokeWidth={1.8} />
+        )}
+      </button>
+    )
+  }
+
+  /* ── Completed state: original text-style row ── */
+  const mainLabel = typeof durationMs === 'number'
+    ? `${t('processed')} ${formatDuration(durationMs)}`
+    : t('processSteps', { count: stepCount })
 
   const showThoughtSuffix =
-    !processing &&
     typeof reasoningDurationMs === 'number' &&
     reasoningDurationMs >= 1000
 
   const content = (
     <>
-      <span className={`tabular-nums ${processing ? 'ds-shiny-text' : ''}`}>{mainLabel}</span>
+      <span className="tabular-nums">{mainLabel}</span>
       {showThoughtSuffix ? (
         <span className="text-ds-faint">
           · {t('thoughtFor', { duration: formatDuration(reasoningDurationMs!) })}

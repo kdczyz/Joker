@@ -1,6 +1,6 @@
-import { ArrowRight, Laptop, LoaderCircle, LockKeyhole, ShieldCheck } from "lucide-react";
+import { ArrowRight, Github, Laptop, LoaderCircle, LockKeyhole, ShieldCheck } from "lucide-react";
 import { createContext, FormEvent, ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { AuthSession, AuthUser, continueAsGuest, RegistrationDetails, restoreAuthSession, signIn, signOut, signUp } from "./authClient";
+import { AuthSession, AuthUser, continueAsGuest, RegistrationDetails, restoreAuthSession, signIn, signInWithGithub, signOut, signUp } from "./authClient";
 
 interface AuthContextValue {
   user: AuthUser;
@@ -84,6 +84,20 @@ function AuthEntry({ onAuthenticated }: { onAuthenticated: (session: AuthSession
     setError("");
   }
 
+  async function githubLogin() {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const session = await signInWithGithub();
+      onAuthenticated(session);
+    } catch (githubError) {
+      setError(githubError instanceof Error ? githubError.message : "GitHub 登录失败");
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return (
     <main className="authScreen">
       <section className="authIntro" aria-label="Rcode 账号登录">
@@ -125,6 +139,10 @@ function AuthEntry({ onAuthenticated }: { onAuthenticated: (session: AuthSession
           {mode === "login" && (
             <>
               <div className="authDivider"><span>或</span></div>
+              <button className="authGithubButton" type="button" disabled={busy} onClick={githubLogin}>
+                <Github size={17} />
+                <span>使用 GitHub 登录</span>
+              </button>
               <button className="authGuestButton" type="button" disabled={busy} onClick={() => onAuthenticated(continueAsGuest())}>
                 <Laptop size={17} />
                 <span>本地使用</span>

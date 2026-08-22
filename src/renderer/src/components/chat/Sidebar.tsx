@@ -369,7 +369,7 @@ function AccountButton({
       type="button"
       data-cursor-spotlight-target
       onClick={onClick}
-      className="ds-sidebar-account-button group flex min-h-[34px] w-full items-center gap-2.5 rounded-[9px] border border-[var(--ds-sidebar-divider)] bg-[color-mix(in_srgb,var(--ds-sidebar-field-bg)_72%,transparent)] px-2.5 py-1.5 text-left transition hover:border-[color-mix(in_srgb,var(--ds-accent)_36%,var(--ds-sidebar-divider))] hover:bg-[color-mix(in_srgb,var(--ds-accent)_6%,var(--ds-sidebar-field-bg))] hover:text-[#1f1f1f] dark:hover:text-white"
+      className="ds-sidebar-account-button group flex min-h-[34px] w-full items-center gap-2.5 px-2.5 py-1.5 text-left transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:hover:text-white"
       aria-label={`${displayName} · 用户主页`}
     >
       <span

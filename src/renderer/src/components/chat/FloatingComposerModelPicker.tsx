@@ -107,23 +107,48 @@ const FLOATING_REASONING_POPOVER_ESTIMATED_HEIGHT = 110
 const FLOATING_REASONING_POPOVER_GAP = 12
 const REASONING_RAIL_THUMB_RADIUS = 18
 const REASONING_RAIL_ORDER: ComposerReasoningEffort[] = ['off', 'low', 'medium', 'high', 'max', 'auto']
-const REASONING_PARTICLES = [
-  { x: '6%', y: '61%', size: '5px', delay: '-2.1s', duration: '3.7s', driftX: '7px', driftY: '-7px' },
-  { x: '11%', y: '29%', size: '3px', delay: '-0.4s', duration: '2.9s', driftX: '-5px', driftY: '6px' },
-  { x: '17%', y: '67%', size: '2px', delay: '-1.6s', duration: '4.4s', driftX: '6px', driftY: '-5px' },
-  { x: '23%', y: '37%', size: '4px', delay: '-3.1s', duration: '3.2s', driftX: '-7px', driftY: '-4px' },
-  { x: '29%', y: '72%', size: '3px', delay: '-0.9s', duration: '4.1s', driftX: '5px', driftY: '-8px' },
-  { x: '35%', y: '24%', size: '6px', delay: '-2.8s', duration: '3.8s', driftX: '-4px', driftY: '7px' },
-  { x: '41%', y: '55%', size: '2px', delay: '-1.2s', duration: '2.7s', driftX: '8px', driftY: '-4px' },
-  { x: '47%', y: '31%', size: '4px', delay: '-3.7s', duration: '4.6s', driftX: '-6px', driftY: '5px' },
-  { x: '53%', y: '69%', size: '3px', delay: '-0.2s', duration: '3.4s', driftX: '5px', driftY: '-7px' },
-  { x: '59%', y: '43%', size: '5px', delay: '-2.4s', duration: '4.2s', driftX: '-8px', driftY: '-5px' },
-  { x: '65%', y: '24%', size: '2px', delay: '-1.4s', duration: '3.1s', driftX: '6px', driftY: '8px' },
-  { x: '71%', y: '66%', size: '4px', delay: '-3.4s', duration: '3.9s', driftX: '-5px', driftY: '-7px' },
-  { x: '77%', y: '36%', size: '3px', delay: '-0.7s', duration: '2.8s', driftX: '7px', driftY: '5px' },
-  { x: '83%', y: '71%', size: '5px', delay: '-2.6s', duration: '4.5s', driftX: '-6px', driftY: '-8px' },
-  { x: '89%', y: '27%', size: '3px', delay: '-1.8s', duration: '3.5s', driftX: '5px', driftY: '7px' },
-  { x: '95%', y: '56%', size: '4px', delay: '-3.9s', duration: '4s', driftX: '-7px', driftY: '-5px' }
+type ReasoningParticle = {
+  x: string
+  y: string
+  size: number
+  shape?: 'diamond' | 'square' | 'spark'
+  delay: string
+  duration: string
+  driftX: string
+  driftY: string
+  opacity: number
+  color?: string
+  glintSpeed?: string
+}
+
+const REASONING_PARTICLES: readonly ReasoningParticle[] = [
+  // Outer diffuse exhaust plume (farthest left, irregular turbulent dissipation)
+  { x: '10%', y: '48%', size: 3, shape: 'spark', delay: '-0.3s', duration: '1.8s', driftX: '-16px', driftY: '-7px', opacity: 0.35, color: '#9333ea', glintSpeed: '1.4s' },
+  { x: '16%', y: '22%', size: 2, shape: 'diamond', delay: '-1.1s', duration: '1.5s', driftX: '-14px', driftY: '8px', opacity: 0.45, color: '#c084fc', glintSpeed: '1.1s' },
+  { x: '21%', y: '74%', size: 4, shape: 'square', delay: '-0.7s', duration: '2.1s', driftX: '-18px', driftY: '-9px', opacity: 0.4, color: '#a855f7', glintSpeed: '1.6s' },
+  { x: '26%', y: '36%', size: 3, shape: 'diamond', delay: '-1.5s', duration: '1.3s', driftX: '-12px', driftY: '6px', opacity: 0.55, color: '#f472b6', glintSpeed: '0.9s' },
+  { x: '31%', y: '62%', size: 2, shape: 'spark', delay: '-0.2s', duration: '1.7s', driftX: '-15px', driftY: '-8px', opacity: 0.5, color: '#d8b4fe', glintSpeed: '1.2s' },
+
+  // Mid exhaust plume (billowing turbulent expansion with sparkling flakes)
+  { x: '37%', y: '16%', size: 4, shape: 'diamond', delay: '-1.8s', duration: '1.2s', driftX: '-13px', driftY: '9px', opacity: 0.65, color: '#fdf4ff', glintSpeed: '0.8s' },
+  { x: '42%', y: '82%', size: 3, shape: 'square', delay: '-0.5s', duration: '1.9s', driftX: '-17px', driftY: '-10px', opacity: 0.6, color: '#c084fc', glintSpeed: '1.5s' },
+  { x: '46%', y: '44%', size: 5, shape: 'diamond', delay: '-1.2s', duration: '1.1s', driftX: '-15px', driftY: '5px', opacity: 0.75, color: '#ffffff', glintSpeed: '0.7s' },
+  { x: '51%', y: '26%', size: 3, shape: 'spark', delay: '-0.8s', duration: '1.6s', driftX: '-11px', driftY: '-7px', opacity: 0.7, color: '#f472b6', glintSpeed: '1.0s' },
+  { x: '55%', y: '68%', size: 4, shape: 'diamond', delay: '-1.6s', duration: '1.4s', driftX: '-14px', driftY: '8px', opacity: 0.75, color: '#f5d0fe', glintSpeed: '0.85s' },
+  { x: '60%', y: '38%', size: 3, shape: 'square', delay: '-0.4s', duration: '1.8s', driftX: '-12px', driftY: '-6px', opacity: 0.8, color: '#ffffff', glintSpeed: '1.1s' },
+  { x: '64%', y: '78%', size: 5, shape: 'diamond', delay: '-1.9s', duration: '1.0s', driftX: '-16px', driftY: '-9px', opacity: 0.8, color: '#fdf4ff', glintSpeed: '0.75s' },
+  { x: '68%', y: '18%', size: 3, shape: 'spark', delay: '-0.6s', duration: '1.5s', driftX: '-10px', driftY: '7px', opacity: 0.85, color: '#e9d5ff', glintSpeed: '0.9s' },
+
+  // Inner flame zone (high temperature, intense glittering diamond sparkles & plasma burst)
+  { x: '72%', y: '52%', size: 6, shape: 'diamond', delay: '-1.3s', duration: '0.9s', driftX: '-14px', driftY: '-5px', opacity: 0.9, color: '#ffffff', glintSpeed: '0.65s' },
+  { x: '76%', y: '28%', size: 4, shape: 'spark', delay: '-0.1s', duration: '1.2s', driftX: '-9px', driftY: '6px', opacity: 0.9, color: '#fdf4ff', glintSpeed: '0.8s' },
+  { x: '79%', y: '72%', size: 5, shape: 'diamond', delay: '-1.7s', duration: '0.8s', driftX: '-13px', driftY: '-8px', opacity: 0.95, color: '#ffffff', glintSpeed: '0.6s' },
+  { x: '82%', y: '40%', size: 4, shape: 'square', delay: '-0.9s', duration: '1.4s', driftX: '-11px', driftY: '4px', opacity: 0.95, color: '#f5d0fe', glintSpeed: '0.9s' },
+  { x: '85%', y: '20%', size: 5, shape: 'diamond', delay: '-1.4s', duration: '0.9s', driftX: '-8px', driftY: '8px', opacity: 1, color: '#ffffff', glintSpeed: '0.7s' },
+  { x: '88%', y: '64%', size: 6, shape: 'spark', delay: '-0.3s', duration: '1.1s', driftX: '-12px', driftY: '-6px', opacity: 1, color: '#ffffff', glintSpeed: '0.65s' },
+  { x: '91%', y: '34%', size: 4, shape: 'diamond', delay: '-1.1s', duration: '0.8s', driftX: '-7px', driftY: '5px', opacity: 1, color: '#ffffff', glintSpeed: '0.55s' },
+  { x: '93%', y: '76%', size: 5, shape: 'square', delay: '-0.5s', duration: '1.0s', driftX: '-9px', driftY: '-7px', opacity: 1, color: '#fdf4ff', glintSpeed: '0.6s' },
+  { x: '95%', y: '48%', size: 6, shape: 'diamond', delay: '-1.5s', duration: '0.7s', driftX: '-6px', driftY: '3px', opacity: 1, color: '#ffffff', glintSpeed: '0.5s' }
 ] as const
 
 export function FloatingComposerModelPicker({
@@ -200,10 +225,12 @@ export function FloatingComposerModelPicker({
   const reasoningRailPosition = composerReasoningRailPosition(reasoningRailEfforts, currentReasoning)
   const reasoningRailIndex = Math.max(0, reasoningRailEfforts.indexOf(currentReasoning))
   const reasoningHasEnergyMotion = composerReasoningEffortHasEnergyMotion(currentReasoning)
-  const reasoningParticleCount = reasoningHasEnergyMotion
-    ? Math.round(REASONING_PARTICLES.length * reasoningRailPosition)
+  const isUltraParticleEffort = currentReasoning === 'max' || (currentReasoning === 'auto' && reasoningRailIndex === reasoningRailEfforts.length - 1)
+  const reasoningParticleCount = isUltraParticleEffort
+    ? REASONING_PARTICLES.length
     : 0
   const reasoningThumbCenter = composerReasoningRailThumbCenter(reasoningRailPosition)
+  const reasoningFillWidth = composerReasoningRailFillWidth(reasoningRailPosition)
   const canOpenModelControls = canChangeModel || (needsProviderSetup && Boolean(onConfigureProviders))
   const modelLabel = needsProviderSetup
     ? t('composerNoProvidersShort')
@@ -498,7 +525,7 @@ export function FloatingComposerModelPicker({
 
   const renderSplitReasoningPopover = (): ReactElement | null => {
     if (!reasoningPopoverOpen || controlVariant !== 'split' || !reasoningEnabled) return null
-    const particleCount = Math.max(0, Math.min(REASONING_PARTICLES.length, reasoningParticleCount))
+
     const popover = (
       <div
         ref={reasoningPopoverRef}
@@ -507,10 +534,27 @@ export function FloatingComposerModelPicker({
         style={reasoningPopoverStyle}
         className="ds-composer-reasoning-popover fixed z-[1001]"
       >
-        <div className="ds-composer-reasoning-scale" aria-hidden="true">
-          <span>{t('composerReasoningFaster')}</span>
-          <span>{t('composerReasoningSmarter')}</span>
+        <div className="ds-composer-reasoning-header">
+          <div className="ds-composer-reasoning-header-left">
+            <span className="ds-composer-reasoning-title-text">{t('composerReasoning')}</span>
+            <span className={`ds-composer-reasoning-value-glow${isUltraParticleEffort ? ' is-ultra' : ''}`}>{currentReasoningLabel}</span>
+          </div>
+          <div className="ds-composer-reasoning-header-right">
+            <span className="ds-composer-reasoning-help-icon" title={t('composerReasoning')} aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+            </span>
+          </div>
         </div>
+
+        <div className="ds-composer-reasoning-scale" aria-hidden="true">
+          <span className="ds-composer-reasoning-scale-item is-fast">{t('composerReasoningFaster')}</span>
+          <span className="ds-composer-reasoning-scale-item is-smart">{t('composerReasoningSmarter')}</span>
+        </div>
+
         <div
           className={`ds-composer-reasoning-rail${canChangeModel ? '' : ' is-disabled'}`}
           role="slider"
@@ -531,25 +575,14 @@ export function FloatingComposerModelPicker({
           <div className="ds-composer-reasoning-rail-inner">
             <div className="ds-composer-reasoning-rail-track" aria-hidden="true">
               <span
-                className={`ds-composer-reasoning-rail-fill${reasoningHasEnergyMotion ? ' is-energized' : ''}`}
-                style={{ width: reasoningThumbCenter }}
+                className={`ds-composer-reasoning-rail-fill${isUltraParticleEffort ? ' is-ultra is-energized' : ''}`}
+                style={{ width: reasoningFillWidth }}
               >
-                {REASONING_PARTICLES.slice(0, particleCount).map((particle, index) => (
-                  <i
-                    key={index}
-                    className="ds-composer-reasoning-particle"
-                    style={{
-                      left: particle.x,
-                      top: particle.y,
-                      width: particle.size,
-                      height: particle.size,
-                      animationDelay: particle.delay,
-                      animationDuration: particle.duration,
-                      '--ds-reasoning-particle-x': particle.driftX,
-                      '--ds-reasoning-particle-y': particle.driftY
-                    } as CSSProperties}
-                  />
-                ))}
+                {isUltraParticleEffort ? (
+                  <span className="ds-composer-reasoning-dot-matrix" />
+                ) : (
+                  <span className="ds-composer-reasoning-normal-fill" />
+                )}
               </span>
               <span className="ds-composer-reasoning-stops">
                 {reasoningRailEfforts.map((effort, index) => (
@@ -564,13 +597,37 @@ export function FloatingComposerModelPicker({
               </span>
             </div>
             <span
-              className="ds-composer-reasoning-thumb"
+              className={`ds-composer-reasoning-thumb${isUltraParticleEffort ? ' is-ultra' : ''}`}
               style={{ left: reasoningThumbCenter }}
               aria-hidden="true"
             >
               <i key={currentReasoning} className="ds-composer-reasoning-thumb-pulse" />
             </span>
           </div>
+        </div>
+
+        <div className="ds-composer-reasoning-chips" aria-label={t('composerReasoning')}>
+          {reasoningRailEfforts.map((effort) => {
+            const isSelected = effort === currentReasoning
+            const opt = REASONING_OPTIONS.find((o) => o.id === effort)
+            const label = opt ? t(opt.labelKey) : effort
+            return (
+              <button
+                key={effort}
+                type="button"
+                className={`ds-composer-reasoning-chip${isSelected ? ' is-active' : ''}`}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  if (canChangeModel && onComposerReasoningEffortChange) {
+                    onComposerReasoningEffortChange(effort)
+                  }
+                }}
+                title={label}
+              >
+                {label}
+              </button>
+            )
+          })}
         </div>
       </div>
     )
@@ -868,7 +925,7 @@ export function FloatingComposerModelPicker({
               setReasoningPanelOpen(false)
               setReasoningPopoverOpen((open) => !open)
             }}
-            className={`inline-flex h-9 shrink-0 items-center gap-1 rounded-lg px-1.5 text-[13.5px] font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-accent/25 disabled:cursor-not-allowed ${
+            className={`ds-composer-reasoning-trigger inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg px-2 text-[13px] font-semibold outline-none transition focus-visible:ring-2 focus-visible:ring-accent/25 disabled:cursor-not-allowed ${
               canChangeModel ? 'text-ds-muted hover:text-ds-ink' : 'text-ds-faint'
             }`}
             aria-expanded={reasoningPopoverOpen}
@@ -876,6 +933,19 @@ export function FloatingComposerModelPicker({
             aria-label={`${t('composerReasoning')}: ${currentReasoningLabel}`}
             title={`${t('composerReasoning')}: ${currentReasoningLabel}`}
           >
+            <span className="ds-composer-reasoning-trigger-icon inline-flex items-center text-accent" aria-hidden="true">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" shapeRendering="crispEdges">
+                <rect x="3" y="1" width="8" height="2" fill="currentColor" />
+                <rect x="1" y="3" width="12" height="2" fill="currentColor" />
+                <rect x="1" y="5" width="4" height="4" fill="currentColor" />
+                <rect x="9" y="5" width="4" height="4" fill="currentColor" />
+                <rect x="6" y="4" width="2" height="6" fill="currentColor" />
+                <rect x="2" y="9" width="10" height="2" fill="currentColor" />
+                <rect x="4" y="11" width="6" height="2" fill="currentColor" />
+                <rect x="3" y="5" width="2" height="2" fill="#ffe600" />
+                <rect x="9" y="5" width="2" height="2" fill="#00f0ff" />
+              </svg>
+            </span>
             <span>{t('composerReasoning')} · </span>
             <span className="text-accent">{currentReasoningLabel}</span>
             <ChevronDown className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.8} />
@@ -1140,6 +1210,14 @@ export function composerReasoningEffortForRailKey(
 
 function composerReasoningRailThumbCenter(position: number): string {
   const normalized = Math.min(1, Math.max(0, Number.isFinite(position) ? position : 0))
+  const pixelOffset = REASONING_RAIL_THUMB_RADIUS * (1 - normalized * 2)
+  return `calc(${normalized * 100}% + ${pixelOffset}px)`
+}
+
+function composerReasoningRailFillWidth(position: number): string {
+  const normalized = Math.min(1, Math.max(0, Number.isFinite(position) ? position : 0))
+  if (normalized <= 0) return '0%'
+  if (normalized >= 1) return '100%'
   const pixelOffset = REASONING_RAIL_THUMB_RADIUS * (1 - normalized * 2)
   return `calc(${normalized * 100}% + ${pixelOffset}px)`
 }

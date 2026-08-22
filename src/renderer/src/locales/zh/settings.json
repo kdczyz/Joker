@@ -1548,6 +1548,8 @@
   "dataMigrationReportLocation": "本地报告",
   "profile": "账号",
   "webSearch": "联网搜索",
+  "github": "GitHub 仓库",
+  "githubDesc": "连接 GitHub 账号，列出、克隆、推送你的仓库并创建 Pull Request。",
   "webSearchDesc": "配置搜索引擎 API Key，开启后 AI 助手将主动联网搜索实时信息。",
   "webSearchEnable": "启用联网搜索",
   "webSearchEnableDesc": "允许 AI 助手在需要时主动搜索网络获取最新信息。",

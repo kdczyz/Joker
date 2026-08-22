@@ -265,6 +265,7 @@ export function clearedThreadSelection(): Pick<
   | 'turnDurationByUserId'
   | 'turnReasoningFirstAtByUserId'
   | 'turnReasoningLastAtByUserId'
+  | 'turnTtftMsByUserId'
   | 'inspectorSelectedId'
   | 'queuedMessages'
 > {
@@ -286,6 +287,7 @@ export function clearedThreadSelection(): Pick<
     turnDurationByUserId: {},
     turnReasoningFirstAtByUserId: {},
     turnReasoningLastAtByUserId: {},
+    turnTtftMsByUserId: {},
     inspectorSelectedId: null,
     queuedMessages: []
   }

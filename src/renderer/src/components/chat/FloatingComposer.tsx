@@ -70,6 +70,7 @@ import {
   formatCost,
   formatPercent,
   cumulativeCacheHitRate,
+  hasUsageCost,
   useThreadUsageState,
   useThreadUsageSeries
 } from '../../hooks/use-thread-usage'
@@ -1906,12 +1907,16 @@ export function FloatingComposer({
                         tokens: formatCompactNumber(threadUsage.totalTokens)
                       })}
                     </span>
-                    <span className="ds-composer-usage-cost-separator text-ds-faint">·</span>
-                    <span className="ds-composer-usage-cost shrink-0 truncate tabular-nums">
-                      {t('sessionUsageCost', {
-                        cost: formatCost(threadUsage.costUsd, i18n.language, threadUsage.costCny)
-                      })}
-                    </span>
+                    {hasUsageCost(threadUsage) ? (
+                      <>
+                        <span className="ds-composer-usage-cost-separator text-ds-faint">·</span>
+                        <span className="ds-composer-usage-cost shrink-0 truncate tabular-nums">
+                          {t('sessionUsageCost', {
+                            cost: formatCost(threadUsage.costUsd, i18n.language, threadUsage.costCny)
+                          })}
+                        </span>
+                      </>
+                    ) : null}
                     {threadUsage.tokenEconomySavingsTokens > 0 ? (
                       <>
                         <span className="ds-composer-usage-context-savings-separator text-ds-faint">·</span>
