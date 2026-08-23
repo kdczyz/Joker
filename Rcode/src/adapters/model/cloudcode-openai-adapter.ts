@@ -34,6 +34,7 @@ const CLOUDCODE_SCHEMA_DROPPED_KEYS = new Set([
   '$defs',
   'definitions',
   'additionalProperties',
+  'strict',
   'title'
 ])
 const NUMERIC_SCHEMA_KEYS = new Set([
@@ -50,10 +51,24 @@ const NUMERIC_SCHEMA_KEYS = new Set([
 // ---------------------------------------------------------------------------
 const CLOUDCODE_MODEL_ALIASES: Record<string, string> = {
   'gemini-3-pro': 'gemini-pro-agent',
+  'gemini-2.5-pro': 'gemini-pro-agent',
+  'gemini-2.5-flash': 'gemini-3-flash',
+  'gemini-3-pro-high': 'gemini-pro-agent',
+  'gemini-3-pro-low': 'gemini-pro-agent',
+  'gemini-3-pro-medium': 'gemini-pro-agent',
   'gemini-3.1-pro': 'gemini-pro-agent',
+  'gemini-3.1-pro-high': 'gemini-pro-agent',
+  'gemini-3.1-pro-low': 'gemini-pro-agent',
+  'gemini-3.1-pro-medium': 'gemini-pro-agent',
   'gemini-3-flash-agent': 'gemini-3-flash',
   'gemini-3.6-flash': 'gemini-3.7-flash-tiered',
+  'gemini-3.6-flash-high': 'gemini-3.7-flash-tiered',
+  'gemini-3.6-flash-medium': 'gemini-3.7-flash-tiered',
+  'gemini-3.6-flash-low': 'gemini-3.7-flash-tiered',
   'gemini-3.7-flash': 'gemini-3.7-flash-tiered',
+  'gemini-3.7-flash-high': 'gemini-3.7-flash-tiered',
+  'gemini-3.7-flash-medium': 'gemini-3.7-flash-tiered',
+  'gemini-3.7-flash-low': 'gemini-3.7-flash-tiered',
   'claude-sonnet-4-5-thinking': 'claude-sonnet-4-6'
 }
 
@@ -205,6 +220,10 @@ export function openAiChatToCloudCodeBody(input: OpenAiChatRequest): CloudCodeRe
     }
   }
 
+  if (input.reasoning_effort && input.reasoning_effort !== 'off') {
+    system.push('Before taking action or responding, please think step-by-step and wrap your thinking process strictly inside <think> and </think> tags. Do not skip this step.');
+  }
+
   const toolNameById = new Map<string, string>()
   for (const message of input.messages) {
     for (const call of message.tool_calls ?? []) {
@@ -235,7 +254,7 @@ export function openAiChatToCloudCodeBody(input: OpenAiChatRequest): CloudCodeRe
       } catch {
         responseObj = { output: raw }
       }
-      appendTurn('user', [{ functionResponse: { name, response: responseObj } }])
+      appendTurn('user', [{ functionResponse: { name: name.replace(/:/g, '__'), response: responseObj } }])
       continue
     }
 
@@ -304,7 +323,7 @@ export function openAiChatToCloudCodeBody(input: OpenAiChatRequest): CloudCodeRe
     request.tools = [
       {
         functionDeclarations: input.tools.map((tool) => ({
-          name: tool.function.name,
+          name: tool.function.name.replace(/:/g, "__"),
           description: tool.function.description ?? '',
           parameters: toCloudCodeSchema(tool.function.parameters) as Record<string, unknown>
         }))
@@ -426,7 +445,7 @@ export function cloudCodeResponseToOpenAiChat(
       }
       if (part.functionCall && typeof part.functionCall === 'object') {
         const fc = part.functionCall as Record<string, unknown>
-        const name = typeof fc.name === 'string' ? fc.name : ''
+        const name = (typeof fc.name === 'string' ? fc.name : '').replace(/__/g, ':')
         const callId = `call_${toolCalls.length + 1}`
         toolCalls.push({
           id: callId,
@@ -605,7 +624,7 @@ export function cloudCodeSseToOpenAiSse(
       const functionCall = part.functionCall
       if (functionCall && typeof functionCall === 'object') {
         const fc = functionCall as Record<string, unknown>
-        const name = typeof fc.name === 'string' ? fc.name : ''
+        const name = (typeof fc.name === 'string' ? fc.name : '').replace(/__/g, ':')
         ctx.toolCallIndex += 1
         const callId = `call_${ctx.toolCallIndex}`
         const deltaIndex = ctx.nextToolCallDeltaIndex

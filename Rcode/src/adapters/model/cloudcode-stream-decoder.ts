@@ -64,7 +64,7 @@ export function decodeCloudCodeStreamPayload(input: {
 
       if (functionCall && typeof functionCall === 'object') {
         const fc = functionCall as Record<string, unknown>
-        const name = typeof fc.name === 'string' ? fc.name : ''
+        const name = (typeof fc.name === 'string' ? fc.name : '').replace(/__/g, ':')
         const callId = `call_${input.pendingArguments.size + 1}`
         if (!input.completedToolCalls.has(callId)) {
           input.completedToolCalls.add(callId)
@@ -99,7 +99,7 @@ export function decodeCloudCodeStreamPayload(input: {
       completion_tokens: usageMeta.candidatesTokenCount,
       total_tokens: usageMeta.totalTokenCount
     })
-    if (finishReason === null && !candidate) finishReason = 'stop'
+    if (finishReason === null) finishReason = 'stop'
   }
 
   return { chunks, sawTextDelta: sawText, finishReason, usage }

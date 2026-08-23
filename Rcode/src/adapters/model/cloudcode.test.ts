@@ -226,9 +226,9 @@ describe('CloudCode / Antigravity Model Adapter', () => {
 
     const parseToolArguments = (raw: string) => JSON.parse(raw)
     const normalizeUsage = (u: Record<string, unknown>) => ({
-      inputTokens: Number(u.prompt_tokens) || 0,
-      outputTokens: Number(u.completion_tokens) || 0,
-      totalTokens: Number(u.total_tokens) || 0,
+      promptTokens: Number(u.prompt_tokens) || 0,
+      completionTokens: Number(u.completion_tokens) || 0,
+      totalTokens: Number(u.total_tokens) || 0, cacheHitRate: null, turns: 1,
       reasoningTokens: 0,
       cacheReadInputTokens: 0,
       cacheCreationInputTokens: 0
@@ -249,7 +249,7 @@ describe('CloudCode / Antigravity Model Adapter', () => {
       },
       pendingArguments,
       pendingByIndex,
-      sawTextDelta: false,
+      completedToolCalls: new Set(), sawTextDelta: false,
       budget,
       parseToolArguments,
       normalizeUsage
@@ -288,7 +288,7 @@ describe('CloudCode / Antigravity Model Adapter', () => {
       },
       pendingArguments,
       pendingByIndex,
-      sawTextDelta: false,
+      completedToolCalls: new Set(), sawTextDelta: false,
       budget,
       parseToolArguments,
       normalizeUsage
@@ -304,8 +304,8 @@ describe('CloudCode / Antigravity Model Adapter', () => {
     ])
     expect(res2.finishReason).toBe('tool_calls')
     expect(res2.usage).toEqual({
-      inputTokens: 100,
-      outputTokens: 50,
+      promptTokens: 100,
+      completionTokens: 50,
       totalTokens: 150,
       reasoningTokens: 0,
       cacheReadInputTokens: 0,
@@ -343,9 +343,9 @@ describe('CloudCode / Antigravity Model Adapter', () => {
     const chunks = decodeCompatNonStreamingResponse(payload, 'cloudcode', {
       payloadError: () => null,
       normalizeUsage: (u) => ({
-        inputTokens: Number(u.prompt_tokens) || 0,
-        outputTokens: Number(u.completion_tokens) || 0,
-        totalTokens: Number(u.total_tokens) || 0,
+        promptTokens: Number(u.prompt_tokens) || 0,
+        completionTokens: Number(u.completion_tokens) || 0,
+        totalTokens: Number(u.total_tokens) || 0, cacheHitRate: null, turns: 1,
         reasoningTokens: 0,
         cacheReadInputTokens: 0,
         cacheCreationInputTokens: 0
@@ -364,8 +364,8 @@ describe('CloudCode / Antigravity Model Adapter', () => {
       {
         kind: 'usage',
         usage: {
-          inputTokens: 50,
-          outputTokens: 20,
+          promptTokens: 50,
+          completionTokens: 20,
           totalTokens: 70,
           reasoningTokens: 0,
           cacheReadInputTokens: 0,

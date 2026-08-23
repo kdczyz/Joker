@@ -14,6 +14,7 @@ const CLOUDCODE_SCHEMA_DROPPED_KEYS = new Set([
   '$defs',
   'definitions',
   'additionalProperties',
+  'strict',
   'title'
 ])
 
@@ -71,6 +72,8 @@ function toCloudCodeSchema(value: unknown): unknown {
 // a stale configured model still routes (otherwise cloudcode returns 404 NOT_FOUND).
 const CLOUDCODE_MODEL_ALIASES: Record<string, string> = {
   'gemini-3-pro': 'gemini-pro-agent',
+  'gemini-2.5-pro': 'gemini-pro-agent',
+  'gemini-2.5-flash': 'gemini-3-flash',
   'gemini-3-pro-high': 'gemini-pro-agent',
   'gemini-3-pro-low': 'gemini-pro-agent',
   'gemini-3-pro-medium': 'gemini-pro-agent',
