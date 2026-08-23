@@ -32,6 +32,7 @@ import {
   defaultModelRequestRetrySettings,
   defaultModelProviderSettings,
   getModelProviderPreset,
+  inferDefaultModelProfile,
   modelProviderPresetProfile,
   modelSupportsImageInput,
   modelProviderTokenPlanProfile,
@@ -56,6 +57,7 @@ import {
   PlugZap,
   Plus,
   RefreshCw,
+  Sparkles,
   Trash2,
   X
 } from 'lucide-react'
@@ -83,7 +85,8 @@ const MODEL_ENDPOINT_FORMAT_LABEL_KEYS: Record<ModelEndpointFormat, string> = {
   chat_completions: 'modelEndpointChatCompletions',
   responses: 'modelEndpointResponses',
   messages: 'modelEndpointMessages',
-  custom_endpoint: 'modelEndpointCustomEndpoint'
+  custom_endpoint: 'modelEndpointCustomEndpoint',
+  cloudcode: 'modelEndpointCloudCode'
 }
 
 const IMAGE_GENERATION_PROTOCOL_LABEL_KEYS: Record<ImageGenerationProtocol, string> = {
@@ -324,6 +327,38 @@ function providerPresetRequiresApiKey(provider: ModelProviderProfileV1): boolean
 
 function isCodexProvider(id: string): boolean {
   return id === 'codex'
+}
+
+function isAntigravityProvider(id: string): boolean {
+  return id === 'antigravity-subscription' || id === 'antigravity'
+}
+
+function parseAntigravityEmail(apiKey: string): string | undefined {
+  if (!apiKey.startsWith('{')) return undefined
+  try {
+    const parsed = JSON.parse(apiKey) as Record<string, unknown>
+    if (parsed.kind === 'antigravity-oauth') {
+      if (typeof parsed.email === 'string' && parsed.email) return parsed.email
+      if (typeof parsed.projectId === 'string' && parsed.projectId) return parsed.projectId
+    }
+  } catch { /* ignore */ }
+  return undefined
+}
+
+function parseAntigravityCredential(apiKey: string): Record<string, unknown> | null {
+  if (!apiKey.startsWith('{')) return null
+  try {
+    const parsed = JSON.parse(apiKey) as Record<string, unknown>
+    return parsed.kind === 'antigravity-oauth' ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function parseAntigravityProjectId(apiKey: string): string | undefined {
+  const credential = parseAntigravityCredential(apiKey)
+  const projectId = credential?.projectId
+  return typeof projectId === 'string' && projectId ? projectId : undefined
 }
 
 function parseCodexEmail(apiKey: string): string | undefined {
@@ -733,6 +768,170 @@ function CodexLoginSection({
   )
 }
 
+type AntigravityLoginPhase = 'idle' | 'browser' | 'error'
+
+function AntigravityLoginSection({
+  provider,
+  onCredentialChange,
+  t
+}: {
+  provider: ModelProviderProfileV1
+  onCredentialChange: (apiKey: string) => void
+  t: (key: string, params?: Record<string, unknown>) => string
+}): ReactElement {
+  const [phase, setPhase] = useState<AntigravityLoginPhase>('idle')
+  const [error, setError] = useState('')
+  const [projectIdInput, setProjectIdInput] = useState('')
+  const loginRunRef = useRef(0)
+  const email = parseAntigravityEmail(provider.apiKey)
+  const connected = Boolean(email)
+  const currentProjectId = parseAntigravityProjectId(provider.apiKey)
+
+  const startBrowserLogin = async (): Promise<void> => {
+    const runId = ++loginRunRef.current
+    if (typeof window.RcodeGui?.startAntigravityBrowserAuth !== 'function') {
+      setPhase('error')
+      setError('Antigravity 登录不可用，请重启应用')
+      return
+    }
+    setPhase('browser')
+    setError('')
+    try {
+      const preferredProjectId = projectIdInput.trim()
+      const result = await window.RcodeGui.startAntigravityBrowserAuth(preferredProjectId || undefined)
+      if (loginRunRef.current !== runId) return
+      if (result.ok) {
+        onCredentialChange(JSON.stringify(result.credentials))
+        setPhase('idle')
+        setProjectIdInput('')
+      } else {
+        setPhase('error')
+        setError(result.message)
+      }
+    } catch (err) {
+      if (loginRunRef.current !== runId) return
+      setPhase('error')
+      setError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  const applyProjectId = (): void => {
+    const credential = parseAntigravityCredential(provider.apiKey)
+    const nextProjectId = projectIdInput.trim()
+    if (!credential || !nextProjectId) return
+    onCredentialChange(JSON.stringify({ ...credential, projectId: nextProjectId }))
+    setProjectIdInput('')
+  }
+
+  const clearProjectId = (): void => {
+    const credential = parseAntigravityCredential(provider.apiKey)
+    if (!credential) return
+    onCredentialChange(JSON.stringify({ ...credential, projectId: '' }))
+    setProjectIdInput('')
+  }
+
+  const disconnect = (): void => {
+    loginRunRef.current += 1
+    onCredentialChange('')
+    setPhase('idle')
+    setError('')
+    setProjectIdInput('')
+  }
+
+  if (connected) {
+    return (
+      <div className="grid gap-2">
+        <div className="flex items-center gap-2">
+          <span className="inline-block h-2 w-2 rounded-full bg-emerald-500" />
+          <span className="text-[13px] text-ds-ink">{email}</span>
+          <button
+            type="button"
+            className="ml-auto rounded-lg px-3 py-1.5 text-[12px] font-medium text-ds-muted hover:bg-ds-hover"
+            onClick={disconnect}
+          >
+            {t('codexDisconnect')}
+          </button>
+        </div>
+        <div className="grid gap-1.5">
+          <span className="text-[12px] font-semibold text-ds-muted">
+            {t('antigravityProjectIdLabel')}
+            <span className="ml-1.5 font-mono font-normal text-ds-ink">{currentProjectId ?? '—'}</span>
+          </span>
+          <div className="flex items-center gap-2">
+            <input
+              value={projectIdInput}
+              onChange={(e) => setProjectIdInput(e.target.value)}
+              placeholder={t('antigravityProjectIdPlaceholder')}
+              spellCheck={false}
+              className="min-w-0 flex-1 rounded-xl border border-ds-border bg-ds-card px-3 py-1.5 text-[13px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
+            />
+            <button
+              type="button"
+              className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-ds-muted hover:bg-ds-hover disabled:opacity-40"
+              onClick={applyProjectId}
+              disabled={!projectIdInput.trim()}
+            >
+              {t('antigravityProjectApply')}
+            </button>
+            {currentProjectId ? (
+              <button
+                type="button"
+                className="rounded-lg px-3 py-1.5 text-[12px] font-medium text-ds-muted hover:bg-ds-hover"
+                onClick={clearProjectId}
+              >
+                {t('antigravityProjectClear')}
+              </button>
+            ) : null}
+          </div>
+          <p className="text-[11px] leading-4 text-ds-muted">{t('antigravityProjectHint')}</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (phase === 'browser') {
+    return (
+      <div className="grid gap-2">
+        <p className="text-[13px] text-ds-muted">{t('codexBrowserOpened')}</p>
+        <div className="flex items-center gap-1.5 text-[12px] text-ds-muted">
+          <Loader2 className="h-3 w-3 animate-spin" />
+          {t('codexWaitingAuth')}
+        </div>
+        <button
+          type="button"
+          className="w-fit text-[12px] font-medium text-ds-muted hover:text-ds-ink"
+          onClick={disconnect}
+        >
+          {t('codexCancel')}
+        </button>
+      </div>
+    )
+  }
+
+  return (
+    <div className="grid gap-2">
+      <button
+        type="button"
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-4 py-2.5 text-[14px] font-semibold text-white shadow-sm transition hover:bg-accent/90"
+        onClick={() => void startBrowserLogin()}
+      >
+        <LogIn className="h-4 w-4" strokeWidth={1.9} />
+        使用 Google 账号登录 (OAuth)
+      </button>
+      <input
+        value={projectIdInput}
+        onChange={(e) => setProjectIdInput(e.target.value)}
+        placeholder={t('antigravityProjectIdPlaceholder')}
+        spellCheck={false}
+        className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
+      />
+      {phase === 'error' && error ? (
+        <InlineNoticeView notice={{ tone: 'error', message: error }} />
+      ) : null}
+    </div>
+  )
+}
+
 const fieldLabelClass = 'grid gap-1.5 text-[12px] font-semibold text-ds-muted'
 const textInputClass =
   'w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] font-normal text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30'
@@ -1065,7 +1264,12 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
       setDraftProvider(transform(draftProvider))
       return
     }
-    updateModelProviders(modelProviders.map((existing) => existing.id === item.id ? transform(existing) : existing))
+    const exists = modelProviders.some((existing) => existing.id === item.id)
+    if (exists) {
+      updateModelProviders(modelProviders.map((existing) => existing.id === item.id ? transform(existing) : existing))
+    } else {
+      updateModelProviders([...modelProviders, transform(item)])
+    }
   }
 
   const updateModelProvider = (id: string, patch: Partial<ModelProviderProfileV1>): void => {
@@ -1482,9 +1686,19 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
       + addedModelCount(target.music?.models ?? [], nextMusicModels)
       + addedModelCount(target.video?.models ?? [], nextVideoModels)
     if (added > 0) {
+      const nextModelProfiles = { ...(target.modelProfiles ?? {}) }
+      for (const modelId of picked.chat) {
+        const trimmed = modelId.trim()
+        if (!trimmed) continue
+        const key = trimmed.toLowerCase()
+        if (!nextModelProfiles[key] && !nextModelProfiles[trimmed]) {
+          nextModelProfiles[key] = inferDefaultModelProfile(trimmed, target.id)
+        }
+      }
       patchProviderProfile(target, (item) => ({
         ...item,
         models: nextChatModels,
+        modelProfiles: nextModelProfiles,
         ...(nextImageModels.length > 0
           ? { image: { ...(item.image ?? presetImageCapability(item.id) ?? defaultImageCapability(item.baseUrl)), models: nextImageModels } }
           : {}),
@@ -1809,6 +2023,12 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
                       onCredentialChange={(apiKey) => updateModelProvider(activeProvider.id, { apiKey })}
                       t={t}
                     />
+                  ) : isAntigravityProvider(activeProvider.id) ? (
+                    <AntigravityLoginSection
+                      provider={activeProvider}
+                      onCredentialChange={(apiKey) => updateModelProvider(activeProvider.id, { apiKey })}
+                      t={t}
+                    />
                   ) : isAgentSdkProvider(activeProvider) ? (
                     <ClaudeSubscriptionSection
                       provider={activeProvider}
@@ -1891,7 +2111,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
                     <select
                       className={selectControlClass}
                       value={activeProvider.endpointFormat}
-                      disabled={isCodexProvider(activeProvider.id) || isAgentSdkProvider(activeProvider)}
+                      disabled={isCodexProvider(activeProvider.id) || isAntigravityProvider(activeProvider.id) || isAgentSdkProvider(activeProvider)}
                       onChange={(e) => updateModelProvider(activeProvider.id, {
                         endpointFormat: e.target.value as ModelEndpointFormat
                       })}
@@ -1906,6 +2126,10 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
                   {isCodexProvider(activeProvider.id) ? (
                     <p className="text-[12px] leading-5 text-ds-muted">
                       {t('codexEndpointLocked')}
+                    </p>
+                  ) : isAntigravityProvider(activeProvider.id) ? (
+                    <p className="text-[12px] leading-5 text-ds-muted">
+                      Antigravity 订阅直连 Google Cloud Code，端点与格式已锁定。
                     </p>
                   ) : isAgentSdkProvider(activeProvider) ? (
                     <p className="text-[12px] leading-5 text-ds-muted">

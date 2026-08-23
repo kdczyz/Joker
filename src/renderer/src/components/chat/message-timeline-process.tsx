@@ -88,20 +88,32 @@ export function groupProcessSections(blocks: ChatBlock[]): ProcessSection[] {
       sections.push({ id: `subagent-${block.id}`, kind: 'subagent', blocks: [block] })
       continue
     }
-    const kind =
-      block.kind === 'reasoning'
-        ? 'reasoning'
-        : block.kind === 'assistant'
-          ? 'output'
-          : 'execution'
-    const last = sections[sections.length - 1]
-    if (last && last.kind === kind) {
-      last.blocks.push(block)
+
+    if (block.kind === 'reasoning') {
+      const last = sections[sections.length - 1]
+      if (last && last.kind === 'reasoning') {
+        last.blocks.push(block)
+        continue
+      }
+      sections.push({ id: `reasoning-${block.id}`, kind: 'reasoning', blocks: [block] })
       continue
     }
+
+    if (block.kind === 'assistant') {
+      const last = sections[sections.length - 1]
+      if (last && last.kind === 'output') {
+        last.blocks.push(block)
+        continue
+      }
+      sections.push({ id: `output-${block.id}`, kind: 'output', blocks: [block] })
+      continue
+    }
+
+    // Keep individual tool and execution steps as separate nodes on the timeline
+    // so each command, read, edit, or tool call expands and lists out individually
     sections.push({
-      id: `${kind}-${block.id}`,
-      kind,
+      id: `execution-${block.id}`,
+      kind: 'execution',
       blocks: [block]
     })
   }
@@ -287,13 +299,14 @@ export function ProcessSectionRow({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="ds-process-step-node flex flex-col">
+      <span className={`ds-process-node-dot${active ? ' is-active' : hasError ? ' is-error' : ''}`} />
       {canToggleSection ? (
         <button
           type="button"
           onClick={() => setUserExpanded(!(userExpanded ?? defaultExpanded))}
-          className={`group flex w-fit max-w-full items-center gap-1.5 rounded-md py-0.5 text-left text-[14px] font-medium transition hover:opacity-85 ${
-            hasError ? processErrorTextClass(errorTone) : 'text-ds-muted'
+          className={`group flex w-fit max-w-full items-center gap-1.5 rounded-lg px-1.5 py-0.5 text-left text-[13.5px] font-medium transition hover:bg-ds-hover/60 ${
+            hasError ? processErrorTextClass(errorTone) : 'text-ds-muted hover:text-ds-ink'
           }`}
         >
           {showActiveError ? (
@@ -306,12 +319,12 @@ export function ProcessSectionRow({
           {expanded ? (
             <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-45" strokeWidth={1.8} />
           ) : (
-            <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-0 transition group-hover:opacity-55" strokeWidth={1.8} />
+            <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-0 transition group-hover:opacity-65" strokeWidth={1.8} />
           )}
         </button>
       ) : (
         <div
-          className={`flex w-fit max-w-full items-center gap-1.5 py-0.5 text-[14px] font-medium ${
+          className={`flex w-fit max-w-full items-center gap-1.5 px-1.5 py-0.5 text-[13.5px] font-medium ${
             hasError ? processErrorTextClass(errorTone) : 'text-ds-muted'
           }`}
         >
@@ -328,21 +341,23 @@ export function ProcessSectionRow({
       {expanded ? (
         <div
           ref={deferredDetailRef}
-          className="mt-1"
+          className="mt-1.5"
           style={{ contentVisibility: 'auto', containIntrinsicSize: 'auto 220px' }}
         >
           {shouldRenderDetail ? (
             section.kind === 'reasoning' ? (
-            <div className="ds-markdown text-[13.5px] leading-6 text-ds-faint">
-              <AssistantMarkdown
-                text={reasoningText}
-                streaming={active && processing}
-                hideHtmlComments
-              />
-            </div>
-          ) : (
-            <ProcessStackRows blocks={section.blocks} processing={processing} workspaceRoot={workspaceRoot} />
-          )
+              <div className="rounded-xl border border-ds-border/40 bg-ds-card/60 p-3 shadow-inner">
+                <div className="ds-markdown text-[13px] leading-6 text-ds-faint">
+                  <AssistantMarkdown
+                    text={reasoningText}
+                    streaming={active && processing}
+                    hideHtmlComments
+                  />
+                </div>
+              </div>
+            ) : (
+              <ProcessStackRows blocks={section.blocks} processing={processing} workspaceRoot={workspaceRoot} />
+            )
           ) : null}
         </div>
       ) : null}
@@ -449,11 +464,11 @@ function ProcessStackRows({
               aria-expanded={canToggle ? open : undefined}
               onClick={handleToggle}
               onKeyDown={handleKeyDown}
-              className={`group flex w-full min-w-0 items-center gap-1.5 rounded-md px-1 py-0.5 text-left text-[13.5px] leading-6 transition ${
+              className={`group flex w-full min-w-0 items-center gap-1.5 rounded-md px-1.5 py-0.5 text-left text-[13px] leading-6 transition ${
                 isError
                   ? processErrorTextClass(errorTone)
-                  : 'text-ds-faint hover:text-ds-muted'
-              } ${canToggle ? 'cursor-pointer hover:bg-ds-hover/45' : 'cursor-default'}`}
+                  : 'text-ds-faint hover:text-ds-ink'
+              } ${canToggle ? 'cursor-pointer hover:bg-ds-hover/60' : 'cursor-default'}`}
             >
               {RowIcon ? <ProcessGlyph Icon={RowIcon} /> : null}
               <span className={`min-w-0 flex-1 truncate ${rowActive && !isError ? 'ds-shiny-text' : ''}`}>
@@ -466,14 +481,14 @@ function ProcessStackRows({
                   aria-expanded={open}
                   disabled={!canToggle}
                   onClick={handleToggleButton}
-                  className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition ${
+                  className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition ${
                     canToggle ? 'cursor-pointer hover:bg-ds-hover/70' : 'cursor-default'
                   }`}
                 >
                   {open ? (
-                    <ChevronDown className="h-3 w-3 opacity-45" strokeWidth={2} />
+                    <ChevronDown className="h-3 w-3 opacity-55" strokeWidth={2} />
                   ) : (
-                    <ChevronRight className="h-3 w-3 opacity-45" strokeWidth={2} />
+                    <ChevronRight className="h-3 w-3 opacity-55" strokeWidth={2} />
                   )}
                 </button>
               ) : null}
@@ -555,24 +570,25 @@ function ProcessEntryRow({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className="ds-process-step-node flex flex-col">
+      <span className={`ds-process-node-dot${rowActive ? ' is-active' : isError ? ' is-error' : ''}`} />
       <div
         role={canToggle ? 'button' : undefined}
         tabIndex={canToggle ? 0 : undefined}
         aria-expanded={canToggle ? open : undefined}
         onClick={handleToggle}
         onKeyDown={handleKeyDown}
-        className={`group flex w-full items-start gap-2 rounded-md px-2 py-1 text-left text-[13.5px] leading-[1.55] transition ${
+        className={`group flex w-full items-start gap-2 rounded-lg px-2 py-1 text-left text-[13px] leading-[1.5] transition ${
           isError
             ? processErrorTextClass(errorTone)
             : 'text-ds-faint hover:text-ds-ink'
         } ${
           canToggle
-            ? 'cursor-pointer hover:bg-ds-hover/70'
+            ? 'cursor-pointer hover:bg-ds-hover/60'
             : 'cursor-default'
         }`}
       >
-        {RowIcon ? <ProcessGlyph Icon={RowIcon} className="mt-1" /> : null}
+        {RowIcon ? <ProcessGlyph Icon={RowIcon} className="mt-0.5" /> : null}
         <span
           className={`min-w-0 flex-1 ${wrapSummary ? 'whitespace-pre-wrap break-words' : 'truncate'} ${
             rowActive && !isError ? 'ds-shiny-text' : ''
@@ -584,7 +600,7 @@ function ProcessEntryRow({
                 {t('toolKindWebSearch', { defaultValue: 'Web Search' })}
               </span>
               {searchQuery ? (
-                <span className="ml-1.5 text-[13px] text-ds-ink">{searchQuery}</span>
+                <span className="ml-1.5 text-[12.5px] text-ds-ink">{searchQuery}</span>
               ) : null}
             </>
           ) : (
@@ -595,7 +611,7 @@ function ProcessEntryRow({
                 {verb}
               </span>
               {rest ? (
-                <span className="ml-1.5 font-mono text-[13px]">
+                <span className="ml-1.5 inline-block rounded bg-ds-card/80 px-1.5 py-0.2 border border-ds-border/50 font-mono text-[12px] text-ds-ink">
                   <ProcessSummaryText block={block} summary={rest} workspaceRoot={workspaceRoot} />
                 </span>
               ) : null}
@@ -609,14 +625,14 @@ function ProcessEntryRow({
             aria-expanded={open}
             disabled={!canToggle}
             onClick={handleToggleButton}
-            className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition ${
+            className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition ${
               canToggle ? 'cursor-pointer hover:bg-ds-hover/70' : 'cursor-default'
             }`}
           >
             {open ? (
-              <ChevronDown className="h-3 w-3 opacity-45" strokeWidth={2} />
+              <ChevronDown className="h-3 w-3 opacity-55" strokeWidth={2} />
             ) : (
-              <ChevronRight className="h-3 w-3 opacity-45" strokeWidth={2} />
+              <ChevronRight className="h-3 w-3 opacity-55" strokeWidth={2} />
             )}
           </button>
         ) : null}
@@ -628,7 +644,7 @@ function ProcessEntryRow({
             <ProcessEntryDetail block={block} detail={detail} processing={processing} />
           </div>
         ) : (
-          <div className="ds-work-timeline-detail">
+          <div className="ds-work-timeline-detail my-1">
             <ProcessEntryDetail block={block} detail={detail} processing={processing} />
           </div>
         )
@@ -930,8 +946,18 @@ function summarizeProcessText(text: string, max = 96): string {
   return `${oneLine.slice(0, max - 1).trimEnd()}…`
 }
 
+function cleanRawToolText(text: string): string {
+  if (!text) return ''
+  return text
+    .replace(/<\|channel\|>commentary/gi, '')
+    .replace(/<\|[^>|]*\|>/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
 function humanizeToolName(name: string): string {
-  const trimmed = name.trim().replace(/[_-]+/g, ' ')
+  const cleaned = cleanRawToolText(name)
+  const trimmed = cleaned.replace(/[_-]+/g, ' ')
   if (!trimmed) return ''
   return trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
 }
@@ -940,7 +966,8 @@ function builtInToolLabel(
   toolName: string,
   t: (key: string, opts?: Record<string, unknown>) => string
 ): string | undefined {
-  switch (toolName) {
+  const normalized = cleanRawToolText(toolName).toLowerCase()
+  switch (normalized) {
     case 'read':
     case 'read_file':
       return t('toolBuiltinRead')
@@ -960,6 +987,9 @@ function builtInToolLabel(
       return t('toolBuiltinLs')
     case 'bash':
     case 'shell':
+    case 'terminal':
+    case 'run_command':
+    case 'commentary':
       return t('toolBuiltinBash')
     case 'background_shell':
       return t('toolBuiltinBackgroundShell', { defaultValue: 'Background shell' })
@@ -975,7 +1005,8 @@ function builtInToolLabel(
 }
 
 function extractToolName(summary: string): string {
-  const match = summary.trim().match(/^([a-z0-9_-]+)\s*:/i)
+  const cleaned = cleanRawToolText(summary)
+  const match = cleaned.match(/^([a-z0-9_.-]+)\s*:/i)
   return match?.[1] ?? ''
 }
 
@@ -1249,23 +1280,26 @@ function ProcessEntryDetail({
       return <DiffView patch={detail.text} filePath={detail.filePath} />
     }
     if (detail.isError) {
+      const cleanError = cleanRawToolText(detail.text)
       return (
-        <div className="overflow-hidden rounded-[10px] border border-orange-200/80 bg-orange-50/80 dark:border-orange-800/40 dark:bg-orange-500/10">
+        <div className="overflow-hidden rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-950 dark:text-orange-100 shadow-sm">
           {detail.filePath ? (
-            <div className="border-b border-orange-200/70 bg-orange-100/50 px-3 py-1.5 font-mono text-[12px] text-orange-700 dark:border-orange-800/40 dark:bg-orange-500/15 dark:text-orange-300">
+            <div className="border-b border-orange-500/20 bg-orange-500/15 px-3 py-1.5 font-mono text-[11.5px] font-semibold text-orange-700 dark:text-orange-300">
               {detail.filePath}
             </div>
           ) : null}
-          <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words px-3 py-2.5 font-mono text-[12px] leading-6 text-orange-900 dark:text-orange-100">
-            {detail.text}
+          <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words px-3.5 py-2.5 font-mono text-[12px] leading-relaxed">
+            {cleanError}
           </pre>
         </div>
       )
     }
     return (
-      <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words font-mono text-[12px] leading-6 text-ds-ink">
-        {detail.text}
-      </pre>
+      <div className="overflow-hidden rounded-xl border border-ds-border/50 bg-ds-card/80 shadow-inner">
+        <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words px-3.5 py-2.5 font-mono text-[12px] leading-relaxed text-ds-ink">
+          {detail.text}
+        </pre>
+      </div>
     )
   }
   if (detail.kind === 'text') {

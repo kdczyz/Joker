@@ -20,6 +20,7 @@ export type ThreadUsageSummary = {
   costCny: number | null
   tokenEconomySavingsTokens: number
   turns: number
+  series?: ThreadUsageSeriesPoint[]
 }
 
 export type ThreadUsageState = {
@@ -192,13 +193,32 @@ export async function loadThreadUsage(threadId: string): Promise<ThreadUsageSumm
   const costCny = rawCostCny != null && rawCostCny > 0 ? rawCostCny : null
   const tokenEconomySavingsTokens = usageNumber(bucket.token_economy_savings_tokens)
   const turns = usageNumber(bucket.turns)
+  const rawSeries = Array.isArray(bucket.series) ? bucket.series : []
+  const series: ThreadUsageSeriesPoint[] = rawSeries.map((item, index) => {
+    const record = typeof item === 'object' && item !== null ? (item as Record<string, unknown>) : {}
+    return {
+      turn: typeof record.turn === 'number' ? record.turn : index + 1,
+      at: typeof record.at === 'number' ? record.at : Date.now(),
+      totalTokens: usageNumber(record.totalTokens ?? record.total_tokens),
+      cachedTokens: usageNumber(record.cachedTokens ?? record.cached_tokens),
+      cacheMissTokens: usageNumber(record.cacheMissTokens ?? record.cache_miss_tokens),
+      cacheHitRate: usageRate(record.cacheHitRate ?? record.cache_hit_rate),
+      costUsd: hasFiniteNumber(record, 'cost_usd') || hasFiniteNumber(record, 'costUsd')
+        ? usageNumber(record.cost_usd ?? record.costUsd)
+        : null,
+      costCny: hasFiniteNumber(record, 'cost_cny') || hasFiniteNumber(record, 'costCny')
+        ? usageNumber(record.cost_cny ?? record.costCny)
+        : null
+    }
+  })
   if (
     totalTokens <= 0 &&
     cachedTokens <= 0 &&
     (costUsd ?? 0) <= 0 &&
     (costCny ?? 0) <= 0 &&
     tokenEconomySavingsTokens <= 0 &&
-    turns <= 0
+    turns <= 0 &&
+    series.length === 0
   ) return null
   return {
     inputTokens,
@@ -216,7 +236,8 @@ export async function loadThreadUsage(threadId: string): Promise<ThreadUsageSumm
     costUsd,
     costCny,
     tokenEconomySavingsTokens,
-    turns
+    turns,
+    ...(series.length > 0 ? { series } : {})
   }
 }
 
@@ -237,7 +258,7 @@ export function useThreadUsageState(
       setState({ usage: null, loading: false, loaded: false })
       return
     }
-    setState((current) => ({ ...current, loading: true }))
+    setState({ usage: null, loading: true, loaded: false })
     void loadThreadUsage(threadId)
       .then((usage) => {
         if (!cancelled) setState({ usage, loading: false, loaded: true })
@@ -275,63 +296,22 @@ export type ThreadUsageSeriesPoint = {
 }
 
 /**
- * Captures a per-turn token-usage series for the active thread *during the
- * current app session*. The runtime reports one cumulative `ThreadUsageSummary`
- * per completed turn (via `usageRefreshKey`), and `useThreadUsageState` reloads
- * `threadUsage` on each bump. We append a sample whenever the cumulative total
- * grows, so the line chart grows live as the conversation proceeds.
- *
- * Historical turns from prior sessions are not exposed without a backend
- * change, so the first sample is the loaded cumulative baseline.
- *
- * Robustness: when the active thread changes, `useThreadUsageState` keeps
- * returning the *previous* thread's usage object for a render or two (stale
- * echo) before the new thread loads. We detect that window via object identity
- * (`staleRef`) and never append a bogus point for the wrong thread.
+ * Returns the per-turn token-usage series for the active thread.
+ * The runtime reports the full turn series via `ThreadUsageSummary.series`,
+ * and `useThreadUsageState` reloads `threadUsage` on each thread switch or turn completion.
  */
 export function useThreadUsageSeries(
   threadId: string | null | undefined,
   usage: ThreadUsageSummary | null
 ): ThreadUsageSeriesPoint[] {
-  const [series, setSeries] = useState<ThreadUsageSeriesPoint[]>([])
-  const ref = useRef<{
-    threadId?: string
-    lastTotal: number
-    lastUsage: ThreadUsageSummary | null
-    switched: boolean
-    staleRef: ThreadUsageSummary | null
-  }>({ lastTotal: -1, lastUsage: null, switched: false, staleRef: null })
-
-  useEffect(() => {
-    if (!threadId) {
-      ref.current = { lastTotal: -1, lastUsage: null, switched: false, staleRef: null }
-      setSeries([])
-      return
-    }
-    if (ref.current.threadId !== threadId) {
-      ref.current = {
-        threadId,
-        lastTotal: -1,
-        lastUsage: null,
-        switched: true,
-        staleRef: usage
-      }
-      setSeries([])
-      return
-    }
-    if (!usage) return
-    if (ref.current.switched) {
-      if (usage === ref.current.staleRef) return
-      ref.current.switched = false
-    }
-    if (usage === ref.current.lastUsage) return
-    if (usage.totalTokens <= ref.current.lastTotal) return
-    ref.current.lastUsage = usage
-    ref.current.lastTotal = usage.totalTokens
-    setSeries((prev) => [
-      ...prev,
+  if (!threadId || !usage) return []
+  if (Array.isArray(usage.series) && usage.series.length > 0) {
+    return usage.series
+  }
+  if (usage.totalTokens > 0 || usage.cachedTokens > 0) {
+    return [
       {
-        turn: prev.length + 1,
+        turn: 1,
         at: Date.now(),
         totalTokens: usage.totalTokens,
         cachedTokens: usage.cachedTokens,
@@ -340,8 +320,7 @@ export function useThreadUsageSeries(
         costUsd: usage.costUsd,
         costCny: usage.costCny
       }
-    ])
-  }, [threadId, usage])
-
-  return series
+    ]
+  }
+  return []
 }

@@ -115,6 +115,8 @@ const api = {
     ipcRenderer.invoke('codex:auth:browser'),
   codexAccountUsage: () =>
     ipcRenderer.invoke('codex:account:usage'),
+  startAntigravityBrowserAuth: (projectId?: string) =>
+    ipcRenderer.invoke('antigravity:auth:browser', projectId),
   pickWorkspaceDirectory: (defaultPath) =>
     ipcRenderer.invoke('workspace:pick-directory', defaultPath),
   workspaceDirectoryExists: (workspaceRoot) =>

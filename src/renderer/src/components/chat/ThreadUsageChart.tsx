@@ -73,7 +73,9 @@ export function ThreadUsageChart({
   }
 
   const active = hover != null ? series[hover] : null
-  const xTickIndexes = Array.from(new Set([0, Math.floor((count - 1) / 2), count - 1]))
+  const xTickIndexes = count <= 6
+    ? Array.from({ length: count }, (_, i) => i)
+    : Array.from(new Set([0, Math.floor((count - 1) / 4), Math.floor((count - 1) / 2), Math.floor((3 * (count - 1)) / 4), count - 1]))
 
   return (
     <div className="min-w-0">

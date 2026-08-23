@@ -34,7 +34,10 @@ export function decodeChatCompletionsStreamPayload(input: {
         sawText = true
         chunks.push({ kind: 'assistant_text_delta', text: content })
       }
-      const reasoning = delta.reasoning_content ?? delta.reasoning
+      const reasoning =
+        delta.reasoning_content ??
+        delta.reasoning ??
+        (typeof delta.thought === 'string' ? delta.thought : undefined)
       if (typeof reasoning === 'string' && reasoning.length > 0) {
         chunks.push({ kind: 'assistant_reasoning_delta', text: reasoning })
       }

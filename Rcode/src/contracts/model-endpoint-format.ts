@@ -1,4 +1,4 @@
-export const MODEL_ENDPOINT_FORMATS = ['chat_completions', 'responses', 'messages', 'custom_endpoint'] as const
+export const MODEL_ENDPOINT_FORMATS = ['chat_completions', 'responses', 'messages', 'custom_endpoint', 'cloudcode'] as const
 export type ModelEndpointFormat = (typeof MODEL_ENDPOINT_FORMATS)[number]
 export const DEFAULT_MODEL_ENDPOINT_FORMAT: ModelEndpointFormat = 'chat_completions'
 
@@ -33,6 +33,11 @@ export function normalizeModelEndpointFormat(value: unknown): ModelEndpointForma
     case 'v1/messages':
     case '/v1/messages':
       return 'messages'
+    case 'cloudcode':
+    case 'cloud-code':
+    case 'cloud_code':
+    case 'gemini':
+      return 'cloudcode'
     default:
       return DEFAULT_MODEL_ENDPOINT_FORMAT
   }
@@ -49,6 +54,10 @@ export function modelEndpointPath(format: ModelEndpointFormat): string {
     default:
       return 'chat/completions'
   }
+}
+
+export function isCloudCodeEndpointFormat(format: ModelEndpointFormat): boolean {
+  return format === 'cloudcode'
 }
 
 export function isCustomModelEndpointFormat(format: ModelEndpointFormat): boolean {

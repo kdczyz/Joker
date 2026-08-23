@@ -836,7 +836,7 @@ describe('FloatingComposer image transfer helpers', () => {
     expect(imageTransferHasImages(source)).toBe(true)
   })
 
-  it('routes pasted image files through the clipboard bridge when available', () => {
+  it('prefers onPickAttachments when clipboard items contain files', () => {
     const screenshot = new File([new Uint8Array([1])], 'shot.png', { type: 'image/png' })
     const preventDefault = vi.fn()
     const onPickAttachments = vi.fn()
@@ -857,8 +857,55 @@ describe('FloatingComposer image transfer helpers', () => {
 
     expect(handled).toBe(true)
     expect(preventDefault).toHaveBeenCalledTimes(1)
-    expect(onPickAttachments).not.toHaveBeenCalled()
-    expect(onPasteClipboardImage).toHaveBeenCalledWith({ silentNoImage: false })
+    expect(onPickAttachments).toHaveBeenCalledWith([screenshot])
+    expect(onPasteClipboardImage).not.toHaveBeenCalled()
+  })
+
+  it('parses image files from clipboard items even when item.type is empty', () => {
+    const photo = new File([new Uint8Array([1])], 'photo.jpg', { type: '' })
+    const preventDefault = vi.fn()
+    const onPickAttachments = vi.fn()
+    const handled = handleComposerImagePaste({
+      canPickAttachment: true,
+      clipboardData: {
+        getData: () => '',
+        items: {
+          length: 1,
+          0: { kind: 'file', type: '', getAsFile: () => photo }
+        }
+      },
+      preventDefault,
+      onPickAttachments
+    })
+
+    expect(handled).toBe(true)
+    expect(preventDefault).toHaveBeenCalledTimes(1)
+    expect(onPickAttachments).toHaveBeenCalledTimes(1)
+    const passedFiles = onPickAttachments.mock.calls[0][0] as File[]
+    expect(passedFiles[0].type).toBe('image/jpeg')
+  })
+
+  it('extracts and attaches base64 images from clipboard html data', () => {
+    const sampleBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+    const htmlWithImage = `<div><img src="data:image/png;base64,${sampleBase64}" /></div>`
+    const preventDefault = vi.fn()
+    const onPickAttachments = vi.fn()
+    const handled = handleComposerImagePaste({
+      canPickAttachment: true,
+      clipboardData: {
+        getData: (format) => format === 'text/html' ? htmlWithImage : '',
+        items: { length: 0 }
+      },
+      preventDefault,
+      onPickAttachments
+    })
+
+    expect(handled).toBe(true)
+    expect(preventDefault).toHaveBeenCalledTimes(1)
+    expect(onPickAttachments).toHaveBeenCalledTimes(1)
+    const passedFiles = onPickAttachments.mock.calls[0][0] as File[]
+    expect(passedFiles.length).toBe(1)
+    expect(passedFiles[0].type).toBe('image/png')
   })
 
   it('still uses the attachment picker for pasted image files when the clipboard bridge is unavailable', () => {
@@ -1717,6 +1764,45 @@ describe('FloatingComposer capability controls', () => {
     expect(html).toContain('-5')
     expect(html).toContain('Preview')
     expect(html).toContain('Review')
+    expect(html).toContain('aria-label="Close"')
+  })
+
+  it('renders close button in the changed-files summary banner for dismissing', () => {
+    useChatStore.setState({
+      activeThreadId: 'thr_1',
+      activeThreadGoal: null,
+      route: 'chat',
+      workspaceRoot: '/workspace/deepseek-gui'
+    })
+
+    const html = renderToStaticMarkup(
+      createElement(FloatingComposer, {
+        input: 'review this',
+        setInput: () => undefined,
+        mode: 'agent',
+        setMode: () => undefined,
+        busy: false,
+        runtimeReady: true,
+        hasActiveThread: true,
+        composerModel: '',
+        composerPickList: [],
+        onComposerModelChange: () => undefined,
+        queuedMessages: [],
+        onRemoveQueuedMessage: () => undefined,
+        onSend: () => undefined,
+        onInterrupt: () => undefined,
+        attachmentUploadEnabled: false,
+        webAccessAvailable: false,
+        changedFiles: [{ path: 'src/a.ts', added: 3, removed: 1 }],
+        changedFileStats: { added: 3, removed: 1 },
+        onOpenChanges: () => undefined,
+        onReviewChanges: () => undefined,
+        onDismissChanges: () => undefined
+      })
+    )
+
+    expect(html).toContain('1 files changed')
+    expect(html).toContain('aria-label="Close"')
   })
 
   it('keeps the empty-session composer interactive in the Electron drag shell', () => {

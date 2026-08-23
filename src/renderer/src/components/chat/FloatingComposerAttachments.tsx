@@ -158,6 +158,9 @@ export function composerImageMimeTypeFromFileName(name: string | undefined): str
   if (lower.endsWith('.avif')) return 'image/avif'
   if (lower.endsWith('.heic')) return 'image/heic'
   if (lower.endsWith('.heif')) return 'image/heif'
+  if (lower.endsWith('.svg')) return 'image/svg+xml'
+  if (lower.endsWith('.ico')) return 'image/x-icon'
+  if (lower.endsWith('.tiff') || lower.endsWith('.tif')) return 'image/tiff'
   return undefined
 }
 
@@ -179,7 +182,37 @@ function normalizedImageFile(file: File, mimeTypeHint?: string): File | null {
   })
 }
 
-export function imageFilesFromTransfer(source: ComposerImageTransferSource | null | undefined): File[] {
+function base64ToBlob(base64: string, mimeType: string): Blob {
+  const byteCharacters = atob(base64)
+  const byteNumbers = new Array(byteCharacters.length)
+  for (let i = 0; i < byteCharacters.length; i += 1) {
+    byteNumbers[i] = byteCharacters.charCodeAt(i)
+  }
+  const byteArray = new Uint8Array(byteNumbers)
+  return new Blob([byteArray], { type: mimeType })
+}
+
+export function imageFilesFromHtml(html: string | undefined): File[] {
+  if (!html) return []
+  const matches = html.matchAll(/<img[^>]+src=["'](data:(image\/[a-zA-Z0-9.+_-]+);base64,([^"'\s]+))["']/gi)
+  const files: File[] = []
+  let index = 1
+  for (const match of matches) {
+    const mimeType = match[2]
+    const base64Data = match[3]
+    try {
+      const ext = mimeType.split('/')[1]?.split('+')[0] || 'png'
+      const blob = base64ToBlob(base64Data, mimeType)
+      const file = new File([blob], `pasted-image-${Date.now()}-${index++}.${ext}`, { type: mimeType })
+      files.push(file)
+    } catch {
+      // ignore malformed base64
+    }
+  }
+  return files
+}
+
+export function imageFilesFromTransfer(source: ComposerClipboardImageSource | null | undefined): File[] {
   if (!source) return []
   const files: File[] = []
   const seen = new Set<File>()
@@ -192,21 +225,41 @@ export function imageFilesFromTransfer(source: ComposerImageTransferSource | nul
 
   for (const item of arrayLikeValues(source.items)) {
     if (item.kind && item.kind !== 'file') continue
-    if (!isComposerImageMimeType(item.type)) continue
-    addFile(item.getAsFile?.(), item.type)
+    const file = item.getAsFile?.()
+    if (file) {
+      addFile(file, item.type)
+    } else if (isComposerImageMimeType(item.type)) {
+      addFile(file, item.type)
+    }
   }
   for (const file of arrayLikeValues(source.files)) {
     addFile(file)
   }
+  if (files.length === 0 && source.getData) {
+    const html = source.getData('text/html')
+    const htmlFiles = imageFilesFromHtml(html)
+    for (const file of htmlFiles) {
+      addFile(file)
+    }
+  }
   return files
 }
 
-export function imageTransferHasImages(source: ComposerImageTransferSource | null | undefined): boolean {
+export function imageTransferHasImages(source: ComposerClipboardImageSource | null | undefined): boolean {
   if (!source) return false
   if (arrayLikeValues(source.files).some((file) => normalizedImageFile(file) !== null)) return true
-  return arrayLikeValues(source.items).some((item) =>
-    (!item.kind || item.kind === 'file') && isComposerImageMimeType(item.type)
-  )
+  const hasItemImage = arrayLikeValues(source.items).some((item) => {
+    if (item.kind && item.kind !== 'file') return false
+    if (isComposerImageMimeType(item.type)) return true
+    const file = item.getAsFile?.()
+    return Boolean(file && normalizedImageFile(file, item.type) !== null)
+  })
+  if (hasItemImage) return true
+  if (source.getData) {
+    const html = source.getData('text/html')
+    if (html && /<img[^>]+src=["']data:image\//i.test(html)) return true
+  }
+  return false
 }
 
 export function handleComposerImagePaste({
@@ -228,12 +281,15 @@ export function handleComposerImagePaste({
   const hasImageTransfer = imageTransferHasImages(clipboardData)
   if (files.length > 0) {
     preventDefault()
+    if (onPickAttachments) {
+      onPickAttachments(files)
+      return true
+    }
     if (onPasteClipboardImage) {
       void onPasteClipboardImage({ silentNoImage: false })
       return true
     }
-    onPickAttachments?.(files)
-    return true
+    return false
   }
   if (!onPasteClipboardImage) return false
 

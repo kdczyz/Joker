@@ -30,6 +30,8 @@ interface ChatResponse {
 interface StreamDelta {
   content?: string;
   reasoning_content?: string;
+  thought?: string;
+  reasoning?: string;
   reasoning_details?: Array<Record<string, unknown>>;
   tool_calls?: Array<{
     index: number;
@@ -1098,6 +1100,7 @@ export async function* callAiStream(
   options: { providerId?: string; model?: string; thinkingMode?: ThinkingMode; skillNames?: string[]; projectPath?: string; mode?: PermissionMode; sessionId?: string; signal?: AbortSignal; allowedTools?: string[]; systemInstructions?: string } = {}
 ): AsyncGenerator<
   | { type: "text_delta"; content: string }
+  | { type: "reasoning_delta"; content: string }
   | { type: "usage"; usage: AiUsage; model: string; provider: string; requestId: string }
   | { type: "context_snapshot"; snapshot: ContextSnapshot }
   | { type: "reasoning_config"; config: AppliedReasoningConfig }
@@ -1220,14 +1223,20 @@ export async function* callAiStream(
           yield { type: "text_delta", content: delta.content };
         }
 
-        if (delta.reasoning_content) {
-          reasoningContentBuffer = appendReasoningText(reasoningContentBuffer, delta.reasoning_content);
+        const deltaReasoning = delta.reasoning_content ?? delta.reasoning ?? delta.thought;
+        if (deltaReasoning) {
+          reasoningContentBuffer = appendReasoningText(reasoningContentBuffer, deltaReasoning);
+          yield { type: "reasoning_delta", content: deltaReasoning };
         }
 
         if (delta.reasoning_details?.length) {
           reasoningDetailsBuffer = mergeReasoningDetails(reasoningDetailsBuffer, delta.reasoning_details);
-          if (!delta.reasoning_content) {
-            reasoningContentBuffer = appendReasoningText(reasoningContentBuffer, reasoningDetailsText(delta.reasoning_details));
+          if (!deltaReasoning) {
+            const detailText = reasoningDetailsText(delta.reasoning_details);
+            if (detailText) {
+              reasoningContentBuffer = appendReasoningText(reasoningContentBuffer, detailText);
+              yield { type: "reasoning_delta", content: detailText };
+            }
           }
         }
 

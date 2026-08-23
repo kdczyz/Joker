@@ -91,6 +91,18 @@ export const DailyUsageResponseSchema = z.object({
 })
 export type DailyUsageResponse = z.infer<typeof DailyUsageResponseSchema>
 
+export const ThreadUsageSeriesPointSchema = z.object({
+  turn: z.number().int().positive(),
+  at: z.number().int().nonnegative(),
+  totalTokens: z.number().int().nonnegative(),
+  cachedTokens: z.number().int().nonnegative(),
+  cacheMissTokens: z.number().int().nonnegative(),
+  cacheHitRate: z.number().min(0).max(1).nullable(),
+  costUsd: z.number().nonnegative().nullable().optional(),
+  costCny: z.number().nonnegative().nullable().optional()
+})
+export type ThreadUsageSeriesPoint = z.infer<typeof ThreadUsageSeriesPointSchema>
+
 export const ThreadUsageBucketSchema = DailyUsageCountersSchema.omit({
   thread_count: true
 }).extend({
@@ -105,7 +117,8 @@ export const ThreadUsageBucketSchema = DailyUsageCountersSchema.omit({
   last_turn_cacheable_hit_rate: z.number().min(0).max(1).nullable().default(null),
   last_turn_total_input_hit_rate: z.number().min(0).max(1).nullable().default(null),
   last_cache_miss_reasons: z.array(z.string()).default([]),
-  last_cache_suggestions: z.array(z.string()).default([])
+  last_cache_suggestions: z.array(z.string()).default([]),
+  series: z.array(ThreadUsageSeriesPointSchema).default([])
 })
 export type ThreadUsageBucket = z.infer<typeof ThreadUsageBucketSchema>
 

@@ -6,6 +6,7 @@ import { repairToolArguments } from './tool-argument-repair.js'
 import type { ModelRequestRetryConfig } from '../../config/Rcode-config.js'
 import {
   DEFAULT_MODEL_ENDPOINT_FORMAT,
+  isCloudCodeEndpointFormat,
   isCustomModelEndpointFormat,
   modelEndpointPath,
   normalizeModelEndpointFormat,
@@ -45,6 +46,7 @@ import {
 import { decodeChatCompletionsStreamPayload } from './chat-completions-stream-decoder.js'
 import { decodeResponsesStreamPayload } from './responses-stream-decoder.js'
 import { decodeAnthropicMessagesStreamPayload } from './anthropic-messages-stream-decoder.js'
+import { decodeCloudCodeStreamPayload } from './cloudcode-stream-decoder.js'
 import { decodeCompatNonStreamingResponse } from './compat-non-streaming-decoder.js'
 import { IncrementalSseFrameBuffer } from './incremental-sse-frame-buffer.js'
 
@@ -136,7 +138,7 @@ type StreamPayloadResult = {
   usage: UsageSnapshot | null
 }
 
-const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 45_000
+const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 300_000
 
 /**
  * Multi-provider HTTP model client.
@@ -214,8 +216,8 @@ export class CompatModelClient implements ModelClient {
       }
       return
     }
-    const url = buildModelEndpointUrl(this.config.baseUrl, configuredEndpointFormat)
     const stream = request.stream ?? !this.config.nonStreaming
+    const url = buildModelEndpointUrl(this.config.baseUrl, configuredEndpointFormat, stream)
     const body = this.buildRequestBody(request, stream, { endpointFormat })
     if (round) {
       this.config.debugSink?.captureRequest(round, body, redactUrlForLog(url))
@@ -277,7 +279,7 @@ export class CompatModelClient implements ModelClient {
         }
         response = retry.response
         if (response.ok) {
-          if (this.config.nonStreaming || response.headers.get('content-type')?.includes('application/json')) {
+          if (this.config.nonStreaming || (response.headers.get('content-type')?.includes('application/json') && endpointFormat !== 'cloudcode')) {
             const json = await readLimitedResponseJson(response, modelStreamLimits.maxTotalBytes)
             if (json.kind === 'limit') {
               yield {
@@ -348,7 +350,7 @@ export class CompatModelClient implements ModelClient {
       }
       return
     }
-    if (this.config.nonStreaming || response.headers.get('content-type')?.includes('application/json')) {
+    if (this.config.nonStreaming || (response.headers.get('content-type')?.includes('application/json') && endpointFormat !== 'cloudcode')) {
       const json = await readLimitedResponseJson(response, modelStreamLimits.maxTotalBytes)
       if (json.kind === 'limit') {
         yield {
@@ -639,6 +641,9 @@ export class CompatModelClient implements ModelClient {
           try {
             payload = JSON.parse(dataLines)
           } catch {
+            if (isNonJsonKeepAliveFrame(dataLines)) {
+              continue
+            }
             yield { kind: 'error', message: 'model stream contained invalid SSE JSON', code: 'stream_invalid_frame' }
             return
           }
@@ -790,6 +795,17 @@ export class CompatModelClient implements ModelClient {
         budget
       )
     }
+    if (endpointFormat === 'cloudcode') {
+      return this.consumeCloudCodeStreamPayload(
+        payload,
+        pendingArguments,
+        pendingByIndex,
+        completedToolCalls,
+        sawTextDelta,
+        model,
+        budget
+      )
+    }
     return decodeChatCompletionsStreamPayload({
       payload,
       pendingArguments,
@@ -842,6 +858,27 @@ export class CompatModelClient implements ModelClient {
     })
   }
 
+  private consumeCloudCodeStreamPayload(
+    payload: Record<string, unknown>,
+    pendingArguments: Map<string, PendingToolCall>,
+    pendingByIndex: Map<number, string>,
+    completedToolCalls: Set<string>,
+    sawTextDelta: boolean,
+    model: string,
+    budget: ModelStreamResourceBudget
+  ): StreamPayloadResult {
+    return decodeCloudCodeStreamPayload({
+      payload,
+      pendingArguments,
+      pendingByIndex,
+      completedToolCalls,
+      sawTextDelta,
+      budget,
+      normalizeUsage: (usage) => this.mapUsage(usage, model),
+      parseToolArguments: (raw) => this.parseToolArguments(raw)
+    })
+  }
+
   private *materializeNonStreaming(
     payload: ChatCompletionResponse,
     endpointFormat: ModelEndpointFormat,
@@ -875,7 +912,17 @@ export class CompatModelClient implements ModelClient {
   }
 }
 
-function buildModelEndpointUrl(baseUrl: string, endpointFormat: ModelEndpointFormat): string {
+function buildModelEndpointUrl(
+  baseUrl: string,
+  endpointFormat: ModelEndpointFormat,
+  stream = true
+): string {
+  if (isCloudCodeEndpointFormat(endpointFormat)) {
+    const normalized = baseUrl.trim().replace(/\/+$/, '')
+    return stream
+      ? `${normalized}:streamGenerateContent?alt=sse`
+      : `${normalized}:generateContent`
+  }
   if (isCustomModelEndpointFormat(endpointFormat)) return exactModelEndpointUrl(baseUrl)
   const path = modelEndpointPath(endpointFormat)
   const normalized = baseUrl.trim().replace(/\/+$/, '')
@@ -1167,4 +1214,34 @@ async function readStreamChunk(
     void reader.cancel('model stream idle timeout').catch(() => {})
   }
   return result
+}
+
+function isNonJsonKeepAliveFrame(data: string): boolean {
+  const trimmed = data.trim()
+  if (!trimmed) return true
+  const lower = trimmed.toLowerCase()
+  if (
+    lower === 'ping' ||
+    lower === '[ping]' ||
+    lower === 'pong' ||
+    lower === '[pong]' ||
+    lower === 'keep-alive' ||
+    lower === '[keep-alive]' ||
+    lower === 'keepalive' ||
+    lower === '[keepalive]' ||
+    lower === 'heartbeat' ||
+    lower === '[heartbeat]' ||
+    lower === 'ok' ||
+    lower === 'null' ||
+    lower.startsWith(':') ||
+    lower.startsWith('//') ||
+    lower.startsWith('/*')
+  ) {
+    return true
+  }
+  // If data does not start with JSON opening delimiters ('{' or '['), treat as non-fatal ping/comment
+  if (!trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+    return true
+  }
+  return false
 }

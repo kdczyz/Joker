@@ -9,7 +9,13 @@ export function buildCompatRequestHeaders(input: {
   responsesLite?: boolean
 }): Record<string, string> {
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (!input.stream) headers.Accept = 'application/json'
+  if (input.stream) {
+    headers.Accept = 'text/event-stream';
+    headers["Cache-Control"] = "no-cache";
+    headers["Connection"] = "keep-alive";
+  } else {
+    headers.Accept = 'application/json'
+  }
   if (input.apiKey) {
     headers.Authorization = `Bearer ${input.apiKey}`
     if (input.endpointFormat === 'messages') {

@@ -108,7 +108,6 @@ async function usageRecords(
       const explicitThread = options.threadId
         ? await runtime.threadService.get(options.threadId)
         : null
-      if (options.threadId && !explicitThread) return []
       const threadSummaries = options.threadId
         ? []
         : await runtime.threadService.list()
@@ -118,7 +117,9 @@ async function usageRecords(
           : threadSummaries.map((thread) => thread.id)
       )
       const indexedRaw = await runtime.sessionStore.loadUsageRecords({ threadId: options.threadId })
-      const indexed = indexedRaw.filter((record) => allowedThreadIds.has(record.threadId))
+      const indexed = options.threadId
+        ? indexedRaw
+        : indexedRaw.filter((record) => allowedThreadIds.has(record.threadId))
       const records: ThreadUsageRecord[] = indexed.map((record) => ({
         threadId: record.threadId,
         ...(record.model ? { model: record.model } : {}),
@@ -141,19 +142,30 @@ async function usageRecords(
           latestByThread.get(threadId) ?? emptyUsageSnapshot()
         )
         if (!hasUsage(liveRemainder)) continue
+        const liveItems = runtime.usageService.recordsForThread(threadId)
         const summary = summariesById.get(threadId)
         const thread = explicitThread?.id === threadId
           ? explicitThread
           : summary
             ? await runtime.threadService.get(threadId) ?? { ...summary, turns: [] }
             : await runtime.threadService.get(threadId)
-        if (!thread) continue
-        records.push({
-          threadId,
-          model: usageRecordModel(thread, { turnId: thread.turns?.at(-1)?.id }),
-          completedAt: thread.updatedAt || runtime.nowIso(),
-          usage: liveRemainder
-        })
+        if (records.filter((r) => r.threadId === threadId).length === 0 && liveItems.length > 0) {
+          for (const item of liveItems) {
+            records.push({
+              threadId,
+              model: item.model || (thread ? usageRecordModel(thread, { turnId: thread.turns?.at(-1)?.id }) : 'default'),
+              completedAt: item.completedAt || thread?.updatedAt || runtime.nowIso(),
+              usage: item.usage
+            })
+          }
+        } else {
+          records.push({
+            threadId,
+            model: thread ? usageRecordModel(thread, { turnId: thread.turns?.at(-1)?.id }) : 'default',
+            completedAt: thread?.updatedAt || runtime.nowIso(),
+            usage: liveRemainder
+          })
+        }
       }
       return records
     } catch {
@@ -167,17 +179,15 @@ async function usageRecords(
   const explicitThread = options.threadId
     ? await runtime.threadService.get(options.threadId)
     : null
-  if (options.threadId && !explicitThread) return records
-  const sources: UsageThreadSource[] = explicitThread
-    ? [{ id: explicitThread.id, thread: explicitThread }]
+  const sources: UsageThreadSource[] = options.threadId
+    ? [{ id: options.threadId, thread: explicitThread ?? undefined }]
     : threadSummaries.map((thread) => ({ id: thread.id, summary: thread }))
   for (const source of sources) {
     const thread = source.thread
       ?? await runtime.threadService.get(source.id)
       ?? (source.summary ? { ...source.summary, turns: [] } : null)
-    if (!thread) continue
     let latestPersisted = emptyUsageSnapshot()
-    const events = await runtime.sessionStore.loadEventsSince(thread.id, 0)
+    const events = await runtime.sessionStore.loadEventsSince(source.id, 0)
     const usageEvents = events
       .filter((event): event is UsageEvent => event.kind === 'usage')
       .sort((a, b) => a.seq - b.seq)
@@ -187,22 +197,34 @@ async function usageRecords(
       latestPersisted = event.usage
       if (hasUsage(delta)) {
         records.push({
-          threadId: thread.id,
-          model: usageRecordModel(thread, event),
+          threadId: source.id,
+          model: thread ? usageRecordModel(thread, event) : (event.model ?? 'default'),
           completedAt: event.timestamp,
           usage: delta
         })
       }
     }
 
-    const liveRemainder = diffUsage(runtime.usageService.forThread(thread.id), latestPersisted)
+    const liveRemainder = diffUsage(runtime.usageService.forThread(source.id), latestPersisted)
     if (hasUsage(liveRemainder)) {
-      records.push({
-        threadId: thread.id,
-        model: usageRecordModel(thread, { turnId: thread.turns?.at(-1)?.id }),
-        completedAt: thread.updatedAt || runtime.nowIso(),
-        usage: liveRemainder
-      })
+      const liveItems = runtime.usageService.recordsForThread(source.id)
+      if (records.filter((r) => r.threadId === source.id).length === 0 && liveItems.length > 0) {
+        for (const item of liveItems) {
+          records.push({
+            threadId: source.id,
+            model: item.model || (thread ? usageRecordModel(thread, { turnId: thread.turns?.at(-1)?.id }) : 'default'),
+            completedAt: item.completedAt || thread?.updatedAt || runtime.nowIso(),
+            usage: item.usage
+          })
+        }
+      } else {
+        records.push({
+          threadId: source.id,
+          model: thread ? usageRecordModel(thread, { turnId: thread.turns?.at(-1)?.id }) : 'default',
+          completedAt: thread?.updatedAt || runtime.nowIso(),
+          usage: liveRemainder
+        })
+      }
     }
   }
   return records

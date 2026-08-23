@@ -5,6 +5,7 @@ import {
   DEFAULT_TEXT_TO_SPEECH_PROTOCOL,
   DEFAULT_VIDEO_GENERATION_PROTOCOL,
   MODEL_REASONING_EFFORTS,
+  inferModelSupportsVision,
   isComposerChatModelId,
   isImageGenerationModelId,
   isMusicGenerationModelId,
@@ -129,7 +130,14 @@ export function providerModelFormForExisting(
   }
   if (kind !== 'chat') return { ...base, contextWindowTokens: null, maxOutputTokens: null }
   const profile = chatModelProfile(provider, modelId)
-  if (!profile) return { ...base, contextWindowTokens: null, maxOutputTokens: null }
+  if (!profile) {
+    return {
+      ...base,
+      contextWindowTokens: null,
+      maxOutputTokens: null,
+      visionInput: inferModelSupportsVision(modelId, provider.id)
+    }
+  }
   return {
     ...base,
     contextWindowTokens: profile.contextWindowTokens ?? null,

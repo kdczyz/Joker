@@ -335,6 +335,7 @@
   "modelEndpointResponses": "/v1/responses (openai)",
   "modelEndpointMessages": "/v1/messages (anthropic)",
   "modelEndpointCustomEndpoint": "Custom full endpoint",
+  "modelEndpointCloudCode": "Cloud Code (Antigravity)",
   "modelEndpointCustomEndpointDesc": "Uses this URL as the final endpoint. Only paths ending in /chat/completions, /completions, /responses, or /messages can be recognized; other endings are not supported.",
   "modelProviderModels": "Models",
   "modelProviderModelsPlaceholder": "Type a model ID and press Enter",
@@ -1594,5 +1595,10 @@
   "cloudAccount": "Cloudflare Account",
   "cloudAccountTitle": "Signed in with Cloudflare",
   "cloudAccountDescription": "Your session is verified by Cloudflare edge services. Passwords are stored with salted hashing. Your local code and project files are never uploaded.",
-  "logout": "Sign Out"
+  "logout": "Sign Out",
+  "antigravityProjectIdLabel": "Project ID (Google Cloud)",
+  "antigravityProjectIdPlaceholder": "Optional: override project ID (blank = auto)",
+  "antigravityProjectApply": "Apply",
+  "antigravityProjectHint": "If the auto-resolved project is unusable (API disabled or no permission), enter a project ID you own with the Cloud Code Private API enabled.",
+  "antigravityProjectClear": "Clear"
 }

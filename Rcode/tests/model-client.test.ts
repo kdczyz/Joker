@@ -2664,4 +2664,70 @@ describe('CompatModelClient', () => {
     })
     expect(chunks.find((chunk) => chunk.kind === 'completed')).toBeUndefined()
   })
+
+  it('tolerates non-JSON keep-alive ping frames during long thinking streams', async () => {
+    const encoder = new TextEncoder()
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode('data: [PING]\n\n'))
+        controller.enqueue(encoder.encode('data: ping\n\n'))
+        controller.enqueue(encoder.encode(': keep-alive\n\n'))
+        controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"reasoning_content":"Step 1"}}]}\n\n'))
+        controller.enqueue(encoder.encode('data: keepalive\n\n'))
+        controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"Answer"}}]}\n\n'))
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+        controller.close()
+      }
+    })
+    const fetchImpl: typeof fetch = async () =>
+      new Response(body, { status: 200, headers: { 'content-type': 'text/event-stream' } })
+    const client = new CompatModelClient({
+      baseUrl: 'https://example.com/v1',
+      apiKey: 'k',
+      model: 'deepseek-chat',
+      fetchImpl
+    })
+    const chunks = []
+    for await (const chunk of client.stream(buildRequest(new AbortController().signal))) {
+      chunks.push(chunk)
+    }
+
+    const reasoning = chunks.find((c) => c.kind === 'assistant_reasoning_delta')
+    const text = chunks.find((c) => c.kind === 'assistant_text_delta')
+    const error = chunks.find((c) => c.kind === 'error')
+
+    expect(error).toBeUndefined()
+    expect(reasoning).toEqual({ kind: 'assistant_reasoning_delta', text: 'Step 1' })
+    expect(text).toEqual({ kind: 'assistant_text_delta', text: 'Answer' })
+  })
+
+  it('extracts thought field from chat completion stream delta', async () => {
+    const encoder = new TextEncoder()
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"thought":"Thinking deep thoughts"}}]}\n\n'))
+        controller.enqueue(encoder.encode('data: {"choices":[{"delta":{"content":"Final Answer"}}]}\n\n'))
+        controller.enqueue(encoder.encode('data: [DONE]\n\n'))
+        controller.close()
+      }
+    })
+    const fetchImpl: typeof fetch = async () =>
+      new Response(body, { status: 200, headers: { 'content-type': 'text/event-stream' } })
+    const client = new CompatModelClient({
+      baseUrl: 'https://example.com/v1',
+      apiKey: 'k',
+      model: 'gemini-2.0-flash-thinking',
+      fetchImpl
+    })
+    const chunks = []
+    for await (const chunk of client.stream(buildRequest(new AbortController().signal))) {
+      chunks.push(chunk)
+    }
+
+    const reasoning = chunks.find((c) => c.kind === 'assistant_reasoning_delta')
+    const text = chunks.find((c) => c.kind === 'assistant_text_delta')
+
+    expect(reasoning).toEqual({ kind: 'assistant_reasoning_delta', text: 'Thinking deep thoughts' })
+    expect(text).toEqual({ kind: 'assistant_text_delta', text: 'Final Answer' })
+  })
 })

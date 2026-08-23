@@ -29,6 +29,7 @@ export type ModelProviderPresetId =
   | 'volcengine-coding-plan'
   | 'opencode-go'
   | 'codex'
+  | 'antigravity-subscription'
   | 'claude-subscription'
   | 'moonshot-cn'
   | 'moonshot-global'
@@ -37,7 +38,6 @@ export type ModelProviderPresetId =
   | 'aliyun'
   | 'tencentcloud'
   | 'vercel-ai-gateway'
-  | 'claude-subscription'
 
 export const TOKEN_PLAN_PROVIDER_ID_SUFFIX = '-token-plan'
 
@@ -59,6 +59,27 @@ export const CHATGPT_SUBSCRIPTION_MODEL_IDS = [
   'gpt-5.4-mini',
   'gpt-5.3-codex-spark'
 ] as const
+
+export const ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID = 'antigravity-subscription'
+export const ANTIGRAVITY_SUBSCRIPTION_NAME = 'Antigravity 订阅'
+export const ANTIGRAVITY_SUBSCRIPTION_MODEL_IDS = [
+  'gemini-pro-agent',
+  'gemini-3.1-pro-high',
+  'gemini-3.1-pro-low',
+  'gemini-3-flash',
+  'gemini-3-flash-agent',
+  'gemini-3.6-flash-high',
+  'gemini-3.6-flash-medium',
+  'gemini-2.5-pro',
+  'gemini-2.5-flash',
+  'claude-sonnet-4-6',
+  'claude-opus-4-6-thinking',
+  'claude-sonnet-4-5-thinking',
+  'gemini-3.7-flash-high',
+  'gemini-3.1-flash-lite',
+  'gpt-oss-120b-medium'
+] as const
+export const ANTIGRAVITY_CLOUDCODE_BASE_URL = 'https://daily-cloudcode-pa.googleapis.com/v1internal'
 
 export type ModelProviderTokenPlanRegion = {
   id: string
@@ -177,6 +198,12 @@ const MINIMAX_BUILT_IN_REASONING: ModelProviderReasoningCapabilityV1 = {
   requestProtocol: 'none'
 }
 
+const DEEPSEEK_REASONING: ModelProviderReasoningCapabilityV1 = {
+  supportedEfforts: ['off', 'high', 'max'],
+  defaultEffort: 'max',
+  requestProtocol: 'deepseek-chat-completions'
+}
+
 const GLM_REASONING: ModelProviderReasoningCapabilityV1 = {
   supportedEfforts: ['off', 'high', 'max'],
   defaultEffort: 'max',
@@ -200,6 +227,12 @@ const HUNYUAN_REASONING: ModelProviderReasoningCapabilityV1 = {
 const DOUBAO_REASONING: ModelProviderReasoningCapabilityV1 = {
   supportedEfforts: ['auto', 'off'],
   defaultEffort: 'auto',
+  requestProtocol: 'none'
+}
+
+const GEMINI_REASONING: ModelProviderReasoningCapabilityV1 = {
+  supportedEfforts: ['off', 'low', 'medium', 'high', 'max'],
+  defaultEffort: 'high',
   requestProtocol: 'none'
 }
 
@@ -351,6 +384,8 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
     baseUrl: 'https://opencode.ai/zen/go/v1',
     endpointFormat: 'chat_completions',
     models: [
+      'deepseek-v4-pro',
+      'deepseek-v4-flash',
       'glm-5.1',
       'glm-5',
       'kimi-k2.7',
@@ -369,6 +404,8 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
       'qwen3.5-plus'
     ],
     modelProfiles: {
+      'deepseek-v4-pro': textChatProfile(1_000_000, DEEPSEEK_REASONING),
+      'deepseek-v4-flash': textChatProfile(1_000_000, DEEPSEEK_REASONING),
       'glm-5.1': visionChatProfile(131_072),
       'glm-5': visionChatProfile(131_072),
       'kimi-k2.7': textChatProfile(131_072),
@@ -679,6 +716,33 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
     apiKeyUrl: 'https://chatgpt.com'
   },
   {
+    id: ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID,
+    name: ANTIGRAVITY_SUBSCRIPTION_NAME,
+    category: 'subscription',
+    baseUrl: ANTIGRAVITY_CLOUDCODE_BASE_URL,
+    endpointFormat: 'cloudcode',
+    models: [...ANTIGRAVITY_SUBSCRIPTION_MODEL_IDS],
+    modelProfiles: {
+      'gemini-pro-agent': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'gemini-3.1-pro-high': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'gemini-3.1-pro-low': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'gemini-3-flash': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'gemini-3-flash-agent': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'gemini-3.6-flash-high': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'gemini-3.6-flash-medium': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'gemini-2.5-pro': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'gemini-2.5-flash': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'claude-sonnet-4-6': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'claude-opus-4-6-thinking': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'claude-sonnet-4-5-thinking': { ...visionChatProfile(200_000, GEMINI_REASONING), defaultWebSearch: true },
+      'gemini-3.7-flash-high': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
+      'gemini-3.1-flash-lite': visionChatProfile(1_000_000, GEMINI_REASONING),
+      'gpt-oss-120b-medium': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true }
+    },
+    docsUrl: 'https://github.com/lbjlaq/Antigravity-Manager',
+    apiKeyUrl: 'https://daily-cloudcode-pa.googleapis.com'
+  },
+  {
     id: 'vercel-ai-gateway',
     name: 'Vercel AI Gateway',
     baseUrl: 'https://ai-gateway.vercel.sh/v1',
@@ -961,4 +1025,46 @@ function modelProviderPresetVideoCapability(
     baseUrl: video.baseUrl,
     models: [...video.models]
   }
+}
+
+export function findPresetModelProfile(
+  modelId: string,
+  providerId?: string
+): ModelProviderModelProfileV1 | null {
+  const normalizedId = modelId.trim().toLowerCase()
+  if (!normalizedId) return null
+
+  if (providerId) {
+    const isTokenPlan = providerId.endsWith(TOKEN_PLAN_PROVIDER_ID_SUFFIX)
+    const basePresetId = isTokenPlan
+      ? providerId.slice(0, -TOKEN_PLAN_PROVIDER_ID_SUFFIX.length)
+      : providerId
+    const preset = getModelProviderPreset(basePresetId)
+    if (preset) {
+      const profiles = isTokenPlan
+        ? preset.tokenPlan?.modelProfiles ?? preset.modelProfiles
+        : preset.modelProfiles
+      if (profiles) {
+        for (const [key, profile] of Object.entries(profiles)) {
+          if (key.trim().toLowerCase() === normalizedId) return profile
+          const aliases = profile.aliases ?? []
+          if (aliases.some((alias) => alias.trim().toLowerCase() === normalizedId)) return profile
+        }
+      }
+    }
+  }
+
+  for (const preset of MODEL_PROVIDER_PRESETS) {
+    const candidateSets = [preset.modelProfiles, preset.tokenPlan?.modelProfiles].filter(Boolean)
+    for (const profiles of candidateSets) {
+      if (!profiles) continue
+      for (const [key, profile] of Object.entries(profiles)) {
+        if (key.trim().toLowerCase() === normalizedId) return profile
+        const aliases = profile.aliases ?? []
+        if (aliases.some((alias) => alias.trim().toLowerCase() === normalizedId)) return profile
+      }
+    }
+  }
+
+  return null
 }

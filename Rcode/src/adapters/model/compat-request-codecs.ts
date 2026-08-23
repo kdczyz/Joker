@@ -3,6 +3,97 @@ import type { ModelEndpointFormat } from '../../contracts/model-endpoint-format.
 import type { ModelRequest, ModelToolSpec } from '../../ports/model-client.js'
 import { isDeepSeekHost } from './model-error-probe.js'
 
+// CloudCode's protobuf Schema message has no JSON-Schema meta keywords (they all
+// start with "$"), nor the legacy "definitions"/"additionalProperties" keys.
+// Passing them through makes cloudcode-pa return 400 ("Unknown name \"$schema\""),
+// so strip them recursively before assigning a tool's inputSchema to parameters.
+const CLOUDCODE_SCHEMA_DROPPED_KEYS = new Set([
+  '$schema',
+  '$id',
+  '$ref',
+  '$defs',
+  'definitions',
+  'additionalProperties',
+  'title'
+])
+
+const NUMERIC_SCHEMA_KEYS = new Set([
+  'maxLength',
+  'minLength',
+  'maxItems',
+  'minItems',
+  'maximum',
+  'minimum'
+])
+
+function toCloudCodeSchema(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(toCloudCodeSchema)
+  if (!value || typeof value !== 'object') return value
+  const out: Record<string, unknown> = {}
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (key.startsWith('$') || CLOUDCODE_SCHEMA_DROPPED_KEYS.has(key)) continue
+    if (NUMERIC_SCHEMA_KEYS.has(key)) {
+      if (typeof child === 'number' && Number.isFinite(child)) {
+        out[key] = Math.floor(child)
+        continue
+      }
+      if (typeof child === 'string') {
+        const parsed = parseInt(child.trim(), 10)
+        if (!Number.isNaN(parsed)) {
+          out[key] = parsed
+          continue
+        }
+      }
+      continue
+    }
+    if (key === 'type' && typeof child === 'string') {
+      out[key] = child.toUpperCase()
+      continue
+    }
+    out[key] = toCloudCodeSchema(child)
+  }
+  if (Array.isArray(out.required)) {
+    if (out.properties && typeof out.properties === 'object') {
+      const validKeys = new Set(Object.keys(out.properties))
+      out.required = (out.required as unknown[]).filter(
+        (r) => typeof r === 'string' && validKeys.has(r)
+      )
+      if ((out.required as unknown[]).length === 0) delete out.required
+    } else {
+      delete out.required
+    }
+  }
+  return out
+}
+
+// CloudCode's :fetchAvailableModels exposes internal model names that differ
+// from the public Gemini names. Map the legacy/public ids to the internal ids so
+// a stale configured model still routes (otherwise cloudcode returns 404 NOT_FOUND).
+const CLOUDCODE_MODEL_ALIASES: Record<string, string> = {
+  'gemini-3-pro': 'gemini-pro-agent',
+  'gemini-3-pro-high': 'gemini-pro-agent',
+  'gemini-3-pro-low': 'gemini-pro-agent',
+  'gemini-3-pro-medium': 'gemini-pro-agent',
+  'gemini-3.1-pro': 'gemini-pro-agent',
+  'gemini-3.1-pro-high': 'gemini-pro-agent',
+  'gemini-3.1-pro-low': 'gemini-pro-agent',
+  'gemini-3.1-pro-medium': 'gemini-pro-agent',
+  'gemini-3-flash-agent': 'gemini-3-flash',
+  'gemini-3.6-flash': 'gemini-3.7-flash-tiered',
+  'gemini-3.6-flash-high': 'gemini-3.7-flash-tiered',
+  'gemini-3.6-flash-medium': 'gemini-3.7-flash-tiered',
+  'gemini-3.6-flash-low': 'gemini-3.7-flash-tiered',
+  'gemini-3.7-flash': 'gemini-3.7-flash-tiered',
+  'gemini-3.7-flash-high': 'gemini-3.7-flash-tiered',
+  'gemini-3.7-flash-medium': 'gemini-3.7-flash-tiered',
+  'gemini-3.7-flash-low': 'gemini-3.7-flash-tiered',
+  'claude-sonnet-4-5-thinking': 'claude-sonnet-4-6'
+}
+
+function mapCloudCodeModel(model: string): string {
+  return CLOUDCODE_MODEL_ALIASES[model] ?? model
+}
+
 export type CompatChatMessage = {
   role: 'system' | 'user' | 'assistant' | 'tool'
   content: string | CompatChatMessageContentPart[] | null
@@ -45,6 +136,9 @@ export type CompatRequestCodecDeps = {
     messages: CompatChatMessage[],
     thinkingMode: boolean
   ) => { system: string; messages: Array<{ content: unknown }> }
+  toCloudCode: (
+    messages: CompatChatMessage[]
+  ) => { system: string; contents: Array<Record<string, unknown>> }
   applyAnthropicCacheControl: (messages: Array<{ content: unknown }>) => void
   plainText: (content: CompatChatMessage['content']) => string
   applyChatReasoning: (
@@ -80,6 +174,8 @@ export class CompatRequestCodecs {
         return this.responses(input)
       case 'messages':
         return this.messages(input)
+      case 'cloudcode':
+        return this.cloudcode(input)
       default:
         return this.chatCompletions(input)
     }
@@ -203,7 +299,53 @@ export class CompatRequestCodecs {
         name: tool.name, description: tool.description, input_schema: tool.inputSchema
       }))
     }
+    console.error('[DEBUG-PAYLOAD] body.tools =', JSON.stringify(body.tools, null, 2))
     return body
+  }
+
+  private cloudcode(input: CompatRequestCodecInput): Record<string, unknown> {
+    const converted = this.deps.toCloudCode(input.messages)
+    const generationConfig: Record<string, unknown> = {}
+    if (input.maxTokens !== undefined) generationConfig.maxOutputTokens = input.maxTokens
+    if (input.request.temperature !== undefined) generationConfig.temperature = input.request.temperature
+    if (input.request.topP !== undefined) generationConfig.topP = input.request.topP
+
+    const effort = input.request.reasoningEffort
+    if (effort && effort !== 'off') {
+      const thinkingConfig: Record<string, unknown> = { includeThoughts: true }
+      if (effort === 'low') {
+        thinkingConfig.thinkingBudget = 1024
+      } else if (effort === 'medium') {
+        thinkingConfig.thinkingBudget = 4096
+      } else if (effort === 'high' || effort === 'max') {
+        thinkingConfig.thinkingBudget = 8192
+      }
+      generationConfig.thinkingConfig = thinkingConfig
+    }
+
+    const request: Record<string, unknown> = {
+      contents: converted.contents
+    }
+    if (Object.keys(generationConfig).length) request.generationConfig = generationConfig
+    if (converted.system.trim()) {
+      request.systemInstruction = { parts: [{ text: converted.system }] }
+    }
+    if (input.tools.length) {
+      request.tools = [
+        {
+          functionDeclarations: input.tools.map((tool) => ({
+            name: tool.name,
+            description: tool.description,
+            parameters: toCloudCodeSchema(tool.inputSchema)
+          }))
+        }
+      ]
+    }
+    console.error('[DEBUG-PAYLOAD] request.tools =', JSON.stringify(request.tools, null, 2))
+    return {
+      model: mapCloudCodeModel(input.model),
+      request
+    }
   }
 }
 

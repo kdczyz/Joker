@@ -21,6 +21,8 @@ import {
   defaultTerminalSettings,
   defaultWriteSettings,
   defaultModelRequestRetrySettings,
+  inferDefaultModelProfile,
+  inferModelSupportsVision,
   CHATGPT_SUBSCRIPTION_MODEL_IDS,
   listMusicGenerationProviderProfiles,
   listSpeechToTextProviderProfiles,
@@ -1530,5 +1532,148 @@ describe('provider presets', () => {
     })
     expect(resolved.modelProfiles['deepseek-v4-pro']).toEqual(profile.modelProfiles['deepseek-v4-pro'])
     expect(resolved.modelProfiles['deepseek-v4-flash']).toEqual(profile.modelProfiles['deepseek-v4-flash'])
+  })
+
+  it('infers image input (vision) capability for common upstream vision models', () => {
+    // OpenAI / Codex / O-series models
+    expect(inferModelSupportsVision('gpt-4o')).toBe(true)
+    expect(inferModelSupportsVision('gpt-4o-mini')).toBe(true)
+    expect(inferModelSupportsVision('gpt-4o-2024-08-06')).toBe(true)
+    expect(inferModelSupportsVision('chatgpt-4o-latest')).toBe(true)
+    expect(inferModelSupportsVision('gpt-4-turbo')).toBe(true)
+    expect(inferModelSupportsVision('gpt-4-vision-preview')).toBe(true)
+    expect(inferModelSupportsVision('gpt-4.5-preview')).toBe(true)
+    expect(inferModelSupportsVision('gpt-5.5')).toBe(true)
+    expect(inferModelSupportsVision('gpt-5.4')).toBe(true)
+    expect(inferModelSupportsVision('gpt-5.6-sol')).toBe(true)
+    expect(inferModelSupportsVision('o1')).toBe(true)
+    expect(inferModelSupportsVision('o1-preview')).toBe(true)
+    expect(inferModelSupportsVision('o1-mini')).toBe(true)
+    expect(inferModelSupportsVision('o3-mini')).toBe(true)
+
+    // Claude models
+    expect(inferModelSupportsVision('claude-3-5-sonnet-20241022')).toBe(true)
+    expect(inferModelSupportsVision('claude-3-7-sonnet-20250219')).toBe(true)
+    expect(inferModelSupportsVision('claude-3-opus-20240229')).toBe(true)
+    expect(inferModelSupportsVision('claude-3-haiku-20240307')).toBe(true)
+    expect(inferModelSupportsVision('claude-opus-4-8')).toBe(true)
+    expect(inferModelSupportsVision('claude-sonnet-4-6')).toBe(true)
+    expect(inferModelSupportsVision('claude-haiku-4-5')).toBe(true)
+
+    // Gemini models
+    expect(inferModelSupportsVision('gemini-1.5-pro')).toBe(true)
+    expect(inferModelSupportsVision('gemini-1.5-flash')).toBe(true)
+    expect(inferModelSupportsVision('gemini-2.0-flash')).toBe(true)
+    expect(inferModelSupportsVision('gemini-2.5-pro')).toBe(true)
+    expect(inferModelSupportsVision('gemini-exp-1206')).toBe(true)
+
+    // Qwen models
+    expect(inferModelSupportsVision('qwen-vl-max')).toBe(true)
+    expect(inferModelSupportsVision('qwen2.5-vl-72b-instruct')).toBe(true)
+    expect(inferModelSupportsVision('qwen3-vl-plus')).toBe(true)
+    expect(inferModelSupportsVision('qwen-omni-turbo')).toBe(true)
+
+    // GLM / Zhipu models
+    expect(inferModelSupportsVision('glm-4v-plus')).toBe(true)
+    expect(inferModelSupportsVision('glm-5v-turbo')).toBe(true)
+    expect(inferModelSupportsVision('glm-5.1', 'opencode-go')).toBe(true)
+    expect(inferModelSupportsVision('glm-5.1', 'zhipu-coding-plan')).toBe(false)
+    expect(inferModelSupportsVision('cogvlm2-llama3-chinese-chat')).toBe(true)
+
+    // Kimi models
+    expect(inferModelSupportsVision('kimi-k2.5')).toBe(true)
+    expect(inferModelSupportsVision('kimi-k2.6')).toBe(true)
+    expect(inferModelSupportsVision('kimi-k2.7-code')).toBe(true)
+
+    // Xiaomi models
+    expect(inferModelSupportsVision('mimo-v2-omni')).toBe(true)
+    expect(inferModelSupportsVision('mimo-v2.5')).toBe(true)
+    expect(inferModelSupportsVision('mimo-v2.5-pro', 'xiaomi')).toBe(false)
+
+    // MiniMax models
+    expect(inferModelSupportsVision('MiniMax-M3')).toBe(true)
+    expect(inferModelSupportsVision('minimax-m3')).toBe(true)
+    expect(inferModelSupportsVision('MiniMax-M2.7', 'minimax')).toBe(false)
+
+    // Doubao / Volcano models
+    expect(inferModelSupportsVision('doubao-seed-1-6-250615')).toBe(true)
+    expect(inferModelSupportsVision('doubao-vision-pro')).toBe(true)
+
+    // Open source / other vision models
+    expect(inferModelSupportsVision('pixtral-12b-2409')).toBe(true)
+    expect(inferModelSupportsVision('llama-3.2-11b-vision-instruct')).toBe(true)
+    expect(inferModelSupportsVision('internvl2-8b')).toBe(true)
+    expect(inferModelSupportsVision('minicpm-v-2_6')).toBe(true)
+    expect(inferModelSupportsVision('deepseek-vl-7b-chat')).toBe(true)
+
+    // Non-vision text models
+    expect(inferModelSupportsVision('deepseek-chat')).toBe(false)
+    expect(inferModelSupportsVision('deepseek-reasoner')).toBe(false)
+    expect(inferModelSupportsVision('gpt-3.5-turbo')).toBe(false)
+    expect(inferModelSupportsVision('gpt-4')).toBe(false)
+    expect(inferModelSupportsVision('gpt-4-0613')).toBe(false)
+    expect(inferModelSupportsVision('qwen-max')).toBe(false)
+    expect(inferModelSupportsVision('qwen-plus')).toBe(false)
+    expect(inferModelSupportsVision('glm-4-flash')).toBe(false)
+    expect(inferModelSupportsVision('moonshot-v1-128k')).toBe(false)
+    expect(inferModelSupportsVision('hunyuan-turbos-latest')).toBe(false)
+  })
+
+  it('automatically configures image input for newly added provider models on normalization', () => {
+    const normalized = normalizeModelProviderSettings({
+      providers: [
+        {
+          id: 'custom-provider',
+          name: 'Custom OneAPI Provider',
+          baseUrl: 'https://oneapi.example.com/v1',
+          apiKey: 'sk-custom',
+          endpointFormat: 'chat_completions',
+          models: [
+            'gpt-4o',
+            'claude-3-5-sonnet-20241022',
+            'gemini-1.5-pro',
+            'qwen-vl-max',
+            'deepseek-chat'
+          ],
+          modelProfiles: {}
+        }
+      ]
+    })
+
+    const custom = normalized.providers.find((p) => p.id === 'custom-provider')
+    expect(custom).toBeDefined()
+
+    // Vision models automatically have ['text', 'image'] inputModalities and image_url messageParts
+    expect(custom!.modelProfiles['gpt-4o']).toMatchObject({
+      inputModalities: ['text', 'image'],
+      messageParts: ['text', 'image_url'],
+      supportsToolCalling: true
+    })
+    expect(modelSupportsImageInput(custom!.modelProfiles['gpt-4o'])).toBe(true)
+
+    expect(custom!.modelProfiles['claude-3-5-sonnet-20241022']).toMatchObject({
+      inputModalities: ['text', 'image'],
+      messageParts: ['text', 'image_url']
+    })
+    expect(modelSupportsImageInput(custom!.modelProfiles['claude-3-5-sonnet-20241022'])).toBe(true)
+
+    expect(custom!.modelProfiles['gemini-1.5-pro']).toMatchObject({
+      inputModalities: ['text', 'image'],
+      messageParts: ['text', 'image_url']
+    })
+    expect(modelSupportsImageInput(custom!.modelProfiles['gemini-1.5-pro'])).toBe(true)
+
+    expect(custom!.modelProfiles['qwen-vl-max']).toMatchObject({
+      inputModalities: ['text', 'image'],
+      messageParts: ['text', 'image_url']
+    })
+    expect(modelSupportsImageInput(custom!.modelProfiles['qwen-vl-max'])).toBe(true)
+
+    // Non-vision text models have ['text']
+    expect(custom!.modelProfiles['deepseek-chat']).toMatchObject({
+      inputModalities: ['text'],
+      messageParts: ['text']
+    })
+    expect(modelSupportsImageInput(custom!.modelProfiles['deepseek-chat'])).toBe(false)
   })
 })

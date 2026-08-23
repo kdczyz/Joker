@@ -335,6 +335,7 @@
   "modelEndpointResponses": "/v1/responses (openai)",
   "modelEndpointMessages": "/v1/messages (anthropic)",
   "modelEndpointCustomEndpoint": "自定义完整路径",
+  "modelEndpointCloudCode": "Cloud Code（Antigravity）",
   "modelEndpointCustomEndpointDesc": "自定义完整路径会把当前 URL 当作最终请求端点。只识别以 /chat/completions、/completions、/responses 或 /messages 结尾的路径；其他结尾暂不支持。",
   "modelProviderModels": "模型列表",
   "modelProviderModelsPlaceholder": "输入模型 ID，回车添加",
@@ -1594,5 +1595,10 @@
   "cloudAccount": "Cloudflare 账号",
   "cloudAccountTitle": "已登录 Cloudflare 账号",
   "cloudAccountDescription": "你的账号会话由 Cloudflare 边缘服务验证，密码加盐哈希存储，本机代码和项目文件不会上传。",
-  "logout": "退出登录"
+  "logout": "退出登录",
+  "antigravityProjectIdLabel": "Project ID（Google Cloud 项目）",
+  "antigravityProjectIdPlaceholder": "可选：手动指定 Project ID（留空自动解析）",
+  "antigravityProjectApply": "应用",
+  "antigravityProjectHint": "若自动解析的项目无法使用（如 API 未启用、无权限），可在此填入你有权限且已启用 Cloud Code Private API 的项目 ID。",
+  "antigravityProjectClear": "清除"
 }

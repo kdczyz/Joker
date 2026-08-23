@@ -201,6 +201,8 @@ async function* continueConversationStream(
           if (event.type === "text_delta") {
             contentBuffer += event.content;
             yield { type: "text_delta", content: event.content };
+          } else if (event.type === "reasoning_delta") {
+            yield { type: "reasoning_delta", content: event.content };
           } else if (event.type === "context_snapshot") {
             yield { type: "context_snapshot", snapshot: event.snapshot };
           } else if (event.type === "reasoning_config") {

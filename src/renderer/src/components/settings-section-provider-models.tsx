@@ -18,6 +18,7 @@ import {
 } from 'lucide-react'
 import {
   MODEL_ENDPOINT_FORMATS,
+  inferModelSupportsVision,
   type ModelEndpointFormat,
   type ModelProviderProfileV1,
   type ModelReasoningEffort,
@@ -77,7 +78,8 @@ const ENDPOINT_FORMAT_LABEL_KEYS: Record<ModelEndpointFormat, string> = {
   chat_completions: 'modelEndpointChatCompletions',
   responses: 'modelEndpointResponses',
   messages: 'modelEndpointMessages',
-  custom_endpoint: 'modelEndpointCustomEndpoint'
+  custom_endpoint: 'modelEndpointCustomEndpoint',
+  cloudcode: 'modelEndpointCloudCode'
 }
 
 const MODEL_KIND_META: Array<{
@@ -659,7 +661,14 @@ export function ProviderModelsManager({
               placeholder={t('providerModelIdPlaceholder')}
               spellCheck={false}
               autoFocus
-              onChange={(e) => updateForm({ modelId: e.target.value })}
+              onChange={(e) => {
+                const modelId = e.target.value
+                const shouldAutoVision = editor.mode === 'add' && editor.form.kind === 'chat'
+                updateForm({
+                  modelId,
+                  ...(shouldAutoVision ? { visionInput: inferModelSupportsVision(modelId, provider.id) } : {})
+                })
+              }}
             />
             <span className="text-[12px] font-normal leading-5 text-ds-faint">{t('providerModelIdHint')}</span>
             {showNonTextWarning ? (

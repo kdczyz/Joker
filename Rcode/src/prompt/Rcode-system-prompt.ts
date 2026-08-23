@@ -114,7 +114,30 @@ function formatToolNames(tools: readonly ToolPreferenceSpec[]): string {
  * products, or time-sensitive information. Only skip web_search for purely
  * code-related or project-internal questions.
  */
-export function buildWebSearchProactiveInstruction(): string {
+export function buildWebSearchProactiveInstruction(signal?: {
+  scoredHitCount?: number
+  totalActive?: number
+  freshestUpdatedAt?: string
+}): string {
+  if (signal && signal.totalActive !== undefined && signal.totalActive > 0 && signal.scoredHitCount === 0) {
+    return [
+      'No relevant internal knowledge was retrieved from the local knowledge base for this query.',
+      'You MUST call `web_search` to find accurate, up-to-date information before answering.',
+      'Do not guess or rely purely on internal knowledge when internal retrieval has no match.'
+    ].join(' ')
+  }
+
+  if (signal?.freshestUpdatedAt) {
+    const ageMs = Date.now() - new Date(signal.freshestUpdatedAt).getTime()
+    const ageDays = ageMs / (1000 * 60 * 60 * 24)
+    if (ageDays > 180) {
+      return [
+        'The retrieved internal knowledge may be outdated based on its last updated timestamp.',
+        'Consider verifying with `web_search` if the query involves recent events, versions, or rapidly evolving topics.'
+      ].join(' ')
+    }
+  }
+
   return [
     'Web search is available through the `web_search` tool.',
     'Use it proactively for any question that involves real-world facts, events, dates, people, products, or information that may change over time.',

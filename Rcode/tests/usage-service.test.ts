@@ -425,4 +425,64 @@ describe('daily usage service', () => {
       thread_count: 3
     })
   })
+
+  it('records turn-by-turn token usage series for each historical turn of a thread', () => {
+    const response = buildThreadUsageResponse([
+      {
+        threadId: 'thr_series_test',
+        completedAt: '2026-05-01T10:00:00.000Z',
+        usage: usage({ promptTokens: 100, completionTokens: 50, totalTokens: 150, cachedTokens: 30, cacheHitTokens: 30, cacheMissTokens: 70, costUsd: 0.0015, costCny: 0.0108, cacheHitRate: 0.3 })
+      },
+      {
+        threadId: 'thr_series_test',
+        completedAt: '2026-05-01T10:02:00.000Z',
+        usage: usage({ promptTokens: 200, completionTokens: 100, totalTokens: 300, cachedTokens: 150, cacheHitTokens: 150, cacheMissTokens: 50, costUsd: 0.0030, costCny: 0.0216, cacheHitRate: 0.75 })
+      },
+      {
+        threadId: 'thr_series_test',
+        completedAt: '2026-05-01T10:05:00.000Z',
+        usage: usage({ promptTokens: 300, completionTokens: 150, totalTokens: 450, cachedTokens: 350, cacheHitTokens: 350, cacheMissTokens: 50, costUsd: 0.0045, costCny: 0.0324, cacheHitRate: 0.875 })
+      }
+    ])
+
+    expect(ThreadUsageResponseSchema.parse(response)).toEqual(response)
+    const bucket = response.buckets.find((b) => b.thread_id === 'thr_series_test')
+    expect(bucket).toBeDefined()
+    expect(bucket!.turns).toBe(3)
+    expect(bucket!.total_tokens).toBe(900)
+    expect(bucket!.series).toHaveLength(3)
+
+    expect(bucket!.series[0]).toEqual({
+      turn: 1,
+      at: new Date('2026-05-01T10:00:00.000Z').getTime(),
+      totalTokens: 150,
+      cachedTokens: 30,
+      cacheMissTokens: 70,
+      cacheHitRate: 0.3,
+      costUsd: 0.0015,
+      costCny: 0.0108
+    })
+
+    expect(bucket!.series[1]).toEqual({
+      turn: 2,
+      at: new Date('2026-05-01T10:02:00.000Z').getTime(),
+      totalTokens: 300,
+      cachedTokens: 150,
+      cacheMissTokens: 50,
+      cacheHitRate: 0.75,
+      costUsd: 0.003,
+      costCny: 0.0216
+    })
+
+    expect(bucket!.series[2]).toEqual({
+      turn: 3,
+      at: new Date('2026-05-01T10:05:00.000Z').getTime(),
+      totalTokens: 450,
+      cachedTokens: 350,
+      cacheMissTokens: 50,
+      cacheHitRate: 0.875,
+      costUsd: 0.0045,
+      costCny: 0.0324
+    })
+  })
 })

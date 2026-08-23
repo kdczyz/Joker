@@ -272,6 +272,7 @@ export type StreamEvent =
   | { type: "reasoning_config"; config: AppliedReasoningConfig }
   | { type: "task_plan"; plan: TaskPlan }
   | { type: "text_delta"; content: string }
+  | { type: "reasoning_delta"; content: string }
   | {
       type: "billing_usage";
       usage: {

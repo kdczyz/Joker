@@ -26,7 +26,84 @@ export function decodeCompatNonStreamingResponse(
   }
   if (endpointFormat === 'responses') return decodeResponses(payload, deps)
   if (endpointFormat === 'messages') return decodeAnthropicMessages(payload, deps)
+  if (endpointFormat === 'cloudcode') return decodeCloudCode(payload, deps)
   return decodeChatCompletions(payload, deps)
+}
+
+function decodeCloudCode(
+  payload: Record<string, unknown>,
+  deps: CompatNonStreamingDecoderDeps
+): ModelStreamChunk[] {
+  // CloudCode wraps responses in a `response` object.
+  const root = (payload.response as Record<string, unknown> | undefined) ?? payload
+  const candidates = Array.isArray(root.candidates) ? root.candidates : []
+  const candidate = recordValue(candidates[0])
+  if (!candidate) return [{ kind: 'error', message: 'model response contained no candidates' }]
+  const content = recordValue(candidate, 'content')
+  const parts = content && Array.isArray(content.parts) ? content.parts : []
+  const chunks: ModelStreamChunk[] = []
+  let hasToolCalls = false
+  let toolCallIndex = 0
+  for (const value of parts) {
+    const part = recordValue(value)
+    if (!part) continue
+    const text = recordString(part, 'text')
+    const thought = part.thought
+    const functionCall = recordValue(part, 'functionCall')
+    const thoughtText =
+      typeof thought === 'string' && thought.length > 0
+        ? thought
+        : thought === true && text
+          ? text
+          : undefined
+    if (thoughtText) {
+      chunks.push({ kind: 'assistant_reasoning_delta', text: thoughtText })
+    } else if (text) {
+      chunks.push({ kind: 'assistant_text_delta', text })
+    }
+    if (functionCall) {
+      hasToolCalls = true
+      toolCallIndex += 1
+      chunks.push({
+        kind: 'tool_call_complete',
+        callId: `call_${toolCallIndex}`,
+        toolName: recordString(functionCall, 'name'),
+        arguments: deps.parseToolArguments(JSON.stringify(functionCall.args ?? {}))
+      })
+    }
+  }
+  const usage = recordValue(root, 'usageMetadata')
+  if (usage) {
+    chunks.push({
+      kind: 'usage',
+      usage: deps.normalizeUsage({
+        prompt_tokens: usage.promptTokenCount,
+        completion_tokens: usage.candidatesTokenCount,
+        total_tokens: usage.totalTokenCount
+      })
+    })
+  }
+  const rawFinishReason = recordString(candidate, 'finishReason')
+  const stopReason = hasToolCalls ? 'tool_calls' : cloudCodeStopReason(rawFinishReason)
+  chunks.push({
+    kind: 'completed',
+    stopReason
+  })
+  return chunks
+}
+
+function cloudCodeStopReason(reason: string): ModelStopReason {
+  switch (reason) {
+    case 'STOP':
+      return 'stop'
+    case 'MAX_TOKENS':
+      return 'length'
+    case 'TOOL_CALLS':
+    case 'FUNCTION_CALL':
+      return 'tool_calls'
+    default:
+      return 'stop'
+  }
 }
 
 function decodeChatCompletions(
@@ -39,7 +116,7 @@ function decodeChatCompletions(
   const message = recordValue(choice, 'message')
   const chunks: ModelStreamChunk[] = []
   const reasoning = message
-    ? recordString(message, 'reasoning_content') || recordString(message, 'reasoning')
+    ? recordString(message, 'reasoning_content') || recordString(message, 'reasoning') || recordString(message, 'thought')
     : ''
   const text = message ? recordString(message, 'content') : ''
   if (reasoning) chunks.push({ kind: 'assistant_reasoning_delta', text: reasoning })

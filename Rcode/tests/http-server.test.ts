@@ -1616,6 +1616,42 @@ describe('HTTP server', () => {
     ])
   })
 
+  it('returns multiple turn series points for multi-turn live conversation', async () => {
+    const h = buildHarness()
+    await h.threadService.create(
+      { workspace: '/tmp/project', model: 'deepseek-chat', mode: 'agent' },
+      { id: 'thr_multi_live', title: 'Multi live' }
+    )
+    h.runtime.usageService.record('thr_multi_live', usageSnapshot({ promptTokens: 10, completionTokens: 5 }))
+    h.runtime.usageService.record('thr_multi_live', usageSnapshot({ promptTokens: 20, completionTokens: 10 }))
+    h.runtime.usageService.record('thr_multi_live', usageSnapshot({ promptTokens: 30, completionTokens: 15 }))
+
+    const response = await dispatchRequest(
+      h.router,
+      new Request('http://localhost/v1/usage?group_by=thread&thread_id=thr_multi_live', {
+        headers: { authorization: 'Bearer tok-1' }
+      })
+    )
+
+    expect(response.status).toBe(200)
+    const body = (await readJson(response)) as {
+      group_by: string
+      buckets: Array<{
+        thread_id: string
+        total_tokens: number
+        turns: number
+        series: Array<{ turn: number; totalTokens: number }>
+      }>
+    }
+    expect(body.buckets).toHaveLength(1)
+    expect(body.buckets[0].turns).toBe(3)
+    expect(body.buckets[0].total_tokens).toBe(90)
+    expect(body.buckets[0].series).toHaveLength(3)
+    expect(body.buckets[0].series[0]).toMatchObject({ turn: 1, totalTokens: 15 })
+    expect(body.buckets[0].series[1]).toMatchObject({ turn: 2, totalTokens: 30 })
+    expect(body.buckets[0].series[2]).toMatchObject({ turn: 3, totalTokens: 45 })
+  })
+
   it('derives daily usage from persisted cumulative usage events', async () => {
     const h = buildHarness()
     await h.threadService.create(

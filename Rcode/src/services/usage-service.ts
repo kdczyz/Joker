@@ -13,6 +13,7 @@ import type {
   ModelUsageResponse,
   ThreadUsageBucket,
   ThreadUsageResponse,
+  ThreadUsageSeriesPoint,
   UsageSnapshot
 } from '../contracts/usage.js'
 
@@ -25,6 +26,7 @@ export class UsageService {
   private readonly counter = new UsageCounter()
   private readonly cache = new CacheTelemetry()
   private readonly cacheSignatures = new Map<string, CacheRequestSignature>()
+  private readonly liveRecords = new Map<string, Array<{ model?: string; completedAt: string; usage: UsageSnapshot }>>()
   /**
    * Rolling cacheable-hit-rate history keyed by thread + provider/model/endpoint
    * so a model or provider switch starts a FRESH baseline instead of polluting
@@ -45,6 +47,13 @@ export class UsageService {
   ): UsageSnapshot {
     const enriched = signature ? this.withCacheDiagnostics(threadId, usage, signature) : usage
     this.cache.ingest(threadId, enriched)
+    const list = this.liveRecords.get(threadId) ?? []
+    list.push({
+      model: signature?.model,
+      completedAt: new Date().toISOString(),
+      usage: enriched
+    })
+    this.liveRecords.set(threadId, list)
     return this.counter.record(threadId, enriched)
   }
 
@@ -55,7 +64,20 @@ export class UsageService {
       'tokenEconomySavingsTokens' | 'tokenEconomySavingsUsd' | 'tokenEconomySavingsCny'
     >
   ): UsageSnapshot {
+    const last = this.liveRecords.get(threadId)?.at(-1)
+    if (last) {
+      last.usage = {
+        ...last.usage,
+        tokenEconomySavingsTokens: (last.usage.tokenEconomySavingsTokens ?? 0) + (savings.tokenEconomySavingsTokens ?? 0),
+        tokenEconomySavingsUsd: (last.usage.tokenEconomySavingsUsd ?? 0) + (savings.tokenEconomySavingsUsd ?? 0),
+        tokenEconomySavingsCny: (last.usage.tokenEconomySavingsCny ?? 0) + (savings.tokenEconomySavingsCny ?? 0)
+      }
+    }
     return this.counter.recordTokenEconomySavings(threadId, savings)
+  }
+
+  recordsForThread(threadId: string): Array<{ model?: string; completedAt: string; usage: UsageSnapshot }> {
+    return [...(this.liveRecords.get(threadId) ?? [])]
   }
 
   seedThread(threadId: string, usage: UsageSnapshot): UsageSnapshot {
@@ -64,6 +86,7 @@ export class UsageService {
     this.cache.ingest(threadId, seeded)
     this.cacheSignatures.delete(threadId)
     this.clearCacheHistory(threadId)
+    this.liveRecords.delete(threadId)
     return seeded
   }
 
@@ -82,8 +105,13 @@ export class UsageService {
   reset(threadId?: string): void {
     this.counter.reset(threadId)
     this.cache.reset(threadId)
-    if (threadId === undefined) this.cacheSignatures.clear()
-    else this.cacheSignatures.delete(threadId)
+    if (threadId === undefined) {
+      this.cacheSignatures.clear()
+      this.liveRecords.clear()
+    } else {
+      this.cacheSignatures.delete(threadId)
+      this.liveRecords.delete(threadId)
+    }
     if (threadId === undefined) {
       this.cacheHitHistory.clear()
       this.cacheRegressionCooldown.clear()
@@ -473,7 +501,8 @@ function emptyThreadBucket(threadId: string): ThreadUsageAccumulator {
     last_cache_miss_reasons: [],
     last_cache_suggestions: [],
     hasCacheTelemetry: false,
-    lastCompletedAt: ''
+    lastCompletedAt: '',
+    series: []
   }
 }
 
@@ -532,7 +561,8 @@ function finalizeThreadBucket(bucket: ThreadUsageAccumulator): ThreadUsageBucket
     last_turn_cacheable_hit_rate: bucket.last_turn_cacheable_hit_rate,
     last_turn_total_input_hit_rate: bucket.last_turn_total_input_hit_rate,
     last_cache_miss_reasons: bucket.last_cache_miss_reasons,
-    last_cache_suggestions: bucket.last_cache_suggestions
+    last_cache_suggestions: bucket.last_cache_suggestions,
+    series: bucket.series
   }
 }
 
@@ -575,6 +605,30 @@ export function buildThreadUsageResponse(records: readonly ThreadUsageRecord[]):
       bucket.last_cache_miss_reasons = record.usage.cacheMissReasons ?? []
       bucket.last_cache_suggestions = record.usage.cacheSuggestions ?? []
     }
+    const turnCachedTokens = typeof record.usage.cacheHitTokens === 'number'
+      ? record.usage.cacheHitTokens
+      : (typeof record.usage.cachedTokens === 'number' ? record.usage.cachedTokens : 0)
+    const turnCacheMissTokens = typeof record.usage.cacheMissTokens === 'number'
+      ? record.usage.cacheMissTokens
+      : 0
+    const turnCacheTotal = turnCachedTokens + turnCacheMissTokens
+    const turnCacheHitRate = record.usage.cacheHitRate ?? (hasCacheTelemetry(record.usage) && turnCacheTotal > 0
+      ? turnCachedTokens / turnCacheTotal
+      : null)
+    const turnTimestamp = record.completedAt
+      ? (new Date(record.completedAt).getTime() || Date.now())
+      : Date.now()
+    const cleanMoney = (v: number) => Math.round(v * 1e6) / 1e6
+    bucket.series.push({
+      turn: bucket.series.length + 1,
+      at: turnTimestamp,
+      totalTokens: record.usage.totalTokens,
+      cachedTokens: turnCachedTokens,
+      cacheMissTokens: turnCacheMissTokens,
+      cacheHitRate: turnCacheHitRate,
+      costUsd: record.usage.costUsd != null && record.usage.costUsd > 0 ? cleanMoney(record.usage.costUsd) : null,
+      costCny: record.usage.costCny != null && record.usage.costCny > 0 ? cleanMoney(record.usage.costCny) : null
+    })
     buckets.set(record.threadId, bucket)
   }
   const finalized = [...buckets.values()]

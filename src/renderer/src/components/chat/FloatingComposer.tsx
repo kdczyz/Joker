@@ -210,6 +210,7 @@ type Props = {
   onExecutionSettingsChange?: (patch: Partial<ComposerExecutionSettings>) => void
   onOpenChanges?: () => void
   onReviewChanges?: () => void
+  onDismissChanges?: () => void
   reviewChangesDisabled?: boolean
   /**
    * When set, the `/btw` slash command is offered. It is omitted from
@@ -327,6 +328,7 @@ export function FloatingComposer({
   onExecutionSettingsChange,
   onOpenChanges,
   onReviewChanges,
+  onDismissChanges,
   reviewChangesDisabled = false,
   onBtwCommand,
   hideBtwCommand = false,
@@ -354,6 +356,20 @@ export function FloatingComposer({
   const blocks = useChatStore((s) => s.blocks)
   const resolveUserInput = useChatStore((s) => s.resolveUserInput)
   const compact = variant === 'compact'
+  const [dismissedChangedFilesKey, setDismissedChangedFilesKey] = useState<string | null>(null)
+  const changedFilesFingerprint = useMemo(
+    () => changedFiles.map((f) => `${f.path}:${f.added}:${f.removed}`).join('|'),
+    [changedFiles]
+  )
+  const showChangeSummary =
+    !compact &&
+    route === 'chat' &&
+    changedFiles.length > 0 &&
+    dismissedChangedFilesKey !== changedFilesFingerprint
+  const handleDismissChangeSummary = (): void => {
+    setDismissedChangedFilesKey(changedFilesFingerprint)
+    onDismissChanges?.()
+  }
   // The pending ask-user request for the active thread, surfaced as a panel
   // docked above this composer. The main Chat and Design composers host it, as
   // does Write's only (compact) composer. Other compact side composers would
@@ -506,7 +522,6 @@ export function FloatingComposer({
   const canOpenComposerMenu = showComposerMenuButton
     && (canPickFileReference || canPickDesignReference || canPickLocalFileReference || canTogglePlanMode || canCreateNewThread || canOpenGoalPanel || canRunReview || canToggleWorktreeMode)
   const showToolbarStartControls = showComposerMenuButton || showExecutionSettingsPicker
-  const showChangeSummary = !compact && route === 'chat' && changedFiles.length > 0
   const effectiveChangedFileStats = changedFileStats ?? changedFiles.reduce(
     (stats, file) => ({
       added: stats.added + file.added,
@@ -1091,13 +1106,18 @@ export function FloatingComposer({
   }
 
   const handleComposerPaste = (event: ReactClipboardEvent<HTMLElement>): void => {
-    handleComposerImagePaste({
+    const handled = handleComposerImagePaste({
       canPickAttachment,
       clipboardData: event.clipboardData,
       preventDefault: () => event.preventDefault(),
       onPickAttachments,
       onPasteClipboardImage
     })
+    if (handled) {
+      window.requestAnimationFrame(() => {
+        draft.textareaRef.current?.focus()
+      })
+    }
   }
 
   const handleComposerDragOver = (event: ReactDragEvent<HTMLDivElement>): void => {
@@ -1529,6 +1549,15 @@ export function FloatingComposer({
                       {t('composerReviewChanges')}
                     </button>
                   ) : null}
+                  <button
+                    type="button"
+                    onClick={handleDismissChangeSummary}
+                    className="flex h-7 w-7 items-center justify-center rounded-full text-ds-faint transition hover:bg-ds-hover hover:text-ds-ink"
+                    aria-label={t('close')}
+                    title={t('close')}
+                  >
+                    <X className="h-4 w-4" strokeWidth={2} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -1596,6 +1625,7 @@ export function FloatingComposer({
             onCompositionStart={draft.onCompositionStart}
             onCompositionEnd={draft.onCompositionEnd}
             onKeyDown={handleComposerKeyDown}
+            onPaste={handleComposerPaste}
           />
           {fileReferences.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2 px-1">

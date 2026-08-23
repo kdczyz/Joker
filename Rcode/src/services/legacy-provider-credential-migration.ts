@@ -82,17 +82,31 @@ export function materializeLegacyProviderCredential(rawApiKey: string): LegacyPr
     const parsed = JSON.parse(apiKey) as Record<string, unknown>
     const accessToken = typeof parsed.accessToken === 'string' ? parsed.accessToken.trim() : ''
     const accountId = typeof parsed.accountId === 'string' ? parsed.accountId.trim() : ''
-    if (parsed.kind !== 'codex-oauth' || !accessToken || !accountId) return { apiKey }
-    return {
-      apiKey: accessToken,
-      headers: {
-        'ChatGPT-Account-Id': accountId,
-        originator: 'codex_cli_rs',
-        'OpenAI-Beta': 'responses=experimental',
-        'User-Agent': 'codex_cli_rs/0.0.0 (deepseekgui)',
-        session_id: randomUUID()
+    if (parsed.kind === 'codex-oauth' && accessToken && accountId) {
+      return {
+        apiKey: accessToken,
+        headers: {
+          'ChatGPT-Account-Id': accountId,
+          originator: 'codex_cli_rs',
+          'OpenAI-Beta': 'responses=experimental',
+          'User-Agent': 'codex_cli_rs/0.0.0 (deepseekgui)',
+          session_id: randomUUID()
+        }
       }
     }
+    if (parsed.kind === 'antigravity-oauth' && accessToken) {
+      const projectId = typeof parsed.projectId === 'string' ? parsed.projectId.trim() : ''
+      return {
+        apiKey: accessToken,
+        headers: {
+          'User-Agent': 'antigravity/1.15.8 darwin/arm64',
+          'X-Goog-Api-Client': 'google-cloud-sdk vscode_cloudshelleditor/0.1',
+          'Client-Metadata': '{"ideType":"ANTIGRAVITY","pluginType":"GEMINI"}',
+          ...(projectId ? { 'x-goog-user-project': projectId } : {})
+        }
+      }
+    }
+    return { apiKey }
   } catch {
     return { apiKey }
   }
@@ -217,6 +231,30 @@ export class LegacyProviderCredentialMigrationService {
     for (const sourceId of [...new Set(sourceIds.map((value) => value.trim()).filter(Boolean))]) {
       await this.rollbackOne(sourceId)
     }
+  }
+
+  /**
+   * Deletes a migrated credential binding (marker + account + credential) and
+   * clears its account reference. Used when a provider's apiKey is cleared by
+   * the user (e.g. disconnect) so the orphaned encrypted credential does not get
+   * re-hydrated back into settings on the next load.
+   */
+  async deleteBinding(sourceId: string): Promise<void> {
+    const document = await this.markers.read(emptyDocument)
+    const entry = document.entries[sourceId]
+    if (!entry) return
+    const principal = corePrincipal(entry.providerId)
+    const account = await this.options.accounts.getAccount(entry.accountId)
+    const credentialRef = account?.credentialRef
+    if (account) await this.options.accounts.deleteAccount(principal, account.id).catch(() => undefined)
+    if (credentialRef) await this.options.credentials.delete(credentialRef).catch(() => undefined)
+    await this.options.accounts.clearBinding(bindingScope(sourceId), entry.providerId).catch(() => undefined)
+    await this.markers.update(emptyDocument, (current) => {
+      if (!current.entries[sourceId]) return current
+      const entries = { ...current.entries }
+      delete entries[sourceId]
+      return { ...current, revision: current.revision + 1, entries }
+    })
   }
 
   private async migrateOne(

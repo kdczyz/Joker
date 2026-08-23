@@ -1,5 +1,6 @@
 import { createServer, type Server } from 'node:http'
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
+import { resolveAntigravityApiKey } from './antigravity-auth'
 
 const CODEX_CLIENT_ID = 'app_EMoamEEZ73f0CkXaXp7hrann'
 const CODEX_ISSUER = 'https://auth.openai.com'
@@ -461,9 +462,13 @@ export function codexRequestHeaders(creds: CodexOAuthCredentials): Record<string
 }
 
 export function resolveCodexOAuthApiKey(rawApiKey: string): { apiKey: string; headers?: Record<string, string> } {
-  const key = rawApiKey.trim()
+  const key = (rawApiKey ?? '').trim()
   const codex = isCodexOAuthCredentials(key) ? parseCodexCredentials(key) : null
   if (codex) return { apiKey: codex.accessToken, headers: codexRequestHeaders(codex) }
+  const antigravity = resolveAntigravityApiKey(key)
+  if (antigravity.headers || antigravity.apiKey !== key) {
+    return { apiKey: antigravity.apiKey, headers: antigravity.headers }
+  }
   return { apiKey: key }
 }
 

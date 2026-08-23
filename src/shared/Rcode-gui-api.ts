@@ -342,6 +342,17 @@ export type CodexBrowserAuthErrorCode = 'port_in_use'
 export type CodexBrowserAuthResult =
   | { ok: true; credentials: CodexOAuthCredentials }
   | { ok: false; message: string; code?: CodexBrowserAuthErrorCode }
+export type AntigravityOAuthCredentials = {
+  kind: 'antigravity-oauth'
+  accessToken: string
+  refreshToken: string
+  expiresAt: number
+  email?: string
+  projectId: string
+}
+export type AntigravityBrowserAuthResult =
+  | { ok: true; credentials: AntigravityOAuthCredentials }
+  | { ok: false; message: string; code?: CodexBrowserAuthErrorCode }
 export type CodexAccountUsageResult =
   | {
       ok: true
@@ -526,6 +537,7 @@ export type RcodeGuiApi = ExtensionIpcApi & {
   pollCodexAuth: (deviceCode: string, userCode: string) => Promise<CodexAuthPollResult>
   startCodexBrowserAuth: () => Promise<CodexBrowserAuthResult>
   codexAccountUsage: () => Promise<CodexAccountUsageResult>
+  startAntigravityBrowserAuth: (projectId?: string) => Promise<AntigravityBrowserAuthResult>
   pickWorkspaceDirectory: (defaultPath?: string) => Promise<WorkspacePickResult>
   workspaceDirectoryExists: (workspaceRoot: string) => Promise<boolean>
   pickLocalFiles: (defaultPath?: string) => Promise<LocalFilesPickResult>

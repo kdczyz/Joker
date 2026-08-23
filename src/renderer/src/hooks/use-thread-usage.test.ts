@@ -1,5 +1,11 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { cumulativeCacheHitRate, formatCost, loadThreadUsage, primaryCacheHitRate } from './use-thread-usage'
+import {
+  cumulativeCacheHitRate,
+  formatCost,
+  loadThreadUsage,
+  primaryCacheHitRate,
+  useThreadUsageSeries
+} from './use-thread-usage'
 
 type RuntimeRequest = (path: string, method?: string) => Promise<{ ok: boolean; status: number; body: string }>
 
@@ -355,5 +361,157 @@ describe('thread usage formatting', () => {
       cacheHitRate: 0.4
     })
     expect(runtimeRequest).toHaveBeenCalledTimes(1)
+  })
+
+  it('parses turn-by-turn series points from thread usage response', async () => {
+    const runtimeRequest = vi.fn<RuntimeRequest>(async (path) => {
+      if (path === threadUsagePath('thr_with_series')) {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({
+            buckets: [
+              {
+                thread_id: 'thr_with_series',
+                input_tokens: 300,
+                output_tokens: 150,
+                total_tokens: 450,
+                cached_tokens: 180,
+                cache_miss_tokens: 120,
+                cache_hit_rate: 0.6,
+                cost_usd: 0.0045,
+                cost_cny: 0.0324,
+                turns: 2,
+                series: [
+                  {
+                    turn: 1,
+                    at: 1777629600000,
+                    total_tokens: 150,
+                    cached_tokens: 30,
+                    cache_miss_tokens: 70,
+                    cache_hit_rate: 0.3,
+                    cost_usd: 0.0015,
+                    cost_cny: 0.0108
+                  },
+                  {
+                    turn: 2,
+                    at: 1777629720000,
+                    total_tokens: 300,
+                    cached_tokens: 150,
+                    cache_miss_tokens: 50,
+                    cache_hit_rate: 0.75,
+                    cost_usd: 0.0030,
+                    cost_cny: 0.0216
+                  }
+                ]
+              }
+            ]
+          })
+        }
+      }
+      throw new Error(`unexpected request: ${path}`)
+    })
+    setRuntimeRequest(runtimeRequest)
+
+    const usage = await loadThreadUsage('thr_with_series')
+
+    expect(usage).toMatchObject({
+      totalTokens: 450,
+      cachedTokens: 180,
+      cacheMissTokens: 120,
+      cacheHitRate: 0.6,
+      costUsd: 0.0045,
+      costCny: 0.0324,
+      turns: 2
+    })
+    expect(usage?.series).toHaveLength(2)
+    expect(usage?.series?.[0]).toEqual({
+      turn: 1,
+      at: 1777629600000,
+      totalTokens: 150,
+      cachedTokens: 30,
+      cacheMissTokens: 70,
+      cacheHitRate: 0.3,
+      costUsd: 0.0015,
+      costCny: 0.0108
+    })
+    expect(usage?.series?.[1]).toEqual({
+      turn: 2,
+      at: 1777629720000,
+      totalTokens: 300,
+      cachedTokens: 150,
+      cacheMissTokens: 50,
+      cacheHitRate: 0.75,
+      costUsd: 0.0030,
+      costCny: 0.0216
+    })
+  })
+
+  it('restores thread series cleanly when switching between threads', () => {
+    const thread1Usage = {
+      inputTokens: 100,
+      outputTokens: 50,
+      reasoningTokens: 0,
+      cachedTokens: 30,
+      cacheMissTokens: 70,
+      cacheHitRate: 0.3,
+      lastTurnCacheHitRate: 0.3,
+      totalTokens: 150,
+      costUsd: 0.0015,
+      costCny: 0.0108,
+      tokenEconomySavingsTokens: 0,
+      turns: 1,
+      series: [
+        {
+          turn: 1,
+          at: 1777629600000,
+          totalTokens: 150,
+          cachedTokens: 30,
+          cacheMissTokens: 70,
+          cacheHitRate: 0.3,
+          costUsd: 0.0015,
+          costCny: 0.0108
+        }
+      ]
+    }
+
+    const thread2Usage = {
+      inputTokens: 200,
+      outputTokens: 100,
+      reasoningTokens: 0,
+      cachedTokens: 80,
+      cacheMissTokens: 120,
+      cacheHitRate: 0.4,
+      lastTurnCacheHitRate: 0.4,
+      totalTokens: 300,
+      costUsd: 0.003,
+      costCny: 0.0216,
+      tokenEconomySavingsTokens: 0,
+      turns: 1,
+      series: [
+        {
+          turn: 1,
+          at: 1777629800000,
+          totalTokens: 300,
+          cachedTokens: 80,
+          cacheMissTokens: 120,
+          cacheHitRate: 0.4,
+          costUsd: 0.003,
+          costCny: 0.0216
+        }
+      ]
+    }
+
+    // Active thread 1
+    const series1 = useThreadUsageSeries('thr_1', thread1Usage)
+    expect(series1).toEqual(thread1Usage.series)
+
+    // Switch to thread 2
+    const series2 = useThreadUsageSeries('thr_2', thread2Usage)
+    expect(series2).toEqual(thread2Usage.series)
+
+    // Switch back to thread 1
+    const series1Again = useThreadUsageSeries('thr_1', thread1Usage)
+    expect(series1Again).toEqual(thread1Usage.series)
   })
 })

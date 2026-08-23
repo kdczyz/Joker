@@ -33,6 +33,7 @@ export function createCompatRequestCodecs(): CompatRequestCodecs {
     responsesInput: (value) => messagesToResponsesInput(value as CompatChatMessage[]),
     toAnthropic: (value, thinkingMode) =>
       messagesToAnthropic(value as CompatChatMessage[], thinkingMode),
+    toCloudCode: (value) => messagesToCloudCode(value as CompatChatMessage[]),
     applyAnthropicCacheControl: (value) =>
       applyAnthropicCacheControl(value as AnthropicMessage[]),
     plainText: (value) => chatContentToPlainText(value as CompatChatMessage['content']),
@@ -184,6 +185,124 @@ function messagesToAnthropic(
     }
   }
   return { system: system.join('\n\n'), messages: out }
+}
+
+/**
+ * Converts OpenAI-style chat messages to the Gemini-style `contents` array used
+ * by Google Cloud Code Assist (`cloudcode-pa.googleapis.com/v1internal`).
+ * System messages become `systemInstruction`; user/assistant become `user` /
+ * `model` roles; tool calls map to `functionCall`/`functionResponse` parts.
+ */
+function messagesToCloudCode(
+  messages: CompatChatMessage[]
+): { system: string; contents: Array<Record<string, unknown>> } {
+  const system: string[] = []
+  const contents: Array<Record<string, unknown>> = []
+
+  const appendTurn = (role: 'user' | 'model', parts: Array<Record<string, unknown>>): void => {
+    if (!parts.length) return
+    const last = contents[contents.length - 1]
+    if (last && last.role === role) {
+      (last.parts as Array<Record<string, unknown>>).push(...parts)
+    } else {
+      contents.push({ role, parts: [...parts] })
+    }
+  }
+
+  // A `role: 'tool'` message references its call by tool_call_id, not by name;
+  // the tool name lives on the preceding assistant message's tool_calls[].function.name.
+  // Pre-scan to resolve each id so functionResponse.name is never empty.
+  const toolNameById = new Map<string, string>()
+  for (const message of messages) {
+    for (const call of message.tool_calls ?? []) {
+      if (call.id) toolNameById.set(call.id, call.function.name)
+    }
+  }
+
+  for (const message of messages) {
+    if (message.role === 'system') {
+      const text = chatContentToPlainText(message.content).trim()
+      if (text) system.push(text)
+      continue
+    }
+
+    if (message.role === 'tool') {
+      const name = message.tool_call_id
+        ? toolNameById.get(message.tool_call_id) ?? ''
+        : (message.name ?? '')
+      const raw = chatContentToTextOnly(message.content)
+      let responseObj: Record<string, unknown>
+      try {
+        const parsed = JSON.parse(raw)
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+          responseObj = parsed as Record<string, unknown>
+        } else {
+          responseObj = { output: parsed }
+        }
+      } catch {
+        responseObj = { output: raw }
+      }
+      appendTurn('user', [{
+        functionResponse: {
+          name,
+          response: responseObj
+        }
+      }])
+      continue
+    }
+
+    const role = message.role === 'assistant' ? 'model' : 'user'
+    const parts: Array<Record<string, unknown>> = []
+
+    if (
+      message.role === 'assistant' &&
+      typeof message.reasoning_content === 'string' &&
+      message.reasoning_content.length > 0
+    ) {
+      parts.push({ text: message.reasoning_content, thought: true })
+    }
+
+    if (typeof message.content === 'string') {
+      if (message.content) parts.push({ text: message.content })
+    } else if (Array.isArray(message.content)) {
+      for (const part of message.content) {
+        if (part.type === 'text') {
+          if (part.text) parts.push({ text: part.text })
+        } else if (part.type === 'image_url') {
+          const inline = geminiInlineData(part.image_url.url)
+          if (inline) parts.push({ inlineData: inline })
+        }
+      }
+    }
+
+    const toolCalls = message.tool_calls ?? []
+    for (let index = 0; index < toolCalls.length; index++) {
+      const call = toolCalls[index]
+      const functionCallPart: Record<string, unknown> = {
+        functionCall: {
+          name: call.function.name,
+          args: repairToolArguments(call.function.arguments).arguments
+        }
+      }
+      // CloudCode requires a thought_signature on the first functionCall part of
+      // a turn (parallel calls after the first must NOT carry one, else 400). We
+      // inject the skip-validation sentinel for compatibility.
+      if (index === 0) {
+        functionCallPart.thoughtSignature = 'skip_thought_signature_validator'
+      }
+      parts.push(functionCallPart)
+    }
+
+    appendTurn(role, parts)
+  }
+
+  return { system: system.join('\n\n'), contents }
+}
+
+function geminiInlineData(value: string): { mimeType: string; data: string } | null {
+  const data = parseDataUri(value)
+  if (data) return { mimeType: data.mimeType, data: data.base64 }
+  return null
 }
 
 /**
@@ -601,16 +720,20 @@ export function requiresReasoningRoundTrip(
   if (reasoning) {
     const resolved = resolveReasoningEffort(effort, reasoning)
     if (resolved) {
-      return resolved !== 'off' && reasoning.requestProtocol !== 'none'
+      return (
+        resolved !== 'off' &&
+        (reasoning.requestProtocol === 'deepseek-chat-completions' ||
+          (isDeepSeekHost(baseUrl) && reasoning.requestProtocol !== 'none'))
+      )
     }
     return isDeepSeekHost(baseUrl) && isThinkingProducerModel(model)
   }
   // Thinking-mode round trip is a DeepSeek-specific protocol extension.
-  // OpenAI-compat providers (OpenRouter, llama.cpp, etc.) may reject
-  // or misinterpret the `thinking` field, so we only auto-enable it
-  // on the official DeepSeek host. User-selected reasoningEffort still
-  // forces the path (opt-in). See issue #26.
-  return isThinkingMode(effort) || (isDeepSeekHost(baseUrl) && isThinkingProducerModel(model))
+  // OpenAI-compat providers (OpenRouter, Azure, OpenAI, llama.cpp, etc.) may reject
+  // the `reasoning_content` field with 400 Bad Request, so we only enable it
+  // on DeepSeek endpoints/models.
+  const isDeepSeekTarget = isDeepSeekHost(baseUrl) || isThinkingProducerModel(model) || (model ? /deepseek/i.test(model) : false)
+  return isDeepSeekTarget && (isThinkingMode(effort) || isThinkingProducerModel(model))
 }
 
 function isThinkingProducerModel(model: string | undefined): boolean {

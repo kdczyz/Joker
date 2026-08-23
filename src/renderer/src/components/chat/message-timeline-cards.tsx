@@ -348,15 +348,35 @@ export function WorkMetaRow({
         : t('thinkingNow')
 
     const orbContent = (
-      <>
-        <ThinkingOrb size={40} />
-        <span className="text-[15px] font-semibold tracking-wide text-ds-ink">{label}</span>
-      </>
+      <div className="flex w-full items-center justify-between gap-3">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <ThinkingOrb size={28} />
+          <span className="truncate text-[14.5px] font-semibold tracking-tight text-ds-ink ds-shiny-text">
+            {label}
+          </span>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          {stepCount > 0 ? (
+            <span className="ds-process-pill-badge">
+              {t('processSteps', { count: stepCount })}
+            </span>
+          ) : null}
+          {collapsible ? (
+            <span className="flex h-6 w-6 items-center justify-center rounded-full text-ds-faint transition group-hover:text-ds-ink">
+              {expanded ? (
+                <ChevronDown className="h-4 w-4" strokeWidth={2} />
+              ) : (
+                <ChevronRight className="h-4 w-4" strokeWidth={2} />
+              )}
+            </span>
+          ) : null}
+        </div>
+      </div>
     )
 
     if (!collapsible) {
       return (
-        <div className="inline-flex items-center gap-2.5 rounded-full py-1 text-left">
+        <div className="flex w-full items-center py-0.5 text-left">
           {orbContent}
         </div>
       )
@@ -367,19 +387,14 @@ export function WorkMetaRow({
         type="button"
         onClick={onToggle}
         aria-expanded={expanded}
-        className="group inline-flex cursor-pointer items-center gap-2.5 rounded-full py-1 text-left transition hover:opacity-85"
+        className="group flex w-full cursor-pointer items-center py-0.5 text-left transition hover:opacity-90"
       >
         {orbContent}
-        {expanded ? (
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-45" strokeWidth={1.8} />
-        ) : (
-          <ChevronRight className="h-3.5 w-3.5 shrink-0 opacity-40 transition group-hover:opacity-65" strokeWidth={1.8} />
-        )}
       </button>
     )
   }
 
-  /* ── Completed state: original text-style row ── */
+  /* ── Completed state: modern sleek pill card header ── */
   const mainLabel = typeof durationMs === 'number'
     ? `${t('processed')} ${formatDuration(durationMs)}`
     : t('processSteps', { count: stepCount })
@@ -389,29 +404,42 @@ export function WorkMetaRow({
     reasoningDurationMs >= 1000
 
   const content = (
-    <>
-      <span className="tabular-nums">{mainLabel}</span>
-      {showThoughtSuffix ? (
-        <span className="text-ds-faint">
-          · {t('thoughtFor', { duration: formatDuration(reasoningDurationMs!) })}
+    <div className="flex w-full items-center justify-between gap-3">
+      <div className="flex items-center gap-2 min-w-0">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent dark:bg-accent/20">
+          <CheckCircle2 className="h-3.5 w-3.5" strokeWidth={2.2} />
         </span>
-      ) : null}
-      {collapsible ? (
-        expanded ? (
-          <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-45" strokeWidth={1.8} />
-        ) : (
-          <ChevronRight
-            className="h-3.5 w-3.5 shrink-0 opacity-40 transition group-hover:opacity-65"
-            strokeWidth={1.8}
-          />
-        )
-      ) : null}
-    </>
+        <span className="truncate text-[13.5px] font-medium text-ds-ink">
+          {mainLabel}
+        </span>
+        {showThoughtSuffix ? (
+          <span className="truncate text-[12px] text-ds-muted">
+            ({t('thoughtFor', { duration: formatDuration(reasoningDurationMs!) })})
+          </span>
+        ) : null}
+      </div>
+      <div className="flex items-center gap-2 shrink-0">
+        {stepCount > 0 ? (
+          <span className="ds-process-pill-badge">
+            {t('processSteps', { count: stepCount })}
+          </span>
+        ) : null}
+        {collapsible ? (
+          <span className="flex h-6 w-6 items-center justify-center rounded-full text-ds-faint transition group-hover:text-ds-ink">
+            {expanded ? (
+              <ChevronDown className="h-3.5 w-3.5" strokeWidth={2} />
+            ) : (
+              <ChevronRight className="h-3.5 w-3.5" strokeWidth={2} />
+            )}
+          </span>
+        ) : null}
+      </div>
+    </div>
   )
 
   if (!collapsible) {
     return (
-      <div className="flex w-fit max-w-full items-center gap-1.5 rounded-md py-1 text-left text-[15px] font-medium text-ds-muted">
+      <div className="flex w-full items-center py-0.5 text-left">
         {content}
       </div>
     )
@@ -422,7 +450,7 @@ export function WorkMetaRow({
       type="button"
       onClick={onToggle}
       aria-expanded={expanded}
-      className="group flex w-fit max-w-full items-center gap-1.5 rounded-md py-1 text-left text-[15px] font-medium text-ds-muted transition hover:opacity-85"
+      className="group flex w-full cursor-pointer items-center py-0.5 text-left transition hover:opacity-90"
     >
       {content}
     </button>

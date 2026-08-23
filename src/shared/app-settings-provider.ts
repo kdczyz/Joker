@@ -68,7 +68,10 @@ import {
   CHATGPT_SUBSCRIPTION_MODEL_IDS,
   CHATGPT_SUBSCRIPTION_NAME,
   CHATGPT_SUBSCRIPTION_PROVIDER_ID,
+  ANTIGRAVITY_CLOUDCODE_BASE_URL,
+  ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID,
   TOKEN_PLAN_PROVIDER_ID_SUFFIX,
+  findPresetModelProfile,
   getModelProviderPreset,
   modelProviderPresetProfile,
   modelProviderTokenPlanProfile,
@@ -100,6 +103,12 @@ const VIDEO_GENERATION_MODEL_PATTERN =
   /(^|[/_.:-])(video|videos|hailuo|sora|veo|kling|seedance|t2v|i2v|s2v)([/_.:-]|$)|text[-_.:/]?to[-_.:/]?video|image[-_.:/]?to[-_.:/]?video/i
 const NON_TEXT_MODEL_PATTERN =
   /(^|[/_.:-])(embedding|embeddings|embed|bge|rerank|reranker|moderation|ocr|image|images|video|videos|music|song|audio|dall-e|dalle|flux|sdxl|cogview|cogvideo|wanx|kolors|imagen|seedream|seededit|seedance|sora|veo|kling|hailuo|t2i|i2i|t2v|i2v|s2v)([/_.:-]|$)|stable[-_.:/]?diffusion|text[-_.:/]?to[-_.:/]?image|text[-_.:/]?to[-_.:/]?video|image[-_.:/]?to[-_.:/]?video|text[-_.:/]?to[-_.:/]?music|music[-_.:/]?generation/i
+
+const VISION_MODEL_KEYWORD_PATTERN =
+  /(?:^|[/_.:-])(vision|vl|omni|multimodal|visual|pixtral|internvl|minicpm-v|cogvlm|cogagent|seed-1-6|janus|step-1v)(?:$|[/_.:-\d])/i
+
+const KNOWN_VISION_MODEL_PREFIX_PATTERN =
+  /^(?:gpt-4o|gpt-4-turbo|gpt-4-vision|gpt-4\.[1-9]|gpt-4\.[0-9]{2,}|gpt-[5-9]|gpt-\d{2,}|chatgpt-4o|o[134](?:-mini|-preview)?|claude-(?:[3-9]|\d{2,}|opus|sonnet|haiku)|gemini-(?:[1-9]|\d{2,}|flash|pro|ultra|exp)|glm-[4-9]v|glm-\d{2,}v|kimi-k2\.[5-9]|mimo-v2\.5$|mimo-v2-omni|minimax-m3|doubao-seed-1-6|doubao-vision|hunyuan-vision|llama-3\.2-(?:11b|90b)-vision|llama-[^/]*vision)(?:$|[/_.:-\d])/i
 
 export function defaultModelProviderSettings(): ModelProviderSettingsV1 {
   return {
@@ -356,6 +365,48 @@ export function modelSupportsImageInput(
   return profile?.inputModalities.includes('image') === true
 }
 
+export function inferModelSupportsVision(modelId: string, providerId?: string): boolean {
+  const normalized = normalizeModelKey(modelId)
+  if (!normalized) return false
+  if (providerId) {
+    const presetProfile = findPresetModelProfile(normalized, providerId)
+    if (presetProfile) {
+      return presetProfile.inputModalities.includes('image')
+    }
+  }
+  if (KNOWN_VISION_MODEL_PREFIX_PATTERN.test(normalized) || VISION_MODEL_KEYWORD_PATTERN.test(normalized)) {
+    return true
+  }
+  const presetProfile = findPresetModelProfile(normalized)
+  if (presetProfile) {
+    return presetProfile.inputModalities.includes('image')
+  }
+  return false
+}
+
+export function inferDefaultModelProfile(
+  modelId: string,
+  providerId?: string
+): ModelProviderModelProfileV1 {
+  const normalized = normalizeModelKey(modelId)
+  const presetProfile = normalized ? findPresetModelProfile(normalized, providerId) : null
+  if (presetProfile) {
+    return {
+      ...presetProfile,
+      inputModalities: [...presetProfile.inputModalities],
+      outputModalities: [...presetProfile.outputModalities],
+      messageParts: [...presetProfile.messageParts]
+    }
+  }
+  const supportsVision = inferModelSupportsVision(modelId, providerId)
+  return {
+    inputModalities: supportsVision ? ['text', 'image'] : ['text'],
+    outputModalities: ['text'],
+    supportsToolCalling: true,
+    messageParts: supportsVision ? ['text', 'image_url'] : ['text']
+  }
+}
+
 export function modelReasoningEfforts(
   profile: Pick<ModelProviderModelProfileV1, 'reasoning'> | undefined
 ): ModelProviderReasoningCapabilityV1 | undefined {
@@ -545,7 +596,7 @@ export function resolveRcodeSpeechToTextSettings(settings: AppSettingsV1): Rcode
   // getModelProviderProfile, which would otherwise fail to find a `local-whisper`
   // provider and fall back to providers[0] (a remote endpoint such as mimo),
   // routing transcription requests to a remote URL and 404-ing.
-  if (providerId === LOCAL_WHISPER_PROVIDER_ID || protocol === LOCAL_WHISPER_PROTOCOL) {
+  if (providerId === LOCAL_WHISPER_PROVIDER_ID || (!providerId && protocol === LOCAL_WHISPER_PROTOCOL)) {
     return {
       ...speechToText,
       providerId: LOCAL_WHISPER_PROVIDER_ID,
@@ -710,12 +761,12 @@ function replaceUrlOrigin(value: string, origin: string): string {
 
 function resolveProviderSpeechModel(configuredModel: string, providerModels: readonly string[]): string {
   const model = configuredModel.trim()
-  if (!model) return providerModels[0] ?? ''
+  if (!model || model === LOCAL_WHISPER_DEFAULT_MODEL_ID) return providerModels[0] ?? ''
   if (providerModels.length === 0) return model
   if (providerModels.some((providerModel) => providerModel.trim().toLowerCase() === model.toLowerCase())) {
     return model
   }
-  return TEXT_TO_SPEECH_MODEL_PATTERN.test(model) ? providerModels[0] ?? model : model
+  return TEXT_TO_SPEECH_MODEL_PATTERN.test(model) ? providerModels[0] ?? model : (providerModels[0] ?? model)
 }
 
 export function resolveRcodeTextToSpeechSettings(settings: AppSettingsV1): RcodeTextToSpeechSettingsV1 {
@@ -943,7 +994,11 @@ function normalizeModelProviderProfile(
   const id = normalizeModelProviderId(input?.id)
   if (!id) return null
   const rawName = typeof input?.name === 'string' && input.name.trim() ? input.name.trim() : id
-  const baseUrl = normalizeModelProviderBaseUrl(input?.baseUrl)
+  // The Antigravity subscription endpoint is fixed (the daily CloudCode host
+  // carries the consumer quota); never honour a stale stored prod URL.
+  const baseUrl = normalizeModelProviderBaseUrl(
+    id === ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID ? ANTIGRAVITY_CLOUDCODE_BASE_URL : input?.baseUrl
+  )
   const rawModels = normalizeProviderModels(input?.models)
   const { name, models } = migrateChatGptSubscriptionProfile(id, rawName, rawModels)
   const filteredModels = migrateXiaomiDeprecatedModels(id, models)
@@ -1045,17 +1100,24 @@ function withPresetModelProfiles(
   stored: Record<string, ModelProviderModelProfileV1>
 ): Record<string, ModelProviderModelProfileV1> {
   const presetProfiles = presetModelProfilesForProvider(providerId)
-  if (!presetProfiles) return stored
   const knownModelKeys = new Set(models.map(normalizeModelKey).filter(Boolean))
   const merged: Record<string, ModelProviderModelProfileV1> = {}
-  for (const [rawModelId, presetProfile] of Object.entries(presetProfiles)) {
-    const modelId = normalizeModelKey(rawModelId)
-    if (!modelId) continue
-    if (knownModelKeys.size > 0 && !knownModelKeys.has(modelId)) {
-      const aliases = normalizeProviderModels(presetProfile.aliases)
-      if (!aliases.some((alias) => knownModelKeys.has(normalizeModelKey(alias)))) continue
+  if (presetProfiles) {
+    for (const [rawModelId, presetProfile] of Object.entries(presetProfiles)) {
+      const modelId = normalizeModelKey(rawModelId)
+      if (!modelId) continue
+      if (knownModelKeys.size > 0 && !knownModelKeys.has(modelId)) {
+        const aliases = normalizeProviderModels(presetProfile.aliases)
+        if (!aliases.some((alias) => knownModelKeys.has(normalizeModelKey(alias)))) continue
+      }
+      merged[modelId] = normalizeModelProviderModelProfile(presetProfile)
     }
-    merged[modelId] = normalizeModelProviderModelProfile(presetProfile)
+  }
+  for (const rawModelId of models) {
+    const modelId = normalizeModelKey(rawModelId)
+    if (!modelId || merged[modelId] || stored[modelId]) continue
+    const inferred = inferDefaultModelProfile(modelId, providerId)
+    merged[modelId] = normalizeModelProviderModelProfile(inferred)
   }
   const profiles = { ...stored }
   for (const [modelId, presetProfile] of Object.entries(merged)) {

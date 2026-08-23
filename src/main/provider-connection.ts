@@ -7,12 +7,23 @@ import {
 } from '../shared/app-settings'
 import type { ModelProviderProbeRequest, ModelProviderProbeResult } from '../shared/Rcode-gui-api'
 import { upstreamOpenAiModelsUrl } from '../shared/openai-compat-url'
-import { CHATGPT_SUBSCRIPTION_MODEL_IDS } from '../shared/model-provider-presets'
+import {
+  ANTIGRAVITY_SUBSCRIPTION_MODEL_IDS,
+  CHATGPT_SUBSCRIPTION_MODEL_IDS
+} from '../shared/model-provider-presets'
 import { fetchWithOptionalProxy } from './proxy-fetch'
 import { isCodexOAuthCredentials, parseCodexCredentials } from './codex-auth'
+import { isAntigravityOAuthCredentials, parseAntigravityCredentials } from './antigravity-auth'
 
 function isCodexBaseUrl(url: string): boolean {
   return url.includes('chatgpt.com/backend-api/codex')
+}
+
+function isAntigravityBaseUrl(url: string): boolean {
+  return (
+    url.includes('cloudcode-pa.googleapis.com') ||
+    url.includes('cloudcode-pa.sandbox.googleapis.com')
+  )
 }
 
 const PROBE_TIMEOUT_MS = 10_000
@@ -72,6 +83,23 @@ export async function probeModelProvider(
       return { ok: false, message: 'ChatGPT 订阅凭据已过期，请重新登录。' }
     }
     return { ok: true, latencyMs: 0, modelIds: [...CHATGPT_SUBSCRIPTION_MODEL_IDS] }
+  }
+  if (isAntigravityBaseUrl(baseUrl)) {
+    const rawKey = request.apiKey.trim()
+    if (!rawKey) {
+      return { ok: false, message: 'Antigravity 订阅未登录，请先点击「使用 Google 账号登录」。' }
+    }
+    if (!isAntigravityOAuthCredentials(rawKey)) {
+      return { ok: false, message: 'Antigravity 订阅凭据格式无效，请重新登录。' }
+    }
+    const creds = parseAntigravityCredentials(rawKey)
+    if (!creds) {
+      return { ok: false, message: 'Antigravity 订阅凭据已损坏，请重新登录。' }
+    }
+    if (creds.expiresAt < Date.now()) {
+      return { ok: false, message: 'Antigravity 订阅凭据已过期，请重新登录。' }
+    }
+    return { ok: true, latencyMs: 0, modelIds: [...ANTIGRAVITY_SUBSCRIPTION_MODEL_IDS] }
   }
   const endpointFormat = normalizeModelEndpointFormat(request.endpointFormat)
   if (isCustomModelEndpointFormat(endpointFormat)) {

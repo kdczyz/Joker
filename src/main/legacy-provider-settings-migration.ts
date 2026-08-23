@@ -51,7 +51,24 @@ export class LegacyProviderSettingsMigrationCoordinator {
     })
     const migratedSourceIds = new Set(migrations.map((entry) => entry.sourceId))
     const persistedSettings = stripMigratedPlaintext(settings, migratedSourceIds)
+    const activeSourceIds = new Set(sources.map((entry) => entry.sourceId))
     const bindings = await service.listBindings()
+    // Only during an explicit save (replaceCommitted) does an empty apiKey mean
+    // the user disconnected. On a load/hydrate pass the on-disk apiKey is always
+    // empty for migrated providers (plaintext was stripped), so deleting there
+    // would drop credentials that should instead be re-hydrated.
+    if (options.replaceCommitted === true) {
+      for (const binding of bindings) {
+        if (!isRecognizedSettingsSource(binding.sourceId)) continue
+        if (activeSourceIds.has(binding.sourceId)) continue
+        await service.deleteBinding(binding.sourceId).catch((error) => {
+          console.warn('[Rcode-gui] Failed to delete orphaned legacy credential.', {
+            sourceId: binding.sourceId,
+            message: error instanceof Error ? error.message : String(error)
+          })
+        })
+      }
+    }
     const sourceIdsToCommit = new Set(migrations.map((entry) => entry.sourceId))
 
     for (const binding of bindings) {

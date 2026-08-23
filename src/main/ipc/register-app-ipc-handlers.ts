@@ -159,6 +159,7 @@ import {
   encodeCodexCredentials,
   fetchCodexAccountUsage
 } from '../codex-auth'
+import { startAntigravityBrowserAuth } from '../antigravity-auth'
 import { startGithubOAuth } from '../github-oauth'
 import {
   syncGithubAccountToEnvironment,
@@ -1115,6 +1116,12 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     return startCodexBrowserAuth(async (url: string) => {
       await shell.openExternal(url)
     })
+  })
+
+  ipcMain.handle('antigravity:auth:browser', async (_event, projectId?: string) => {
+    return startAntigravityBrowserAuth(async (url: string) => {
+      await shell.openExternal(url)
+    }, typeof projectId === 'string' ? projectId : undefined)
   })
 
   // --- GitHub OAuth + 仓库接管 ---

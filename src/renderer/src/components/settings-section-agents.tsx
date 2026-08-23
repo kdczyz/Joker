@@ -289,7 +289,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   })
   const runtimeTuning = Rcode.runtimeTuning ?? {
     maxWallTimeMs: 86400000,
-    streamIdleTimeoutMs: 45000,
+    streamIdleTimeoutMs: 300000,
     toolStorm: {
       enabled: true,
       windowSize: 8,

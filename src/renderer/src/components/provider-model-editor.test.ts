@@ -317,4 +317,19 @@ describe('provider-model-editor', () => {
     expect(describeContextWindowTokens(1_000_000)).toBe('1M')
     expect(describeContextWindowTokens(24_512)).toBe('24512')
   })
+
+  it('infers visionInput in providerModelFormForExisting when profile is absent', () => {
+    const target = provider({
+      models: ['gpt-4o', 'claude-3-5-sonnet', 'deepseek-chat'],
+      modelProfiles: {}
+    })
+    const gpt4oForm = providerModelFormForExisting(target, 'chat', 'gpt-4o')
+    expect(gpt4oForm.visionInput).toBe(true)
+
+    const claudeForm = providerModelFormForExisting(target, 'chat', 'claude-3-5-sonnet')
+    expect(claudeForm.visionInput).toBe(true)
+
+    const deepseekForm = providerModelFormForExisting(target, 'chat', 'deepseek-chat')
+    expect(deepseekForm.visionInput).toBe(false)
+  })
 })

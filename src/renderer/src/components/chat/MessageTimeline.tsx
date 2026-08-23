@@ -1009,30 +1009,34 @@ function MessageTurn({
       {turn.user ? <MessageBubble block={turn.user} /> : null}
 
       {hasProcess ? (
-        <div className="flex flex-col gap-1 pb-2">
-          <WorkMetaRow
-            processing={isProcessing}
-            stepCount={workProcessBlocks.length}
-            durationMs={durationMs}
-            reasoningDurationMs={reasoningDurationMs}
-            expanded={workExpanded}
-            collapsible={!forceExpandForError}
-            onToggle={() => setWorkExpandedOverride((value) => !(value ?? isProcessing))}
-          />
+        <div className="ds-process-flow-card my-1">
+          <div className="ds-process-flow-header">
+            <WorkMetaRow
+              processing={isProcessing}
+              stepCount={workProcessBlocks.length}
+              durationMs={durationMs}
+              reasoningDurationMs={reasoningDurationMs}
+              expanded={workExpanded}
+              collapsible={!forceExpandForError}
+              onToggle={() => setWorkExpandedOverride((value) => !(value ?? isProcessing))}
+            />
+          </div>
           {workExpanded && processSections.length > 0 ? (
-            <div className="flex flex-col gap-1">
-              {processSections.map((section) => (
-                <ProcessSectionRow
-                  key={section.id}
-                  section={section}
-                  processing={isProcessing}
-                  reasoningDurationMs={reasoningDurationMs}
-                  singleReasoningSection={reasoningSectionCount === 1}
-                  workspaceRoot={filePreviewWorkspaceRoot}
-                  viewportRef={viewportRef}
-                  onOpenChildThread={onOpenChildThread}
-                />
-              ))}
+            <div className="border-t border-ds-border/40 bg-ds-card/40 px-3.5 py-3">
+              <div className="ds-process-timeline-spine flex flex-col gap-2.5">
+                {processSections.map((section) => (
+                  <ProcessSectionRow
+                    key={section.id}
+                    section={section}
+                    processing={isProcessing}
+                    reasoningDurationMs={reasoningDurationMs}
+                    singleReasoningSection={reasoningSectionCount === 1}
+                    workspaceRoot={filePreviewWorkspaceRoot}
+                    viewportRef={viewportRef}
+                    onOpenChildThread={onOpenChildThread}
+                  />
+                ))}
+              </div>
             </div>
           ) : null}
         </div>
@@ -1152,7 +1156,10 @@ function LiveTurnProgressRow({ hasActiveGoal }: { hasActiveGoal: boolean }): Rea
 
   return (
     <div className={liveTurnProgressClass(hasActiveGoal)}>
-      <span className="ds-shiny-text">{label}</span>
+      <div className="ds-live-progress-pill">
+        <span className="ds-live-progress-dot" />
+        <span className="ds-shiny-text">{label}</span>
+      </div>
     </div>
   )
 }

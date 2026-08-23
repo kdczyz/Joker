@@ -111,28 +111,55 @@ export function useWorkbenchAttachmentController({
         if (!file.type.startsWith('image/')) {
           throw new Error(t('composerAttachmentUnsupportedType'))
         }
-        if (!selectedModelSupportsImageInput) {
-          throw new Error(t('composerAttachmentModelUnsupported'))
-        }
-        if (!attachmentCapabilities || typeof window.RcodeGui?.uploadRuntimeImageAttachment !== 'function') {
+        if (
+          !attachmentCapabilities ||
+          (typeof window.RcodeGui?.uploadRuntimeImageAttachment !== 'function' &&
+            typeof provider.uploadAttachment !== 'function')
+        ) {
           throw new Error(t('composerAttachmentUnavailable'))
         }
-        const result = await uploadRuntimeImageAttachment({
-          source: await runtimeImageSourceForFile(file, localFilePath),
-          name: file.name || 'image',
-          ...(activeThreadId ? { threadId: activeThreadId } : {}),
-          ...(workspace ? { workspace } : {})
-        })
-        const attachment = result.attachment
-        uploaded.push({
-          id: attachment.id,
-          kind: 'image',
-          name: attachment.name,
-          mimeType: attachment.mimeType,
-          width: attachment.width,
-          height: attachment.height,
-          previewUrl: runtimeImagePreviewUrl(result)
-        })
+        if (typeof window.RcodeGui?.uploadRuntimeImageAttachment === 'function') {
+          const result = await uploadRuntimeImageAttachment({
+            source: await runtimeImageSourceForFile(file, localFilePath),
+            name: file.name || 'image',
+            ...(activeThreadId ? { threadId: activeThreadId } : {}),
+            ...(workspace ? { workspace } : {})
+          })
+          const attachment = result.attachment
+          uploaded.push({
+            id: attachment.id,
+            kind: 'image',
+            name: attachment.name,
+            mimeType: attachment.mimeType,
+            width: attachment.width,
+            height: attachment.height,
+            previewUrl: runtimeImagePreviewUrl(result)
+          })
+        } else if (typeof provider.uploadAttachment === 'function') {
+          const base64Data = arrayBufferToBase64(await file.arrayBuffer())
+          const mimeType = file.type || 'image/png'
+          const attachment = await provider.uploadAttachment({
+            name: file.name || 'image',
+            mimeType,
+            dataBase64: base64Data,
+            localFilePath,
+            ...(activeThreadId ? { threadId: activeThreadId } : {}),
+            ...(workspace ? { workspace } : {})
+          })
+          uploaded.push({
+            id: attachment.id,
+            kind: 'image',
+            name: attachment.name,
+            mimeType: attachment.mimeType,
+            width: attachment.width,
+            height: attachment.height,
+            previewUrl: attachment.textFallback?.dataBase64
+              ? `data:${attachment.mimeType || 'image/png'};base64,${attachment.textFallback.dataBase64}`
+              : `data:${mimeType};base64,${base64Data}`
+          })
+        } else {
+          throw new Error(t('composerAttachmentUnavailable'))
+        }
       }
       if (uploaded.length > 0) {
         setComposerAttachmentsForScope(attachmentScope, (current) => {

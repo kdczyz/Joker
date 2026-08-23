@@ -605,9 +605,17 @@ function relayCompletionStream(upstream: Response, fallbackModel: string): Respo
         usage = tokenUsage(parsed.usage) ?? usage;
         const choices = Array.isArray(parsed.choices) ? parsed.choices : [];
         const first = isObject(choices[0]) ? choices[0] : undefined;
-        const delta = isObject(first?.delta) ? assistantContent(first.delta.content) : undefined;
+        const delta = isObject(first?.delta) ? first.delta : undefined;
+        const reasoningDelta = typeof delta?.reasoning_content === "string" ? delta.reasoning_content
+          : typeof delta?.reasoning === "string" ? delta.reasoning
+          : typeof delta?.thought === "string" ? delta.thought
+          : undefined;
+        if (reasoningDelta && !finished) {
+          controller.enqueue(encodeEvent(encoder, { type: "reasoning_delta", delta: reasoningDelta }));
+        }
+        const deltaContent = isObject(first?.delta) ? assistantContent(first.delta.content) : undefined;
         const finalMessage = isObject(first?.message) ? assistantContent(first.message.content) : undefined;
-        const text = delta ?? finalMessage;
+        const text = deltaContent ?? finalMessage;
         if (!text || finished) return;
         totalLength += text.length;
         if (totalLength > MAX_STREAM_TEXT_LENGTH) {
@@ -679,7 +687,7 @@ export async function workChat(request: Request, env: WorkEnv): Promise<Response
     method: "POST",
     headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json", accept: wantsStream ? "text/event-stream" : "application/json" },
     body: JSON.stringify(payload),
-    signal: AbortSignal.timeout(wantsStream ? 120_000 : 60_000)
+    signal: AbortSignal.timeout(wantsStream ? 300_000 : 90_000)
   });
   let upstream: Response;
   try {

@@ -9,9 +9,8 @@ export type AttachmentUploadAvailabilityInput = {
 export function isChatAttachmentUploadEnabled(input: AttachmentUploadAvailabilityInput): boolean {
   return (
     input.runtimeConnection === 'ready' &&
-    (input.route === 'chat' || input.route === 'design') &&
+    (input.route === 'chat' || input.route === 'design' || input.route === 'write') &&
     (input.mode === 'agent' || input.mode === 'plan') &&
-    input.attachmentStoreAvailable === true &&
-    input.modelSupportsImageInput === true
+    input.attachmentStoreAvailable === true
   )
 }
