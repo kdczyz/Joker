@@ -6,11 +6,13 @@ import { repairToolArguments } from './tool-argument-repair.js'
 import type { ModelRequestRetryConfig } from '../../config/Rcode-config.js'
 import {
   DEFAULT_MODEL_ENDPOINT_FORMAT,
+  isAntigravityCloudCodeBaseUrl,
   isCloudCodeEndpointFormat,
   isCustomModelEndpointFormat,
   modelEndpointPath,
   normalizeModelEndpointFormat,
   resolveModelEndpointFormat,
+  shouldUseAntigravityAdapter,
   usesChatCompletionsShape,
   type ModelEndpointFormat
 } from '../../contracts/model-endpoint-format.js'
@@ -49,6 +51,7 @@ import { decodeAnthropicMessagesStreamPayload } from './anthropic-messages-strea
 import { decodeCloudCodeStreamPayload } from './cloudcode-stream-decoder.js'
 import { decodeCompatNonStreamingResponse } from './compat-non-streaming-decoder.js'
 import { IncrementalSseFrameBuffer } from './incremental-sse-frame-buffer.js'
+import { openAiChatToCloudCodeBody } from './cloudcode-openai-adapter.js'
 
 export { redactUrlForLog } from './compat-http-diagnostics.js'
 
@@ -217,14 +220,25 @@ export class CompatModelClient implements ModelClient {
       return
     }
     const stream = request.stream ?? !this.config.nonStreaming
-    const url = buildModelEndpointUrl(this.config.baseUrl, configuredEndpointFormat, stream)
-    const body = this.buildRequestBody(request, stream, { endpointFormat })
+    const useAntigravityAdapter = shouldUseAntigravityAdapter(endpointFormat, this.config.baseUrl)
+    // For Antigravity/CloudCode endpoints: build the request body using the
+    // standard OpenAI shape (so tools, reasoning_effort etc. are handled
+    // identically to other providers), then translate it to the CloudCode
+    // wire format before sending. The URL still targets the CloudCode endpoint.
+    const url = useAntigravityAdapter
+      ? buildCloudCodeEndpointUrl(this.config.baseUrl, stream)
+      : buildModelEndpointUrl(this.config.baseUrl, endpointFormat, stream)
+    const buildBodyFormat: ModelEndpointFormat = useAntigravityAdapter ? 'chat_completions' : endpointFormat
+    let body = this.buildRequestBody(request, stream, { endpointFormat: buildBodyFormat })
+    if (useAntigravityAdapter) {
+      body = openAiChatToCloudCodeBody(body as never)
+    }
     if (round) {
       this.config.debugSink?.captureRequest(round, body, redactUrlForLog(url))
     }
     const headers = this.buildHeaders(
       stream,
-      endpointFormat,
+      useAntigravityAdapter ? 'cloudcode' : endpointFormat,
       this.config.baseUrl.includes('chatgpt.com/backend-api/codex') &&
         this.capabilitiesForModel(requestModel).responsesMode === 'lite'
     )
@@ -270,7 +284,11 @@ export class CompatModelClient implements ModelClient {
       }
       const text = errorBody.text
       if (usesChatCompletionsShape(endpointFormat) && shouldRetryWithoutStreamUsage(response.status, text, body)) {
-        const retryBody = this.buildRequestBody(request, stream, { endpointFormat, includeStreamUsage: false })
+        const retryBuildFormat: ModelEndpointFormat = useAntigravityAdapter ? 'chat_completions' : endpointFormat
+        let retryBody = this.buildRequestBody(request, stream, { endpointFormat: retryBuildFormat, includeStreamUsage: false })
+        if (useAntigravityAdapter) {
+          retryBody = openAiChatToCloudCodeBody(retryBody as never)
+        }
         if (round) this.config.debugSink?.captureRequest(round, retryBody, redactUrlForLog(url))
         const retry = await this.postChatCompletion(url, headers, retryBody, request.abortSignal)
         if (retry.kind === 'error') {
@@ -279,7 +297,7 @@ export class CompatModelClient implements ModelClient {
         }
         response = retry.response
         if (response.ok) {
-          if (this.config.nonStreaming || (response.headers.get('content-type')?.includes('application/json') && endpointFormat !== 'cloudcode')) {
+          if (this.config.nonStreaming || (response.headers.get('content-type')?.includes('application/json') && (endpointFormat !== 'cloudcode' || useAntigravityAdapter))) {
             const json = await readLimitedResponseJson(response, modelStreamLimits.maxTotalBytes)
             if (json.kind === 'limit') {
               yield {
@@ -295,7 +313,7 @@ export class CompatModelClient implements ModelClient {
             }
             yield* this.materializeNonStreaming(
               json.value as ChatCompletionResponse,
-              endpointFormat,
+              useAntigravityAdapter ? 'cloudcode' : endpointFormat,
               requestModel,
               modelStreamLimits
             )
@@ -305,7 +323,7 @@ export class CompatModelClient implements ModelClient {
             yield { kind: 'error', message: 'model response had no body' }
             return
           }
-          yield* this.streamSse(response.body, request.abortSignal, endpointFormat, requestModel)
+          yield* this.streamSse(response.body, request.abortSignal, endpointFormat, requestModel, useAntigravityAdapter)
           return
         }
         const retryErrorBody = await readLimitedResponseText(response, maxErrorBodyBytes)
@@ -350,7 +368,7 @@ export class CompatModelClient implements ModelClient {
       }
       return
     }
-    if (this.config.nonStreaming || (response.headers.get('content-type')?.includes('application/json') && endpointFormat !== 'cloudcode')) {
+    if (this.config.nonStreaming || (response.headers.get('content-type')?.includes('application/json') && (endpointFormat !== 'cloudcode' || useAntigravityAdapter))) {
       const json = await readLimitedResponseJson(response, modelStreamLimits.maxTotalBytes)
       if (json.kind === 'limit') {
         yield {
@@ -366,7 +384,7 @@ export class CompatModelClient implements ModelClient {
       }
       yield* this.materializeNonStreaming(
         json.value as ChatCompletionResponse,
-        endpointFormat,
+        useAntigravityAdapter ? 'cloudcode' : endpointFormat,
         requestModel,
         modelStreamLimits
       )
@@ -376,7 +394,7 @@ export class CompatModelClient implements ModelClient {
       yield { kind: 'error', message: 'model response had no body' }
       return
     }
-    yield* this.streamSse(response.body, request.abortSignal, endpointFormat, requestModel)
+    yield* this.streamSse(response.body, request.abortSignal, endpointFormat, requestModel, useAntigravityAdapter)
   }
 
   private endpointFormat(): ModelEndpointFormat {
@@ -560,7 +578,8 @@ export class CompatModelClient implements ModelClient {
     body: ReadableStream<Uint8Array>,
     signal: AbortSignal,
     endpointFormat: ModelEndpointFormat,
-    model: string
+    model: string,
+    useAntigravityAdapter = false
   ): AsyncIterable<ModelStreamChunk> {
     const decoder = new TextDecoder('utf-8')
     const reader = body.getReader()
@@ -653,7 +672,7 @@ export class CompatModelClient implements ModelClient {
             pendingByIndex,
             completedToolCalls,
             sawTextDelta,
-            endpointFormat,
+            useAntigravityAdapter ? 'cloudcode' : endpointFormat,
             model,
             budget
           )
@@ -912,16 +931,20 @@ export class CompatModelClient implements ModelClient {
   }
 }
 
+function buildCloudCodeEndpointUrl(baseUrl: string, stream = true): string {
+  const normalized = baseUrl.trim().replace(/\/+$/, '')
+  return stream
+    ? `${normalized}:streamGenerateContent?alt=sse`
+    : `${normalized}:generateContent`
+}
+
 function buildModelEndpointUrl(
   baseUrl: string,
   endpointFormat: ModelEndpointFormat,
   stream = true
 ): string {
   if (isCloudCodeEndpointFormat(endpointFormat)) {
-    const normalized = baseUrl.trim().replace(/\/+$/, '')
-    return stream
-      ? `${normalized}:streamGenerateContent?alt=sse`
-      : `${normalized}:generateContent`
+    return buildCloudCodeEndpointUrl(baseUrl, stream)
   }
   if (isCustomModelEndpointFormat(endpointFormat)) return exactModelEndpointUrl(baseUrl)
   const path = modelEndpointPath(endpointFormat)

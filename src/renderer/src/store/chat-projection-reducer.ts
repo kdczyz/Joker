@@ -316,12 +316,7 @@ export function reduceChatProjection(
         createdAt: event.createdAt ?? new Date(context.now).toISOString(),
         text: context.runtimeStatusText(event)
       }
-      const index = baseBlocks.findIndex(
-        (candidate) => candidate.kind === 'system' && candidate.id === event.itemId
-      )
-      const blocks = [...baseBlocks]
-      if (index >= 0) blocks[index] = block
-      else blocks.push(block)
+      const blocks = [...baseBlocks, block]
       return {
         ...base,
         ...flushed,
@@ -345,7 +340,7 @@ export function reduceChatProjection(
       }
       return {
         ...flushed,
-        blocks: context.upsertRuntimeError(baseBlocks, block),
+        blocks: [...baseBlocks, block],
         error: context.clearRecoveringError(state.error)
       }
     }

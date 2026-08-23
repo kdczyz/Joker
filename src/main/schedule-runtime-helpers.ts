@@ -331,8 +331,6 @@ export function resolveScheduleModelConfig(
     ? providers.find((item) => providerHasModel(item, requestedModel))
     : undefined
 
-  try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'resolveScheduleModelConfig', ts: new Date().toISOString(), requestedProviderId: requestedProviderId || null, requestedModel, modelProviderId: modelProvider?.id ?? null, allProviderIds: providers.map((p) => p.id) }) + '\n') } catch {}
-
   const provider =
     (requestedProviderServesModel ? requestedProvider : undefined) ??
     modelProvider ??

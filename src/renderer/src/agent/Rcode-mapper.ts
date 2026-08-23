@@ -1474,11 +1474,12 @@ function toolReadyFromEvent(event: CoreRuntimeEventJson): ToolEventPayload | nul
 }
 
 function runtimeStatusFromEvent(event: CoreRuntimeEventJson): RuntimeStatusEventPayload | null {
+  const seq = typeof event.seq === 'number' ? event.seq : Date.now()
   if (event.kind === 'error' && event.code === 'compaction_summary_fallback') {
     const key = event.turnId ?? event.threadId ?? event.seq ?? Date.now()
     return {
       kind: 'compaction_summary_fallback',
-      itemId: `runtime_status_${key}_compaction_summary_fallback`,
+      itemId: `runtime_status_${key}_compaction_summary_fallback_${seq}`,
       turnId: event.turnId,
       createdAt: event.timestamp,
       message: event.message
@@ -1486,19 +1487,22 @@ function runtimeStatusFromEvent(event: CoreRuntimeEventJson): RuntimeStatusEvent
   }
   if (event.kind === 'tool_result_upload_wait') {
     const turnKey = event.turnId ?? event.threadId ?? event.seq ?? Date.now()
+    const rawToolName = (event as { toolName?: unknown }).toolName
+    const toolName = typeof rawToolName === 'string' && rawToolName.trim() ? rawToolName.trim() : undefined
     return {
       kind: 'tool_result_upload_wait',
-      itemId: `runtime_status_${turnKey}_tool_upload_wait`,
+      itemId: `runtime_status_${turnKey}_tool_upload_wait_${seq}`,
       turnId: event.turnId,
       createdAt: event.timestamp,
-      toolResultCount: typeof event.toolResultCount === 'number' ? event.toolResultCount : 0
+      toolResultCount: typeof event.toolResultCount === 'number' ? event.toolResultCount : 0,
+      ...(toolName ? { toolName } : {})
     }
   }
   if (event.kind === 'model_request_retry') {
     const turnKey = event.turnId ?? event.threadId ?? event.seq ?? Date.now()
     return {
       kind: 'model_request_retry',
-      itemId: `runtime_status_${turnKey}_model_retry`,
+      itemId: `runtime_status_${turnKey}_model_retry_${seq}`,
       turnId: event.turnId,
       createdAt: event.timestamp,
       status: typeof event.status === 'number' ? event.status : undefined,
@@ -1511,7 +1515,7 @@ function runtimeStatusFromEvent(event: CoreRuntimeEventJson): RuntimeStatusEvent
     const key = event.fingerprint ?? event.seq ?? Date.now()
     return {
       kind: 'tool_catalog_changed',
-      itemId: `runtime_status_tool_catalog_${key}`,
+      itemId: `runtime_status_tool_catalog_${key}_${seq}`,
       turnId: event.turnId,
       createdAt: event.timestamp,
       ...(event.changeKind ? { changeKind: event.changeKind } : {}),
@@ -1524,7 +1528,7 @@ function runtimeStatusFromEvent(event: CoreRuntimeEventJson): RuntimeStatusEvent
     if (!callId || !toolName) return null
     return {
       kind: 'tool_storm_suppressed',
-      itemId: event.itemId ?? `runtime_status_tool_storm_${callId}`,
+      itemId: event.itemId ?? `runtime_status_tool_storm_${callId}_${seq}`,
       turnId: event.turnId,
       createdAt: event.timestamp,
       message: event.message,

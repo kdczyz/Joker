@@ -233,7 +233,7 @@ const DOUBAO_REASONING: ModelProviderReasoningCapabilityV1 = {
 const GEMINI_REASONING: ModelProviderReasoningCapabilityV1 = {
   supportedEfforts: ['off', 'low', 'medium', 'high', 'max'],
   defaultEffort: 'high',
-  requestProtocol: 'none'
+  requestProtocol: 'deepseek-chat-completions'
 }
 
 const ZHIPU_CODING_PLAN_MODELS = [
@@ -720,7 +720,7 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
     name: ANTIGRAVITY_SUBSCRIPTION_NAME,
     category: 'subscription',
     baseUrl: ANTIGRAVITY_CLOUDCODE_BASE_URL,
-    endpointFormat: 'cloudcode',
+    endpointFormat: 'chat_completions',
     models: [...ANTIGRAVITY_SUBSCRIPTION_MODEL_IDS],
     modelProfiles: {
       'gemini-pro-agent': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },

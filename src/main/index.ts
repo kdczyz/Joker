@@ -101,6 +101,7 @@ import {
 import { createClawRuntime, type ClawRuntime } from './claw-runtime'
 import { createScheduleRuntime, type ScheduleRuntime } from './schedule-runtime'
 import { createWorkflowRuntime, type WorkflowRuntime } from './workflow-runtime'
+import { createOpenAiProxyServer, type OpenAiProxyServer } from './openai-proxy-server'
 import { runClawScheduleMcpServerFromArgv } from './claw-schedule-mcp-server'
 import {
   resolveRcodeMcpJsonPath,
@@ -285,6 +286,7 @@ let clawRuntime: ClawRuntime | null = null
 let scheduleRuntime: ScheduleRuntime | null = null
 let telegramRuntime: TelegramRuntime | null = null
 let workflowRuntime: WorkflowRuntime | null = null
+let openaiProxyServer: OpenAiProxyServer | null = null
 let appBehavior: AppBehaviorConfigV1 = normalizeAppBehaviorSettings()
 let tray: Tray | null = null
 let trayMenu: Menu | null = null
@@ -359,6 +361,7 @@ function syncCheckpointCleanupTimer(settings: AppSettingsV1): void {
 const runtimeShutdown = new ManagedRuntimeShutdownCoordinator(async () => {
   await scheduleRuntime?.stop()
   await workflowRuntime?.stop()
+  await openaiProxyServer?.stop()
   await Promise.all([
     clawRuntime?.stop(),
     telegramRuntime?.stop()
@@ -1640,6 +1643,8 @@ app.whenReady().then(async () => {
   scheduleRuntime.sync(initial)
   workflowRuntime = createWorkflowRuntime({ store, runtimeRequest, logError, powerSaveBlocker })
   workflowRuntime.sync(initial)
+  openaiProxyServer = createOpenAiProxyServer({ store, logError })
+  openaiProxyServer.sync(initial)
   // Telegram runtime is created first so ClawRuntime can reference it via deps.
   // The onInbound callback closes over the module-level clawRuntime, which is
   // assigned on the next line — by the time an update arrives the reference is set.
@@ -1729,6 +1734,7 @@ app.whenReady().then(async () => {
     try {
       scheduleRuntime?.sync(saved)
       workflowRuntime?.sync(saved)
+      openaiProxyServer?.sync(saved)
       clawRuntime?.sync(saved)
     } catch (error) {
       logError('settings-apply', 'failed to sync schedule/claw runtimes after settings change', {

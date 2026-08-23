@@ -1007,26 +1007,26 @@ export function SidebarProjectsSection({
 
   return (
     <div className="ds-no-drag flex min-h-0 flex-1 flex-col">
-      <div className="flex min-h-[38px] items-center justify-between px-2 pb-1.5 pt-3">
+      <div className="flex min-h-[34px] items-center justify-between px-2 pb-1 pt-2">
         <button
           type="button"
           onClick={toggleAllGroups}
-          className="flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1.5 text-[13px] text-ds-faint transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-ds-muted"
+          className="group flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-[#71717a] transition hover:bg-black/[0.04] hover:text-[#18181b] dark:text-[#a1a1aa] dark:hover:bg-white/[0.06] dark:hover:text-white"
           title={t('sidebarProjects')}
           aria-label={t('sidebarProjects')}
         >
-          <span className="truncate">{t('sidebarProjects')}</span>
+          <span className="truncate tracking-wide">{t('sidebarProjects')}</span>
           {allGroupsCollapsed ? (
-            <ChevronRight className="h-3 w-3 shrink-0" strokeWidth={2} />
+            <ChevronRight className="h-3 w-3 shrink-0 text-[#a1a1aa] transition group-hover:text-[#18181b] dark:group-hover:text-white" strokeWidth={2} />
           ) : (
-            <ChevronDown className="h-3 w-3 shrink-0" strokeWidth={2} />
+            <ChevronDown className="h-3 w-3 shrink-0 text-[#a1a1aa] transition group-hover:text-[#18181b] dark:group-hover:text-white" strokeWidth={2} />
           )}
         </button>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-0.5">
           <SidebarIconButton
             onClick={() => setSearchOpen((open) => !open)}
             active={searchVisible}
-            className="h-7 w-7"
+            className="h-6.5 w-6.5 rounded-[6px]"
             title={t('sidebarSearchThreads')}
             ariaLabel={t('sidebarSearchThreads')}
           >
@@ -1034,7 +1034,7 @@ export function SidebarProjectsSection({
           </SidebarIconButton>
           <SidebarIconButton
             onClick={onPickWorkspace}
-            className="h-7 w-7"
+            className="h-6.5 w-6.5 rounded-[6px]"
             title={workspaceRoot ? t('changeWorkspace') : t('selectWorkspace')}
             ariaLabel={workspaceRoot ? t('changeWorkspace') : t('selectWorkspace')}
           >
@@ -1044,7 +1044,7 @@ export function SidebarProjectsSection({
       </div>
 
       {searchVisible ? (
-        <div className="mb-2 flex items-center gap-1 px-2">
+        <div className="mb-1.5 flex items-center gap-1 px-1">
           <SidebarSearchField
             value={searchQuery}
             onChange={onSearchQueryChange}
@@ -1054,7 +1054,7 @@ export function SidebarProjectsSection({
         </div>
       ) : null}
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-1 pb-2 pt-0.5">
+      <div className="min-h-0 flex-1 overflow-y-auto px-0.5 pb-2 pt-0.5">
         {displayGroups.length === 0 ? (
           <SidebarEmpty
             runtimeReady={runtimeReady}
@@ -1090,11 +1090,11 @@ export function SidebarProjectsSection({
           return (
             <div
               key={workspacePath}
-              className={`relative mb-2 ${
+              className={`relative mb-1.5 ${
                 workspaceDropPosition === 'before'
-                  ? "before:absolute before:inset-x-2 before:top-0 before:z-10 before:h-0.5 before:rounded-full before:bg-accent before:content-['']"
+                  ? "before:absolute before:inset-x-2 before:top-0 before:z-10 before:h-0.5 before:rounded-full before:bg-[#18181b] dark:before:bg-white before:content-['']"
                   : workspaceDropPosition === 'after'
-                    ? "after:absolute after:bottom-0 after:inset-x-2 after:z-10 after:h-0.5 after:rounded-full after:bg-accent after:content-['']"
+                    ? "after:absolute after:bottom-0 after:inset-x-2 after:z-10 after:h-0.5 after:rounded-full after:bg-[#18181b] dark:after:bg-white after:content-['']"
                     : ''
               }`}
             >
@@ -1110,9 +1110,9 @@ export function SidebarProjectsSection({
                 onDragOver={(event) => handleWorkspaceDragOver(event, workspacePath)}
                 onDragLeave={(event) => handleWorkspaceDragLeave(event, workspacePath)}
                 onDrop={(event) => handleWorkspaceDrop(event, workspacePath)}
-                className={`min-h-[36px] text-[13.5px] ${
+                className={`min-h-[32px] text-[13px] font-medium ${
                   isDragOver
-                    ? 'bg-accent/10 shadow-[inset_0_0_0_1px_rgba(79,124,255,0.32)]'
+                    ? 'bg-black/[0.08] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.15)] dark:bg-white/[0.12]'
                     : ''
                 } ${
                   draggingWorkspacePath !== null
@@ -1120,38 +1120,38 @@ export function SidebarProjectsSection({
                     ? 'opacity-55'
                     : ''
                 }`}
-                buttonClassName="items-center gap-2 px-2.5 py-2"
+                buttonClassName="items-center gap-2 px-2 py-1.5"
                 actionsVisibility="hidden"
                 actionsLayout="overlay"
                 actions={
-                  <>
+                  <div className="flex items-center gap-0.5 rounded-[5px] bg-white/80 p-0.5 backdrop-blur-[2px] shadow-sm dark:bg-[#18181b]/80">
                     <SidebarIconButton
                       onClick={() => onCreateThreadInWorkspace(workspacePath)}
                       title={t('sidebarWorkspaceNewThread')}
                       ariaLabel={t('sidebarWorkspaceNewThread')}
-                      className="h-6 w-6"
+                      className="h-5.5 w-5.5 rounded-[4px]"
                       stopPropagation
                     >
-                      <Plus className="h-3.5 w-3.5" strokeWidth={1.9} />
+                      <Plus className="h-3 w-3" strokeWidth={2.2} />
                     </SidebarIconButton>
-                  </>
+                  </div>
                 }
               >
                 {isCollapsed ? (
-                  <Folder className="h-4 w-4 shrink-0 text-ds-muted" strokeWidth={1.75} />
+                  <Folder className="h-3.5 w-3.5 shrink-0 text-[#71717a] dark:text-[#a1a1aa]" strokeWidth={1.9} />
                 ) : (
-                  <FolderOpen className="h-4 w-4 shrink-0 text-ds-muted" strokeWidth={1.75} />
+                  <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#18181b] dark:text-white" strokeWidth={1.9} />
                 )}
-                <span className="min-w-0 flex-1 truncate">{folderName}</span>
+                <span className="min-w-0 flex-1 truncate font-medium text-[#18181b] dark:text-[#f4f4f5]">{folderName}</span>
                 {workspaceContext ? (
-                  <span className="min-w-0 max-w-[42%] shrink truncate text-[12.5px] text-ds-faint transition group-hover:opacity-0 group-focus-within:opacity-0">
+                  <span className="min-w-0 max-w-[40%] shrink truncate rounded-[4px] border border-black/[0.06] bg-black/[0.03] px-1 py-0.2 text-[10.5px] font-normal text-ds-faint transition group-hover:opacity-0 group-focus-within:opacity-0 dark:border-white/[0.08] dark:bg-white/[0.04]">
                     {workspaceContext}
                   </span>
                 ) : null}
               </SidebarTreeRow>
 
               {!isCollapsed ? (
-                <div className="mt-1 space-y-[3px] pl-4">
+                <div className="relative ml-2 mt-0.5 space-y-[2px] border-l border-black/[0.06] pl-2 dark:border-white/[0.08]">
                   <SddDraftHistoryRows
                     items={draftHistory}
                     activeDraftId={activeSddDraftId}
@@ -1162,8 +1162,8 @@ export function SidebarProjectsSection({
                     t={t}
                   />
                   {sortedThreads.length === 0 && draftHistory.length === 0 ? (
-                    <div className="flex items-center justify-between gap-2 px-2.5 py-1.5">
-                      <div className="text-[12.5px] leading-5 text-ds-faint">
+                    <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+                      <div className="text-[12px] leading-5 text-ds-faint">
                         {searchQuery.trim()
                           ? t('sidebarSearchEmpty')
                           : showArchived
@@ -1175,7 +1175,7 @@ export function SidebarProjectsSection({
                           type="button"
                           data-cursor-spotlight-target
                           onClick={() => onCreateThreadInWorkspace(workspacePath)}
-                          className="shrink-0 rounded-md px-2 py-1 text-[12px] font-medium text-ds-faint transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-ds-ink"
+                          className="shrink-0 rounded-[5px] border border-black/[0.06] bg-black/[0.02] px-2 py-0.5 text-[11px] font-medium text-ds-faint transition hover:bg-black/[0.05] hover:text-[#18181b] dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:text-white"
                         >
                           {t('sidebarWorkspaceNewThread')}
                         </button>
@@ -1233,7 +1233,7 @@ export function SidebarProjectsSection({
                           [workspacePath]: !workspaceExpanded
                         }))
                       }
-                      className="ml-1 mt-1 rounded-md px-2.5 py-1.5 text-[12.5px] text-ds-faint transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-ds-ink"
+                      className="mt-1 flex w-full items-center justify-center rounded-[6px] py-1 text-[11.5px] font-medium text-[#71717a] transition hover:bg-black/[0.04] hover:text-[#18181b] dark:text-[#a1a1aa] dark:hover:bg-white/[0.05] dark:hover:text-white"
                     >
                       {workspaceExpanded
                         ? t('sidebarWorkspaceShowLess')

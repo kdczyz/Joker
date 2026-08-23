@@ -186,7 +186,8 @@ export type ModelRequestRetryEvent = z.infer<typeof ModelRequestRetryEvent>
 export const ToolUploadStatusEvent = RuntimeEventBase.extend({
   kind: z.literal('tool_result_upload_wait'),
   status: z.literal('waiting'),
-  toolResultCount: z.number().int().nonnegative()
+  toolResultCount: z.number().int().nonnegative(),
+  toolName: z.string().optional()
 })
 export type ToolUploadStatusEvent = z.infer<typeof ToolUploadStatusEvent>
 

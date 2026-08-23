@@ -181,6 +181,7 @@ class CompatMessageProjector {
         return {
           role: 'tool',
           content: text || '(image omitted: the active model has no image input)',
+          name: item.toolName,
           tool_call_id: item.callId
         }
       }
@@ -192,11 +193,12 @@ class CompatMessageProjector {
           image_url: { url: `data:${image.mimeType};base64,${image.dataBase64}` }
         })
       }
-      return { role: 'tool', content: parts, tool_call_id: item.callId }
+      return { role: 'tool', content: parts, name: item.toolName, tool_call_id: item.callId }
     }
     return {
       role: 'tool',
       content: toolResultContent(item.output),
+      name: item.toolName,
       tool_call_id: item.callId
     }
   }

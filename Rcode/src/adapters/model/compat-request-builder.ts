@@ -228,8 +228,8 @@ function messagesToCloudCode(
 
     if (message.role === 'tool') {
       const name = message.tool_call_id
-        ? toolNameById.get(message.tool_call_id) ?? ''
-        : (message.name ?? '')
+        ? (toolNameById.get(message.tool_call_id) || message.name || 'tool')
+        : (message.name || 'tool')
       const raw = chatContentToTextOnly(message.content)
       let responseObj: Record<string, unknown>
       try {

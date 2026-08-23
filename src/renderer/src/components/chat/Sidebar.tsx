@@ -143,7 +143,7 @@ export function Sidebar({
       title={t('appName')}
       footer={
         <div className="space-y-1">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5">
             <AccountButton
               displayName={accountDisplayName}
               initials={accountInitials}
@@ -154,6 +154,7 @@ export function Sidebar({
               ariaLabel={t('claw')}
               onClick={onToggleConnectPhone}
               active={connectPhoneSidebarOpen}
+              className="h-8 w-8 rounded-[9px] border border-black/[0.06] bg-black/[0.02] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:bg-black/[0.05] dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:bg-white/[0.08]"
             >
               <Smartphone className="h-4 w-4" strokeWidth={1.75} />
             </SidebarIconButton>
@@ -161,6 +162,7 @@ export function Sidebar({
               title={isDarkMode ? t('switchToLight') : t('switchToDark')}
               ariaLabel={t('toggleTheme')}
               onClick={onToggleTheme}
+              className="h-8 w-8 rounded-[9px] border border-black/[0.06] bg-black/[0.02] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:bg-black/[0.05] dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:bg-white/[0.08]"
             >
               {isDarkMode ? (
                 <Sun className="h-4 w-4" strokeWidth={1.75} />
@@ -172,64 +174,97 @@ export function Sidebar({
         </div>
       }
     >
-      <div className="ds-no-drag flex flex-col px-1">
+      <div className="ds-no-drag flex flex-col gap-1 px-1">
         <WorkspaceModeTabs
           activeView={activeView}
           onCodeOpen={onCodeOpen}
         />
 
         {activeView !== 'claw' && activeView !== 'schedule' && activeView !== 'workflow' ? (
-          <>
+          <div className="flex flex-col gap-1 pt-0.5">
             <SidebarCommandRow
-              icon={<Plus className="h-4 w-4" strokeWidth={2} />}
+              icon={<Plus className="h-4 w-4" strokeWidth={2.2} />}
               label={t('newAgent')}
+              shortcut="⌘N"
               onClick={runtimeReady ? onNewChat : undefined}
               disabled={!runtimeReady}
               disabledHint={t('runtimeActionNeedsConnection')}
-              variant="accent"
+              variant="hero"
             />
             <SidebarCommandRow
-              icon={<FileQuestion className="h-4 w-4" strokeWidth={1.9} />}
+              icon={<FileQuestion className="h-4 w-4" strokeWidth={1.8} />}
               label={t('sddNewRequirement')}
               onClick={runtimeReady ? onNewRequirement : undefined}
               disabled={!runtimeReady}
               disabledHint={t('runtimeActionNeedsConnection')}
-              variant="accent"
+              variant="subtle"
               trailing={requirementWorkspace ? (
                 <span
-                  className="max-w-[92px] truncate text-[11.5px] text-ds-faint"
+                  className="max-w-[88px] truncate rounded-[5px] border border-black/[0.06] bg-black/[0.03] px-1.5 py-0.5 text-[11px] font-medium text-ds-faint dark:border-white/[0.08] dark:bg-white/[0.05]"
                   title={requirementWorkspace}
                 >
                   {workspaceLabelFromPath(requirementWorkspace)}
                 </span>
               ) : null}
             />
-          </>
+          </div>
         ) : null}
-        <SidebarCommandRow
-          icon={<LayoutGrid className="h-4 w-4" strokeWidth={1.75} />}
-          label={t('plugins')}
-          onClick={onOpenPlugins}
-          active={pluginsActive}
-        />
-        <SidebarCommandRow
-          icon={<Puzzle className="h-4 w-4" strokeWidth={1.75} />}
-          label={i18n.language.toLowerCase().startsWith('zh') ? '扩展' : 'Extensions'}
-          onClick={onOpenExtensions}
-          active={extensionsActive}
-        />
-        <SidebarCommandRow
-          icon={<Clock3 className="h-4 w-4" strokeWidth={1.75} />}
-          label={t('schedule')}
-          onClick={onScheduleOpen}
-          active={activeView === 'schedule'}
-        />
-        <SidebarCommandRow
-          icon={<Workflow className="h-4 w-4" strokeWidth={1.75} />}
-          label={t('workflowCreate')}
-          onClick={onWorkflowOpen}
-          active={activeView === 'workflow'}
-        />
+
+        {/* 紧凑快捷工具网格 */}
+        <div className="mt-1 grid grid-cols-2 gap-1 rounded-[10px] border border-black/[0.05] bg-black/[0.02] p-1 dark:border-white/[0.06] dark:bg-white/[0.02]">
+          <button
+            type="button"
+            data-cursor-spotlight-target
+            onClick={onOpenPlugins}
+            className={`group flex min-h-[30px] items-center gap-1.5 rounded-[7px] px-2 py-1 text-[12px] transition duration-150 ${
+              pluginsActive
+                ? 'bg-white font-medium text-[#18181b] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:bg-white/[0.12] dark:text-white'
+                : 'text-[#606066] hover:bg-black/[0.04] hover:text-[#18181b] dark:text-[#9e9ea6] dark:hover:bg-white/[0.06] dark:hover:text-white'
+            }`}
+          >
+            <LayoutGrid className="h-3.5 w-3.5 shrink-0 text-[#606066] transition group-hover:text-[#18181b] dark:text-[#9e9ea6] dark:group-hover:text-white" strokeWidth={1.8} />
+            <span className="truncate">{t('plugins')}</span>
+          </button>
+          <button
+            type="button"
+            data-cursor-spotlight-target
+            onClick={onOpenExtensions}
+            className={`group flex min-h-[30px] items-center gap-1.5 rounded-[7px] px-2 py-1 text-[12px] transition duration-150 ${
+              extensionsActive
+                ? 'bg-white font-medium text-[#18181b] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:bg-white/[0.12] dark:text-white'
+                : 'text-[#606066] hover:bg-black/[0.04] hover:text-[#18181b] dark:text-[#9e9ea6] dark:hover:bg-white/[0.06] dark:hover:text-white'
+            }`}
+          >
+            <Puzzle className="h-3.5 w-3.5 shrink-0 text-[#606066] transition group-hover:text-[#18181b] dark:text-[#9e9ea6] dark:group-hover:text-white" strokeWidth={1.8} />
+            <span className="truncate">{i18n.language.toLowerCase().startsWith('zh') ? '扩展' : 'Extensions'}</span>
+          </button>
+          <button
+            type="button"
+            data-cursor-spotlight-target
+            onClick={onScheduleOpen}
+            className={`group flex min-h-[30px] items-center gap-1.5 rounded-[7px] px-2 py-1 text-[12px] transition duration-150 ${
+              activeView === 'schedule'
+                ? 'bg-white font-medium text-[#18181b] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:bg-white/[0.12] dark:text-white'
+                : 'text-[#606066] hover:bg-black/[0.04] hover:text-[#18181b] dark:text-[#9e9ea6] dark:hover:bg-white/[0.06] dark:hover:text-white'
+            }`}
+          >
+            <Clock3 className="h-3.5 w-3.5 shrink-0 text-[#606066] transition group-hover:text-[#18181b] dark:text-[#9e9ea6] dark:group-hover:text-white" strokeWidth={1.8} />
+            <span className="truncate">{t('schedule')}</span>
+          </button>
+          <button
+            type="button"
+            data-cursor-spotlight-target
+            onClick={onWorkflowOpen}
+            className={`group flex min-h-[30px] items-center gap-1.5 rounded-[7px] px-2 py-1 text-[12px] transition duration-150 ${
+              activeView === 'workflow'
+                ? 'bg-white font-medium text-[#18181b] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:bg-white/[0.12] dark:text-white'
+                : 'text-[#606066] hover:bg-black/[0.04] hover:text-[#18181b] dark:text-[#9e9ea6] dark:hover:bg-white/[0.06] dark:hover:text-white'
+            }`}
+          >
+            <Workflow className="h-3.5 w-3.5 shrink-0 text-[#606066] transition group-hover:text-[#18181b] dark:text-[#9e9ea6] dark:group-hover:text-white" strokeWidth={1.8} />
+            <span className="truncate">{t('workflowCreate')}</span>
+          </button>
+        </div>
       </div>
 
       <div className="ds-no-drag mx-1 my-1" />
@@ -369,24 +404,24 @@ function AccountButton({
       type="button"
       data-cursor-spotlight-target
       onClick={onClick}
-      className="ds-sidebar-account-button group flex min-h-[34px] w-full items-center gap-2.5 px-2.5 py-1.5 text-left transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:hover:text-white"
+      className="ds-sidebar-account-button group flex min-h-[36px] w-full items-center gap-2.5 rounded-[10px] border border-transparent px-2 py-1 text-left transition duration-150 hover:border-black/[0.06] hover:bg-black/[0.04] hover:text-[#18181b] dark:hover:border-white/[0.08] dark:hover:bg-white/[0.05] dark:hover:text-white"
       aria-label={`${displayName} · 用户主页`}
     >
       <span
-        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#8470ed] to-[#5aa7dc] text-[10px] font-semibold text-white shadow-[0_2px_6px_rgba(111,93,221,0.28)]"
+        className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#6366f1] via-[#8b5cf6] to-[#38bdf8] text-[10.5px] font-semibold text-white shadow-[0_2px_8px_rgba(99,102,241,0.35)] transition group-hover:scale-105"
         aria-hidden="true"
       >
         {initials}
       </span>
       <span className="min-w-0 flex-1">
-        <strong className="block truncate text-[12px] font-semibold text-[#1f1f1f] dark:text-white">
+        <strong className="block truncate text-[12.5px] font-medium leading-tight text-[#18181b] dark:text-[#f4f4f5]">
           {displayName}
         </strong>
-        <small className="block truncate text-[10px] text-[#9aa5b5] dark:text-white/35">
+        <small className="block truncate text-[10.5px] leading-tight text-[#8a8a93] dark:text-[#83838c]">
           用户主页
         </small>
       </span>
-      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#9aa5b5] transition group-hover:translate-x-0.5 group-hover:text-[#1f1f1f] dark:text-white/35 dark:group-hover:text-white" strokeWidth={1.8} />
+      <ChevronRight className="h-3.5 w-3.5 shrink-0 text-[#9aa5b5] transition group-hover:translate-x-0.5 group-hover:text-[#18181b] dark:text-white/35 dark:group-hover:text-white" strokeWidth={1.8} />
     </button>
   )
 }

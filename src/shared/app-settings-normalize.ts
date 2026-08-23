@@ -44,6 +44,7 @@ import { normalizeClawSettings } from './app-settings-claw'
 import { normalizeRemoteAgentSettings } from './app-settings-remote-agent'
 import { normalizeScheduleSettings } from './app-settings-schedule'
 import { normalizeWorkflowSettings } from './app-settings-workflow'
+import { normalizeOpenAiProxySettings } from './app-settings-openai-proxy'
 import { normalizeWriteSettings } from './app-settings-write'
 import { normalizeDesignSettings } from './app-settings-design'
 import { normalizeTerminalSettings, type TerminalSettingsPatchV1 } from './app-settings-terminal'
@@ -66,6 +67,7 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     design?: DesignSettingsPatchV1
     guiUpdate?: Partial<GuiUpdateConfigV1>
     terminal?: TerminalSettingsPatchV1
+    openaiProxy?: OpenAiProxySettingsPatchV1
   }
   const providerSettings = normalizeModelProviderSettings(maybeSettings.provider)
   const rawRcode = maybeSettings.agents?.Rcode
@@ -126,6 +128,7 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     workflow: normalizeWorkflowSettings(maybeSettings.workflow),
     design: normalizeDesignSettings(maybeSettings.design),
     terminal: normalizeTerminalSettings(maybeSettings.terminal),
+    openaiProxy: normalizeOpenAiProxySettings(maybeSettings.openaiProxy),
     guiUpdate: {
       channel: normalizeGuiUpdateChannel(
         maybeSettings.guiUpdate?.channel ?? DEFAULT_GUI_UPDATE_CHANNEL

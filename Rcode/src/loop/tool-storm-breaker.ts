@@ -3,6 +3,7 @@ import type { ToolCallLike } from '../ports/tool-host.js'
 export type ToolStormBreakerOptions = {
   windowSize?: number
   threshold?: number
+  readOnlyThreshold?: number
   interactiveThreshold?: number
 }
 
@@ -14,6 +15,7 @@ type RecentToolCall = {
 
 const DEFAULT_WINDOW_SIZE = 8
 const DEFAULT_THRESHOLD = 3
+const DEFAULT_READ_ONLY_THRESHOLD = 15
 const DEFAULT_INTERACTIVE_THRESHOLD = 3
 const MUTATING_TOOL_NAMES = new Set(['write', 'edit', 'edit_diff', 'apply_patch', 'delete', 'move'])
 const INTERACTIVE_TOOL_NAMES = new Set(['request_user_input', 'user_input'])
@@ -26,6 +28,7 @@ const INTERACTIVE_TOOL_NAMES = new Set(['request_user_input', 'user_input'])
 export class ToolStormBreaker {
   private readonly windowSize: number
   private readonly threshold: number
+  private readonly readOnlyThreshold: number
   private readonly interactiveThreshold: number
   private readonly recent: RecentToolCall[] = []
   private interactiveCount = 0
@@ -33,6 +36,7 @@ export class ToolStormBreaker {
   constructor(options: ToolStormBreakerOptions = {}) {
     this.windowSize = Math.max(1, Math.floor(options.windowSize ?? DEFAULT_WINDOW_SIZE))
     this.threshold = Math.max(2, Math.floor(options.threshold ?? DEFAULT_THRESHOLD))
+    this.readOnlyThreshold = Math.max(2, Math.floor(options.readOnlyThreshold ?? DEFAULT_READ_ONLY_THRESHOLD))
     this.interactiveThreshold = Math.max(
       1,
       Math.floor(options.interactiveThreshold ?? DEFAULT_INTERACTIVE_THRESHOLD)
@@ -64,7 +68,8 @@ export class ToolStormBreaker {
       (sum, entry) => sum + (entry.name === name && entry.args === args ? 1 : 0),
       0
     )
-    if (count >= this.threshold - 1) {
+    const effectiveThreshold = readOnly ? this.readOnlyThreshold : this.threshold
+    if (count >= effectiveThreshold - 1) {
       return {
         suppress: true,
         reason:

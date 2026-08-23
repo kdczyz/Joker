@@ -226,22 +226,22 @@ export function SidebarConversationsSection({
         <button
           type="button"
           onClick={() => setCollapsed((open) => !open)}
-          className="flex min-w-0 items-center gap-1.5 rounded-md px-2 py-1 text-[13px] text-ds-faint transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-ds-muted"
+          className="group flex min-w-0 items-center gap-1.5 rounded-md px-1.5 py-1 text-[12px] font-medium text-[#71717a] transition hover:bg-black/[0.04] hover:text-[#18181b] dark:text-[#a1a1aa] dark:hover:bg-white/[0.06] dark:hover:text-white"
           title={t('sidebarConversations')}
           aria-label={t('sidebarConversations')}
         >
+          <span className="truncate tracking-wide">{t('sidebarConversations')}</span>
           {collapsed ? (
-            <ChevronRight className="h-3 w-3 shrink-0" strokeWidth={2} />
+            <ChevronRight className="h-3 w-3 shrink-0 text-[#a1a1aa] transition group-hover:text-[#18181b] dark:group-hover:text-white" strokeWidth={2} />
           ) : (
-            <ChevronDown className="h-3 w-3 shrink-0" strokeWidth={2} />
+            <ChevronDown className="h-3 w-3 shrink-0 text-[#a1a1aa] transition group-hover:text-[#18181b] dark:group-hover:text-white" strokeWidth={2} />
           )}
-          <span className="truncate">{t('sidebarConversations')}</span>
         </button>
-        <div className="flex shrink-0 items-center gap-1">
+        <div className="flex shrink-0 items-center gap-0.5">
           <SidebarIconButton
             onClick={() => setSearchOpen((open) => !open)}
             active={searchOpen}
-            className="h-7 w-7"
+            className="h-6.5 w-6.5 rounded-[6px]"
             title={t('sidebarSearchThreads')}
             ariaLabel={t('sidebarSearchThreads')}
           >
@@ -250,7 +250,7 @@ export function SidebarConversationsSection({
           <SidebarIconButton
             onClick={runtimeReady ? onNewConversation : undefined}
             disabled={!runtimeReady}
-            className="h-7 w-7"
+            className="h-6.5 w-6.5 rounded-[6px]"
             title={t('newConversation')}
             ariaLabel={t('newConversation')}
           >
@@ -260,7 +260,7 @@ export function SidebarConversationsSection({
       </div>
 
       {searchOpen ? (
-        <div className="mb-1 flex items-center gap-1 px-2">
+        <div className="mb-1.5 flex items-center gap-1 px-1">
           <SidebarSearchField
             value={search}
             onChange={setSearch}
@@ -271,16 +271,16 @@ export function SidebarConversationsSection({
       ) : null}
 
       {!collapsed ? (
-        <div className="max-h-[40vh] min-h-0 shrink-0 overflow-y-auto px-1 pb-2 pt-0.5">
+        <div className="relative ml-2 max-h-[40vh] min-h-0 shrink-0 space-y-[2px] overflow-y-auto border-l border-black/[0.06] pb-2 pl-2 pt-0.5 dark:border-white/[0.08]">
           {conversationThreads.length === 0 ? (
             <button
               type="button"
               onClick={runtimeReady ? onNewConversation : undefined}
               disabled={!runtimeReady}
-              className="flex w-full flex-col items-center gap-2 px-4 py-6 text-center transition hover:bg-[var(--ds-sidebar-row-hover)] disabled:cursor-not-allowed disabled:opacity-60"
+              className="flex w-full flex-col items-center gap-2 rounded-lg border border-dashed border-black/10 px-4 py-5 text-center transition hover:bg-black/[0.03] disabled:cursor-not-allowed disabled:opacity-60 dark:border-white/10 dark:hover:bg-white/[0.03]"
             >
-              <MessageCirclePlus className="h-6 w-6 text-ds-faint" strokeWidth={1.5} />
-              <p className="text-[12.5px] leading-5 text-ds-faint">{t('conversationsEmptyHint')}</p>
+              <MessageCirclePlus className="h-5 w-5 text-ds-faint" strokeWidth={1.75} />
+              <p className="text-[12px] leading-5 text-ds-faint">{t('conversationsEmptyHint')}</p>
             </button>
           ) : null}
 

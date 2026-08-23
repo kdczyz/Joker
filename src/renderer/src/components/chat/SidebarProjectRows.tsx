@@ -222,7 +222,7 @@ export function ThreadRow({
       actionsVisibility={deleting ? 'visible' : 'hidden'}
       actionsLayout="overlay"
       actions={(
-        <>
+        <div className="flex items-center gap-0.5 rounded-[6px] bg-white/80 p-0.5 backdrop-blur-[2px] shadow-sm dark:bg-[#18181b]/80">
           {!archived ? (
             <SidebarIconButton
               onClick={onPin}
@@ -231,11 +231,12 @@ export function ThreadRow({
               title={pinned ? t('sidebarThreadUnpin') : t('sidebarThreadPin')}
               ariaLabel={pinned ? t('sidebarThreadUnpin') : t('sidebarThreadPin')}
               active={pinned}
+              className="h-5.5 w-5.5 rounded-[5px]"
               stopPropagation
             >
               {pinned
-                ? <PinOff className="h-3 w-3" strokeWidth={1.9} />
-                : <Pin className="h-3 w-3" strokeWidth={1.9} />}
+                ? <PinOff className="h-3 w-3" strokeWidth={2} />
+                : <Pin className="h-3 w-3" strokeWidth={2} />}
             </SidebarIconButton>
           ) : null}
           <SidebarIconButton
@@ -244,13 +245,14 @@ export function ThreadRow({
             tone="accent"
             title={archived ? t('sidebarThreadRestore') : t('sidebarThreadArchive')}
             ariaLabel={archived ? t('sidebarThreadRestore') : t('sidebarThreadArchive')}
+            className="h-5.5 w-5.5 rounded-[5px]"
             stopPropagation
           >
             {deleting
               ? <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />
               : archived
-                ? <RotateCcw className="h-3 w-3" strokeWidth={1.9} />
-                : <Archive className="h-3 w-3" strokeWidth={1.9} />}
+                ? <RotateCcw className="h-3 w-3" strokeWidth={2} />
+                : <Archive className="h-3 w-3" strokeWidth={2} />}
           </SidebarIconButton>
           <SidebarIconButton
             onClick={onDelete}
@@ -258,22 +260,23 @@ export function ThreadRow({
             tone="danger"
             title={t('sidebarThreadDelete')}
             ariaLabel={t('sidebarThreadDelete')}
+            className="h-5.5 w-5.5 rounded-[5px]"
             stopPropagation
           >
-            <Trash2 className="h-3 w-3" strokeWidth={1.9} />
+            <Trash2 className="h-3 w-3" strokeWidth={2} />
           </SidebarIconButton>
-        </>
+        </div>
       )}
-      className={`min-h-[34px] ${
-        dragging ? 'opacity-55' : ''
+      className={`min-h-[32px] ${
+        dragging ? 'opacity-50' : ''
       } ${
         dropPosition === 'before'
-          ? "before:absolute before:inset-x-2 before:top-0 before:z-10 before:h-0.5 before:rounded-full before:bg-accent before:content-['']"
+          ? "before:absolute before:inset-x-2 before:top-0 before:z-10 before:h-0.5 before:rounded-full before:bg-[#18181b] dark:before:bg-white before:content-['']"
           : dropPosition === 'after'
-            ? "after:absolute after:bottom-0 after:inset-x-2 after:z-10 after:h-0.5 after:rounded-full after:bg-accent after:content-['']"
+            ? "after:absolute after:bottom-0 after:inset-x-2 after:z-10 after:h-0.5 after:rounded-full after:bg-[#18181b] dark:after:bg-white after:content-['']"
             : ''
       }`}
-      buttonClassName="items-center gap-2 px-2.5 py-1.5"
+      buttonClassName="items-center gap-2 px-2 py-1.5"
       disabled={deleting}
       draggable={draggable}
       onDragStart={onDragStart}
@@ -289,25 +292,29 @@ export function ThreadRow({
       onMouseLeave={onPreviewClose}
     >
       <span className="flex min-w-0 flex-1 items-center gap-1.5">
-        {pinned ? <Pin className="h-3.5 w-3.5 shrink-0 text-accent" strokeWidth={1.9} /> : null}
+        {pinned ? <Pin className="h-3 w-3 shrink-0 text-[#18181b] dark:text-white" strokeWidth={2.2} /> : null}
         {worktreeRecord ? (
           <span
-            className="inline-grid h-5 w-5 shrink-0 place-items-center rounded-full border border-ds-border-muted bg-ds-card/80 text-ds-muted"
+            className="inline-grid h-4.5 w-4.5 shrink-0 place-items-center rounded-full border border-black/10 bg-black/[0.04] text-ds-muted dark:border-white/15 dark:bg-white/[0.06]"
             title={worktreeLabel}
             aria-label={worktreeLabel}
           >
-            <GitBranch className="h-3 w-3" strokeWidth={1.8} />
+            <GitBranch className="h-2.5 w-2.5" strokeWidth={2} />
           </span>
         ) : null}
-        <span className={`min-w-0 flex-1 truncate text-[13.5px] leading-5 ${
-          showUnreadDot && !active ? 'font-semibold text-ds-ink' : 'text-ds-ink'
+        <span className={`min-w-0 flex-1 truncate text-[12.5px] leading-tight ${
+          active
+            ? 'font-medium text-[#18181b] dark:text-white'
+            : showUnreadDot
+              ? 'font-semibold text-[#18181b] dark:text-white'
+              : 'text-[#4b4b52] dark:text-[#d4d4d8]'
         }`}>
           {thread.title}
         </span>
-        <span className={`ml-auto flex min-w-[3.75rem] shrink-0 items-center justify-end gap-1.5 transition ${
+        <span className={`ml-auto flex min-w-[3rem] shrink-0 items-center justify-end gap-1.5 transition duration-150 ${
           deleting ? 'opacity-0' : 'group-hover:opacity-0 group-focus-within:opacity-0'
         }`}>
-          <span className="shrink-0 text-right text-[12px] leading-4 text-ds-faint tabular-nums">
+          <span className="shrink-0 text-right text-[11px] leading-tight text-[#8a8a93] tabular-nums dark:text-[#83838c]">
             {updatedLabel}
           </span>
           <ThreadActivityDot
@@ -330,11 +337,18 @@ function ThreadActivityDot({
   unread: boolean
   unreadLabel: string
 }): ReactElement | null {
-  if (running) return <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-accent" strokeWidth={2} />
+  if (running) {
+    return (
+      <span className="relative flex h-2.5 w-2.5 shrink-0 items-center justify-center">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-blue-500" />
+      </span>
+    )
+  }
   if (unread) {
     return (
       <span
-        className="block h-2 w-2 shrink-0 rounded-full bg-accent shadow-[0_0_0_1px_rgba(79,124,255,0.2)]"
+        className="block h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500 shadow-[0_0_0_2px_rgba(59,130,246,0.2)]"
         title={unreadLabel}
       />
     )
@@ -358,17 +372,17 @@ export function SidebarEmpty({
       <button
         type="button"
         onClick={onPickWorkspace}
-        className="mx-1 mt-1 flex w-[calc(100%-0.5rem)] items-center gap-2 rounded-lg px-2 py-1.5 text-left text-ds-muted transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-ds-ink"
+        className="mx-1 mt-1 flex w-[calc(100%-0.5rem)] items-center gap-2 rounded-lg border border-dashed border-black/10 px-3 py-2 text-left text-ds-muted transition hover:border-black/20 hover:bg-[var(--ds-sidebar-row-hover)] hover:text-ds-ink dark:border-white/10 dark:hover:border-white/20"
       >
-        <FolderPlus className="h-4 w-4 shrink-0 text-accent" strokeWidth={1.75} />
-        <span className="min-w-0 flex-1 truncate text-[14px] font-medium">{t('selectWorkspace')}</span>
+        <FolderPlus className="h-4 w-4 shrink-0 text-[#18181b] dark:text-white" strokeWidth={1.75} />
+        <span className="min-w-0 flex-1 truncate text-[13px] font-medium">{t('selectWorkspace')}</span>
       </button>
     )
   }
   return (
-    <div className="mx-2 mt-2 rounded-lg px-2 py-2">
-      <p className="text-[15px] font-medium text-ds-muted">{t('sidebarEmptyTitle')}</p>
-      <p className="mt-1 text-[13px] leading-5 text-ds-faint">
+    <div className="mx-1 mt-2 rounded-lg border border-black/[0.04] bg-black/[0.02] px-3 py-3 text-center dark:border-white/[0.05] dark:bg-white/[0.02]">
+      <p className="text-[13.5px] font-medium text-ds-muted">{t('sidebarEmptyTitle')}</p>
+      <p className="mt-1 text-[12px] leading-5 text-ds-faint">
         {runtimeReady ? t('sidebarEmptySub') : t('sidebarEmptySubOffline')}
       </p>
     </div>

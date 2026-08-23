@@ -2,6 +2,20 @@ export const MODEL_ENDPOINT_FORMATS = ['chat_completions', 'responses', 'message
 export type ModelEndpointFormat = (typeof MODEL_ENDPOINT_FORMATS)[number]
 export const DEFAULT_MODEL_ENDPOINT_FORMAT: ModelEndpointFormat = 'chat_completions'
 
+/**
+ * Detects whether a base URL points to the Google Cloud Code Assist endpoint
+ * used by Antigravity subscriptions. These endpoints require the `cloudcode`
+ * wire format even when the user configured the provider with the standard
+ * OpenAI `chat_completions` shape — the adapter transparently rewrites.
+ */
+export function isAntigravityCloudCodeBaseUrl(url: string): boolean {
+  const normalized = url.trim().toLowerCase()
+  return (
+    normalized.includes('cloudcode-pa.googleapis.com') ||
+    normalized.includes('cloudcode-pa.sandbox.googleapis.com')
+  )
+}
+
 export function normalizeModelEndpointFormat(value: unknown): ModelEndpointFormat {
   if (typeof value !== 'string') return DEFAULT_MODEL_ENDPOINT_FORMAT
   const normalized = value.trim().toLowerCase().replace(/^\/+/, '')
@@ -81,7 +95,28 @@ export function resolveModelEndpointFormat(
   endpointFormat: ModelEndpointFormat,
   baseUrl: string
 ): ModelEndpointFormat | null {
-  return isCustomModelEndpointFormat(endpointFormat)
+  const resolved = isCustomModelEndpointFormat(endpointFormat)
     ? inferModelEndpointFormatFromUrl(baseUrl)
     : endpointFormat
+  if (resolved === null) return null
+  return resolved
+}
+
+/**
+ * When a base URL points to a Google Cloud Code Assist endpoint but the
+ * endpoint format is `chat_completions`, we need to:
+ *   1. Build the request body using the standard OpenAI shape (tools, messages, etc.)
+ *      so tool definitions and reasoning effort are handled identically to any
+ *      other OpenAI-compatible provider.
+ *   2. Translate the request to the CloudCode wire format before sending.
+ *   3. Rewrite the CloudCode response back to the OpenAI shape before
+ *      decoding.
+ *
+ * This function returns true when the adapter path should be activated.
+ */
+export function shouldUseAntigravityAdapter(
+  endpointFormat: ModelEndpointFormat,
+  baseUrl: string
+): boolean {
+  return usesChatCompletionsShape(endpointFormat) && isAntigravityCloudCodeBaseUrl(baseUrl)
 }

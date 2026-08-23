@@ -56,9 +56,10 @@ export function registerRemoteAgentIpc(deps: RemoteAgentIpcDeps): void {
       // picker would keep falling back to its own default provider model. The
       // phone's thinking mode is still honored.
       const desktopModel = settings.agents?.Rcode?.model?.trim() || ''
+      const desktopProviderId = settings.agents?.Rcode?.providerId?.trim() || ''
       const requestedModel = desktopModel || options?.model || null
       const modelConfig = resolveScheduleModelConfig(settings, {
-        providerId: null,
+        providerId: desktopProviderId || null,
         model: requestedModel || null,
         reasoningEffort: thinkingModeToReasoningEffort(options?.thinkingMode)
       })

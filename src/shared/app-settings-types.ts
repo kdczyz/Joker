@@ -2013,6 +2013,25 @@ export type TerminalSettingsPatchV1 = {
   colors?: Partial<TerminalColorSettingsV1>
 }
 
+/**
+ * Local OpenAI-compatible proxy. When enabled, the Rcode main process hosts a
+ * `/v1/chat/completions` (and `/v1/models`) endpoint on 127.0.0.1 that proxies
+ * to the configured Antigravity (Google Cloud Code Assist) subscription,
+ * translating the OpenAI request/response shapes via cloudcode-openai-adapter.
+ */
+export type OpenAiProxySettingsV1 = {
+  enabled: boolean
+  /** Local-only (127.0.0.1) port the proxy listener binds to. */
+  port: number
+  /** Optional shared secret. When non-empty, inbound requests must carry the
+   * `X-Rcode-Proxy-Token` header matching this value. */
+  token: string
+  /** Provider id to proxy. Empty falls back to the Antigravity subscription. */
+  providerId: string
+}
+
+export type OpenAiProxySettingsPatchV1 = Partial<OpenAiProxySettingsV1>
+
 export type AppSettingsV1 = {
   version: 1
   locale: AppLocale
@@ -2047,6 +2066,7 @@ export type AppSettingsV1 = {
   design: DesignSettingsV1
   guiUpdate: GuiUpdateConfigV1
   terminal: TerminalSettingsV1
+  openaiProxy?: OpenAiProxySettingsV1
   codePromptPrefix: string
   /** User-disabled skill IDs. Disabled skills are hidden from command surfaces. */
   disabledSkillIds: string[]
@@ -2070,4 +2090,5 @@ export type AppSettingsPatch = Partial<
   design?: DesignSettingsPatchV1
   guiUpdate?: Partial<GuiUpdateConfigV1>
   terminal?: TerminalSettingsPatchV1
+  openaiProxy?: OpenAiProxySettingsPatchV1
 }

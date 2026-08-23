@@ -46,6 +46,7 @@ import {
   type ClawImChannelV1,
   type ClawImConversationV1
 } from '../shared/app-settings'
+import { defaultOpenAiProxySettings, mergeOpenAiProxySettings } from '../shared/app-settings-openai-proxy'
 
 export type { AppSettingsV1 }
 
@@ -267,7 +268,8 @@ const defaultSettings = (): AppSettingsV1 => ({
   schedule: defaultScheduleSettings(),
   workflow: defaultWorkflowSettings(),
   design: defaultDesignSettings(),
-  terminal: defaultTerminalSettings()
+  terminal: defaultTerminalSettings(),
+  openaiProxy: defaultOpenAiProxySettings()
 })
 
 function buildMergedSettings(parsed: Partial<AppSettingsV1>): AppSettingsV1 {
@@ -296,6 +298,7 @@ function buildMergedSettings(parsed: Partial<AppSettingsV1>): AppSettingsV1 {
     workflow: mergeWorkflowSettings(defaults.workflow, migrated.workflow),
     design: mergeDesignSettings(defaults.design, migrated.design),
     terminal: mergeTerminalSettings(defaults.terminal, migrated.terminal),
+    openaiProxy: mergeOpenAiProxySettings(defaults.openaiProxy!, migrated.openaiProxy),
     guiUpdate: { ...defaults.guiUpdate, ...migrated.guiUpdate },
     codePromptPrefix: typeof migrated.codePromptPrefix === 'string' ? migrated.codePromptPrefix : '',
     disabledSkillIds: normalizeDisabledSkillIds(migrated.disabledSkillIds)

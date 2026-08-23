@@ -229,15 +229,20 @@ export class ModelStepService {
       prefixVolatilityStageDetails(detectVolatilePrefixContent(this.deps.prefix))
     )
     if (stepIndex > 0) {
-      const toolResultCount = historyItems.filter(
+      const turnToolResults = historyItems.filter(
         (item) => item.turnId === turnId && item.kind === 'tool_result'
-      ).length
+      )
+      const toolResultCount = turnToolResults.length
+      const latestToolName = turnToolResults.length > 0
+        ? (turnToolResults[turnToolResults.length - 1] as { toolName?: string }).toolName
+        : undefined
       await this.deps.events.record({
         kind: 'tool_result_upload_wait',
         threadId,
         turnId,
         status: 'waiting',
-        toolResultCount
+        toolResultCount,
+        ...(latestToolName ? { toolName: latestToolName } : {})
       })
     }
     const items = repairModelHistoryItems(

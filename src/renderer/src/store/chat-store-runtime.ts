@@ -465,6 +465,9 @@ function resolveWriteToolFilePath(filePath: string | undefined, workspaceRoot: s
 
 function runtimeStatusText(event: RuntimeStatusEventPayload): string {
   if (event.kind === 'tool_result_upload_wait') {
+    if (event.toolName) {
+      return i18n.t('common:toolCalledStatus', { tool: event.toolName })
+    }
     return i18n.t('common:toolUploadWaitStatus', { count: event.toolResultCount ?? 0 })
   }
   if (event.kind === 'model_request_retry') {

@@ -57,19 +57,19 @@ export function SidebarFrame({
   return (
     <aside
       className={cx(
-        'ds-drag ds-sidebar-shell relative flex h-full w-full shrink-0 flex-col overflow-hidden px-4 pb-3',
+        'ds-drag ds-sidebar-shell relative flex h-full w-full shrink-0 flex-col overflow-hidden px-2.5 pb-2.5',
         className
       )}
     >
-      <div className="ds-sidebar-titlebar-spacer shrink-0 pb-2 pt-2">
-        <div className="ds-sidebar-titlebar-row flex min-h-[34px] items-start justify-between">
-          <div aria-hidden className="ds-titlebar-safe-block min-w-[86px]" />
+      <div className="ds-sidebar-titlebar-spacer shrink-0 pb-1 pt-1.5">
+        <div className="ds-sidebar-titlebar-row flex min-h-[30px] items-start justify-between">
+          <div aria-hidden className="ds-titlebar-safe-block min-w-[80px]" />
           {onCollapse ? (
             <SidebarTitlebarToggleButton
               onClick={onCollapse}
               title={title}
               ariaLabel={title}
-              className="ds-sidebar-titlebar-toggle mt-[5px]"
+              className="ds-sidebar-titlebar-toggle mt-[4px]"
             />
           ) : null}
         </div>
@@ -78,7 +78,7 @@ export function SidebarFrame({
       {children}
 
       {footer ? (
-        <div className="ds-sidebar-footer ds-no-drag mt-2 border-t border-[var(--ds-sidebar-divider)] px-1.5 pt-3">
+        <div className="ds-sidebar-footer ds-no-drag mt-auto border-t border-[var(--ds-sidebar-divider)]/70 px-1 pt-2">
           {footer}
         </div>
       ) : null}
@@ -93,10 +93,11 @@ type SidebarCommandRowProps = {
   disabled?: boolean
   disabledHint?: string
   shortcut?: string
-  variant?: 'flat' | 'accent' | 'footer'
+  variant?: 'flat' | 'accent' | 'hero' | 'subtle' | 'footer'
   trailing?: ReactNode
   active?: boolean
   showChevron?: boolean
+  className?: string
 }
 
 export function SidebarCommandRow({
@@ -109,10 +110,14 @@ export function SidebarCommandRow({
   variant = 'flat',
   trailing,
   active = false,
-  showChevron = false
+  showChevron = false,
+  className
 }: SidebarCommandRowProps): ReactElement {
-  const accent = variant === 'accent'
-  const footer = variant === 'footer'
+  const isHero = variant === 'hero'
+  const isAccent = variant === 'accent'
+  const isSubtle = variant === 'subtle'
+  const isFooter = variant === 'footer'
+
   return (
     <button
       type="button"
@@ -123,35 +128,40 @@ export function SidebarCommandRow({
       title={disabled ? disabledHint : undefined}
       onClick={onClick}
       className={cx(
-        'ds-sidebar-command-row flex min-h-[34px] w-full items-center gap-2.5 rounded-[8px] px-3 py-1.5 text-[13px] font-normal transition',
+        'ds-sidebar-command-row group relative flex min-h-[34px] w-full items-center gap-2.5 rounded-[9px] px-3 py-1.5 text-[13px] font-normal transition duration-150',
         disabled
           ? 'cursor-not-allowed text-[#a8a8a8] opacity-55'
-          : active
-            ? 'bg-[var(--ds-sidebar-row-active)] text-[#1f1f1f] shadow-[inset_0_0_0_1px_var(--ds-sidebar-row-ring)] dark:text-white'
-            : footer
-              ? 'text-[#4f4f4f] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:text-white/70 dark:hover:text-white'
-              : accent
-                ? 'text-[#1f1f1f] hover:bg-[var(--ds-sidebar-row-hover)] dark:text-white'
-                : 'text-[#343434] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:text-white/75 dark:hover:text-white'
+          : isHero
+            ? 'border border-black/[0.08] bg-white font-medium text-[#18181b] shadow-[0_1px_3px_rgba(0,0,0,0.06),0_1px_2px_rgba(0,0,0,0.04)] hover:bg-[#fafafa] hover:shadow-[0_2px_6px_rgba(0,0,0,0.08)] active:translate-y-[0.5px] dark:border-white/[0.12] dark:bg-white/[0.09] dark:text-white dark:shadow-[0_2px_6px_rgba(0,0,0,0.3)] dark:hover:bg-white/[0.13]'
+            : active
+              ? 'bg-[var(--ds-sidebar-row-active)] font-medium text-[#1f1f1f] shadow-[inset_0_0_0_1px_var(--ds-sidebar-row-ring)] dark:text-white'
+              : isSubtle
+                ? 'text-[#606066] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#18181b] dark:text-[#9e9ea6] dark:hover:text-white'
+                : isFooter
+                  ? 'text-[#4f4f4f] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:text-white/70 dark:hover:text-white'
+                  : isAccent
+                    ? 'text-[#18181b] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#000] dark:text-[#eaeaea] dark:hover:text-white'
+                    : 'text-[#38383e] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#18181b] dark:text-[#b4b4bc] dark:hover:text-white',
+        className
       )}
     >
       <span
         className={cx(
-          'flex h-5 w-5 shrink-0 items-center justify-center',
-          accent ? 'text-[#1f1f1f] dark:text-white' : footer ? 'text-[#888888]' : 'text-[#343434] dark:text-white/75'
+          'flex h-5 w-5 shrink-0 items-center justify-center transition group-hover:scale-105',
+          isHero ? 'text-[#18181b] dark:text-white' : isAccent ? 'text-[#1f1f1f] dark:text-white' : isFooter ? 'text-[#888888]' : 'text-[#52525b] dark:text-[#9e9ea6] group-hover:text-[#18181b] dark:group-hover:text-white'
         )}
       >
         {icon}
       </span>
       <span className="min-w-0 flex-1 truncate text-left">{label}</span>
       {shortcut ? (
-        <kbd className="ds-kbd hidden items-center gap-0.5 rounded-md px-1.5 py-0.5 font-mono text-[11.5px] font-medium text-ds-faint sm:inline-flex">
+        <kbd className="ds-kbd hidden items-center gap-0.5 rounded-[5px] border border-black/5 bg-black/[0.03] px-1.5 py-0.5 font-mono text-[10.5px] font-medium text-ds-faint transition group-hover:border-black/10 sm:inline-flex dark:border-white/10 dark:bg-white/5">
           <Command className="h-2.5 w-2.5" strokeWidth={2} />
           {shortcut.replace('⌘', '')}
         </kbd>
       ) : null}
       {trailing ?? null}
-      {showChevron ? <ChevronRight className="h-3.5 w-3.5 text-ds-faint" strokeWidth={1.8} /> : null}
+      {showChevron ? <ChevronRight className="h-3.5 w-3.5 text-ds-faint transition group-hover:translate-x-0.5" strokeWidth={1.8} /> : null}
     </button>
   )
 }
@@ -252,28 +262,28 @@ export function SidebarSearchField({
   return (
     <label
       data-cursor-spotlight-target
-      className="ds-sidebar-search-field relative min-w-0 flex-1 rounded-[8px]"
+      className="ds-sidebar-search-field relative flex min-w-0 flex-1 items-center rounded-[8px]"
     >
       <Search
-        className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ds-faint"
+        className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ds-faint"
         strokeWidth={1.8}
       />
       <input
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-8 w-full rounded-[8px] border border-transparent bg-[var(--ds-sidebar-field-bg)] pl-7 pr-7 text-[13px] text-[#1f1f1f] outline-none transition placeholder:text-[#9aa5b5] focus:bg-[var(--ds-sidebar-field-focus)] dark:text-white"
+        className="h-7.5 w-full rounded-[8px] border border-black/[0.06] bg-[var(--ds-sidebar-field-bg)] pl-8 pr-7 text-[12.5px] text-[#1f1f1f] outline-none transition placeholder:text-[#9aa5b5] focus:border-black/20 focus:bg-[var(--ds-sidebar-field-focus)] focus:shadow-[0_0_0_2px_rgba(0,0,0,0.04)] dark:border-white/[0.08] dark:text-white dark:focus:border-white/20 dark:focus:shadow-[0_0_0_2px_rgba(255,255,255,0.05)]"
       />
       {value.trim() ? (
         <button
           type="button"
           data-cursor-spotlight-target
           onClick={() => onChange('')}
-          className="absolute right-1 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-[#9a9a9a] transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:hover:text-white"
+          className="absolute right-1 top-1/2 flex h-5.5 w-5.5 -translate-y-1/2 items-center justify-center rounded-md text-[#9a9a9a] transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:hover:text-white"
           title={clearLabel}
           aria-label={clearLabel}
         >
-          <X className="h-3.5 w-3.5" strokeWidth={1.9} />
+          <X className="h-3 w-3" strokeWidth={1.9} />
         </button>
       ) : null}
     </label>
@@ -342,14 +352,14 @@ export function SidebarTreeRow({
       ? 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100'
       : actionsVisibility === 'visible'
         ? 'opacity-100'
-        : 'opacity-55 group-hover:opacity-100 focus-within:opacity-100'
+        : 'opacity-60 group-hover:opacity-100 focus-within:opacity-100'
   const actionsWrapClass =
     actionsLayout === 'overlay'
-      ? 'absolute inset-y-0 right-1.5 flex items-center gap-0.5'
-      : 'mr-1.5 flex shrink-0 items-center gap-0.5'
+      ? 'absolute inset-y-0 right-1 flex items-center gap-0.5'
+      : 'mr-1 flex shrink-0 items-center gap-0.5'
   const trailingWrapClass =
     actionsLayout === 'overlay'
-      ? 'mr-1.5 flex shrink-0 items-center gap-0.5 transition group-hover:opacity-0 group-focus-within:opacity-0'
+      ? 'mr-1 flex shrink-0 items-center gap-0.5 transition group-hover:opacity-0 group-focus-within:opacity-0'
       : 'flex shrink-0 items-center gap-0.5'
 
   return (
@@ -358,12 +368,12 @@ export function SidebarTreeRow({
       data-active={active ? 'true' : 'false'}
       data-active-variant={activeVariant}
       className={cx(
-        'ds-sidebar-tree-row group relative flex w-full items-center overflow-hidden rounded-[8px] text-[13px] font-normal transition',
+        'ds-sidebar-tree-row group relative flex w-full items-center overflow-hidden rounded-[8px] text-[13px] font-normal transition duration-150',
         outlined
-          ? 'bg-[var(--ds-sidebar-row-active)] text-[#1f1f1f] shadow-[inset_0_0_0_1px_var(--ds-sidebar-row-ring)] dark:text-white'
+          ? 'bg-[var(--ds-sidebar-row-active)] text-[#18181b] shadow-[inset_0_0_0_1px_var(--ds-sidebar-row-ring)] dark:text-white'
           : active
-            ? 'bg-[var(--ds-sidebar-row-active)] text-[#1f1f1f] shadow-[inset_0_0_0_1px_var(--ds-sidebar-row-ring)] dark:text-white'
-            : 'text-[#343434] hover:bg-[var(--ds-sidebar-row-hover)] dark:text-white/75',
+            ? 'bg-black/[0.06] font-medium text-[#18181b] shadow-[0_1px_2px_rgba(0,0,0,0.03),inset_0_0_0_1px_rgba(0,0,0,0.06)] dark:bg-white/[0.08] dark:text-white dark:shadow-[0_1px_2px_rgba(0,0,0,0.2),inset_0_0_0_1px_rgba(255,255,255,0.08)]'
+            : 'text-[#38383e] hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#18181b] dark:text-[#b4b4bc] dark:hover:text-white',
         className
       )}
       title={title}
@@ -378,13 +388,10 @@ export function SidebarTreeRow({
       onDragLeave={onDragLeave}
       onDrop={onDrop}
     >
-      {rail ? (
+      {rail && active ? (
         <span
           aria-hidden
-          className={cx(
-            'absolute bottom-1 left-0 top-1 w-[2px] rounded-full transition',
-            active ? 'bg-transparent opacity-0' : 'bg-transparent opacity-0'
-          )}
+          className="absolute bottom-1.5 left-0.5 top-1.5 w-[3px] rounded-full bg-[#18181b] shadow-[0_0_6px_rgba(0,0,0,0.2)] transition dark:bg-white dark:shadow-[0_0_8px_rgba(255,255,255,0.4)]"
         />
       ) : null}
       <button
@@ -395,7 +402,7 @@ export function SidebarTreeRow({
         aria-label={ariaLabel}
         className={cx(
           'flex min-w-0 flex-1 text-left disabled:cursor-not-allowed',
-          buttonClassName ?? 'items-center gap-2 px-2.5 py-2'
+          buttonClassName ?? 'items-center gap-2 px-2.5 py-1.5'
         )}
         style={buttonStyle}
       >
