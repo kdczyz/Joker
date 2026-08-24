@@ -932,19 +932,20 @@ export function Workbench(): ReactElement {
         onBeginResize={beginLeftResize}
       />
 
-      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-      {activeExtensionCenterView ? (
-        <main className="ds-stage-surface relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-          <div className="ds-stage-route-host relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-            <ExtensionViewOutlet
-              contribution={activeExtensionCenterView}
-              workspaceRoot={extensionWorkspaceRoot}
-              onClose={() => selectExtensionSurface(null)}
-            />
-          </div>
-        </main>
-      ) : (
-      <WorkbenchStageRouter
+      <div className={`flex min-h-0 min-w-0 flex-1 flex-col p-2 ${leftSidebarCollapsed || activeExtensionCenterView?.point === 'views.fullPage' ? '' : 'pl-0'}`}>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-ds-canvas shadow-sm border border-ds-border-muted">
+          {activeExtensionCenterView ? (
+            <main className="ds-stage-surface relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+              <div className="ds-stage-route-host relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+                <ExtensionViewOutlet
+                  contribution={activeExtensionCenterView}
+                  workspaceRoot={extensionWorkspaceRoot}
+                  onClose={() => selectExtensionSurface(null)}
+                />
+              </div>
+            </main>
+          ) : (
+            <WorkbenchStageRouter
         route={route}
         leftSidebarCollapsed={leftSidebarCollapsed}
         onToggleLeftSidebar={toggleLeftSidebar}
@@ -1042,6 +1043,7 @@ export function Workbench(): ReactElement {
           />
         </div>
       ) : null}
+        </div>
       </div>
       <DeclarativeContextMenuOverlay
         contributions={extensionHostContextMenus.filter(

@@ -348,14 +348,12 @@
 }
 
 .ds-sidebar-shell {
-  background: var(--ds-sidebar-gradient);
+  background: transparent;
   border-color: var(--ds-sidebar-border);
   border-style: solid;
   border-width: 0;
-  box-shadow: var(--ds-sidebar-shadow);
+  box-shadow: none;
   isolation: isolate;
-  backdrop-filter: blur(14px) saturate(112%);
-  -webkit-backdrop-filter: blur(14px) saturate(112%);
 }
 
 .ds-sidebar-shell::before {
@@ -363,9 +361,7 @@
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: var(--ds-sidebar-haze);
-  opacity: 1;
-  pointer-events: none;
+  display: none;
 }
 
 .ds-sidebar-shell > * {

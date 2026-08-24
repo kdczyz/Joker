@@ -48,7 +48,7 @@ export function ContextCapacityPopover({ capacity, thresholdRatio = 0.9, style }
 
   return (
     <div
-      className="ds-context-capacity w-[300px] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-ds-border-muted bg-ds-card p-3.5 text-ds-ink shadow-[0_14px_34px_rgba(20,47,95,0.16)]"
+      className="ds-context-capacity w-[300px] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-ds-border-muted bg-ds-card dark:bg-[#202024] p-3.5 text-ds-ink shadow-[0_14px_34px_rgba(20,47,95,0.16)]"
       style={style}
       role="dialog"
       aria-label={t('contextCapacityTitle')}

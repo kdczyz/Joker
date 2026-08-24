@@ -466,7 +466,18 @@ function resolveWriteToolFilePath(filePath: string | undefined, workspaceRoot: s
 function runtimeStatusText(event: RuntimeStatusEventPayload): string {
   if (event.kind === 'tool_result_upload_wait') {
     if (event.toolName) {
-      return i18n.t('common:toolCalledStatus', { tool: event.toolName })
+      let displayName = event.toolName
+      const normalized = event.toolName.toLowerCase()
+      if (normalized.includes('view_file') || normalized.includes('read_url') || normalized === 'read' || normalized === 'read_file') displayName = i18n.t('common:toolBuiltinRead', { defaultValue: '读取' })
+      else if (normalized.includes('write_to_file') || normalized === 'write' || normalized === 'write_file') displayName = i18n.t('common:toolBuiltinWrite', { defaultValue: '写入' })
+      else if (normalized.includes('replace_file_content') || normalized === 'edit' || normalized === 'edit_file') displayName = i18n.t('common:toolBuiltinEdit', { defaultValue: '编辑' })
+      else if (normalized.includes('run_command') || normalized === 'bash' || normalized === 'shell') displayName = i18n.t('common:toolBuiltinBash', { defaultValue: '执行' })
+      else if (normalized.includes('search_web')) displayName = i18n.t('common:toolKindWebSearch', { defaultValue: 'Web Search' })
+      else if (normalized.includes('grep_search') || normalized === 'grep' || normalized === 'search_files') displayName = i18n.t('common:toolBuiltinGrep', { defaultValue: '检索' })
+      else if (normalized.includes('find_by_name') || normalized === 'find') displayName = i18n.t('common:toolBuiltinFind', { defaultValue: '查找' })
+      else if (normalized.includes('list_dir') || normalized === 'ls') displayName = i18n.t('common:toolBuiltinLs', { defaultValue: '列出目录' })
+      
+      return i18n.t('common:toolCalledStatus', { tool: displayName })
     }
     return i18n.t('common:toolUploadWaitStatus', { count: event.toolResultCount ?? 0 })
   }

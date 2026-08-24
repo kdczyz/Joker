@@ -12,7 +12,7 @@ import { MessageTimelineEmptyHero, ThreadForkBanner, ThreadForkPoint } from './m
 import { GeneratedFilesPanel, MessageBubble } from './message-timeline-bubbles'
 import { PresentationFilesPanel } from './PresentationFilesPanel'
 import { presentationFileArtifactsForTurn } from './presentation-file-artifacts'
-import { ReviewPlanCard, ReviewSummaryCard, TurnChangeSummary, WorkMetaRow } from './message-timeline-cards'
+import { ReviewPlanCard, ReviewSummaryCard, TurnChangeSummary } from './message-timeline-cards'
 import { ProcessSectionRow, groupProcessSections } from './message-timeline-process'
 import { ComponentPrototypeCard } from './ComponentPrototypeCard'
 import type { OpenChildThreadHandler } from './SubagentCallCard'
@@ -905,7 +905,6 @@ function MessageTurn({
   }, [turn.blocks, isProcessing])
   const { think: liveThink, content: liveContent } = splitThink(live)
   const liveProcessText = [liveReasoning, liveThink].filter(Boolean).join('\n\n')
-  const [workExpandedOverride, setWorkExpandedOverride] = useState<boolean | null>(null)
 
   const { processBlocks, assistantContentBlocks, componentPrototypeBlocks, generatedFileBlocks, turnFileChanges } = useMemo(
     () =>
@@ -937,18 +936,16 @@ function MessageTurn({
   )
   const onlyCompactionProcess = processBlocks.length > 0 && workProcessBlocks.length === 0
   const hasProcessError = workProcessBlocks.some(processBlockHasError)
-  // Keep active failures visible while a turn is still running, but fold
-  // completed failures into the normal work summary until the user opens it.
+  // Keep active failures visible while a turn is still running
   const forceExpandForError = isProcessing && hasProcessError
-  const workExpanded = forceExpandForError || (workExpandedOverride ?? isProcessing)
   const reviewBlocks = useMemo(
     () => turn.blocks.filter((block) => block.kind === 'review'),
     [turn.blocks]
   )
 
   const processSections = useMemo(
-    () => (workExpanded ? groupProcessSections(workProcessBlocks) : []),
-    [workProcessBlocks, workExpanded]
+    () => groupProcessSections(workProcessBlocks),
+    [workProcessBlocks]
   )
   const reasoningSectionCount = useMemo(
     () => processSections.filter((section) => section.kind === 'reasoning').length,
@@ -1008,37 +1005,22 @@ function MessageTurn({
     <div className="flex min-w-0 flex-col gap-4">
       {turn.user ? <MessageBubble block={turn.user} /> : null}
 
-      {hasProcess ? (
-        <div className="ds-process-flow-card my-1">
-          <div className="ds-process-flow-header">
-            <WorkMetaRow
-              processing={isProcessing}
-              stepCount={workProcessBlocks.length}
-              durationMs={durationMs}
-              reasoningDurationMs={reasoningDurationMs}
-              expanded={workExpanded}
-              collapsible={!forceExpandForError}
-              onToggle={() => setWorkExpandedOverride((value) => !(value ?? isProcessing))}
-            />
+      {hasProcess && processSections.length > 0 ? (
+        <div className="my-1 px-3.5 py-3">
+          <div className="ds-process-timeline-spine flex flex-col gap-2.5">
+            {processSections.map((section) => (
+              <ProcessSectionRow
+                key={section.id}
+                section={section}
+                processing={isProcessing}
+                reasoningDurationMs={reasoningDurationMs}
+                singleReasoningSection={reasoningSectionCount === 1}
+                workspaceRoot={filePreviewWorkspaceRoot}
+                viewportRef={viewportRef}
+                onOpenChildThread={onOpenChildThread}
+              />
+            ))}
           </div>
-          {workExpanded && processSections.length > 0 ? (
-            <div className="border-t border-ds-border/40 bg-ds-card/40 px-3.5 py-3">
-              <div className="ds-process-timeline-spine flex flex-col gap-2.5">
-                {processSections.map((section) => (
-                  <ProcessSectionRow
-                    key={section.id}
-                    section={section}
-                    processing={isProcessing}
-                    reasoningDurationMs={reasoningDurationMs}
-                    singleReasoningSection={reasoningSectionCount === 1}
-                    workspaceRoot={filePreviewWorkspaceRoot}
-                    viewportRef={viewportRef}
-                    onOpenChildThread={onOpenChildThread}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
         </div>
       ) : null}
 

@@ -1185,7 +1185,7 @@ export function FloatingComposer({
         <div className="pointer-events-none absolute inset-x-0 bottom-full z-30 mb-2 flex flex-col items-center gap-2">
           {runtimeReady ? <BackgroundShellOverlay /> : null}
           {showGoalFloater && activeThreadGoal && !pendingUserInputBlock ? (
-            <div className="pointer-events-auto flex min-h-11 w-full max-w-[46rem] items-center gap-2 rounded-full border border-ds-border bg-white px-3 py-1.5 text-ds-muted shadow-[0_12px_34px_rgba(20,47,95,0.10)] backdrop-blur-xl dark:bg-ds-card">
+            <div className="pointer-events-auto flex min-h-11 w-full max-w-[46rem] items-center gap-2 rounded-full border border-ds-border bg-white px-3 py-1.5 text-ds-muted shadow-[0_12px_34px_rgba(20,47,95,0.10)] backdrop-blur-xl dark:bg-[#202024]">
               <Target className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.9} />
               <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px] leading-5">
                 <span className="shrink-0 font-semibold text-ds-ink">
@@ -1248,7 +1248,7 @@ export function FloatingComposer({
         {composerMenuOpen && slashQuery == null ? (
           <div
             ref={composerMenuPanelRef}
-            className="absolute bottom-12 left-1 z-40 w-48 overflow-hidden rounded-[18px] border border-ds-border bg-white py-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-ds-card"
+            className="absolute bottom-12 left-1 z-40 w-48 overflow-hidden rounded-[18px] border border-ds-border bg-white py-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#202024]"
           >
             {fileReferenceEnabled ? (
               <button
@@ -1403,7 +1403,7 @@ export function FloatingComposer({
         {goalPanelOpen && slashQuery == null && !pendingUserInputBlock ? (
           <div
             ref={goalPanelRef}
-            className="absolute inset-x-2 bottom-full z-30 mb-3 overflow-hidden rounded-[26px] border border-ds-border bg-white p-3 shadow-[0_18px_52px_rgba(20,47,95,0.14)] backdrop-blur-xl dark:bg-ds-card"
+            className="absolute inset-x-2 bottom-full z-30 mb-3 overflow-hidden rounded-[26px] border border-ds-border bg-white p-3 shadow-[0_18px_52px_rgba(20,47,95,0.14)] backdrop-blur-xl dark:bg-[#202024]"
           >
             <div className="flex items-start gap-3">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ds-border-muted text-ds-muted">
@@ -1908,7 +1908,7 @@ export function FloatingComposer({
                 onClick={() => setUsageChartOpen((value) => !value)}
                 aria-haspopup="dialog"
                 aria-expanded={usageChartOpen}
-                className="ds-composer-usage ds-no-drag inline-flex min-h-7 max-w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 overflow-visible rounded-lg border border-ds-border-muted bg-ds-card px-2.5 py-0.5 text-[12.5px] font-medium leading-5 text-ds-muted shadow-sm transition hover:border-accent/40 hover:text-ds-ink"
+                className="ds-composer-usage ds-no-drag inline-flex min-h-7 max-w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 overflow-visible rounded-lg border border-ds-border-muted bg-ds-card dark:bg-[#202024] px-2.5 py-0.5 text-[12.5px] font-medium leading-5 text-ds-muted shadow-sm transition hover:border-accent/40 hover:text-ds-ink"
                 title={
                   threadUsage
                     ? t(
@@ -2005,7 +2005,7 @@ export function FloatingComposer({
               ref={usagePopoverRef}
               role="dialog"
               aria-label={t('usageChartTitle')}
-              className="fixed z-[100] w-[360px] max-w-[calc(100vw-24px)] rounded-2xl border border-ds-border bg-ds-card p-4 shadow-[0_24px_60px_rgba(20,47,95,0.18)]"
+              className="fixed z-[100] w-[360px] max-w-[calc(100vw-24px)] rounded-2xl border border-ds-border bg-ds-card dark:bg-[#202024] p-4 shadow-[0_24px_60px_rgba(20,47,95,0.18)]"
               style={{ top: usagePopoverPos.top, left: usagePopoverPos.left }}
             >
               <div className="mb-3 flex items-center justify-between gap-2">

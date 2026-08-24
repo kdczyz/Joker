@@ -221,7 +221,7 @@ export function SidebarConversationsSection({
   }
 
   return (
-    <div className="ds-no-drag flex shrink-0 flex-col">
+    <div className="ds-no-drag flex shrink-0 flex-col mt-2 rounded-xl bg-black/[0.05] pb-1.5 dark:bg-white/[0.05]">
       <div className="flex min-h-[34px] items-center justify-between px-2 pb-1 pt-2">
         <button
           type="button"

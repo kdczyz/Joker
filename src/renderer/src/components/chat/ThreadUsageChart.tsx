@@ -172,7 +172,7 @@ export function ThreadUsageChart({
 
         {active ? (
           <div
-            className="pointer-events-none absolute z-10 w-[min(15rem,82%)] -translate-x-1/2 -translate-y-[118%] rounded-xl border border-ds-border bg-ds-card/98 p-2.5 text-[12px] shadow-[0_14px_38px_rgba(20,47,95,0.16)] backdrop-blur-xl"
+            className="pointer-events-none absolute z-10 w-[min(15rem,82%)] -translate-x-1/2 -translate-y-[118%] rounded-xl border border-ds-border bg-white/98 dark:bg-[#202024] p-2.5 text-[12px] shadow-[0_14px_38px_rgba(20,47,95,0.16)] backdrop-blur-xl"
             style={{
               left: `${(xFor(hover as number, count) / CHART_W) * 100}%`,
               top: `${(yFor(active.totalTokens, maxY) / CHART_H) * 100}%`

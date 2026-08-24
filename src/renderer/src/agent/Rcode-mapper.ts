@@ -194,10 +194,15 @@ const FILE_PATH_KEYS = [
   'file',
   'relative_path',
   'target_path',
-  'targetPath'
+  'targetPath',
+  'AbsolutePath',
+  'TargetFile',
+  'SearchDirectory',
+  'DirectoryPath',
+  'Url'
 ] as const
 
-const COMMAND_KEYS = ['command', 'cmd', 'script'] as const
+const COMMAND_KEYS = ['command', 'cmd', 'script', 'CommandLine'] as const
 const COMMAND_RESULT_META_KEYS = [
   'exit_code',
   'session_id',
@@ -217,6 +222,7 @@ const TOOL_KIND_BY_NAME: ReadonlyMap<string, ToolBlock['toolKind']> = new Map([
   ['terminal', 'command_execution'],
   ['run_command', 'command_execution'],
   ['exec', 'command_execution'],
+  ['default_api:run_command', 'command_execution'],
   ['read', 'tool_call'],
   ['write', 'file_change'],
   ['edit', 'file_change'],
@@ -228,7 +234,15 @@ const TOOL_KIND_BY_NAME: ReadonlyMap<string, ToolBlock['toolKind']> = new Map([
   ['edit_file', 'file_change'],
   ['apply_patch', 'file_change'],
   ['create_file', 'file_change'],
-  ['create_plan', 'file_change']
+  ['create_plan', 'file_change'],
+  ['default_api:view_file', 'tool_call'],
+  ['default_api:write_to_file', 'file_change'],
+  ['default_api:replace_file_content', 'file_change'],
+  ['default_api:read_url_content', 'tool_call'],
+  ['default_api:search_web', 'tool_call'],
+  ['default_api:find_by_name', 'tool_call'],
+  ['default_api:grep_search', 'tool_call'],
+  ['default_api:list_dir', 'tool_call']
 ])
 
 function payloadFor(item: CoreTurnItemJson): Record<string, unknown> {

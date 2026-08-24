@@ -796,9 +796,12 @@ function toolBlockIcon(block: ToolBlock): LucideIcon {
     case 'terminal':
     case 'run_command':
     case 'exec':
+    case 'default_api:run_command':
       return Terminal
     case 'read':
     case 'read_file':
+    case 'default_api:view_file':
+    case 'default_api:read_url_content':
       return BookOpen
     case 'write':
     case 'write_file':
@@ -806,16 +809,22 @@ function toolBlockIcon(block: ToolBlock): LucideIcon {
     case 'edit_file':
     case 'apply_patch':
     case 'create_file':
+    case 'default_api:write_to_file':
+    case 'default_api:replace_file_content':
       return PencilLine
     case 'grep':
     case 'grep_files':
     case 'search':
     case 'search_files':
+    case 'default_api:grep_search':
+    case 'default_api:search_web':
     case 'find':
+    case 'default_api:find_by_name':
       return Search
     case 'ls':
     case 'list':
     case 'list_dir':
+    case 'default_api:list_dir':
       return FolderOpen
     case 'create_plan':
     case 'update_plan':
@@ -970,27 +979,37 @@ function builtInToolLabel(
   switch (normalized) {
     case 'read':
     case 'read_file':
+    case 'default_api:view_file':
+    case 'default_api:read_url_content':
       return t('toolBuiltinRead')
     case 'write':
     case 'write_file':
+    case 'default_api:write_to_file':
       return t('toolBuiltinWrite')
     case 'edit':
     case 'edit_file':
+    case 'default_api:replace_file_content':
       return t('toolBuiltinEdit')
     case 'grep':
     case 'grep_files':
     case 'search_files':
+    case 'default_api:grep_search':
       return t('toolBuiltinGrep')
     case 'find':
+    case 'default_api:find_by_name':
       return t('toolBuiltinFind')
     case 'ls':
+    case 'default_api:list_dir':
       return t('toolBuiltinLs')
     case 'bash':
     case 'shell':
     case 'terminal':
     case 'run_command':
     case 'commentary':
+    case 'default_api:run_command':
       return t('toolBuiltinBash')
+    case 'default_api:search_web':
+      return t('toolKindWebSearch', { defaultValue: 'Web Search' })
     case 'background_shell':
       return t('toolBuiltinBackgroundShell', { defaultValue: 'Background shell' })
     case 'delegate_task':
