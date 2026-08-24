@@ -27,6 +27,15 @@ const NUMERIC_SCHEMA_KEYS = new Set([
   'minimum'
 ])
 
+// Keys whose values must be non-negative integers in JSON Schema draft
+// 2020-12 (fractional values are invalid).
+const INTEGER_SCHEMA_KEYS = new Set([
+  'maxLength',
+  'minLength',
+  'maxItems',
+  'minItems'
+])
+
 function toCloudCodeSchema(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(toCloudCodeSchema)
   if (!value || typeof value !== 'object') return value
@@ -65,6 +74,132 @@ function toCloudCodeSchema(value: unknown): unknown {
     }
   }
   return out
+}
+
+// CloudCode models backed by Anthropic's Claude validate tool schemas
+// against JSON Schema draft 2020-12 (`tools.N.custom.input_schema`). The
+// protobuf-style transformation above (uppercase "STRING" types, floored
+// numeric bounds) violates that metaschema, so Claude models need a
+// pass-through sanitizer that only removes guaranteed-invalid constructs.
+const CLAUDE_SCHEMA_DROPPED_KEYS = new Set([
+  '$schema',
+  '$id',
+  '$ref',
+  '$defs',
+  'definitions',
+  'strict'
+])
+
+function toCloudCodeClaudeSchema(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(toCloudCodeClaudeSchema)
+  if (!value || typeof value !== 'object') return value
+  const out: Record<string, unknown> = {}
+  for (const [key, child] of Object.entries(value as Record<string, unknown>)) {
+    if (key.startsWith('$') || CLAUDE_SCHEMA_DROPPED_KEYS.has(key)) continue
+    if (key === 'additionalProperties' && typeof child === 'boolean') {
+      out[key] = child
+      continue
+    }
+    if (key === 'additionalProperties' && child && typeof child === 'object') {
+      out[key] = toCloudCodeClaudeSchema(child)
+      continue
+    }
+    if (NUMERIC_SCHEMA_KEYS.has(key)) {
+      if (typeof child === 'number' && Number.isFinite(child)) {
+        out[key] = INTEGER_SCHEMA_KEYS.has(key) ? Math.floor(child) : child
+        continue
+      }
+      if (typeof child === 'string') {
+        const parsed = Number(child.trim())
+        if (Number.isFinite(parsed)) {
+          out[key] = INTEGER_SCHEMA_KEYS.has(key) ? Math.floor(parsed) : parsed
+          continue
+        }
+      }
+      continue
+    }
+    if (key === 'exclusiveMinimum' || key === 'exclusiveMaximum') {
+      if (typeof child === 'number' && Number.isFinite(child)) out[key] = child
+      continue
+    }
+    if (key === 'type') {
+      if (typeof child === 'string') {
+        const normalized = child.toLowerCase().trim()
+        if (['object', 'array', 'string', 'number', 'integer', 'boolean', 'null'].includes(normalized)) {
+          out[key] = normalized
+        }
+        continue
+      }
+      if (Array.isArray(child)) {
+        const types = child
+          .filter((entry) => typeof entry === 'string' && entry.length > 0)
+          .map((entry) => (entry as string).toLowerCase().trim())
+          .filter((entry) => ['object', 'array', 'string', 'number', 'integer', 'boolean', 'null'].includes(entry))
+        if (types.length === 1) out[key] = types[0]
+        else if (types.length > 1) out[key] = types
+      }
+      continue
+    }
+    if (key === 'properties') {
+      if (child && typeof child === 'object' && !Array.isArray(child)) {
+        const sanitized: Record<string, unknown> = {}
+        for (const [propKey, propVal] of Object.entries(child as Record<string, unknown>)) {
+          const cleaned = toCloudCodeClaudeSchema(propVal)
+          if (cleaned && typeof cleaned === 'object' && !Array.isArray(cleaned)) {
+            const obj = cleaned as Record<string, unknown>
+            if (!obj.type && !obj.anyOf && !obj.oneOf && !obj.allOf && !obj.enum && !obj.const) {
+              obj.type = 'string'
+            }
+            sanitized[propKey] = obj
+          } else if (cleaned) {
+            sanitized[propKey] = cleaned
+          }
+        }
+        out[key] = sanitized
+      }
+      continue
+    }
+    if (key === 'items' || key === 'prefixItems' || key === 'contains' || key === 'propertyNames' || key === 'unevaluatedProperties' || key === 'unevaluatedItems') {
+      out[key] = toCloudCodeClaudeSchema(child)
+      continue
+    }
+    out[key] = toCloudCodeClaudeSchema(child)
+  }
+  if (Array.isArray(out.required)) {
+    if (out.properties && typeof out.properties === 'object') {
+      const validKeys = new Set(Object.keys(out.properties as Record<string, unknown>))
+      out.required = (out.required as unknown[]).filter(
+        (r) => typeof r === 'string' && validKeys.has(r)
+      )
+      if ((out.required as unknown[]).length === 0) delete out.required
+    } else {
+      delete out.required
+    }
+  }
+  if (out.type === undefined && !out.anyOf && !out.oneOf && !out.allOf && !out.enum && !out.const) {
+    if (out.properties) out.type = 'object'
+  }
+  return out
+}
+
+// Anthropic requires the root tool schema to be an object schema, so force
+// `type: "object"` when it is missing after sanitization.
+function claudeToolParameters(inputSchema: unknown): Record<string, unknown> {
+  try {
+    const sanitized = toCloudCodeClaudeSchema(inputSchema)
+    if (!sanitized || typeof sanitized !== 'object' || Array.isArray(sanitized)) {
+      return { type: 'object' }
+    }
+    const obj = sanitized as Record<string, unknown>
+    if (!obj.type) obj.type = 'object'
+    return obj as Record<string, unknown>
+  } catch {
+    return { type: 'object' }
+  }
+}
+
+function isClaudeCloudCodeModel(model: string): boolean {
+  return model.trim().toLowerCase().startsWith('claude')
 }
 
 // CloudCode's :fetchAvailableModels exposes internal model names that differ
@@ -302,7 +437,6 @@ export class CompatRequestCodecs {
         name: tool.name, description: tool.description, input_schema: tool.inputSchema
       }))
     }
-    console.error('[DEBUG-PAYLOAD] body.tools =', JSON.stringify(body.tools, null, 2))
     return body
   }
 
@@ -334,17 +468,29 @@ export class CompatRequestCodecs {
       request.systemInstruction = { parts: [{ text: converted.system }] }
     }
     if (input.tools.length) {
+      const claudeModel = isClaudeCloudCodeModel(input.model)
       request.tools = [
         {
-          functionDeclarations: input.tools.map((tool) => ({
-            name: tool.name,
-            description: tool.description,
-            parameters: toCloudCodeSchema(tool.inputSchema)
-          }))
+          functionDeclarations: input.tools.map((tool) => {
+            try {
+              return {
+                name: tool.name,
+                description: tool.description,
+                parameters: claudeModel
+                  ? claudeToolParameters(tool.inputSchema)
+                  : toCloudCodeSchema(tool.inputSchema)
+              }
+            } catch {
+              return {
+                name: tool.name,
+                description: tool.description,
+                parameters: { type: 'OBJECT', properties: {} }
+              }
+            }
+          })
         }
       ]
     }
-    console.error('[DEBUG-PAYLOAD] request.tools =', JSON.stringify(request.tools, null, 2))
     return {
       model: mapCloudCodeModel(input.model),
       request

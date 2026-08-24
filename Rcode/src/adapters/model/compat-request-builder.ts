@@ -83,10 +83,11 @@ function messagesToResponsesInput(messages: CompatChatMessage[]): Array<Record<s
         content
       })
     }
-    for (const call of message.tool_calls ?? []) {
+    for (let index = 0; index < (message.tool_calls ?? []).length; index++) {
+      const call = message.tool_calls![index]
       input.push({
         type: 'function_call',
-        call_id: call.id,
+        call_id: call.id?.trim() || `call_${index}_${call.function.name}`,
         name: call.function.name,
         arguments: call.function.arguments,
         status: 'completed'
@@ -171,10 +172,11 @@ function messagesToAnthropic(
       const thinking = message.reasoning_content?.trim()
       if (thinking) blocks.unshift({ type: 'thinking', thinking })
     }
-    for (const call of message.tool_calls ?? []) {
+    for (let index = 0; index < (message.tool_calls ?? []).length; index++) {
+      const call = message.tool_calls![index]
       blocks.push({
         type: 'tool_use',
-        id: call.id,
+        id: call.id?.trim() || `call_${index}_${call.function.name}`,
         name: call.function.name,
         input: repairToolArguments(call.function.arguments).arguments
       })
@@ -278,6 +280,7 @@ function messagesToCloudCode(
     const toolCalls = message.tool_calls ?? []
     for (let index = 0; index < toolCalls.length; index++) {
       const call = toolCalls[index]
+      if (!call.id?.trim()) call.id = `call_${index}_${call.function.name}`
       const functionCallPart: Record<string, unknown> = {
         functionCall: {
           name: call.function.name,

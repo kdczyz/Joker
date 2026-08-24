@@ -3,6 +3,7 @@ import { decodeCloudCodeStreamPayload } from './cloudcode-stream-decoder.js'
 import { decodeCompatNonStreamingResponse } from './compat-non-streaming-decoder.js'
 import { type CompatChatMessage } from './compat-request-codecs.js'
 import { createCompatRequestCodecs } from './compat-request-builder.js'
+import { openAiChatToCloudCodeBody } from './cloudcode-openai-adapter.js'
 import {
   DEFAULT_MODEL_STREAM_LIMITS,
   ModelStreamResourceBudget
@@ -217,6 +218,157 @@ describe('CloudCode / Antigravity Model Adapter', () => {
         ]
       }
     ])
+  })
+
+  it('keeps tool schemas draft-2020-12 valid for Claude models (lowercase types, numeric bounds, object root)', () => {
+    const encoded = codecs.build({
+      endpointFormat: 'cloudcode',
+      model: 'claude-sonnet-4-6',
+      messages: [{ role: 'user', content: 'hi' }],
+      tools: [
+        {
+          name: 'search_items',
+          description: 'Search items',
+          inputSchema: {
+            type: 'object',
+            properties: {
+              query: { type: 'string', minLength: '1' as unknown as number },
+              limit: { type: 'number', minimum: 0.5, exclusiveMinimum: true },
+              mode: { type: ['string', 'null'] },
+              flag: { type: 'boolean' }
+            },
+            required: ['query', 'missing_prop'],
+            additionalProperties: false
+          }
+        },
+        {
+          name: 'no_schema_tool',
+          description: 'Tool with a non-object schema',
+          inputSchema: { properties: { a: { type: 'string' } } } as never
+        }
+      ],
+      stream: true,
+      baseUrl: 'https://cloudcode-pa.googleapis.com/v1internal',
+      request: {
+        threadId: 't1',
+        turnId: 'u1',
+        model: 'claude-sonnet-4-6',
+        systemPrompt: '',
+        prefix: [],
+        history: [],
+        tools: [],
+        abortSignal: new AbortController().signal
+      },
+      isCodex: false,
+      isCodexLite: false,
+      codexNativeImageGeneration: false
+    })
+
+    const request = encoded.request as Record<string, unknown>
+    const tools = request.tools as Array<{
+      functionDeclarations: Array<{ parameters: Record<string, unknown> }>
+    }>
+    const [first, second] = tools[0].functionDeclarations
+
+    // Type stays lowercase (Anthropic draft 2020-12 rejects "STRING").
+    expect(first.parameters.type).toBe('object')
+    const props = first.parameters.properties as Record<string, Record<string, unknown>>
+    expect(props.query.type).toBe('string')
+    expect(props.limit.type).toBe('number')
+    expect(props.flag.type).toBe('boolean')
+    // String numeric bounds are coerced to numbers; minimum keeps fractional value.
+    expect(props.query.minLength).toBe(1)
+    expect(props.limit.minimum).toBe(0.5)
+    // Boolean (draft-04 style) exclusiveMinimum is dropped.
+    expect(props.limit).not.toHaveProperty('exclusiveMinimum')
+    // Type arrays are valid draft 2020-12 and preserved.
+    expect(props.mode.type).toEqual(['string', 'null'])
+    // additionalProperties is legal draft 2020-12 and preserved for Claude.
+    expect(first.parameters.additionalProperties).toBe(false)
+    // required entries missing from properties are removed.
+    expect(first.parameters.required).toEqual(['query'])
+    // Root schema without a type gets `type: "object"` forced.
+    expect(second.parameters.type).toBe('object')
+  })
+
+  it('still protobuf-mangles tool schemas for Gemini models on CloudCode', () => {
+    const encoded = codecs.build({
+      endpointFormat: 'cloudcode',
+      model: 'gemini-3.7-flash',
+      messages: [{ role: 'user', content: 'hi' }],
+      tools: [
+        {
+          name: 'search_items',
+          description: 'Search items',
+          inputSchema: {
+            type: 'object',
+            properties: { query: { type: 'string', minLength: '1' as unknown as number } }
+          }
+        }
+      ],
+      stream: true,
+      baseUrl: 'https://cloudcode-pa.googleapis.com/v1internal',
+      request: {
+        threadId: 't1',
+        turnId: 'u1',
+        model: 'gemini-3.7-flash',
+        systemPrompt: '',
+        prefix: [],
+        history: [],
+        tools: [],
+        abortSignal: new AbortController().signal
+      },
+      isCodex: false,
+      isCodexLite: false,
+      codexNativeImageGeneration: false
+    })
+
+    const request = encoded.request as Record<string, unknown>
+    const tools = request.tools as Array<{
+      functionDeclarations: Array<{ parameters: Record<string, unknown> }>
+    }>
+    const props = tools[0].functionDeclarations[0].parameters.properties as Record<
+      string,
+      Record<string, unknown>
+    >
+    expect(props.query.type).toBe('STRING')
+    expect(props.query.minLength).toBe(1)
+  })
+
+  it('openAiChatToCloudCodeBody keeps Claude tool schemas draft-2020-12 valid', () => {
+    const body = openAiChatToCloudCodeBody({
+      model: 'claude-sonnet-4-5-thinking',
+      messages: [{ role: 'user', content: 'hi' }],
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'search_items',
+            description: 'Search items',
+            parameters: {
+              type: 'object',
+              properties: {
+                query: { type: 'string' },
+                limit: { type: 'number', minimum: 1 }
+              },
+              required: ['query']
+            }
+          }
+        }
+      ]
+    })
+
+    expect(body.model).toBe('claude-sonnet-4-6')
+    const tools = body.request.tools as Array<{
+      functionDeclarations: Array<{ parameters: Record<string, unknown> }>
+    }>
+    const props = tools[0].functionDeclarations[0].parameters.properties as Record<
+      string,
+      Record<string, unknown>
+    >
+    expect(props.query.type).toBe('string')
+    expect(props.limit.type).toBe('number')
+    expect(props.limit.minimum).toBe(1)
   })
 
   it('decodes streaming thought and functionCall properly', () => {
