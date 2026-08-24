@@ -25,8 +25,11 @@ const WEB_SEARCH_TOOL_NAMES = new Set([
   'web_search', 'web_fetch',
   'open-websearch', 'open_websearch',
   'search', 'fetch-web', 'fetch_web',
-  'fetch-csdn', 'fetch_csdn',
-  'fetch-github-readme', 'fetch_github_readme',
+  'fetch-csdn', 'fetch_csdn', 'fetchcsdnarticle',
+  'fetch-github-readme', 'fetch_github_readme', 'fetchgithubreadme',
+  'fetch-linuxdo', 'fetch_linuxdo', 'fetchlinuxdoarticle',
+  'fetch-juejin', 'fetch_juejin', 'fetchjuejinarticle',
+  'fetch-webcontent', 'fetch_webcontent',
   'tavily-search', 'tavily_search', 'tavily',
   'baidu-search', 'baidu_search', 'baidu'
 ])
@@ -41,7 +44,11 @@ function isWebSearchToolName(name: string | undefined): boolean {
     lower.includes('baidu') ||
     lower.includes('search') ||
     lower.includes('fetch-web') ||
-    lower.includes('fetch-csdn')
+    lower.includes('fetch-csdn') ||
+    lower.includes('fetch-github') ||
+    lower.includes('fetch-linuxdo') ||
+    lower.includes('fetch-juejin') ||
+    lower.includes('fetch-webcontent')
 }
 
 /** Map a raw tool name to a localized, human-readable label. */
@@ -53,14 +60,19 @@ function localizeToolName(
   if (lower === 'web_search') return t('webSearchToolWebSearch')
   if (lower === 'web_fetch') return t('webSearchToolWebFetch')
   if (lower === 'open-websearch' || lower === 'open_websearch') return t('webSearchToolOpenWebSearch')
-  if (lower === 'fetch-web' || lower === 'fetch_web') return t('webSearchToolFetchWeb')
-  if (lower === 'fetch-csdn' || lower === 'fetch_csdn') return t('webSearchToolFetchCsdn')
-  if (lower === 'fetch-github-readme' || lower === 'fetch_github_readme') return t('webSearchToolFetchGithubReadme')
+  if (lower === 'fetch-web' || lower === 'fetch_web' || lower === 'fetchwebcontent' || lower === 'fetch-webcontent') return t('webSearchToolFetchWeb')
+  if (lower === 'fetch-csdn' || lower === 'fetch_csdn' || lower === 'fetchcsdnarticle') return t('webSearchToolFetchCsdn')
+  if (lower === 'fetch-github-readme' || lower === 'fetch_github_readme' || lower === 'fetchgithubreadme') return t('webSearchToolFetchGithubReadme')
+  if (lower === 'fetch-linuxdo' || lower === 'fetch_linuxdo' || lower === 'fetchlinuxdoarticle') return t('webSearchToolFetchLinuxdo')
+  if (lower === 'fetch-juejin' || lower === 'fetch_juejin' || lower === 'fetchjuejinarticle') return t('webSearchToolFetchJuejin')
   if (lower === 'tavily-search' || lower === 'tavily_search' || lower === 'tavily') return t('webSearchToolTavily')
   if (lower === 'baidu-search' || lower === 'baidu_search' || lower === 'baidu') return t('webSearchToolBaidu')
   if (lower.includes('open-websearch')) return t('webSearchToolOpenWebSearch')
-  if (lower.includes('fetch-web') || lower.includes('fetch_web')) return t('webSearchToolFetchWeb')
-  if (lower.includes('fetch-csdn') || lower.includes('fetch_csdn')) return t('webSearchToolFetchCsdn')
+  if (lower.includes('fetch-web') || lower.includes('fetch_web') || lower.includes('fetchwebcontent')) return t('webSearchToolFetchWeb')
+  if (lower.includes('fetch-csdn') || lower.includes('fetch_csdn') || lower.includes('fetchcsdn')) return t('webSearchToolFetchCsdn')
+  if (lower.includes('fetch-github') || lower.includes('fetchgithub')) return t('webSearchToolFetchGithubReadme')
+  if (lower.includes('fetch-linuxdo') || lower.includes('fetchlinuxdo')) return t('webSearchToolFetchLinuxdo')
+  if (lower.includes('fetch-juejin') || lower.includes('fetchjuejin')) return t('webSearchToolFetchJuejin')
   if (lower.includes('tavily')) return t('webSearchToolTavily')
   if (lower.includes('baidu')) return t('webSearchToolBaidu')
   if (lower.includes('search')) return t('webSearchToolSearch')
@@ -270,6 +282,7 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
     // Open WebSearch (Keyless multi-engine web search)
     if (openWebSearchEnabled) {
       const env: Record<string, string> = {
+        MODE: 'stdio',
         DEFAULT_SEARCH_ENGINE: openWebSearchEngine || 'duckduckgo'
       }
       if (openWebSearchProxyEnabled) {

@@ -90,16 +90,20 @@ describe('application locale settings', () => {
     expect(normalizeAppSettings({ ...settings(), locale }).locale).toBe(locale)
   })
 
-  it('falls back to English for an unsupported persisted locale', () => {
+  it('falls back to system for an unsupported persisted locale', () => {
     const input = { ...settings(), locale: 'fr' } as unknown as AppSettingsV1
-    expect(normalizeAppSettings(input).locale).toBe('en')
+    expect(normalizeAppSettings(input).locale).toBe('system')
+  })
+
+  it('preserves the system locale', () => {
+    expect(normalizeAppSettings({ ...settings(), locale: 'system' }).locale).toBe('system')
   })
 })
 
 describe('chat content max width', () => {
-  it('defaults invalid values to 896px', () => {
-    expect(normalizeChatContentMaxWidth(undefined)).toBe(896)
-    expect(normalizeChatContentMaxWidth('bad')).toBe(896)
+  it('defaults invalid values to 1200px', () => {
+    expect(normalizeChatContentMaxWidth(undefined)).toBe(1200)
+    expect(normalizeChatContentMaxWidth('bad')).toBe(1200)
   })
 
   it('clamps and rounds to 8px steps', () => {

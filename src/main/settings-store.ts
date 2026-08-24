@@ -231,7 +231,7 @@ async function ensureManagedWorkspaceRootsExist(settings: AppSettingsV1): Promis
 
 const defaultSettings = (): AppSettingsV1 => ({
   version: 1,
-  locale: 'en',
+  locale: 'system',
   theme: 'system',
   uiFontScale: DEFAULT_UI_FONT_SCALE,
   chatContentMaxWidthPx: DEFAULT_CHAT_CONTENT_MAX_WIDTH_PX,

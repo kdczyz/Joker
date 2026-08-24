@@ -18,11 +18,6 @@ const Workbench = lazy(() =>
 const SettingsView = lazy(() =>
   import('./components/SettingsView').then((module) => ({ default: module.SettingsView }))
 )
-const InitialSetupDialog = lazy(() =>
-  import('./components/InitialSetupDialog').then((module) => ({
-    default: module.InitialSetupDialog
-  }))
-)
 
 function RouteFallback(): React.ReactElement {
   return (
@@ -42,7 +37,6 @@ function RouteFallback(): React.ReactElement {
 export default function AppShell(): React.ReactElement {
   const route = useChatStore((s) => s.route)
   const boot = useChatStore((s) => s.boot)
-  const initialSetupOpen = useChatStore((s) => s.initialSetupOpen)
   const platform = typeof window !== 'undefined' ? window.RcodeGui?.platform ?? 'unknown' : 'unknown'
   const hasDesktopTitleBar = supportsDesktopTitleBar(platform)
 
@@ -80,17 +74,6 @@ export default function AppShell(): React.ReactElement {
           </Suspense>
         </div>
         <ExtensionWorkbenchLifecycle />
-        {initialSetupOpen ? (
-          <ProtectedRendererSurface
-            kind="account-credentials"
-            restoreTarget="initial-setup"
-            fallback={null}
-          >
-            <Suspense fallback={null}>
-              <InitialSetupDialog />
-            </Suspense>
-          </ProtectedRendererSurface>
-        ) : null}
       </div>
     </ExtensionSettingsServiceProvider>
   )

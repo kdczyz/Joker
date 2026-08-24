@@ -247,7 +247,6 @@ export function createNavigationActions(
           preservedWorkspaceRoots: [workspaceRoot]
         })
         saveCodeWorkspaceRoots(codeWorkspaceRoots)
-        const needsInitialSetup = !getActiveAgentApiKey(settings).trim()
         applyTheme(settings.theme)
         applyUiFontScale(settings.uiFontScale)
         applyChatContentMaxWidth(settings.chatContentMaxWidthPx)
@@ -322,7 +321,7 @@ export function createNavigationActions(
         const stateBeforeBootCommit = get()
         set({
           route: stateBeforeBootCommit.route === 'settings' ? 'settings' : 'chat',
-          initialSetupOpen: needsInitialSetup || stateBeforeBootCommit.initialSetupOpen,
+          initialSetupOpen: false,
           initialSetupMode: 'required',
           workspaceRoot,
           codeWorkspaceRoots,
@@ -331,11 +330,10 @@ export function createNavigationActions(
           disabledSkillIds: settings.disabledSkillIds,
           clawChannels: settings.claw.channels,
           activeClawChannelId: settings.claw.channels.find((channel) => isClawChannelEnabled(channel))?.id ?? '',
-          runtimeConnection: needsInitialSetup ? 'idle' : get().runtimeConnection,
-          error: needsInitialSetup ? null : get().error,
-          runtimeErrorDetail: needsInitialSetup ? null : get().runtimeErrorDetail
+          runtimeConnection: get().runtimeConnection,
+          error: get().error,
+          runtimeErrorDetail: get().runtimeErrorDetail
         })
-        if (needsInitialSetup) return
         const initialPick = get().composerPickList
         const fromStorage = readStoredComposerModel(initialPick)
         if (fromStorage) {

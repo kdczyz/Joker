@@ -47,7 +47,7 @@ export type RcodeToolPermissionMode = (typeof RCODE_TOOL_PERMISSION_MODES)[numbe
 export type UiFontScale = number
 export const UI_FONT_SCALE_MIN = 0.7
 export const UI_FONT_SCALE_MAX = 3.0
-export const DEFAULT_UI_FONT_SCALE = 1.0
+export const DEFAULT_UI_FONT_SCALE = 0.97
 /** Maps the retired small/medium/large presets to their old zoom factors. */
 export const LEGACY_UI_FONT_SCALE_FACTORS = { small: 0.82, medium: 0.88, large: 1 } as const
 /** Coerce any stored/legacy value into a valid numeric scale factor. */
@@ -63,7 +63,7 @@ export function normalizeUiFontScale(value: unknown): UiFontScale {
 export type ChatContentMaxWidthPx = number
 export const CHAT_CONTENT_MAX_WIDTH_MIN = 640
 export const CHAT_CONTENT_MAX_WIDTH_MAX = 1200
-export const DEFAULT_CHAT_CONTENT_MAX_WIDTH_PX = 896
+export const DEFAULT_CHAT_CONTENT_MAX_WIDTH_PX = 1200
 export function normalizeChatContentMaxWidth(value: unknown): ChatContentMaxWidthPx {
   const num = typeof value === 'number' ? value : Number(value)
   if (!Number.isFinite(num)) return DEFAULT_CHAT_CONTENT_MAX_WIDTH_PX
@@ -128,7 +128,7 @@ export const DEFAULT_WRITE_WORKSPACE_ROOT = '~/.Rcode/write_workspace'
 // (DEFAULT_CONVERSATION_WORKSPACE_ROOT_ABSOLUTE)和 renderer 层
 // (defaultConversationWorkspaceRoot)各自按平台推导。
 export const DEFAULT_RCODE_DATA_DIR = '~/.Rcode/data'
-export const DEFAULT_RCODE_MODEL = ''
+export const DEFAULT_RCODE_MODEL = 'deepseek-v4-flash-free'
 export const DEFAULT_PROMPT_OPTIMIZATION_PROMPT = [
   'You rewrite rough spoken or typed instructions into a clear prompt for a coding agent.',
   'Keep the user intent, constraints, names, paths, and concrete details intact.',
@@ -159,7 +159,7 @@ export const DEFAULT_CHECKPOINT_CLEANUP_ENABLED = true
 export const DEFAULT_GIT_BRANCH_PREFIX = 'codex/'
 export const DEFAULT_CURSOR_SPOTLIGHT_COLOR = '#85c1f1'
 export const DEFAULT_WEIXIN_BRIDGE_RPC_URL = 'http://127.0.0.1:18790/api/v1/admin/rpc'
-export const DEFAULT_MODEL_PROVIDER_ID = ''
+export const DEFAULT_MODEL_PROVIDER_ID = 'opencode-zen'
 export const NETWORK_PROXY_PROTOCOLS = ['http', 'https', 'socks', 'socks4', 'socks4a', 'socks5', 'socks5h'] as const
 export type NetworkProxyProtocol = (typeof NETWORK_PROXY_PROTOCOLS)[number]
 export type NetworkProxySettingsV1 = {

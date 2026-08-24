@@ -12,7 +12,7 @@ export function createInitialChatStoreState(workingDirectoryLabel: string) {
     settingsReturnRoute: 'chat' as const,
     pluginHostRoute: 'chat' as const,
     settingsSection: 'general' as const,
-    initialSetupOpen: protectedSurfaceRestore === 'initial-setup',
+    initialSetupOpen: false,
     initialSetupMode: 'required' as const,
     workspaceRoot: '',
     conversationWorkspaceRoot: defaultConversationWorkspaceRoot(),

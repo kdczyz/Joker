@@ -74,6 +74,15 @@ export async function createSdkMcpClient(
     ...(options.encryptor ? { encryptor: options.encryptor } : {})
   })
   let transport = createTransport(server, authProvider)
+  // Drain the stderr pipe to prevent the child process from blocking when its
+  // stderr buffer fills up.  Without a consumer the PassThrough stream that the
+  // SDK creates for `stderr: 'pipe'` stalls after ~16 KB, causing the child to
+  // hang on stderr writes and eventually drop the MCP connection.
+  const stderr = (transport as { stderr?: import('node:stream').Readable | null }).stderr
+  if (stderr) {
+    stderr.on('data', () => {})
+    stderr.resume()
+  }
   try {
     await client.connect(transport, { timeout: server.timeoutMs })
   } catch (error) {

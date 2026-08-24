@@ -20,6 +20,7 @@ import {
   rememberThreadComposerSelection,
   readStoredComposerProviderId
 } from './chat-store-helpers'
+import type { AppLocale } from '@shared/app-locales'
 
 type CreateAppActionsOptions = {
   set: ChatStoreSet
@@ -310,8 +311,15 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
     selectInspectorItem: (id) => set({ inspectorSelectedId: id }),
 
     applyI18nFromSettings: async (locale) => {
-      await i18n.changeLanguage(locale)
-      applyDocumentLocale(locale)
+      let resolvedLocale: AppLocale = locale
+      if (locale === 'system') {
+        const systemLang = typeof navigator !== 'undefined' ? navigator.language : 'en'
+        const normalized = systemLang.toLowerCase().split('-')[0]
+        const supportedLocales = ['en', 'zh', 'ru', 'hi', 'th', 'ja', 'ko']
+        resolvedLocale = supportedLocales.includes(normalized) ? normalized as AppLocale : 'en'
+      }
+      await i18n.changeLanguage(resolvedLocale)
+      applyDocumentLocale(resolvedLocale)
     },
 
     reloadUiSettings: async () => {

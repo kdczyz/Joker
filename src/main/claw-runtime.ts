@@ -117,7 +117,10 @@ function buildImRuntimePrompt(prompt: string): string {
 
 
 function isChineseLocale(settings: AppSettingsV1): boolean {
-  return settings.locale.toLowerCase().startsWith('zh')
+  const locale = settings.locale === 'system'
+    ? (process.env.LANG?.toLowerCase().startsWith('zh') ? 'zh' : 'en')
+    : settings.locale
+  return locale.toLowerCase().startsWith('zh')
 }
 
 function currentImModel(

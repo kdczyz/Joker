@@ -1605,6 +1605,8 @@
   "webSearchToolFetchWeb": "Fetch Web Page",
   "webSearchToolFetchCsdn": "Fetch CSDN",
   "webSearchToolFetchGithubReadme": "Fetch GitHub README",
+  "webSearchToolFetchLinuxdo": "Fetch Linux.do",
+  "webSearchToolFetchJuejin": "Fetch Juejin",
   "webSearchToolTavily": "Tavily Search",
   "webSearchToolBaidu": "Baidu Search",
   "webSearchToolSearch": "Search",

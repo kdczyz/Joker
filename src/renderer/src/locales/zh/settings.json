@@ -1605,6 +1605,8 @@
   "webSearchToolFetchWeb": "网页正文提取",
   "webSearchToolFetchCsdn": "CSDN 提取",
   "webSearchToolFetchGithubReadme": "GitHub README",
+  "webSearchToolFetchLinuxdo": "Linux.do 提取",
+  "webSearchToolFetchJuejin": "掘金提取",
   "webSearchToolTavily": "Tavily 搜索",
   "webSearchToolBaidu": "百度搜索",
   "webSearchToolSearch": "搜索",

@@ -486,7 +486,10 @@ function windowCloseLabels(locale: AppSettingsV1['locale']): {
   cancel: string
   remember: string
 } {
-  if (locale === 'zh') {
+  const resolvedLocale = locale === 'system'
+    ? (app.getLocale().toLowerCase().startsWith('zh') ? 'zh' : 'en')
+    : locale
+  if (resolvedLocale === 'zh') {
     return {
       title: '关闭窗口',
       message: '关闭窗口时要怎么处理？',

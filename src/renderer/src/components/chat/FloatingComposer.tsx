@@ -1846,26 +1846,17 @@ export function FloatingComposer({
                       )}
                     </button>
                   ) : null}
-                  {busy ? (
-                    <button
-                      type="button"
-                      onClick={() => onInterrupt()}
-                      className="ds-no-drag flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-950 text-white shadow-[0_10px_22px_rgba(20,47,95,0.22)] transition hover:bg-zinc-800 dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200"
-                      aria-label={t('interrupt')}
-                      title={t('interrupt')}
-                    >
-                      <Square className="h-3.5 w-3.5 fill-current" strokeWidth={2.4} />
-                    </button>
-                  ) : null}
                   <button
                     type="button"
-                    disabled={primaryActionDisabled}
-                    onClick={handlePrimaryAction}
+                    disabled={!busy && primaryActionDisabled}
+                    onClick={busy ? () => onInterrupt() : handlePrimaryAction}
                     className="ds-composer-primary-action ds-no-drag flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-zinc-950 text-white shadow-[0_10px_22px_rgba(20,47,95,0.22)] transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-ds-card disabled:text-ds-faint disabled:shadow-none dark:bg-white dark:text-zinc-950 dark:hover:bg-zinc-200 dark:disabled:bg-ds-card dark:disabled:text-ds-faint"
-                    aria-label={primaryActionLabel}
-                    title={primaryActionLabel}
+                    aria-label={busy ? t('interrupt') : primaryActionLabel}
+                    title={busy ? t('interrupt') : primaryActionLabel}
                   >
-                    {primaryActionLoading ? (
+                    {busy ? (
+                      <Square className="h-3.5 w-3.5 fill-current" strokeWidth={2.4} />
+                    ) : primaryActionLoading ? (
                       <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.2} />
                     ) : (
                       <Send className="h-4 w-4" strokeWidth={2.2} />
