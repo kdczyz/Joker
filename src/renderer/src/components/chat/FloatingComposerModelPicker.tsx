@@ -1272,17 +1272,15 @@ export function calculateFloatingMenuPlacement({
     normalizedViewportHeight - normalizedAnchorRect.bottom - FLOATING_MENU_MARGIN - FLOATING_MENU_GAP
   )
   const targetHeight = Math.min(contentHeight, FLOATING_MENU_MAX_HEIGHT)
-  const openAbove = spaceAbove >= targetHeight || spaceAbove >= spaceBelow
+  const openAbove = true
   const availableHeight = Math.max(openAbove ? spaceAbove : spaceBelow, FLOATING_MENU_MIN_HEIGHT)
   const maxHeight = Math.min(FLOATING_MENU_MAX_HEIGHT, availableHeight)
   const visibleHeight = Math.min(contentHeight, maxHeight)
-  const preferredTop = openAbove
-    ? normalizedAnchorRect.top - FLOATING_MENU_GAP - visibleHeight
-    : normalizedAnchorRect.bottom + FLOATING_MENU_GAP
+  const preferredTop = normalizedAnchorRect.top - FLOATING_MENU_GAP - visibleHeight
   const top = clamp(
     preferredTop,
     FLOATING_MENU_MARGIN,
-    Math.max(FLOATING_MENU_MARGIN, normalizedViewportHeight - FLOATING_MENU_MARGIN - visibleHeight)
+    normalizedAnchorRect.top - FLOATING_MENU_GAP
   )
 
   return { left, top, width, maxHeight }
