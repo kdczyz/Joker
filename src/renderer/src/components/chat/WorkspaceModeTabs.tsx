@@ -3,8 +3,10 @@ import { Code2 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 
 type Props = {
-  activeView: 'chat' | 'claw' | 'schedule' | 'workflow' | 'subagents'
+  activeView: 'chat' | 'claw' | 'schedule' | 'workflow' | 'subagents' | 'design'
   onCodeOpen: () => void
+  onWriteOpen?: () => void
+  onDesignOpen?: () => void
 }
 
 export function WorkspaceModeTabs({

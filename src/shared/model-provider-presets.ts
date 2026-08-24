@@ -28,8 +28,8 @@ export type ModelProviderPresetId =
   | 'kimi-code'
   | 'volcengine-coding-plan'
   | 'opencode-go'
+  | 'opencode-zen'
   | 'codex'
-  | 'antigravity-subscription'
   | 'claude-subscription'
   | 'moonshot-cn'
   | 'moonshot-global'
@@ -59,27 +59,6 @@ export const CHATGPT_SUBSCRIPTION_MODEL_IDS = [
   'gpt-5.4-mini',
   'gpt-5.3-codex-spark'
 ] as const
-
-export const ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID = 'antigravity-subscription'
-export const ANTIGRAVITY_SUBSCRIPTION_NAME = 'Antigravity 订阅'
-export const ANTIGRAVITY_SUBSCRIPTION_MODEL_IDS = [
-  'gemini-pro-agent',
-  'gemini-3.1-pro-high',
-  'gemini-3.1-pro-low',
-  'gemini-3-flash',
-  'gemini-3-flash-agent',
-  'gemini-3.6-flash-high',
-  'gemini-3.6-flash-medium',
-  'gemini-2.5-pro',
-  'gemini-2.5-flash',
-  'claude-sonnet-4-6',
-  'claude-opus-4-6-thinking',
-  'claude-sonnet-4-5-thinking',
-  'gemini-3.7-flash-high',
-  'gemini-3.1-flash-lite',
-  'gpt-oss-120b-medium'
-] as const
-export const ANTIGRAVITY_CLOUDCODE_BASE_URL = 'https://daily-cloudcode-pa.googleapis.com/v1internal'
 
 export type ModelProviderTokenPlanRegion = {
   id: string
@@ -427,6 +406,42 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
     apiKeyUrl: 'https://opencode.ai/auth'
   },
   {
+    id: 'opencode-zen',
+    name: 'OpenCode Zen',
+    category: 'api',
+    baseUrl: 'https://opencode.ai/zen/v1',
+    endpointFormat: 'chat_completions',
+    models: [
+      'nemotron-3.5-lightning-free',
+      'nemotron-3-ultra-free',
+      'big-pickle',
+      'mimo-v2.5-free',
+      'hy3-free',
+      'x-preview-f-free',
+      'deepseek-v4-flash-free',
+      'muse-spark-1.2-contributor-free',
+      'laguna-s-2.1-free'
+    ],
+    modelProfiles: {
+      'nemotron-3.5-lightning-free': textChatProfile(262_144),
+      'nemotron-3-ultra-free': textChatProfile(262_144),
+      'big-pickle': textChatProfile(131_072),
+      'mimo-v2.5-free': textChatProfile(1_048_576, XIAOMI_REASONING),
+      'hy3-free': textChatProfile(131_072),
+      'x-preview-f-free': textChatProfile(131_072),
+      'deepseek-v4-flash-free': textChatProfile(1_000_000, DEEPSEEK_REASONING),
+      'muse-spark-1.2-contributor-free': textChatProfile(131_072),
+      'laguna-s-2.1-free': textChatProfile(131_072)
+    },
+    docsUrl: 'https://opencode.ai/docs/zen',
+    apiKeyUrl: 'https://opencode.ai/console',
+    retry: {
+      maxAttempts: 3,
+      initialDelayMs: 1500,
+      statusCodes: [429, 500, 502, 503, 504]
+    }
+  },
+  {
     id: 'moonshot-cn',
     name: 'Moonshot CN',
     baseUrl: 'https://api.moonshot.cn/v1',
@@ -714,33 +729,6 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
     },
     docsUrl: 'https://openai.com/index/codex/',
     apiKeyUrl: 'https://chatgpt.com'
-  },
-  {
-    id: ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID,
-    name: ANTIGRAVITY_SUBSCRIPTION_NAME,
-    category: 'subscription',
-    baseUrl: ANTIGRAVITY_CLOUDCODE_BASE_URL,
-    endpointFormat: 'chat_completions',
-    models: [...ANTIGRAVITY_SUBSCRIPTION_MODEL_IDS],
-    modelProfiles: {
-      'gemini-pro-agent': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'gemini-3.1-pro-high': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'gemini-3.1-pro-low': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'gemini-3-flash': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'gemini-3-flash-agent': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'gemini-3.6-flash-high': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'gemini-3.6-flash-medium': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'gemini-2.5-pro': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'gemini-2.5-flash': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'claude-sonnet-4-6': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'claude-opus-4-6-thinking': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'claude-sonnet-4-5-thinking': { ...visionChatProfile(200_000, GEMINI_REASONING), defaultWebSearch: true },
-      'gemini-3.7-flash-high': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true },
-      'gemini-3.1-flash-lite': visionChatProfile(1_000_000, GEMINI_REASONING),
-      'gpt-oss-120b-medium': { ...visionChatProfile(1_000_000, GEMINI_REASONING), defaultWebSearch: true }
-    },
-    docsUrl: 'https://github.com/lbjlaq/Antigravity-Manager',
-    apiKeyUrl: 'https://daily-cloudcode-pa.googleapis.com'
   },
   {
     id: 'vercel-ai-gateway',

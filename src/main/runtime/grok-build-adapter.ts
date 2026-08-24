@@ -232,7 +232,7 @@ export const GrokBuildAdapter = {
           setTimeout(check, 50)
         }
       }
-      this._proc.once('exit', () => {
+      this._proc?.once('exit', () => {
         this._proc = null
         resolve()
       })

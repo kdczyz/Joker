@@ -180,7 +180,11 @@ export function defaultRcodeRuntimeSettings(
     computerUse: defaultRcodeComputerUseSettings(),
     quality: defaultRcodeQualitySettings(),
     webSearchAutoMode: true,
-    webSearchEnabled: true
+    webSearchEnabled: true,
+    openWebSearchEnabled: true,
+    openWebSearchEngine: 'duckduckgo',
+    openWebSearchProxyEnabled: false,
+    openWebSearchProxyUrl: ''
   }
 }
 

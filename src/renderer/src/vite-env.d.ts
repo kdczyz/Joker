@@ -30,14 +30,16 @@ interface RcodeAuthSession {
   expiresAt: string
 }
 
-interface Window {
-  agentDesktop?: {
-    platform: string
-    isDesktopClient: boolean
-    getLocalApiToken?: () => Promise<string | undefined>
-    authSession?: () => Promise<RcodeAuthSession | undefined>
-    authLogin?: (details: { identifier: string; password: string }) => Promise<RcodeAuthSession>
-    authRegister?: (details: { email: string; username: string; displayName: string; password: string }) => Promise<RcodeAuthSession>
-    authLogout?: () => Promise<{ ok: boolean }>
+declare global {
+  interface Window {
+    agentDesktop?: {
+      platform: string
+      isDesktopClient: boolean
+      getLocalApiToken?: () => Promise<string | undefined>
+      authSession?: () => Promise<RcodeAuthSession | undefined>
+      authLogin?: (details: { identifier: string; password: string }) => Promise<RcodeAuthSession>
+      authRegister?: (details: { email: string; username: string; displayName: string; password: string }) => Promise<RcodeAuthSession>
+      authLogout?: () => Promise<{ ok: boolean }>
+    }
   }
 }

@@ -41,6 +41,9 @@ export type QueuedUserMessage = {
   attachments?: AttachmentReference[]
   fileReferences?: UserFileReference[]
   composerContexts?: ComposerContextAttachment[]
+  guiDesignCanvas?: boolean
+  guiDesignMode?: boolean
+  guiDesignArtifact?: { kind: 'svg'; artifactId: string; relativePath: string }
   /**
    * Optional GUI plan context forwarded to Rcode. The renderer
    * attaches it for plan/refine turns so the runtime can advertise
@@ -84,6 +87,9 @@ export type SendMessageOverrides = {
   attachments?: AttachmentReference[]
   fileReferences?: UserFileReference[]
   composerContexts?: ComposerContextAttachment[]
+  guiDesignCanvas?: boolean
+  guiDesignMode?: boolean
+  guiDesignArtifact?: { kind: 'svg'; artifactId: string; relativePath: string }
 }
 
 export type InitialSetupMode = 'required' | 'preview'

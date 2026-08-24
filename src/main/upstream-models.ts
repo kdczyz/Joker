@@ -2,12 +2,14 @@ import { readFile } from 'node:fs/promises'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
 import {
+  getModelProviderPreset,
   getModelProviderSettings,
   isComposerChatModelId,
   listModelProviderModelIds,
   listNonTextModelIds,
   modelProfileSupportsTextChat,
   modelProviderModelProfile,
+  modelProviderPresetProfile,
   resolveRcodeRuntimeSettings,
   type AppSettingsV1
 } from '../shared/app-settings'
@@ -90,10 +92,92 @@ function modelListOrError(
     : { ok: false, message }
 }
 
+let liveZenModelsCache: { models: string[]; timestamp: number } | null = null
+const ZEN_CACHE_TTL_MS = 120_000
+
+export function isOpenCodeZenFreeModelId(id: string): boolean {
+  const lower = id.trim().toLowerCase()
+  return (
+    lower.endsWith('-free') ||
+    lower.includes('-free') ||
+    lower.endsWith(':free') ||
+    lower === 'big-pickle'
+  )
+}
+
+export function getKnownOpenCodeZenFreeModelIds(): string[] {
+  return liveZenModelsCache?.models ?? [
+    'nemotron-3.5-lightning-free',
+    'nemotron-3-ultra-free',
+    'big-pickle',
+    'mimo-v2.5-free',
+    'hy3-free',
+    'x-preview-f-free',
+    'deepseek-v4-flash-free',
+    'muse-spark-1.2-contributor-free',
+    'laguna-s-2.1-free'
+  ]
+}
+
+export async function fetchLiveOpenCodeZenFreeModelIds(): Promise<string[] | null> {
+  const now = Date.now()
+  if (liveZenModelsCache && now - liveZenModelsCache.timestamp < ZEN_CACHE_TTL_MS) {
+    return liveZenModelsCache.models
+  }
+  try {
+    const res = await fetch('https://opencode.ai/zen/v1/models', {
+      signal: AbortSignal.timeout(3000),
+      headers: { Accept: 'application/json' }
+    })
+    if (!res.ok) return liveZenModelsCache?.models ?? null
+    const json = (await res.json()) as { data?: Array<{ id?: string }> }
+    const rawList = Array.isArray(json.data) ? json.data : []
+    const freeModels = rawList
+      .map((item) => (typeof item.id === 'string' ? item.id.trim() : ''))
+      .filter((id) => Boolean(id) && isOpenCodeZenFreeModelId(id))
+    if (freeModels.length > 0) {
+      liveZenModelsCache = { models: freeModels, timestamp: now }
+      return freeModels
+    }
+  } catch {
+    // network timeout / offline fallback
+  }
+  return liveZenModelsCache?.models ?? null
+}
+
 async function readConfiguredModelGroups(settings: AppSettingsV1): Promise<ModelProviderModelGroup[]> {
   const groups: ModelProviderModelGroup[] = []
   const nonTextModelIds = listNonTextModelIds(settings)
-  for (const provider of getModelProviderSettings(settings).providers) {
+  const configuredProviders = getModelProviderSettings(settings).providers
+  const knownZenFreeModels = getKnownOpenCodeZenFreeModelIds()
+  if (process.env.NODE_ENV !== 'test') {
+    void fetchLiveOpenCodeZenFreeModelIds().catch(() => {})
+  }
+
+  for (const provider of configuredProviders) {
+    if (provider.id === 'opencode-zen') {
+      const baseModels = [...new Set([...knownZenFreeModels, ...provider.models])]
+      const modelIds = baseModels.filter((id) =>
+        isOpenCodeZenFreeModelId(id)
+        && isComposerChatModelId(id, nonTextModelIds)
+        && modelProfileSupportsTextChat(modelProviderModelProfile(provider, id))
+      )
+      if (modelIds.length === 0) continue
+      const modelProfiles = { ...(provider.modelProfiles ?? {}) }
+      for (const id of modelIds) {
+        if (!modelProfiles[id]) {
+          modelProfiles[id] = { contextWindowTokens: 131_072 }
+        }
+      }
+      groups.push({
+        providerId: provider.id,
+        label: provider.name,
+        modelIds,
+        modelProfiles
+      })
+      continue
+    }
+
     const modelIds = provider.models.filter((id) =>
       isComposerChatModelId(id, nonTextModelIds)
       && modelProfileSupportsTextChat(modelProviderModelProfile(provider, id))
@@ -105,6 +189,33 @@ async function readConfiguredModelGroups(settings: AppSettingsV1): Promise<Model
       modelIds,
       modelProfiles: provider.modelProfiles
     })
+  }
+
+  if (!configuredProviders.some((p) => p.id === 'opencode-zen')) {
+    const zenPreset = getModelProviderPreset('opencode-zen')
+    if (zenPreset) {
+      const zenProfile = modelProviderPresetProfile(zenPreset, 'public')
+      const baseModels = [...new Set([...knownZenFreeModels, ...zenProfile.models])]
+      const modelIds = baseModels.filter((id) =>
+        isOpenCodeZenFreeModelId(id)
+        && isComposerChatModelId(id, nonTextModelIds)
+        && modelProfileSupportsTextChat(modelProviderModelProfile(zenProfile, id))
+      )
+      if (modelIds.length > 0) {
+        const modelProfiles = { ...(zenProfile.modelProfiles ?? {}) }
+        for (const id of modelIds) {
+          if (!modelProfiles[id]) {
+            modelProfiles[id] = { contextWindowTokens: 131_072 }
+          }
+        }
+        groups.push({
+          providerId: zenProfile.id,
+          label: `${zenProfile.name} (内置免费)`,
+          modelIds,
+          modelProfiles
+        })
+      }
+    }
   }
   return mergeModelGroups(groups)
 }

@@ -183,7 +183,9 @@ function mapTurnComplete(
         cacheHitRate: null,
         totalTokens: event.usage.inputTokens + event.usage.outputTokens,
         costUsd: 0,
-        costCny: null
+        costCny: null,
+        tokenEconomySavingsTokens: 0,
+        turns: 0
       }
     })
   }

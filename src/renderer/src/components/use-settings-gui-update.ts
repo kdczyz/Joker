@@ -14,7 +14,7 @@ export function useSettingsGuiUpdate({
   form,
   t
 }: {
-  category: 'general' | 'providers' | 'design' | 'imageGeneration' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'easterEgg' | 'claw' | 'updates' | 'debug' | 'terminal' | 'dataMigration'
+  category: string
   channel: GuiUpdateChannel | undefined
   form: AppSettingsV1 | null
   t: (key: string, values?: Record<string, unknown>) => string
@@ -39,6 +39,15 @@ export function useSettingsGuiUpdate({
     if ('info' in state && state.info) {
       setGuiUpdateInfo(state.info)
     }
+    if (state.status === 'idle') {
+      setCheckingGuiUpdate(false)
+      setDownloadingGuiUpdate(false)
+      setInstallingGuiUpdate(false)
+      setGuiUpdateDownloaded(false)
+      setGuiUpdateProgress(null)
+      setGuiUpdateError(null)
+      return
+    }
     if (state.status === 'checking') {
       setCheckingGuiUpdate(true)
       setGuiUpdateError(null)
@@ -56,7 +65,7 @@ export function useSettingsGuiUpdate({
     if (state.status === 'downloading') {
       setCheckingGuiUpdate(false)
       setDownloadingGuiUpdate(true)
-      setInstallingGuiUpdate(false)
+      setGuiUpdateDownloaded(false)
       setGuiUpdateProgress(state.progress)
       setGuiUpdateError(null)
       return
@@ -64,8 +73,9 @@ export function useSettingsGuiUpdate({
     if (state.status === 'downloaded') {
       setCheckingGuiUpdate(false)
       setDownloadingGuiUpdate(false)
-      setGuiUpdateProgress(null)
+      setInstallingGuiUpdate(false)
       setGuiUpdateDownloaded(true)
+      setGuiUpdateProgress(null)
       setGuiUpdateError(null)
       return
     }
@@ -81,17 +91,18 @@ export function useSettingsGuiUpdate({
       setCheckingGuiUpdate(false)
       setDownloadingGuiUpdate(false)
       setInstallingGuiUpdate(false)
+      setGuiUpdateDownloaded(false)
       setGuiUpdateProgress(null)
       setGuiUpdateError(state.message)
     }
   }, [])
 
   const checkGuiUpdate = useCallback(async (): Promise<void> => {
-    if (typeof window.kunGui?.checkGuiUpdate !== 'function') return
+    if (typeof window.RcodeGui?.checkGuiUpdate !== 'function') return
     setCheckingGuiUpdate(true)
     setGuiUpdateError(null)
     try {
-      const info = await window.kunGui.checkGuiUpdate(channel)
+      const info = await window.RcodeGui.checkGuiUpdate(channel)
       setGuiUpdateInfo(info)
       if (!info.ok) {
         setGuiUpdateError(info.code === 'not_configured' ? null : guiUpdateFailureMessage(info, t))
@@ -104,12 +115,12 @@ export function useSettingsGuiUpdate({
   }, [channel, t])
 
   const downloadGuiUpdate = async (): Promise<void> => {
-    if (typeof window.kunGui?.downloadGuiUpdate !== 'function') return
+    if (typeof window.RcodeGui?.downloadGuiUpdate !== 'function') return
     setDownloadingGuiUpdate(true)
     setGuiUpdateProgress(null)
     setGuiUpdateError(null)
     try {
-      const result = await window.kunGui.downloadGuiUpdate(form?.guiUpdate?.channel)
+      const result = await window.RcodeGui.downloadGuiUpdate(form?.guiUpdate?.channel)
       if (!result.ok) {
         setGuiUpdateError(result.message)
         return
@@ -123,11 +134,11 @@ export function useSettingsGuiUpdate({
   }
 
   const installGuiUpdate = async (): Promise<void> => {
-    if (typeof window.kunGui?.installGuiUpdate !== 'function') return
+    if (typeof window.RcodeGui?.installGuiUpdate !== 'function') return
     setInstallingGuiUpdate(true)
     setGuiUpdateError(null)
     try {
-      const result = await window.kunGui.installGuiUpdate()
+      const result = await window.RcodeGui.installGuiUpdate()
       if (!result.ok) {
         setGuiUpdateError(result.message)
         setInstallingGuiUpdate(false)
@@ -139,10 +150,10 @@ export function useSettingsGuiUpdate({
   }
 
   useEffect(() => {
-    if (typeof window.kunGui?.onGuiUpdateState !== 'function') return
-    const unsubscribe = window.kunGui.onGuiUpdateState(applyGuiUpdateState)
-    if (typeof window.kunGui?.getGuiUpdateState === 'function') {
-      void window.kunGui.getGuiUpdateState().then(applyGuiUpdateState).catch(() => undefined)
+    if (typeof window.RcodeGui?.onGuiUpdateState !== 'function') return
+    const unsubscribe = window.RcodeGui.onGuiUpdateState(applyGuiUpdateState)
+    if (typeof window.RcodeGui?.getGuiUpdateState === 'function') {
+      void window.RcodeGui.getGuiUpdateState().then(applyGuiUpdateState).catch(() => undefined)
     }
     return unsubscribe
   }, [applyGuiUpdateState])

@@ -12,7 +12,7 @@ import { MessageTimelineEmptyHero, ThreadForkBanner, ThreadForkPoint } from './m
 import { GeneratedFilesPanel, MessageBubble } from './message-timeline-bubbles'
 import { PresentationFilesPanel } from './PresentationFilesPanel'
 import { presentationFileArtifactsForTurn } from './presentation-file-artifacts'
-import { ReviewPlanCard, ReviewSummaryCard, TurnChangeSummary } from './message-timeline-cards'
+import { ReviewPlanCard, ReviewSummaryCard, TurnChangeSummary, WorkMetaRow } from './message-timeline-cards'
 import { ProcessSectionRow, groupProcessSections } from './message-timeline-process'
 import { ComponentPrototypeCard } from './ComponentPrototypeCard'
 import type { OpenChildThreadHandler } from './SubagentCallCard'
@@ -906,6 +906,8 @@ function MessageTurn({
   const { think: liveThink, content: liveContent } = splitThink(live)
   const liveProcessText = [liveReasoning, liveThink].filter(Boolean).join('\n\n')
 
+  const [workExpandedOverride, setWorkExpandedOverride] = useState<boolean | null>(null)
+
   const { processBlocks, assistantContentBlocks, componentPrototypeBlocks, generatedFileBlocks, turnFileChanges } = useMemo(
     () =>
       deriveTurnSections({
@@ -936,16 +938,18 @@ function MessageTurn({
   )
   const onlyCompactionProcess = processBlocks.length > 0 && workProcessBlocks.length === 0
   const hasProcessError = workProcessBlocks.some(processBlockHasError)
-  // Keep active failures visible while a turn is still running
+  // Keep active failures visible while a turn is still running, but fold
+  // completed failures into the normal work summary until the user opens it.
   const forceExpandForError = isProcessing && hasProcessError
+  const workExpanded = forceExpandForError || (workExpandedOverride ?? isProcessing)
   const reviewBlocks = useMemo(
     () => turn.blocks.filter((block) => block.kind === 'review'),
     [turn.blocks]
   )
 
   const processSections = useMemo(
-    () => groupProcessSections(workProcessBlocks),
-    [workProcessBlocks]
+    () => (workExpanded ? groupProcessSections(workProcessBlocks) : []),
+    [workProcessBlocks, workExpanded]
   )
   const reasoningSectionCount = useMemo(
     () => processSections.filter((section) => section.kind === 'reasoning').length,
@@ -1005,22 +1009,33 @@ function MessageTurn({
     <div className="flex min-w-0 flex-col gap-4">
       {turn.user ? <MessageBubble block={turn.user} /> : null}
 
-      {hasProcess && processSections.length > 0 ? (
-        <div className="my-1 px-3.5 py-3">
-          <div className="ds-process-timeline-spine flex flex-col gap-2.5">
-            {processSections.map((section) => (
-              <ProcessSectionRow
-                key={section.id}
-                section={section}
-                processing={isProcessing}
-                reasoningDurationMs={reasoningDurationMs}
-                singleReasoningSection={reasoningSectionCount === 1}
-                workspaceRoot={filePreviewWorkspaceRoot}
-                viewportRef={viewportRef}
-                onOpenChildThread={onOpenChildThread}
-              />
-            ))}
-          </div>
+      {hasProcess ? (
+        <div className="flex flex-col gap-2 my-1">
+          <WorkMetaRow
+            processing={isProcessing}
+            stepCount={workProcessBlocks.length}
+            durationMs={durationMs}
+            reasoningDurationMs={reasoningDurationMs}
+            expanded={workExpanded}
+            collapsible={!forceExpandForError}
+            onToggle={() => setWorkExpandedOverride((value) => !(value ?? isProcessing))}
+          />
+          {workExpanded && processSections.length > 0 ? (
+            <div className="ds-process-timeline-spine flex flex-col gap-2.5 pt-1">
+              {processSections.map((section) => (
+                <ProcessSectionRow
+                  key={section.id}
+                  section={section}
+                  processing={isProcessing}
+                  reasoningDurationMs={reasoningDurationMs}
+                  singleReasoningSection={reasoningSectionCount === 1}
+                  workspaceRoot={filePreviewWorkspaceRoot}
+                  viewportRef={viewportRef}
+                  onOpenChildThread={onOpenChildThread}
+                />
+              ))}
+            </div>
+          ) : null}
         </div>
       ) : null}
 

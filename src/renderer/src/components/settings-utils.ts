@@ -33,6 +33,9 @@ import {
   normalizeTerminalSettings,
   normalizeChatContentMaxWidth,
   normalizeUiFontScale,
+  defaultOpenAiProxySettings,
+  mergeOpenAiProxySettings,
+  normalizeOpenAiProxySettings,
   type AppSettingsPatch,
   type AppSettingsV1
 } from '@shared/app-settings'
@@ -113,6 +116,7 @@ export function mergeSettings(current: AppSettingsV1, patch: SettingsPatch): App
     workflow: mergeWorkflowSettings(safeCurrent.workflow, patch.workflow),
     design: mergeDesignSettings(safeCurrent.design, patch.design),
     terminal: mergeTerminalSettings(safeCurrent.terminal, patch.terminal),
+    openaiProxy: mergeOpenAiProxySettings(safeCurrent.openaiProxy ?? defaultOpenAiProxySettings(), patch.openaiProxy),
     guiUpdate: {
       ...safeCurrent.guiUpdate,
       ...(patch.guiUpdate ?? {})
@@ -167,6 +171,7 @@ export function coerceRendererSettings(settings: AppSettingsV1): AppSettingsV1 {
     workflow: normalizeWorkflowSettings(raw.workflow),
     design: normalizeDesignSettings(raw.design),
     terminal: normalizeTerminalSettings(raw.terminal),
+    openaiProxy: normalizeOpenAiProxySettings(raw.openaiProxy),
     guiUpdate: {
       channel: normalizeGuiUpdateChannel(raw.guiUpdate?.channel ?? DEFAULT_GUI_UPDATE_CHANNEL)
     },

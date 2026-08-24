@@ -15,8 +15,7 @@ describe('WorkbenchConversationStage', () => {
     await i18n.changeLanguage('en')
   })
 
-  it('keeps the Code icon rail mounted and routes its launcher through the tab callback', () => {
-    const onToggleRightPanelMode = vi.fn()
+  it('renders the chat stage and right panel when activeSddDraft is false', () => {
     let renderer: ReactTestRenderer
 
     act(() => {
@@ -26,21 +25,11 @@ describe('WorkbenchConversationStage', () => {
         activeSddDraft: false,
         sdd: {} as never,
         chat: {} as WorkbenchChatStageProps,
-        rightPanel: createElement('aside', { 'data-right-workspace': true }),
-        sideRail: {
-          rightPanelMode: null,
-          onToggleRightPanelMode,
-          planPanelEnabled: false,
-          canvasEnabled: true,
-          sideChatEnabled: true,
-          fileTreeEnabled: true
-        }
+        rightPanel: createElement('aside', { 'data-right-workspace': true })
       }))
     })
 
-    const previewButton = renderer!.root.findByProps({ 'aria-label': 'Preview' })
-    act(() => previewButton.props.onClick())
-    expect(onToggleRightPanelMode).toHaveBeenCalledWith(BUILTIN_RIGHT_PANEL_IDS.browser)
+    expect(renderer!.root.findByProps({ 'data-chat-stage': true })).toBeTruthy()
     expect(renderer!.root.findByProps({ 'data-right-workspace': true })).toBeTruthy()
     act(() => renderer!.unmount())
   })

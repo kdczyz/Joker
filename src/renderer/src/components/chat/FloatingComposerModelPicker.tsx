@@ -727,8 +727,7 @@ export function FloatingComposerModelPicker({
                   currentModel,
                   modelId: currentModel
                 })
-                  ? currentModel
-                  : ''
+                const isFreeProvider = group.providerId === 'opencode-zen' || group.label.includes('免费')
                 return (
                   <ProviderRow
                     key={group.providerId}
@@ -740,6 +739,13 @@ export function FloatingComposerModelPicker({
                     selected={selectedProviderId === group.providerId}
                     title={group.label}
                     subtitle={selectedModel}
+                    badge={
+                      isFreeProvider ? (
+                        <span className="inline-flex h-4 shrink-0 items-center rounded-full border border-amber-300/70 bg-amber-50 px-1.5 text-[9.5px] font-semibold leading-none text-amber-700 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-300">
+                          免费
+                        </span>
+                      ) : null
+                    }
                     onClick={() => {
                       setReasoningPanelOpen(false)
                       setImagePanelOpen(false)
@@ -846,6 +852,7 @@ export function FloatingComposerModelPicker({
                   currentModel,
                   modelId: id
                 })
+                const free = isFreeModel(id, activeProviderGroup.providerId)
                 return (
                   <PickerRow
                     key={`${activeProviderGroup.providerId}:${id}`}
@@ -853,6 +860,11 @@ export function FloatingComposerModelPicker({
                     title={id}
                     metaSlot={
                       <span className="flex items-center gap-1">
+                        {free ? (
+                          <span className="inline-flex h-5 shrink-0 items-center rounded-full border border-amber-300/70 bg-amber-50 px-1.5 text-[10.5px] font-semibold leading-none text-amber-700 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-300">
+                            免费
+                          </span>
+                        ) : null}
                         {targetProfile?.contextWindowTokens ? (
                           <ModelContextBadge tokens={targetProfile.contextWindowTokens} title={t('composerModelContextWindow')} />
                         ) : null}
@@ -1615,11 +1627,28 @@ function ModelContextBadge({ tokens, title }: { tokens: number; title: string })
   )
 }
 
+function isFreeModel(modelId: string, providerId?: string): boolean {
+  const normalized = modelId.trim().toLowerCase()
+  if (
+    normalized.endsWith('-free') ||
+    normalized.includes('free') ||
+    normalized === 'big-pickle' ||
+    normalized.endsWith(':free')
+  ) {
+    return true
+  }
+  if (providerId === 'opencode-zen') {
+    return true
+  }
+  return false
+}
+
 function ProviderRow({
   active,
   selected,
   title,
   subtitle,
+  badge,
   refNode,
   onClick,
   onMouseEnter
@@ -1628,6 +1657,7 @@ function ProviderRow({
   selected: boolean
   title: string
   subtitle: string
+  badge?: ReactElement | null
   refNode: (node: HTMLButtonElement | null) => void
   onClick: () => void
   onMouseEnter: () => void
@@ -1639,6 +1669,7 @@ function ProviderRow({
       selected={selected}
       title={title}
       subtitle={subtitle}
+      badge={badge}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
     />
@@ -1651,6 +1682,7 @@ function SubmenuRow({
   icon,
   title,
   subtitle,
+  badge,
   refNode,
   onClick,
   onMouseEnter
@@ -1660,6 +1692,7 @@ function SubmenuRow({
   icon?: ReactElement | null
   title: string
   subtitle: string
+  badge?: ReactElement | null
   refNode: (node: HTMLButtonElement | null) => void
   onClick: () => void
   onMouseEnter: () => void
@@ -1686,7 +1719,10 @@ function SubmenuRow({
     >
       {icon}
       <span className="min-w-0 flex-1">
-        <span className="block truncate text-[13px] font-semibold">{title}</span>
+        <span className="flex items-center gap-1.5">
+          <span className="truncate text-[13px] font-semibold">{title}</span>
+          {badge}
+        </span>
         {subtitle ? (
           <span className="block truncate text-[11.5px] font-medium text-ds-faint">{subtitle}</span>
         ) : null}

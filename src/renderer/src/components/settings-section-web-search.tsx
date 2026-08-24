@@ -1,14 +1,32 @@
 import { useCallback, useEffect, useState, type ReactElement } from 'react'
-import { CheckCircle, ExternalLink, Loader2, RefreshCw, Search, XCircle } from 'lucide-react'
+import { CheckCircle, ExternalLink, Globe, Loader2, RefreshCw, Search, Sparkles, XCircle } from 'lucide-react'
 import { SecretInput, SettingsCard, SettingRow, Toggle } from './settings-controls'
 import { getProvider } from '../agent/registry'
 
+const OPEN_WEB_SEARCH_REPO_URL = 'https://github.com/Aas-ee/open-webSearch'
 const TAVILY_KEY_URL = 'https://app.tavily.com/home'
 const BAIDU_KEY_URL = 'https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application'
+
+const OPEN_WEB_SEARCH_ENGINES = [
+  { id: 'duckduckgo', labelKey: 'webSearchEngineDuckduckgo' },
+  { id: 'bing', labelKey: 'webSearchEngineBing' },
+  { id: 'baidu', labelKey: 'webSearchEngineBaidu' },
+  { id: 'sogou', labelKey: 'webSearchEngineSogou' },
+  { id: 'brave', labelKey: 'webSearchEngineBrave' },
+  { id: 'exa', labelKey: 'webSearchEngineExa' },
+  { id: 'csdn', labelKey: 'webSearchEngineCsdn' },
+  { id: 'juejin', labelKey: 'webSearchEngineJuejin' },
+  { id: 'startpage', labelKey: 'webSearchEngineStartpage' },
+  { id: 'hackernews', labelKey: 'webSearchEngineHackernews' }
+] as const
 
 // Tool names that count as "web search" calls
 const WEB_SEARCH_TOOL_NAMES = new Set([
   'web_search', 'web_fetch',
+  'open-websearch', 'open_websearch',
+  'search', 'fetch-web', 'fetch_web',
+  'fetch-csdn', 'fetch_csdn',
+  'fetch-github-readme', 'fetch_github_readme',
   'tavily-search', 'tavily_search', 'tavily',
   'baidu-search', 'baidu_search', 'baidu'
 ])
@@ -17,7 +35,13 @@ function isWebSearchToolName(name: string | undefined): boolean {
   if (!name) return false
   const lower = name.toLowerCase()
   if (WEB_SEARCH_TOOL_NAMES.has(lower)) return true
-  return lower.includes('tavily') || lower.includes('baidu') || lower.includes('search')
+  return lower.includes('open-websearch') ||
+    lower.includes('websearch') ||
+    lower.includes('tavily') ||
+    lower.includes('baidu') ||
+    lower.includes('search') ||
+    lower.includes('fetch-web') ||
+    lower.includes('fetch-csdn')
 }
 
 /** Map a raw tool name to a localized, human-readable label. */
@@ -28,8 +52,15 @@ function localizeToolName(
   const lower = name.toLowerCase().trim()
   if (lower === 'web_search') return t('webSearchToolWebSearch')
   if (lower === 'web_fetch') return t('webSearchToolWebFetch')
+  if (lower === 'open-websearch' || lower === 'open_websearch') return t('webSearchToolOpenWebSearch')
+  if (lower === 'fetch-web' || lower === 'fetch_web') return t('webSearchToolFetchWeb')
+  if (lower === 'fetch-csdn' || lower === 'fetch_csdn') return t('webSearchToolFetchCsdn')
+  if (lower === 'fetch-github-readme' || lower === 'fetch_github_readme') return t('webSearchToolFetchGithubReadme')
   if (lower === 'tavily-search' || lower === 'tavily_search' || lower === 'tavily') return t('webSearchToolTavily')
   if (lower === 'baidu-search' || lower === 'baidu_search' || lower === 'baidu') return t('webSearchToolBaidu')
+  if (lower.includes('open-websearch')) return t('webSearchToolOpenWebSearch')
+  if (lower.includes('fetch-web') || lower.includes('fetch_web')) return t('webSearchToolFetchWeb')
+  if (lower.includes('fetch-csdn') || lower.includes('fetch_csdn')) return t('webSearchToolFetchCsdn')
   if (lower.includes('tavily')) return t('webSearchToolTavily')
   if (lower.includes('baidu')) return t('webSearchToolBaidu')
   if (lower.includes('search')) return t('webSearchToolSearch')
@@ -66,6 +97,10 @@ type WebSearchSettingsCtx = {
   t: (key: string) => string
   Rcode: {
     webSearchEnabled: boolean
+    openWebSearchEnabled?: boolean
+    openWebSearchEngine?: string
+    openWebSearchProxyEnabled?: boolean
+    openWebSearchProxyUrl?: string
     tavilySearchApiKey?: string
     baiduSearchApiKey?: string
   }
@@ -129,14 +164,18 @@ function formatTime(iso: string | undefined): string {
 
 export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }): ReactElement {
   const {
-    t, Rcode, updateRcode, mcpConfigText, setMcpConfigText,
-    showApiKey, setShowApiKey
+    t, Rcode, updateRcode, mcpConfigText, setMcpConfigText
   } = ctx as WebSearchSettingsCtx
   const [tavilyVisible, setTavilyVisible] = useState(false)
   const [baiduVisible, setBaiduVisible] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [notice, setNotice] = useState<LocalNotice>(null)
   const [activity, setActivity] = useState<ActivityState>({ loading: false, servers: [], calls: [] })
+
+  const openWebSearchEnabled = Rcode.openWebSearchEnabled !== false
+  const openWebSearchEngine = Rcode.openWebSearchEngine || 'duckduckgo'
+  const openWebSearchProxyEnabled = Rcode.openWebSearchProxyEnabled === true
+  const openWebSearchProxyUrl = Rcode.openWebSearchProxyUrl ?? ''
 
   const tavilyKey = Rcode.tavilySearchApiKey ?? ''
   const baiduKey = Rcode.baiduSearchApiKey ?? ''
@@ -228,6 +267,26 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
   const handleGenerateMcp = useCallback(async (): Promise<void> => {
     const servers: Record<string, unknown> = {}
 
+    // Open WebSearch (Keyless multi-engine web search)
+    if (openWebSearchEnabled) {
+      const env: Record<string, string> = {
+        DEFAULT_SEARCH_ENGINE: openWebSearchEngine || 'duckduckgo'
+      }
+      if (openWebSearchProxyEnabled) {
+        env.USE_PROXY = 'true'
+        if (openWebSearchProxyUrl.trim()) {
+          env.PROXY_URL = openWebSearchProxyUrl.trim()
+        }
+      }
+      servers['open-websearch'] = {
+        enabled: true,
+        transport: 'stdio',
+        command: 'npx',
+        args: ['-y', 'open-websearch@latest'],
+        env
+      }
+    }
+
     if (tavilyKey.trim()) {
       servers['tavily-search'] = {
         enabled: true,
@@ -238,12 +297,13 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
       }
     }
 
-    // Baidu search is always included (free, no API key required)
-    servers['baidu-search'] = {
-      enabled: true,
-      transport: 'stdio',
-      command: 'npx',
-      args: ['-y', 'baidu-search-mcp', '--max-result=5', '--fetch-content-count=2', '--max-content-length=2000']
+    if (baiduKey.trim()) {
+      servers['baidu-search'] = {
+        enabled: true,
+        transport: 'stdio',
+        command: 'npx',
+        args: ['-y', 'baidu-search-mcp', '--max-result=5', '--fetch-content-count=2', '--max-content-length=2000']
+      }
     }
 
     if (Object.keys(servers).length === 0) {
@@ -283,7 +343,7 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
     } finally {
       setGenerating(false)
     }
-  }, [tavilyKey, mcpConfigText, setMcpConfigText, t])
+  }, [openWebSearchEnabled, openWebSearchEngine, openWebSearchProxyEnabled, openWebSearchProxyUrl, tavilyKey, baiduKey, mcpConfigText, setMcpConfigText, t])
 
   const serverStatusText = (status: string): string => {
     switch (status) {
@@ -472,6 +532,7 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
         </div>
       </SettingsCard>
 
+      {/* 联网搜索总开关 */}
       <SettingsCard title={t('webSearch')}>
         <div className="px-3 pb-2 pt-1">
           <p className="text-[13px] leading-relaxed text-ds-muted">{t('webSearchDesc')}</p>
@@ -487,8 +548,110 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
             />
           }
         />
+      </SettingsCard>
 
-        <div className="border-t border-ds-border-muted" />
+      {/* Open WebSearch (免 Key 多引擎搜索) */}
+      <SettingsCard
+        title={t('webSearchOpenWebSearch')}
+        action={
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window.RcodeGui?.openExternal === 'function') {
+                void window.RcodeGui.openExternal(OPEN_WEB_SEARCH_REPO_URL).catch(() => undefined)
+              } else {
+                window.open(OPEN_WEB_SEARCH_REPO_URL, '_blank', 'noopener,noreferrer')
+              }
+            }}
+            className="inline-flex items-center gap-1 text-[12px] text-accent hover:underline"
+          >
+            <Globe className="h-3.5 w-3.5" />
+            GitHub: open-webSearch
+            <ExternalLink className="h-3 w-3" />
+          </button>
+        }
+      >
+        <div className="px-3 pb-2 pt-1">
+          <div className="flex items-start gap-2 rounded-xl bg-accent/10 p-3 text-[13px] text-accent dark:text-accent-foreground">
+            <Sparkles className="mt-0.5 h-4 w-4 shrink-0" />
+            <p className="leading-relaxed">{t('webSearchOpenWebSearchDesc')}</p>
+          </div>
+        </div>
+
+        <SettingRow
+          title={t('webSearchOpenWebSearchEnable')}
+          description={t('webSearchOpenWebSearchEnableDesc')}
+          control={
+            <Toggle
+              checked={openWebSearchEnabled}
+              onChange={(v) => updateRcode({ openWebSearchEnabled: v })}
+            />
+          }
+        />
+
+        {openWebSearchEnabled && (
+          <>
+            <div className="border-t border-ds-border-muted" />
+
+            <SettingRow
+              title={t('webSearchDefaultEngine')}
+              description={t('webSearchDefaultEngineDesc')}
+              control={
+                <select
+                  value={openWebSearchEngine}
+                  onChange={(e) => updateRcode({ openWebSearchEngine: e.target.value })}
+                  className="rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13.5px] font-medium text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
+                >
+                  {OPEN_WEB_SEARCH_ENGINES.map((engine) => (
+                    <option key={engine.id} value={engine.id}>
+                      {t(engine.labelKey)} ({engine.id})
+                    </option>
+                  ))}
+                </select>
+              }
+            />
+
+            <div className="border-t border-ds-border-muted" />
+
+            <SettingRow
+              title={t('webSearchProxyEnable')}
+              description={t('webSearchProxyDesc')}
+              control={
+                <Toggle
+                  checked={openWebSearchProxyEnabled}
+                  onChange={(v) => updateRcode({ openWebSearchProxyEnabled: v })}
+                />
+              }
+            />
+
+            {openWebSearchProxyEnabled && (
+              <>
+                <div className="border-t border-ds-border-muted" />
+                <SettingRow
+                  title={t('webSearchProxyUrl')}
+                  description={t('webSearchProxyDesc')}
+                  wideControl
+                  control={
+                    <input
+                      type="text"
+                      value={openWebSearchProxyUrl}
+                      onChange={(e) => updateRcode({ openWebSearchProxyUrl: e.target.value })}
+                      placeholder={t('webSearchProxyUrlPlaceholder')}
+                      className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13.5px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
+                    />
+                  }
+                />
+              </>
+            )}
+          </>
+        )}
+      </SettingsCard>
+
+      {/* 高级 / 备用搜索 API */}
+      <SettingsCard title={t('webSearchOptionalApiKeys')}>
+        <div className="px-3 pb-2 pt-1">
+          <p className="text-[13px] leading-relaxed text-ds-muted">{t('webSearchOptionalApiKeysDesc')}</p>
+        </div>
 
         <SettingRow
           title={t('webSearchTavilyKey')}
@@ -598,3 +761,4 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
     </div>
   )
 }
+

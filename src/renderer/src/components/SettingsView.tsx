@@ -487,10 +487,7 @@ export function SettingsView(): ReactElement {
       return
     }
     if (!agentsSectionReady) return
-    const refs: Record<
-      Exclude<SettingsRouteSection, 'general' | 'providers' | 'design' | 'imageGeneration' | 'mediaGeneration' | 'speechToText' | 'subagents' | 'archives' | 'claw' | 'shortcuts' | 'updates' | 'terminal' | 'dataMigration'>,
-      HTMLDivElement | null
-    > = {
+    const refs: Partial<Record<SettingsRouteSection, HTMLDivElement | null>> = {
       agents: agentsSectionRef.current,
       skill: skillSectionRef.current,
       mcp: mcpSectionRef.current,

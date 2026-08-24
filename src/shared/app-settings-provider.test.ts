@@ -7,6 +7,7 @@ import {
   defaultRcodeRuntimeSettings,
   defaultMiniMaxMediaGenerationRcodePatch,
   defaultModelProviderSettings,
+  findPresetModelProfile,
   getModelProviderPreset,
   isComposerChatModelId,
   isImageGenerationModelId,
@@ -1676,4 +1677,26 @@ describe('provider presets', () => {
     })
     expect(modelSupportsImageInput(custom!.modelProfiles['deepseek-chat'])).toBe(false)
   })
+
+  it('exposes opencode-zen preset with free models and correct capabilities', () => {
+    const preset = getModelProviderPreset('opencode-zen')
+    expect(preset).toBeDefined()
+    expect(preset!.name).toBe('OpenCode Zen')
+    expect(preset!.baseUrl).toBe('https://opencode.ai/zen/v1')
+    expect(preset!.endpointFormat).toBe('chat_completions')
+    expect(preset!.models).toContain('nemotron-3.5-lightning-free')
+    expect(preset!.models).toContain('big-pickle')
+    expect(preset!.models).toContain('mimo-v2.5-free')
+
+    const presetProfile = modelProviderPresetProfile(preset!, 'public')
+    expect(presetProfile.apiKey).toBe('public')
+    expect(presetProfile.baseUrl).toBe('https://opencode.ai/zen/v1')
+
+    const modelProfile = findPresetModelProfile('nemotron-3.5-lightning-free', 'opencode-zen')
+    expect(modelProfile).toBeDefined()
+    expect(modelProfile!.contextWindowTokens).toBe(262144)
+    expect(modelProfile!.supportsToolCalling).toBe(true)
+  })
 })
+
+

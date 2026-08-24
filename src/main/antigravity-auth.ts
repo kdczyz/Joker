@@ -1,11 +1,3 @@
-import { createServer, type Server } from 'node:http'
-import { createHash, randomBytes } from 'node:crypto'
-
-// Google OAuth client for the Antigravity IDE. These are public constants
-// embedded in the Antigravity desktop client (recovered by reverse-engineering
-// the client binary and cross-checked against the opencode-antigravity-auth
-// reference implementation). They identify us as an Antigravity client so the
-// returned refresh_token is scoped to the Cloud Code Assist subscription.
 const ANTIGRAVITY_CLIENT_ID = String.fromCharCode(
   49, 48, 55, 49, 48, 48, 54, 48, 54, 48, 53, 57, 49, 45, 116, 109, 104, 115, 115, 105, 110, 50,
   104, 50, 49, 108, 99, 114, 101, 50, 51, 53, 118, 116, 111, 108, 111, 106, 104, 52, 103, 52, 48,
@@ -17,23 +9,8 @@ const ANTIGRAVITY_CLIENT_SECRET = String.fromCharCode(
   56, 115, 88, 67, 52, 122, 54, 113, 68, 65, 102
 )
 
-const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth'
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token'
 const GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v1/userinfo?alt=json'
-
-// Loopback redirect URI registered for the Antigravity client.
-const OAUTH_PORT = 51121
-const OAUTH_REDIRECT_PATH = '/oauth-callback'
-const OAUTH_REDIRECT_URI = `http://localhost:${OAUTH_PORT}${OAUTH_REDIRECT_PATH}`
-const OAUTH_TIMEOUT_MS = 5 * 60 * 1000
-
-const SCOPES = [
-  'https://www.googleapis.com/auth/cloud-platform',
-  'https://www.googleapis.com/auth/userinfo.email',
-  'https://www.googleapis.com/auth/userinfo.profile',
-  'https://www.googleapis.com/auth/cclog',
-  'https://www.googleapis.com/auth/experimentsandconfigs'
-]
 
 // Client identity presented to cloudcode-pa.googleapis.com. Matches the
 // Antigravity desktop client so Google treats us as an official IDE client.
@@ -60,46 +37,6 @@ export type AntigravityOAuthCredentials = {
   expiresAt: number
   email?: string
   projectId: string
-}
-
-export type AntigravityBrowserAuthResult =
-  | { ok: true; credentials: AntigravityOAuthCredentials }
-  | { ok: false; message: string; code?: 'port_in_use' }
-
-class AntigravityBrowserAuthError extends Error {
-  constructor(
-    message: string,
-    readonly code: 'port_in_use'
-  ) {
-    super(message)
-    this.name = 'AntigravityBrowserAuthError'
-  }
-}
-
-function base64UrlEncode(buffer: Buffer): string {
-  return buffer.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
-}
-
-function generatePkce(): { verifier: string; challenge: string } {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~'
-  const verifier = Array.from(randomBytes(43), (byte) => chars[byte % chars.length]).join('')
-  const challenge = base64UrlEncode(createHash('sha256').update(verifier).digest())
-  return { verifier, challenge }
-}
-
-function buildAuthorizeUrl(pkceChallenge: string, state: string): string {
-  const params = new URLSearchParams({
-    client_id: ANTIGRAVITY_CLIENT_ID,
-    response_type: 'code',
-    redirect_uri: OAUTH_REDIRECT_URI,
-    scope: SCOPES.join(' '),
-    code_challenge: pkceChallenge,
-    code_challenge_method: 'S256',
-    state,
-    access_type: 'offline',
-    prompt: 'consent'
-  })
-  return `${GOOGLE_AUTH_URL}?${params.toString()}`
 }
 
 async function postForm(url: string, body: Record<string, string>): Promise<Record<string, unknown>> {
@@ -199,149 +136,6 @@ export async function fetchAntigravityProjectId(accessToken: string): Promise<st
   // x-goog-user-project header, matching the official client — a stale project
   // id (e.g. from the external "Antigravity Tools" app) causes 403 SERVICE_DISABLED.
   return ''
-}
-
-const SUCCESS_HTML = `<!doctype html><html><head><meta charset="utf-8"><title>Antigravity 订阅</title><style>body{font-family:system-ui,-apple-system,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#faf6ef;color:#3a2f23}.box{text-align:center;padding:2rem}h1{margin-bottom:.5rem}p{color:#8a7a66}</style></head><body><div class="box"><h1>登录成功</h1><p>可以关闭此窗口并返回应用。</p></div><script>setTimeout(()=>window.close(),1500)</script></body></html>`
-
-function renderErrorHtml(message: string): string {
-  const safe = message.replace(/[&<>"]/g, (ch) =>
-    ch === '&' ? '&amp;' : ch === '<' ? '&lt;' : ch === '>' ? '&gt;' : '&quot;'
-  )
-  return `<!doctype html><html><head><meta charset="utf-8"><title>Antigravity 订阅</title></head><body style="font-family:system-ui;padding:2rem;color:#b91c1c"><h1>登录失败</h1><p>${safe}</p></body></html>`
-}
-
-/**
- * Browser OAuth (authorization code + PKCE) for the Antigravity Google account.
- * Opens the default browser, runs a one-shot loopback server on the registered
- * redirect port, exchanges the code for tokens, resolves the project id, and
- * returns serializable credentials.
- */
-export async function startAntigravityBrowserAuth(
-  openBrowser: (url: string) => void | Promise<void>,
-  preferredProjectId?: string
-): Promise<AntigravityBrowserAuthResult> {
-  const pkce = generatePkce()
-  const state = base64UrlEncode(randomBytes(32))
-  let server: Server | null = null
-
-  const cleanup = (): void => {
-    if (server) {
-      try {
-        server.close(() => {})
-      } catch {
-        /* server may not have finished binding */
-      }
-      server = null
-    }
-  }
-
-  try {
-    const credentials = await new Promise<AntigravityOAuthCredentials>((resolve, reject) => {
-      let settled = false
-      const timeout = setTimeout(() => {
-        cleanup()
-        reject(new Error('授权超时，请重试'))
-      }, OAUTH_TIMEOUT_MS)
-
-      const settleReject = (error: Error): void => {
-        if (settled) return
-        settled = true
-        clearTimeout(timeout)
-        cleanup()
-        reject(error)
-      }
-      const settleResolve = (creds: AntigravityOAuthCredentials): void => {
-        if (settled) return
-        settled = true
-        clearTimeout(timeout)
-        cleanup()
-        resolve(creds)
-      }
-
-      server = createServer((req, res) => {
-        const url = new URL(req.url || '/', OAUTH_REDIRECT_URI)
-        if (url.pathname !== OAUTH_REDIRECT_PATH) {
-          res.writeHead(404).end('Not found')
-          return
-        }
-        const code = url.searchParams.get('code')
-        const returnedState = url.searchParams.get('state')
-        const oauthError = url.searchParams.get('error')
-        if (oauthError) {
-          const message = url.searchParams.get('error_description') || oauthError
-          res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }).end(renderErrorHtml(message))
-          settleReject(new Error(message))
-          return
-        }
-        if (!code || returnedState !== state) {
-          const message = !code ? '缺少授权码' : '状态校验失败（可能的 CSRF）'
-          res.writeHead(400, { 'Content-Type': 'text/html; charset=utf-8' }).end(renderErrorHtml(message))
-          settleReject(new Error(message))
-          return
-        }
-        postForm(GOOGLE_TOKEN_URL, {
-          client_id: ANTIGRAVITY_CLIENT_ID,
-          client_secret: ANTIGRAVITY_CLIENT_SECRET,
-          code,
-          grant_type: 'authorization_code',
-          redirect_uri: OAUTH_REDIRECT_URI,
-          code_verifier: pkce.verifier
-        })
-          .then(async (tokens) => {
-            const accessToken = tokens.access_token as string | undefined
-            const refreshToken = tokens.refresh_token as string | undefined
-            const expiresIn = Number(tokens.expires_in) || 3600
-            if (!accessToken || !refreshToken) {
-              throw new Error('令牌交换返回的数据不完整')
-            }
-            const preferred = preferredProjectId?.trim()
-            const [email, projectId] = await Promise.all([
-              fetchEmail(accessToken),
-              preferred ? Promise.resolve(preferred) : fetchAntigravityProjectId(accessToken)
-            ])
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }).end(SUCCESS_HTML)
-            settleResolve({
-              kind: 'antigravity-oauth',
-              accessToken,
-              refreshToken,
-              expiresAt: Date.now() + expiresIn * 1000,
-              email,
-              projectId
-            })
-          })
-          .catch((err: unknown) => {
-            const message = err instanceof Error ? err.message : String(err)
-            res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }).end(renderErrorHtml(message))
-            settleReject(new Error(message))
-          })
-      })
-
-      server.once('error', (err: NodeJS.ErrnoException) => {
-        const message =
-          err.code === 'EADDRINUSE'
-            ? `端口 ${OAUTH_PORT} 被占用，无法完成登录回调`
-            : err.message
-        settleReject(
-          err.code === 'EADDRINUSE'
-            ? new AntigravityBrowserAuthError(message, 'port_in_use')
-            : new Error(message)
-        )
-      })
-
-      server.listen(OAUTH_PORT, '127.0.0.1', () => {
-        void Promise.resolve(openBrowser(buildAuthorizeUrl(pkce.challenge, state))).catch(
-          (err: unknown) => settleReject(err instanceof Error ? err : new Error(String(err)))
-        )
-      })
-    })
-    return { ok: true, credentials }
-  } catch (error) {
-    cleanup()
-    const message = error instanceof Error ? error.message : String(error)
-    return error instanceof AntigravityBrowserAuthError
-      ? { ok: false, message, code: error.code }
-      : { ok: false, message }
-  }
 }
 
 export async function refreshAntigravityToken(

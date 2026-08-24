@@ -62,6 +62,13 @@ export function providersConfigForRuntime(
       // the protected binding and are never persisted in config.json.
     }
   }
+  if (!out['opencode-zen']) {
+    out['opencode-zen'] = {
+      apiKey: 'public',
+      baseUrl: 'https://opencode.ai/zen/v1',
+      endpointFormat: 'chat_completions'
+    }
+  }
   return out
 }
 

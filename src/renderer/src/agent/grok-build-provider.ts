@@ -452,7 +452,6 @@ export class GrokBuildProvider implements AgentProvider {
       model: this._currentModel || 'grok',
       mode: 'agent',
       workspace: record.workspace,
-      createdAt: record.createdAt,
       updatedAt: record.updatedAt,
       approvalPolicy: 'auto' as const
     }

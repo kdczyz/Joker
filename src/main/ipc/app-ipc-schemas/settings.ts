@@ -394,7 +394,11 @@ const RcodeRuntimePatchSchema = z.object({
   webSearchAutoMode: z.boolean().optional(),
   webSearchEnabled: z.boolean().optional(),
   tavilySearchApiKey: z.string().max(MAX_BODY_BYTES).optional(),
-  baiduSearchApiKey: z.string().max(MAX_BODY_BYTES).optional()
+  baiduSearchApiKey: z.string().max(MAX_BODY_BYTES).optional(),
+  openWebSearchEnabled: z.boolean().optional(),
+  openWebSearchEngine: z.string().max(MAX_BODY_BYTES).optional(),
+  openWebSearchProxyEnabled: z.boolean().optional(),
+  openWebSearchProxyUrl: z.string().max(MAX_BODY_BYTES).optional()
 }).strict()
 
 const logPatchSchema = z.object({

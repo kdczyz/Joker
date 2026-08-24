@@ -1,11 +1,14 @@
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
-import {
-  ANTIGRAVITY_CLOUDCODE_BASE_URL,
-  ANTIGRAVITY_SUBSCRIPTION_MODEL_IDS,
-  ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID
-} from '../shared/model-provider-presets'
 import { getModelProviderSettings } from '../shared/app-settings-provider'
 import type { AppSettingsV1, OpenAiProxySettingsV1 } from '../shared/app-settings-types'
+
+const DEFAULT_CLOUDCODE_BASE_URL = 'https://daily-cloudcode-pa.googleapis.com/v1internal'
+const DEFAULT_PROXY_MODELS = [
+  'gemini-pro-agent',
+  'gemini-3.1-pro-high',
+  'gemini-3.7-flash-high',
+  'claude-sonnet-4-6'
+] as const
 import {
   antigravityRequestHeaders,
   encodeAntigravityCredentials,
@@ -127,7 +130,7 @@ export class OpenAiProxyServer {
   }
 
   private handleModels(res: ServerResponse): void {
-    const objects = ANTIGRAVITY_SUBSCRIPTION_MODEL_IDS.map((id) => ({
+    const objects = DEFAULT_PROXY_MODELS.map((id) => ({
       id,
       object: 'model',
       created: 0,
@@ -150,7 +153,7 @@ export class OpenAiProxyServer {
       )
       if (provider?.baseUrl?.trim()) return provider.baseUrl.trim()
     }
-    return ANTIGRAVITY_CLOUDCODE_BASE_URL
+    return DEFAULT_CLOUDCODE_BASE_URL
   }
 
   private buildEndpointUrl(baseUrl: string, stream: boolean): string {
@@ -183,11 +186,11 @@ export class OpenAiProxyServer {
     const model = typeof body.model === 'string' && body.model ? body.model : 'gemini-pro-agent'
     const settings = await this.deps.store.load()
 
-    const providerId = proxy.providerId?.trim() || ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID
+    const providerId = proxy.providerId?.trim() || 'antigravity-subscription'
     const provider = getModelProviderSettings(settings).providers.find((p) => p.id === providerId)
     if (!provider || !provider.apiKey?.trim()) {
       writeJson(res, 503, {
-        error: { message: `Antigravity provider "${providerId}" is not configured. Log in to the Antigravity subscription first.` }
+        error: { message: `Provider "${providerId}" is not configured.` }
       })
       return
     }

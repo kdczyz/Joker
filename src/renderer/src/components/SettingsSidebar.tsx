@@ -1,5 +1,5 @@
 import type { Dispatch, ReactElement, SetStateAction } from 'react'
-import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, GitBranch, Github, Globe, Keyboard, Palette, Puzzle, RefreshCw, Search, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
+import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, GitBranch, Github, Globe, Keyboard, Layers, Palette, Puzzle, RefreshCw, Search, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
 
 type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch' | 'github'
 

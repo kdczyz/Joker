@@ -10,6 +10,7 @@ export const APP_SETTINGS_FIELD_OWNERS: { readonly [K in keyof AppSettingsV1]-?:
   cursorSpotlight: 'core', cursorSpotlightColor: 'core', provider: 'provider', agents: 'Rcode',
   workspaceRoot: 'core', conversationWorkspaceRoot: 'core', log: 'core', checkpointCleanup: 'core',
   gitBranchPrefix: 'core', notifications: 'core', appBehavior: 'core', keyboardShortcuts: 'keyboard',
-  write: 'write', claw: 'claw', schedule: 'schedule', workflow: 'workflow', design: 'design',
-  guiUpdate: 'update', terminal: 'terminal', codePromptPrefix: 'core', disabledSkillIds: 'core'
+  write: 'write', claw: 'claw', remoteAgent: 'claw', schedule: 'schedule', workflow: 'workflow', design: 'design',
+  guiUpdate: 'update', terminal: 'terminal', openaiProxy: 'provider', codePromptPrefix: 'core', disabledSkillIds: 'core'
 }
+

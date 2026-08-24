@@ -548,12 +548,13 @@ function ProcessEntryRow({
   // For web search tools, show the search query as the summary and web sources below
   const toolNameForSearch = block.kind === 'tool' ? toolNameForBlock(block) : ''
   const isSearchTool = isWebSearchTool(toolNameForSearch)
+  const blockMeta = 'meta' in block ? (block.meta as Record<string, unknown> | undefined) : undefined
   const searchQuery = isSearchTool
-    ? (typeof block.meta?.query === 'string' && block.meta.query.trim()
-      ? block.meta.query.trim()
+    ? (typeof blockMeta?.query === 'string' && blockMeta.query.trim()
+      ? blockMeta.query.trim()
       : (rest || summary))
     : ''
-  const webSourcesForProcess = isSearchTool ? readMetaSources(block.meta) : []
+  const webSourcesForProcess = isSearchTool ? readMetaSources(blockMeta) : []
   const handleToggle = (): void => {
     if (!canToggle) return
     setUserOpen(!open)

@@ -1830,10 +1830,16 @@ function buildModelClientRouterInput(
     ...(llmDebug ? { debugSink: llmDebug } : {}),
     ...streamIdleOverride
   })
+  const OPENCODE_ZEN_CLIENT_HEADERS = {
+    'User-Agent': 'opencode/1.2.0',
+    'x-opencode-client': 'desktop'
+  }
   const providerClients = new Map<string, ModelClient>()
   for (const [providerId, provider] of Object.entries(options.providers ?? {})) {
     const trimmedId = providerId.trim()
     if (!trimmedId || (provider.kind ?? 'http') === 'agent-sdk') continue
+    const isZen = trimmedId === 'opencode-zen'
+    const zenHeaders = isZen ? OPENCODE_ZEN_CLIENT_HEADERS : {}
     providerClients.set(
       trimmedId,
       new CompatModelClient({
@@ -1844,7 +1850,24 @@ function buildModelClientRouterInput(
         retry: provider.retry ?? options.retry,
         model: options.model,
         modelCapabilities,
-        headers: provider.headers,
+        headers: { ...zenHeaders, ...(provider.headers ?? {}) },
+        ...(llmDebug ? { debugSink: llmDebug } : {}),
+        ...streamIdleOverride
+      })
+    )
+  }
+  if (!providerClients.has('opencode-zen')) {
+    providerClients.set(
+      'opencode-zen',
+      new CompatModelClient({
+        baseUrl: 'https://opencode.ai/zen/v1',
+        apiKey: 'public',
+        modelProxyUrl: options.modelProxyUrl,
+        endpointFormat: 'chat_completions',
+        retry: options.retry,
+        model: options.model,
+        modelCapabilities,
+        headers: OPENCODE_ZEN_CLIENT_HEADERS,
         ...(llmDebug ? { debugSink: llmDebug } : {}),
         ...streamIdleOverride
       })

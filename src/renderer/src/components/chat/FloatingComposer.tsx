@@ -432,7 +432,7 @@ export function FloatingComposer({
   const [usageChartOpen, setUsageChartOpen] = useState(false)
   const usageChipRef = useRef<HTMLButtonElement>(null)
   const usagePopoverRef = useRef<HTMLDivElement>(null)
-  const [usagePopoverPos, setUsagePopoverPos] = useState<{ top: number; left: number } | null>(null)
+  const [usagePopoverPos, setUsagePopoverPos] = useState<{ bottom: number; left: number } | null>(null)
 
   useEffect(() => {
     if (!usageChartOpen) return
@@ -441,18 +441,18 @@ export function FloatingComposer({
       if (!el) return
       const rect = el.getBoundingClientRect()
       const width = 360
-      const heightEstimate = 300
       let left = rect.left
-      left = Math.min(left, window.innerWidth - width - 12)
-      left = Math.max(12, left)
-      let top = rect.top - heightEstimate - 10
-      if (top < 12) top = rect.bottom + 10
-      setUsagePopoverPos({ top, left })
+      left = Math.min(left, window.innerWidth - width - 16)
+      left = Math.max(16, left)
+      const bottom = Math.max(16, window.innerHeight - rect.top + 8)
+      setUsagePopoverPos({ bottom, left })
     }
     updatePosition()
+    const frame = window.requestAnimationFrame(updatePosition)
     window.addEventListener('scroll', updatePosition, true)
     window.addEventListener('resize', updatePosition)
     return () => {
+      window.cancelAnimationFrame(frame)
       window.removeEventListener('scroll', updatePosition, true)
       window.removeEventListener('resize', updatePosition)
     }
@@ -2005,8 +2005,12 @@ export function FloatingComposer({
               ref={usagePopoverRef}
               role="dialog"
               aria-label={t('usageChartTitle')}
-              className="fixed z-[100] w-[360px] max-w-[calc(100vw-24px)] rounded-2xl border border-ds-border bg-ds-card dark:bg-[#202024] p-4 shadow-[0_24px_60px_rgba(20,47,95,0.18)]"
-              style={{ top: usagePopoverPos.top, left: usagePopoverPos.left }}
+              className="fixed z-[1100] w-[360px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-ds-border bg-ds-card dark:bg-[#202024] p-4 shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
+              style={{
+                bottom: usagePopoverPos.bottom,
+                left: usagePopoverPos.left,
+                maxHeight: 'min(460px, calc(100vh - 32px))'
+              }}
             >
               <div className="mb-3 flex items-center justify-between gap-2">
                 <span className="text-[13px] font-semibold text-ds-ink">{t('usageChartTitle')}</span>

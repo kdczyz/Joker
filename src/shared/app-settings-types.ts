@@ -447,6 +447,14 @@ export type RcodeRuntimeSettingsV1 = {
   tavilySearchApiKey?: string
   /** 百度搜索 API Key (千帆平台)，可选。百度搜索 MCP 免费无需 API Key。 */
   baiduSearchApiKey?: string
+  /** 是否启用 open-webSearch 免 Key 多引擎搜索 MCP 服务。默认 true。 */
+  openWebSearchEnabled?: boolean
+  /** open-webSearch 默认搜索引擎。如 'duckduckgo' | 'bing' | 'baidu' | 'sogou' 等。 */
+  openWebSearchEngine?: string
+  /** open-webSearch 是否启用 HTTP 代理。默认 false。 */
+  openWebSearchProxyEnabled?: boolean
+  /** open-webSearch HTTP 代理地址，如 'http://127.0.0.1:7890'。 */
+  openWebSearchProxyUrl?: string
 }
 
 export type RcodeInstructionSettingsV1 = {

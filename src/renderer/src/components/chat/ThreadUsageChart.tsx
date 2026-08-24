@@ -170,42 +170,53 @@ export function ThreadUsageChart({
           ) : null}
         </svg>
 
-        {active ? (
-          <div
-            className="pointer-events-none absolute z-10 w-[min(15rem,82%)] -translate-x-1/2 -translate-y-[118%] rounded-xl border border-ds-border bg-white/98 dark:bg-[#202024] p-2.5 text-[12px] shadow-[0_14px_38px_rgba(20,47,95,0.16)] backdrop-blur-xl"
-            style={{
-              left: `${(xFor(hover as number, count) / CHART_W) * 100}%`,
-              top: `${(yFor(active.totalTokens, maxY) / CHART_H) * 100}%`
-            }}
-          >
-            <div className="mb-1.5 flex items-center justify-between gap-2">
-              <span className="font-semibold text-ds-ink">
-                {t('usageChartTurnLabel', { turn: active.turn })}
-              </span>
-              <span className="tabular-nums text-ds-muted">
-                {formatCost(active.costUsd, locale, active.costCny)}
-              </span>
+        {active ? (() => {
+          const xPercent = (xFor(hover as number, count) / CHART_W) * 100
+          const yPercent = (yFor(active.totalTokens, maxY) / CHART_H) * 100
+          const isNearTop = yPercent < 48
+          const isNearLeft = (hover as number) <= 1 && count > 3
+          const isNearRight = (hover as number) >= count - 2 && count > 3
+
+          const xTransform = isNearLeft ? 'translate-x-0' : isNearRight ? '-translate-x-full' : '-translate-x-1/2'
+          const yTransform = isNearTop ? 'translate-y-3' : '-translate-y-[calc(100%+8px)]'
+
+          return (
+            <div
+              className={`pointer-events-none absolute z-10 w-[min(14.5rem,80%)] ${xTransform} ${yTransform} rounded-xl border border-ds-border bg-white/98 dark:bg-[#202024] p-2.5 text-[12px] shadow-[0_14px_38px_rgba(20,47,95,0.16)] backdrop-blur-xl transition-transform duration-75`}
+              style={{
+                left: `${xPercent}%`,
+                top: `${yPercent}%`
+              }}
+            >
+              <div className="mb-1.5 flex items-center justify-between gap-2">
+                <span className="font-semibold text-ds-ink">
+                  {t('usageChartTurnLabel', { turn: active.turn })}
+                </span>
+                <span className="tabular-nums text-ds-muted">
+                  {formatCost(active.costUsd, locale, active.costCny)}
+                </span>
+              </div>
+              <div className="grid gap-1">
+                <ChartTooltipRow
+                  color="#3b82f6"
+                  label={t('sessionUsageTokens', { tokens: formatCompactNumber(active.totalTokens) })}
+                />
+                <ChartTooltipRow
+                  color="#10b981"
+                  label={t('sessionUsageCached', { tokens: formatCompactNumber(active.cachedTokens) })}
+                />
+                <ChartTooltipRow
+                  color="#f59e0b"
+                  label={t('sessionUsageMiss', { tokens: formatCompactNumber(active.cacheMissTokens) })}
+                />
+                <ChartTooltipRow
+                  color="#94a3b8"
+                  label={t('sessionUsageCache', { cache: formatPercent(cumulativeCacheHitRate(active)) })}
+                />
+              </div>
             </div>
-            <div className="grid gap-1">
-              <ChartTooltipRow
-                color="#3b82f6"
-                label={t('sessionUsageTokens', { tokens: formatCompactNumber(active.totalTokens) })}
-              />
-              <ChartTooltipRow
-                color="#10b981"
-                label={t('sessionUsageCached', { tokens: formatCompactNumber(active.cachedTokens) })}
-              />
-              <ChartTooltipRow
-                color="#f59e0b"
-                label={t('sessionUsageMiss', { tokens: formatCompactNumber(active.cacheMissTokens) })}
-              />
-              <ChartTooltipRow
-                color="#94a3b8"
-                label={t('sessionUsageCache', { cache: formatPercent(cumulativeCacheHitRate(active)) })}
-              />
-            </div>
-          </div>
-        ) : null}
+          )
+        })() : null}
       </div>
     </div>
   )

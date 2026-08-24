@@ -68,8 +68,6 @@ import {
   CHATGPT_SUBSCRIPTION_MODEL_IDS,
   CHATGPT_SUBSCRIPTION_NAME,
   CHATGPT_SUBSCRIPTION_PROVIDER_ID,
-  ANTIGRAVITY_CLOUDCODE_BASE_URL,
-  ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID,
   TOKEN_PLAN_PROVIDER_ID_SUFFIX,
   findPresetModelProfile,
   getModelProviderPreset,
@@ -206,13 +204,24 @@ export function getModelProviderProfile(
 ): ModelProviderProfileV1 {
   const provider = getModelProviderSettings(settings)
   const id = normalizeModelProviderId(providerId || DEFAULT_MODEL_PROVIDER_ID)
-  return provider.providers.find((profile) => profile.id === id) ?? provider.providers[0] ?? defaultModelProviderProfile(provider.apiKey, provider.baseUrl)
+  const found = provider.providers.find((profile) => profile.id === id)
+  if (found) return found
+  if (id === 'opencode-zen') {
+    const preset = getModelProviderPreset('opencode-zen')
+    if (preset) return modelProviderPresetProfile(preset, 'public')
+  }
+  return provider.providers[0] ?? defaultModelProviderProfile(provider.apiKey, provider.baseUrl)
 }
 
 export function listModelProviderModelIds(settings: AppSettingsV1): string[] {
   const nonTextModelIds = listNonTextModelIds(settings)
   const ids = new Set<string>()
-  for (const provider of getModelProviderSettings(settings).providers) {
+  const providers = [...getModelProviderSettings(settings).providers]
+  if (!providers.some((p) => p.id === 'opencode-zen')) {
+    const zenPreset = getModelProviderPreset('opencode-zen')
+    if (zenPreset) providers.push(modelProviderPresetProfile(zenPreset, 'public'))
+  }
+  for (const provider of providers) {
     for (const model of provider.models) {
       const trimmed = model.trim()
       if (!trimmed || !isComposerChatModelId(trimmed, nonTextModelIds)) continue
@@ -994,11 +1003,7 @@ function normalizeModelProviderProfile(
   const id = normalizeModelProviderId(input?.id)
   if (!id) return null
   const rawName = typeof input?.name === 'string' && input.name.trim() ? input.name.trim() : id
-  // The Antigravity subscription endpoint is fixed (the daily CloudCode host
-  // carries the consumer quota); never honour a stale stored prod URL.
-  const baseUrl = normalizeModelProviderBaseUrl(
-    id === ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID ? ANTIGRAVITY_CLOUDCODE_BASE_URL : input?.baseUrl
-  )
+  const baseUrl = normalizeModelProviderBaseUrl(input?.baseUrl)
   const rawModels = normalizeProviderModels(input?.models)
   const { name, models } = migrateChatGptSubscriptionProfile(id, rawName, rawModels)
   const filteredModels = migrateXiaomiDeprecatedModels(id, models)

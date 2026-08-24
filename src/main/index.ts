@@ -53,6 +53,8 @@ import {
   mergeScheduleSettings,
   mergeWriteSettings,
   mergeTerminalSettings,
+  defaultOpenAiProxySettings,
+  mergeOpenAiProxySettings,
   MIN_RCODE_LOCAL_PORT,
   normalizeAppSettings,
   normalizeAppBehaviorSettings,
@@ -172,6 +174,70 @@ import {
   startExtensionSecretRevealConsentPump,
   type RegisterExtensionIpcHandlersOptions
 } from './ipc/register-extension-ipc-handlers'
+
+// Guard against EPIPE crashes: when the parent process closes the stdio pipes
+// (common when launching the packaged app or after a terminal detaches), any
+// console/logger write throws EPIPE. This can surface two ways:
+//   1. asynchronously — the stream emits an 'error' event on a failed flush;
+//   2. synchronously — process.stderr.write() (called by console.error) throws
+//      EPIPE directly. That synchronous throw is NOT caught by the 'error' event
+//      listener, so it becomes an uncaughtException and takes the process down.
+// We must handle both. See the crash report: "write EPIPE" -> uncaughtException.
+function isEpipe(err: unknown): boolean {
+  return err instanceof Error && (err as NodeJS.ErrnoException).code === 'EPIPE'
+}
+
+function guardStreamAgainstEpipe(stream: NodeJS.WritableStream | undefined): void {
+  if (!stream) return
+  // Async path.
+  stream.on('error', (err: NodeJS.ErrnoException) => {
+    if (err?.code === 'EPIPE') return
+    throw err
+  })
+  // Sync path: wrap write() so a broken pipe is swallowed instead of propagating
+  // into an uncaughtException. Non-EPIPE errors are rethrown untouched.
+  const originalWrite = stream.write.bind(stream) as (...args: unknown[]) => boolean
+  ;(stream as unknown as { write: (...args: unknown[]) => unknown }).write = (
+    ...args: unknown[]
+  ): unknown => {
+    try {
+      return originalWrite(...args)
+    } catch (err) {
+      if (isEpipe(err)) return false
+      throw err
+    }
+  }
+}
+
+for (const stream of [process.stdout, process.stderr]) {
+  guardStreamAgainstEpipe(stream as NodeJS.WritableStream)
+}
+
+// Last-resort guard: never let a single logging/pipe error kill the whole app.
+// EPIPE is always safe to ignore. For any other uncaught error we still write it
+// to the log file (so the crash is observable) and exit non-zero.
+process.on('uncaughtException', (err: unknown) => {
+  if (isEpipe(err)) return
+  try {
+    logError(
+      'fatal',
+      'Uncaught exception in main process',
+      err instanceof Error ? err.stack ?? err.message : String(err)
+    )
+  } catch {
+    /* logging must never throw */
+  }
+  process.exit(1)
+})
+
+process.on('unhandledRejection', (reason: unknown) => {
+  if (isEpipe(reason)) return
+  try {
+    logError('fatal', 'Unhandled promise rejection in main process', String(reason))
+  } catch {
+    /* logging must never throw */
+  }
+})
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 registerRcodeExtensionPlatformSchemesAsPrivileged(protocol)
@@ -1717,6 +1783,7 @@ app.whenReady().then(async () => {
       workflow: mergeWorkflowSettings(prev.workflow, effectivePartial.workflow),
       design: mergeDesignSettings(prev.design, effectivePartial.design),
       terminal: mergeTerminalSettings(prev.terminal, effectivePartial.terminal),
+      openaiProxy: mergeOpenAiProxySettings(prev.openaiProxy ?? defaultOpenAiProxySettings(), effectivePartial.openaiProxy),
       guiUpdate: { ...prev.guiUpdate, ...(effectivePartial.guiUpdate ?? {}) }
     })
     if (prev.log.enabled !== next.log.enabled || prev.log.retentionDays !== next.log.retentionDays) {

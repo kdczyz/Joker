@@ -16,11 +16,16 @@ import {
   defaultTerminalSettings,
   type AppSettingsV1
 } from '../shared/app-settings'
-import { fetchUpstreamModelIds, readConfiguredRcodeModelIds } from './upstream-models'
+import { fetchUpstreamModelIds, isOpenCodeZenFreeModelId, readConfiguredRcodeModelIds } from './upstream-models'
 
 function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
   const provider = defaultModelProviderSettings()
-  const deepseek = defaultModelProviderProfile('', '')
+  const deepseek = {
+    ...defaultModelProviderProfile('', ''),
+    id: 'deepseek',
+    name: 'DeepSeek',
+    models: ['deepseek-v4-pro', 'deepseek-v4-flash']
+  }
   return {
     version: 1,
     locale: 'en',
@@ -254,5 +259,14 @@ describe('upstream model picker list', () => {
     } finally {
       vi.unstubAllGlobals()
     }
+  })
+
+  it('filters only free models for opencode-zen', () => {
+    expect(isOpenCodeZenFreeModelId('nemotron-3.5-lightning-free')).toBe(true)
+    expect(isOpenCodeZenFreeModelId('big-pickle')).toBe(true)
+    expect(isOpenCodeZenFreeModelId('mimo-v2.5-free')).toBe(true)
+    expect(isOpenCodeZenFreeModelId('deepseek-v4-flash-free')).toBe(true)
+    expect(isOpenCodeZenFreeModelId('deepseek-v4-pro')).toBe(false)
+    expect(isOpenCodeZenFreeModelId('claude-sonnet-4-6')).toBe(false)
   })
 })

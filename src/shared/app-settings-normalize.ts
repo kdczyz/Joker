@@ -24,7 +24,8 @@ import {
   WINDOW_CLOSE_ACTIONS,
   type WindowCloseAction,
   type WorkflowSettingsPatchV1,
-  type WriteSettingsPatchV1
+  type WriteSettingsPatchV1,
+  type OpenAiProxySettingsPatchV1
 } from './app-settings-types'
 import { isAppLocale } from './app-locales'
 import { normalizeKeyboardShortcuts, type KeyboardShortcutsConfigV1 } from './keyboard-shortcuts'

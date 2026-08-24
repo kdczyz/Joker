@@ -3,7 +3,6 @@ import {
   type OpenAiProxySettingsPatchV1,
   type OpenAiProxySettingsV1
 } from './app-settings-types'
-import { ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID } from './model-provider-presets'
 import { normalizeBoolean, normalizePositiveInteger } from './app-settings-normalizers'
 
 function asTrimmed(value: unknown, fallback = ''): string {
@@ -15,7 +14,7 @@ export function defaultOpenAiProxySettings(): OpenAiProxySettingsV1 {
     enabled: false,
     port: 18899,
     token: '',
-    providerId: ANTIGRAVITY_SUBSCRIPTION_PROVIDER_ID
+    providerId: ''
   }
 }
 

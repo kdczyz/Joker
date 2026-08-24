@@ -583,6 +583,7 @@ export class JsonSettingsStore {
       workflow: mergeWorkflowSettings(cur.workflow, partial.workflow),
       design: mergeDesignSettings(cur.design, partial.design),
       terminal: mergeTerminalSettings(cur.terminal, partial.terminal),
+      openaiProxy: mergeOpenAiProxySettings(cur.openaiProxy ?? defaultOpenAiProxySettings(), partial.openaiProxy),
       guiUpdate: { ...cur.guiUpdate, ...(partial.guiUpdate ?? {}) }
     })
     await this.save(next)
