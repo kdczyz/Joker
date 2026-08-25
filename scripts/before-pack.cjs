@@ -1,5 +1,5 @@
 const { execFileSync } = require('node:child_process')
-const { existsSync } = require('node:fs')
+const { existsSync, statSync } = require('node:fs')
 const { join } = require('node:path')
 
 const WHISPER_RESOURCES_DIR = join(__dirname, '..', 'resources', 'whisper')
@@ -16,7 +16,69 @@ function normalizeArch(arch) {
   throw new Error(`[before-pack] Unsupported Whisper runner arch: ${arch}`)
 }
 
+// ---------------------------------------------------------------------------
+// Stale-build guard
+//
+// electron-vite dev mode serves the renderer from an in-memory Vite server and
+// never writes out/renderer to disk, while electron-builder blindly zips up
+// whatever is already in out/. If someone packages via a sub-script (e.g.
+// `npm run dist:mac:arm64:dmg`) without first running `npm run build`, the dmg
+// ships a STALE renderer/main/preload. This check fails the packaging fast
+// instead of silently producing an outdated app.
+// ---------------------------------------------------------------------------
+const BUILD_FRESHNESS_PAIRS = [
+  {
+    output: join(__dirname, '..', 'out', 'renderer', 'index.html'),
+    source: join(__dirname, '..', 'src', 'renderer', 'src'),
+    label: 'renderer'
+  },
+  {
+    output: join(__dirname, '..', 'out', 'main', 'index.js'),
+    source: join(__dirname, '..', 'src', 'main'),
+    label: 'main'
+  },
+  {
+    // electron-vite preload config uses entryFileNames: '[name].cjs', so the
+    // emitted file is index.cjs (not index.js). Adjust if that config changes.
+    output: join(__dirname, '..', 'out', 'preload', 'index.cjs'),
+    source: join(__dirname, '..', 'src', 'preload'),
+    label: 'preload'
+  },
+  {
+    output: join(__dirname, '..', 'Rcode', 'dist', 'cli', 'serve-entry.js'),
+    source: join(__dirname, '..', 'Rcode', 'src'),
+    label: 'Rcode runtime'
+  }
+]
+
+function assertBuildFreshness() {
+  for (const { output, source, label } of BUILD_FRESHNESS_PAIRS) {
+    if (!existsSync(output)) {
+      throw new Error(
+        `[before-pack] Stale build: ${label} output is missing (${output}).\n` +
+        'Packaging would ship outdated code. Run `npm run build`, or simply use\n' +
+        '`npm run dist:mac:arm64` (it builds before packaging).'
+      )
+    }
+    if (!existsSync(source)) continue
+    const stale = execFileSync(
+      'find',
+      [source, '-type', 'f', '-newer', output, '-not', '-path', '*/node_modules/*'],
+      { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }
+    ).trim()
+    if (stale) {
+      throw new Error(
+        `[before-pack] Stale build: ${label} output (${output}) is older than source in\n` +
+        `${source}.\n` +
+        'Packaging would ship outdated code. Run `npm run build`, or simply use\n' +
+        '`npm run dist:mac:arm64` (it builds before packaging).'
+      )
+    }
+  }
+}
+
 async function beforePack(context) {
+  assertBuildFreshness()
   const platform = normalizePlatform(context.electronPlatformName)
   const arch = normalizeArch(context.arch)
   if (process.env.RCODE_SKIP_WHISPER_RUNNER === '1') {

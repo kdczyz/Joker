@@ -324,15 +324,44 @@ function normalizeArch(arch) {
 }
 
 function prunePackedWhisperResources(context) {
-  const whisperDir = join(packedResourcesDir(context), 'whisper')
+  // Matches the `to: 'resources/whisper'` extraResources target so pruning
+  // actually lands on the packaged directory.
+  const whisperDir = join(packedResourcesDir(context), 'resources', 'whisper')
   if (!existsSync(whisperDir)) return
 
   const keep = `${normalizePlatform(context.electronPlatformName)}-${normalizeArch(context.arch)}`
   for (const entry of readdirSync(whisperDir)) {
-    if (entry === keep || entry === 'LICENSE.whisper.cpp') continue
+    // `models` holds the bundled Whisper model(s) copied in by
+    // copyBundledWhisperModels(); keep it even though it is not a platform dir.
+    if (entry === keep || entry === 'LICENSE.whisper.cpp' || entry === 'models') continue
     rmSync(join(whisperDir, entry), { recursive: true, force: true })
     console.log(`[after-pack] Removed non-target Whisper resource: ${entry}`)
   }
+}
+
+// The bundled Whisper models live under resources/whisper/models in the repo
+// source tree (populated by scripts/prepare-whisper-models.cjs). That directory
+// is intentionally gitignored (see .gitignore `resources/whisper/models/`) so it
+// is NOT committed and is also skipped by electron-builder's extraResources
+// (which honors .gitignore). We copy it here, AFTER prunePackedWhisperResources,
+// so the shipped app always contains the built-in model without bloating git.
+// Runs after `npm run prepare:whisper` (wired into the build script) ensures the
+// source directory exists; if it is missing we warn instead of failing the build.
+function copyBundledWhisperModels(context) {
+  const sourceModelsDir = join(__dirname, '..', 'resources', 'whisper', 'models')
+  if (!existsSync(sourceModelsDir)) {
+    console.warn(
+      `[after-pack] No bundled Whisper model directory at ${sourceModelsDir}; ` +
+        'the built-in model will not be bundled. Run `npm run prepare:whisper` before building.'
+    )
+    return
+  }
+  const targetModelsDir = join(packedResourcesDir(context), 'resources', 'whisper', 'models')
+  cpSync(sourceModelsDir, targetModelsDir, { recursive: true, force: true })
+  const modelDirs = readdirSync(targetModelsDir).filter((entry) =>
+    lstatSync(join(targetModelsDir, entry)).isDirectory()
+  )
+  console.log(`[after-pack] Bundled ${modelDirs.length} Whisper model(s) into ${targetModelsDir}`)
 }
 
 async function afterPack(context) {
@@ -341,6 +370,7 @@ async function afterPack(context) {
   validateBundledRcodeRuntime(context)
   validateBundledExtensionResources(context)
   prunePackedWhisperResources(context)
+  copyBundledWhisperModels(context)
   ensureNodePtyHelpersExecutable(context)
   installLinuxElectronLauncher(context)
   maybeAdhocSignMacApp(context)
@@ -360,6 +390,7 @@ exports._internals = {
   validateBundledExtensionResources,
   normalizeArch,
   prunePackedWhisperResources,
+  copyBundledWhisperModels,
   ensureNodePtyHelpersExecutable,
   assertElfExecutable,
   installLinuxElectronLauncher,

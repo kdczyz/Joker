@@ -181,7 +181,11 @@ module.exports = {
     },
     {
       from: 'resources/whisper',
-      to: 'whisper',
+      // Keep the `resources/` prefix so the packaged path matches what
+      // local-whisper-service.ts searches: join(resourcesPath, 'resources', 'whisper', ...).
+      // A bare `to: 'whisper'` lands the runner/models at Resources/whisper/... which the
+      // code never checks, causing "local Whisper runner is missing" / "model is not downloaded".
+      to: 'resources/whisper',
       filter: ['**/*']
     },
     {

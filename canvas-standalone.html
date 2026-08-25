@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Rcode Canvas Layer</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #000000;
+      --text: #ffffff;
+      --muted: #9aa0a6;
+      --accent: #00d4aa;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: "SF Pro Display", "PingFang SC", "Helvetica Neue", system-ui, sans-serif;
+      color: var(--text);
+    }
+
+    /*
+     * ══════════════════════════════════════════════════════════════
+     *  RCODE CANVAS — 底层画布
+     *  可独立使用，也可嵌入任何页面作为背景层
+     *
+     *  使用方式：
+     *    <canvas id="rcode-canvas" style="position:fixed;inset:0;z-index:0;pointer-events:none;"></canvas>
+     *    然后引入下方 JS
+     *
+     *  效果：
+     *    - 均匀点阵网格（呼吸微动）
+     *    - 鼠标靠近时点阵亮度/尺寸渐变
+     *    - 鼠标附近点与点之间连线
+     *    - 鼠标径向光晕
+     *    - 自适应设备像素比
+     *    - prefers-reduced-motion 兼容
+     * ══════════════════════════════════════════════════════════════
+     */
+
+    #rcode-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    .demo-content {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .demo-content h1 {
+      font-size: clamp(42px, 8vw, 80px);
+      font-weight: 600;
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+
+    .demo-content p {
+      margin-top: 20px;
+      font-size: 18px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+  <!--
+    ╔═══════════════════════════════════════════════════════╗
+    ║  底层画布 Canvas                                      ║
+    ║  独立于内容层，可被任何页面复用                         ║
+    ╚═══════════════════════════════════════════════════════╝
+  -->
+  <canvas id="rcode-canvas"></canvas>
+
+  <!-- 内容层（仅用于演示） -->
+  <div class="demo-content">
+    <h1>底层画布</h1>
+    <p>移动鼠标，观察画布响应</p>
+  </div>
+
+  <script>
+  (() => {
+    'use strict';
+
+    // ── 配置 ──
+    const CONFIG = {
+      // 网格间距（CSS 像素）
+      spacing: 42,
+      // 点的基准半径（CSS 像素）
+      dotRadius: 1.1,
+      // 点的最大半径（鼠标靠近时）
+      dotRadiusMax: 3.2,
+      // 鼠标影响半径（CSS 像素）
+      influenceRadius: 180,
+      // 连线最大距离（CSS 像素）
+      lineMaxDist: 90,
+      // 连线最大不透明度
+      lineOpacityMax: 0.14,
+      // 点的基础颜色
+      dotBaseColor: [140, 155, 170],       // rgb — 柔和灰
+      dotAccentColor: [0, 212, 170],        // rgb — 青色强调
+      lineColor: [80, 130, 160],            // rgb — 淡蓝灰连线
+      // 鼠标光晕颜色
+      glowColor: [0, 212, 170],             // rgb
+      glowRadius: 220,
+      glowOpacity: 0.06,
+      // 呼吸动画
+      breathe: true,
+      breatheSpeed: 0.0008,                 // 很慢的呼吸频率
+      breatheAmplitude: 0.12,              // 呼吸幅度
+      // 是否显示连线
+      showLines: true,
+      // 连线最小不透明度（低于此不绘制）
+      lineOpacityMin: 0.008,
+      // 是否显示鼠标光晕
+      showGlow: true,
+    };
+
+    // ── DOM ──
+    const canvas = document.getElementById('rcode-canvas');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d', { alpha: false });
+
+    // ── 状态 ──
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let W = 0;   // 逻辑宽度
+    let H = 0;   // 逻辑高度
+    let mouse = { x: -9999, y: -9999, active: false };
+    let frame = 0;
+    let cols = 0;
+    let rows = 0;
+    let points = [];
+    let rafId = null;
+
+    const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ── 工具函数 ──
+    function lerp(a, b, t) {
+      return a + (b - a) * t;
+    }
+
+    function dist(x1, y1, x2, y2) {
+      return Math.hypot(x1 - x2, y1 - y2);
+    }
+
+    function rgba(r, g, b, a) {
+      return `rgba(${r|0},${g|0},${b|0},${a})`;
+    }
+
+    // ── Resize ──
+    function resize() {
+      W = window.innerWidth;
+      H = window.innerHeight;
+      canvas.width = W * dpr;
+      canvas.height = H * dpr;
+      canvas.style.width = W + 'px';
+      canvas.style.height = H + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // 重建点阵
+      cols = Math.ceil(W / CONFIG.spacing) + 1;
+      rows = Math.ceil(H / CONFIG.spacing) + 1;
+      points = [];
+
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          points.push({
+            x: c * CONFIG.spacing,
+            y: r * CONFIG.spacing,
+            baseX: c * CONFIG.spacing,
+            baseY: r * CONFIG.spacing,
+            phase: Math.random() * Math.PI * 2,
+          });
+        }
+      }
+    }
+
+    // ── 鼠标追踪 ──
+    function onMouseMove(e) {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      mouse.active = true;
+    }
+
+    function onMouseLeave() {
+      mouse.active = false;
+      mouse.x = -9999;
+      mouse.y = -9999;
+    }
+
+    // ── 渲染 ──
+    function draw(now) {
+      frame = now * 0.001;
+
+      // 清屏
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, W, H);
+
+      const inf = CONFIG.influenceRadius;
+      const infSq = inf * inf;
+      const mx = mouse.x;
+      const my = mouse.y;
+
+      // 为连线收集活跃点（鼠标附近）
+      const activePoints = [];
+
+      // ── 绘制点 ──
+      for (let i = 0; i < points.length; i++) {
+        const p = points[i];
+
+        // 呼吸微动
+        let breathe = 1;
+        if (CONFIG.breathe && !prefersReduced) {
+          breathe = 1 + Math.sin(frame * CONFIG.breatheSpeed * 600 + p.phase) * CONFIG.breatheAmplitude;
+        }
+
+        // 鼠标距离
+        const dx = p.x - mx;
+        const dy = p.y - my;
+        const dSq = dx * dx + dy * dy;
+        const influence = mouse.active ? Math.max(0, 1 - dSq / infSq) : 0;
+
+        // 混合半径
+        const radius = lerp(CONFIG.dotRadius, CONFIG.dotRadiusMax, influence) * breathe;
+
+        // 混合颜色（灰 → 青）
+        const r = lerp(CONFIG.dotBaseColor[0], CONFIG.dotAccentColor[0], influence);
+        const g = lerp(CONFIG.dotBaseColor[1], CONFIG.dotAccentColor[1], influence);
+        const b = lerp(CONFIG.dotBaseColor[2], CONFIG.dotAccentColor[2], influence);
+        const a = lerp(0.28, 0.92, influence);
+
+        // 绘制点
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+        ctx.fillStyle = rgba(r, g, b, a);
+        ctx.fill();
+
+        // 如果在连线范围内，收集
+        if (CONFIG.showLines && influence > 0.05) {
+          activePoints.push({ p, influence });
+        }
+      }
+
+      // ── 绘制连线 ──
+      if (CONFIG.showLines && activePoints.length > 1) {
+        const lineMax = CONFIG.lineMaxDist;
+        const lineMaxSq = lineMax * lineMax;
+
+        for (let i = 0; i < activePoints.length; i++) {
+          const a = activePoints[i];
+          for (let j = i + 1; j < activePoints.length; j++) {
+            const b = activePoints[j];
+            const d = dist(a.p.x, a.p.y, b.p.x, b.p.y);
+
+            if (d < lineMax) {
+              const proximity = 1 - d / lineMax;
+              const opacity = proximity * CONFIG.lineOpacityMax * Math.min(a.influence, b.influence);
+
+              if (opacity > CONFIG.lineOpacityMin) {
+                ctx.beginPath();
+                ctx.moveTo(a.p.x, a.p.y);
+                ctx.lineTo(b.p.x, b.p.y);
+                ctx.strokeStyle = rgba(
+                  CONFIG.lineColor[0],
+                  CONFIG.lineColor[1],
+                  CONFIG.lineColor[2],
+                  opacity
+                );
+                ctx.lineWidth = 0.6;
+                ctx.stroke();
+              }
+            }
+          }
+        }
+      }
+
+      // ── 鼠标光晕 ──
+      if (CONFIG.showGlow && mouse.active) {
+        const glow = ctx.createRadialGradient(mx, my, 0, mx, my, CONFIG.glowRadius);
+        glow.addColorStop(0, rgba(CONFIG.glowColor[0], CONFIG.glowColor[1], CONFIG.glowColor[2], CONFIG.glowOpacity));
+        glow.addColorStop(1, rgba(CONFIG.glowColor[0], CONFIG.glowColor[1], CONFIG.glowColor[2], 0));
+        ctx.fillStyle = glow;
+        ctx.fillRect(mx - CONFIG.glowRadius, my - CONFIG.glowRadius, CONFIG.glowRadius * 2, CONFIG.glowRadius * 2);
+      }
+
+      rafId = requestAnimationFrame(draw);
+    }
+
+    // ── 初始化 ──
+    resize();
+    window.addEventListener('resize', resize, { passive: true });
+    window.addEventListener('pointermove', onMouseMove, { passive: true });
+    window.addEventListener('pointerleave', onMouseLeave);
+
+    if (prefersReduced) {
+      // reduced motion：只画静态点阵，不启动动画循环
+      (function drawStatic() {
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, W, H);
+
+        for (const p of points) {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, CONFIG.dotRadius, 0, Math.PI * 2);
+          ctx.fillStyle = rgba(CONFIG.dotBaseColor[0], CONFIG.dotBaseColor[1], CONFIG.dotBaseColor[2], 0.22);
+          ctx.fill();
+        }
+      })();
+    } else {
+      rafId = requestAnimationFrame(draw);
+    }
+  })();
+  </script>
+</body>
+</html>

@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "npm run build:extensions && npm run build:rcode && npm run build:bundled-extensions && electron-vite dev",
-    "build": "npm run build:extensions && npm run build:rcode && npm run build:bundled-extensions && electron-vite build",
+    "build": "npm run prepare:whisper && npm run build:extensions && npm run build:rcode && npm run build:bundled-extensions && electron-vite build",
     "build:rcode": "npm run build --workspace @Rcode/extension-api && node ./scripts/ensure-Rcode-install.cjs && npm --prefix Rcode run build",
     "build:extensions": "npm run build --workspace @Rcode/extension-api && npm run build --workspace @Rcode/extension-react && npm run build --workspace @Rcode/extension-test && npm run build --workspace create-Rcode-extension",
     "test:extensions": "npm run test --workspace @Rcode/extension-api && npm run test --workspace @Rcode/extension-react && npm run test --workspace @Rcode/extension-test && npm run test --workspace create-Rcode-extension",
@@ -62,7 +62,7 @@
     "verify:apple": "node ./scripts/verify-apple-signing.cjs",
     "preview": "electron-vite preview",
     "typecheck": "npm run build:extensions && tsc --noEmit -p tsconfig.web.json && tsc --noEmit -p tsconfig.node.json",
-    "prepare:whisper": "node ./scripts/prepare-whisper-runner.cjs",
+    "prepare:whisper": "node ./scripts/prepare-whisper-runner.cjs && node ./scripts/prepare-whisper-models.cjs",
     "mac:unquarantine": "bash ./scripts/mac-unquarantine.sh",
     "server:dev": "tsx watch server/index.ts",
     "server:build": "tsc -p tsconfig.server.json && node scripts/bundle-server.cjs",
