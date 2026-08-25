@@ -1,5 +1,5 @@
 const { execFileSync } = require('node:child_process')
-const { existsSync, statSync } = require('node:fs')
+const { existsSync, statSync, readdirSync } = require('node:fs')
 const { join } = require('node:path')
 
 const WHISPER_RESOURCES_DIR = join(__dirname, '..', 'resources', 'whisper')
@@ -51,6 +51,35 @@ const BUILD_FRESHNESS_PAIRS = [
   }
 ]
 
+// Recursively find files newer than `threshold` using pure Node.js
+// (cross-platform: works on macOS, Linux, and Windows).
+function findNewerFiles(dir, threshold, ignoreDirs) {
+  const results = []
+  let entries
+  try {
+    entries = readdirSync(dir, { withFileTypes: true })
+  } catch {
+    return results
+  }
+  for (const entry of entries) {
+    const fullPath = join(dir, entry.name)
+    if (entry.isDirectory()) {
+      if (ignoreDirs.has(entry.name)) continue
+      results.push(...findNewerFiles(fullPath, threshold, ignoreDirs))
+    } else if (entry.isFile()) {
+      try {
+        const stat = statSync(fullPath)
+        if (stat.mtimeMs > threshold) results.push(fullPath)
+      } catch {
+        // skip unreadable files
+      }
+    }
+  }
+  return results
+}
+
+const IGNORE_DIRS = new Set(['node_modules', '.git', '.DS_Store'])
+
 function assertBuildFreshness() {
   for (const { output, source, label } of BUILD_FRESHNESS_PAIRS) {
     if (!existsSync(output)) {
@@ -61,15 +90,12 @@ function assertBuildFreshness() {
       )
     }
     if (!existsSync(source)) continue
-    const stale = execFileSync(
-      'find',
-      [source, '-type', 'f', '-newer', output, '-not', '-path', '*/node_modules/*'],
-      { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 }
-    ).trim()
-    if (stale) {
+    const outputMtime = statSync(output).mtimeMs
+    const staleFiles = findNewerFiles(source, outputMtime, IGNORE_DIRS)
+    if (staleFiles.length > 0) {
       throw new Error(
         `[before-pack] Stale build: ${label} output (${output}) is older than source in\n` +
-        `${source}.\n` +
+        `${source} (${staleFiles.length} newer file(s), e.g. ${staleFiles[0]}).\n` +
         'Packaging would ship outdated code. Run `npm run build`, or simply use\n' +
         '`npm run dist:mac:arm64` (it builds before packaging).'
       )
