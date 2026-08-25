@@ -14,6 +14,7 @@ import {
 import { applyRequestHistoryHygiene } from './request-history-hygiene.js'
 import { estimateModelRequestInputTokens } from './model-request-estimator.js'
 import { capToolResultImages } from './tool-result-image.js'
+import { injectTokenBudgetContext, type TokenBudgetContextOptions } from './token-budget-context.js'
 
 const MAX_FORWARDED_TOOL_IMAGES = 3
 
@@ -34,6 +35,8 @@ export type ModelRequestComposerInput = Readonly<{
   requiredToolName?: string
   tokenEconomy?: TokenEconomyConfig
   signal: AbortSignal
+  /** Token budget context for Codex-style remaining-token injection. */
+  tokenBudgetContext?: TokenBudgetContextOptions
 }>
 
 export type ComposedModelRequest = Readonly<{
@@ -94,10 +97,14 @@ export function composeModelRequest(input: ModelRequestComposerInput): ComposedM
       { currentTurnId: input.turnId }
     )
   }
+  // Inject token budget context if provided.
+  const budgetedRequest = input.tokenBudgetContext
+    ? injectTokenBudgetContext(request, input.tokenBudgetContext)
+    : request
   return {
-    request,
+    request: budgetedRequest,
     rawInputTokens,
-    sentInputTokens: estimateModelRequestInputTokens(request),
+    sentInputTokens: estimateModelRequestInputTokens(budgetedRequest),
     tokenEconomy
   }
 }

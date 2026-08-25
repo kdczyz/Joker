@@ -256,6 +256,61 @@ export class ContextCompactor {
   }
 }
 
+/**
+ * Maximum token estimate for a single tool result sent to the compaction
+ * summarizer. Tool results larger than this are prefix-clipped with a
+ * truncation notice so the compaction request itself does not exceed the
+ * summarizer's context window. Borrowed from Codex's
+ * `trim_function_call_history_to_fit_context_window`.
+ */
+export const COMPACTION_TOOL_RESULT_MAX_TOKENS = 4_000
+
+/**
+ * Pre-trim oversized tool results in the items being sent to the
+ * compaction summarizer. This prevents the compaction request itself from
+ * blowing past the summarizer's context window (a problem Codex hit and
+ * solved with its own trim-before-compact path).
+ *
+ * Only `tool_result` items with estimated token count exceeding
+ * `maxTokensPerResult` are trimmed. The original call/result pairing
+ * invariant is preserved — we never remove items, only shorten output text.
+ */
+export function trimOversizedToolResults(
+  items: readonly TurnItem[],
+  maxTokensPerResult: number = COMPACTION_TOOL_RESULT_MAX_TOKENS
+): TurnItem[] {
+  const out: TurnItem[] = []
+  for (const item of items) {
+    if (item.kind === 'tool_result') {
+      const outputStr = stringifyOutput(item.output)
+      // Rough estimate: ~4 chars per token for ASCII, ~1 char per token for CJK.
+      // Use a conservative 3 chars/token to catch more oversized results.
+      const estimatedTokens = Math.ceil(outputStr.length / 3)
+      if (estimatedTokens > maxTokensPerResult) {
+        const maxChars = maxTokensPerResult * 3
+        const clipped = outputStr.slice(0, Math.max(0, maxChars - 80)).trimEnd()
+        out.push({
+          ...item,
+          output: `${clipped}\n\n[... truncated ${estimatedTokens.toLocaleString()} tokens to ${maxTokensPerResult.toLocaleString()} tokens for compaction summarization ...]`
+        })
+        continue
+      }
+    }
+    out.push(item)
+  }
+  return out
+}
+
+function stringifyOutput(output: unknown): string {
+  if (typeof output === 'string') return output
+  if (output == null) return ''
+  try {
+    return JSON.stringify(output)
+  } catch {
+    return String(output)
+  }
+}
+
 export function trimTrailingToolCalls(history: TurnItem[]): TurnItem[] {
   let end = history.length
   while (end > 0) {

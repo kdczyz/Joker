@@ -2,13 +2,18 @@ import type { ImmutablePrefix } from '../cache/immutable-prefix.js'
 import type { TurnItem } from '../contracts/items.js'
 import type { UsageSnapshot } from '../contracts/usage.js'
 import type { ModelClient } from '../ports/model-client.js'
-import { trimTrailingToolCalls } from './context-compactor.js'
+import { trimTrailingToolCalls, trimOversizedToolResults } from './context-compactor.js'
 import type { ContextCompactionConfig } from './model-context-profile.js'
+import { cleanCompactionSummary, isDegenerateSummary } from './compaction-clean.js'
 
 export const DEFAULT_COMPACTION_SUMMARY_TIMEOUT_MS = 15_000
 export const DEFAULT_COMPACTION_SUMMARY_MAX_TOKENS = 2_048
 /** @deprecated The compaction-mode path feeds real conversation messages, not a byte-capped transcript. Kept for config back-compat. */
 export const DEFAULT_COMPACTION_SUMMARY_INPUT_MAX_BYTES = 96 * 1024
+/** Max retries for degenerate/empty summaries before falling back to heuristic. */
+export const DEFAULT_COMPACTION_MAX_RETRIES = 2
+/** Delay between retries (ms) to let transient provider issues clear. */
+export const DEFAULT_COMPACTION_RETRY_DELAY_MS = 1_000
 
 /**
  * System prompt for the dedicated "compaction mode" turn. Ported from
@@ -18,27 +23,46 @@ export const DEFAULT_COMPACTION_SUMMARY_INPUT_MAX_BYTES = 96 * 1024
  * handoff summary so work can continue past the context window.
  */
 export const COMPACTION_SYSTEM_PROMPT = [
-  'You are summarizing a long coding-agent conversation so the work can continue past the context window.',
+  'You are performing a CONTEXT CHECKPOINT COMPACTION for a coding-agent conversation.',
+  'Write a structured handoff summary so a successor assistant with no access to',
+  'the earlier conversation can continue the work seamlessly.',
   '',
-  'Write a structured handoff summary with these sections:',
-  '## Goal',
-  '## Durable Context',
-  '## Completed and Decisions',
-  '## Files, Commands, and Results',
-  '## Open Issues and Next Steps',
+  'Organize your summary into these numbered sections. Include every section',
+  'heading even if a section is empty (write "None" in that case):',
   '',
-  'Focus on information that would be helpful for continuing the work, including:',
-  '- What was requested and the overall goal',
-  '- What has been done and the decisions that were made (and why)',
-  '- Which files are being created, edited, or inspected (with their paths)',
-  '- Key technical findings: root causes, data values, API shapes, commands run and their results',
-  '- What still needs to be done next',
-  '- User requests, constraints, and preferences that must persist',
+  '1. Goal and Intent: The user\'s explicit requests, underlying intent, constraints,',
+  '   scope boundaries, and stated preferences. Preserve nuance.',
+  '2. Key Technical Concepts: Technologies, languages, frameworks, libraries, tools,',
+  '   and patterns discussed or relied upon.',
+  '3. Files, Code, and Commands: Every file examined, created, or modified.',
+  '   For each, give the full path, why it matters, and relevant code snippets',
+  '   or commands — include full snippets of any code you wrote or changed,',
+  '   not just descriptions.',
+  '4. Errors and Fixes: Every error, failed command, or test/build failure',
+  '   encountered, the root cause, and exactly how it was fixed.',
+  '5. Problem Solving: Problems already solved and any in-progress diagnosis.',
+  '6. All User Messages: List ALL user messages in order (skip tool results).',
+  '   Do NOT include this compaction instruction itself.',
+  '7. Pending Tasks: Tasks the user explicitly asked for that are not yet complete.',
+  '   Do not invent tasks the user never requested.',
+  '8. Current Work: Precisely what you were doing immediately before this compaction',
+  '   request, with the most recent file names, code, commands, and state.',
+  '9. Optional Next Step: The single next step that directly continues the most',
+  '   recent work, with a verbatim quote showing where you left off.',
   '',
-  'If the conversation contains a numbered or bulleted list of issues, tasks, TODOs, problems, requirements, or user findings, preserve every item that is still relevant. Do not collapse middle items into a range, "etc.", or an omitted-count line.',
-  'Preserve concrete identifiers verbatim: file paths, function and variable names, commands, URLs, IDs, and error messages.',
-  'Do not invent facts and do not add generic advice. Write in the same language as the conversation.',
-  'Your summary should be comprehensive enough to provide full context but concise enough to be quickly understood.'
+  'Guidelines:',
+  '- Preserve concrete identifiers verbatim: file paths, function and variable names,',
+  '  commands, URLs, IDs, and error messages.',
+  '- If the conversation contains numbered or bulleted lists of issues, tasks, TODOs,',
+  '  problems, requirements, or user findings, preserve every still-relevant item.',
+  '  Do not collapse middle items into a range, "etc.", or an omitted-count line.',
+  '- If earlier turns include a prior compaction summary (marked with',
+  '  "This session is being continued" preamble), treat it as authoritative for',
+  '  the early history and carry its still-relevant information forward.',
+  '- Do not invent facts and do not add generic advice.',
+  '- Write in the same language as the conversation.',
+  '- Be comprehensive enough to provide full context but concise enough to be',
+  '  quickly understood. Aim for at most a few thousand words.',
 ].join('\n')
 
 /**
@@ -209,7 +233,10 @@ export async function summarizeCompactionWithModel(input: {
     // Feed the real conversation as model messages (compaction mode), not a
     // serialized transcript. Trailing tool calls without results are dropped
     // so the request stays well-formed for OpenAI-compatible providers.
-    const conversation = trimTrailingToolCalls(input.items)
+    // Oversized tool results are prefix-clipped so the compaction request
+    // itself does not blow past the summarizer's context window (borrowed
+    // from Codex's trim-before-compact pattern).
+    const conversation = trimOversizedToolResults(trimTrailingToolCalls(input.items))
     const continuationItem: TurnItem = {
       id: `item_${input.turnId}_compaction_continuation`,
       turnId: input.turnId,
@@ -260,11 +287,15 @@ export async function summarizeCompactionWithModel(input: {
       }
     }
     const summary = text.trim()
-    if (!summary) {
-      await recordFallback('Model compaction summary returned empty text; using heuristic summary.')
+    if (!summary || isDegenerateSummary(summary)) {
+      const reason = summary ? `degenerate (${summary.length} chars)` : 'empty'
+      await recordFallback(
+        `Model compaction summary returned ${reason} text; using heuristic summary.`
+      )
       return undefined
     }
-    return summary
+    // Clean the summary: strip scratchpad, unwrap tags, neutralize control tokens.
+    return cleanCompactionSummary(summary)
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error)
     const reason = controller.signal.aborted && !input.signal.aborted

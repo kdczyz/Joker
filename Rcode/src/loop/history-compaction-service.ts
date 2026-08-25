@@ -23,6 +23,18 @@ import type { ContextCompactionConfig } from './model-context-profile.js'
 import { estimateRequestOverheadTokens } from './model-request-estimator.js'
 import type { LoopTelemetry } from './loop-telemetry.js'
 import { extractSkillPins } from './context-compactor.js'
+import {
+  type SuppressionLevel,
+  SUPPRESS_NONE,
+  clearTurnSuppression,
+  clearOnContextChange,
+  classifyCompactionFailure,
+  isSuppressed
+} from './compaction-suppress.js'
+import {
+  extractCompactionStateSnapshot,
+  buildCompactionStateRecoveryPrompt
+} from './compaction-state-recovery.js'
 
 export type HistoryCompactionServiceDeps = {
   sessionStore: SessionStore
@@ -46,9 +58,32 @@ export type HistoryCompactionServiceDeps = {
  * Applies automatic history compaction through the revision-aware coordinator.
  * The service never retries model/tool work after a lost history CAS: only the
  * pure heuristic transform is rebuilt from the latest persisted snapshot.
+ *
+ * Borrowed from Grok Build: auto-compaction is gated by a multi-level
+ * suppression state machine that prevents repeated futile compaction attempts
+ * after deterministic failures (context overflow, auth expiry, persistent
+ * model errors).
  */
 export class HistoryCompactionService {
+  /** Suppression level carried across calls for a given thread. */
+  private suppression: SuppressionLevel = SUPPRESS_NONE
+
   constructor(private readonly deps: HistoryCompactionServiceDeps) {}
+
+  /** Clear suppression at turn boundary (TURN-level clears automatically). */
+  clearTurnSuppression(): void {
+    this.suppression = clearTurnSuppression(this.suppression)
+  }
+
+  /** Clear suppression after a successful model response. */
+  clearOnSuccess(): void {
+    this.suppression = clearOnContextChange(this.suppression)
+  }
+
+  /** Get the current suppression level for external inspection. */
+  getSuppressionLevel(): SuppressionLevel {
+    return this.suppression
+  }
 
   async compactIfNeeded(input: {
     items: TurnItem[]
@@ -61,6 +96,11 @@ export class HistoryCompactionService {
     toolSpecs?: readonly ModelToolSpec[]
     reserveModelRequest?: () => Promise<{ allowed: boolean; reason?: string }>
   }): Promise<TurnItem[]> {
+    // Skip compaction when suppressed by a previous deterministic failure.
+    if (isSuppressed(this.suppression)) {
+      return input.items
+    }
+    try {
     await this.deps.telemetry.hydratePromptPressureIfCold(input.threadId, input.model)
     const pressure = this.deps.telemetry.consumePromptPressure(input.threadId, input.model)
     const thresholdModel = pressure?.model || input.model
@@ -253,6 +293,14 @@ export class HistoryCompactionService {
       if (result) {
         this.deps.clearReadTracker?.(input.threadId)
         await this.deps.rewriteThreadItemsFromSession(input.threadId)
+        // Build state recovery prompt from the folded items so the first
+        // post-compaction request has key context (borrowed from Grok Build's
+        // CompactionStateContext / <system-reminder> pattern).
+        const snapshot = extractCompactionStateSnapshot(committed.value.history)
+        const recoveryPrompt = buildCompactionStateRecoveryPrompt(
+          snapshot,
+          result.summaryItem.kind === 'compaction' ? result.summaryItem.summary : ''
+        )
         await this.deps.events.record({
           kind: 'compaction_completed',
           threadId: input.threadId,
@@ -261,6 +309,7 @@ export class HistoryCompactionService {
           summary: result.summaryItem.kind === 'compaction' ? result.summaryItem.summary : '',
           replacedTokens: result.replacedTokens,
           pinnedConstraints: this.deps.prefix.pinnedConstraints,
+          ...(recoveryPrompt ? { stateRecovery: recoveryPrompt } : {}),
           ...(result.summaryItem.kind === 'compaction' && result.summaryItem.sourceDigest
             ? { sourceDigest: result.summaryItem.sourceDigest }
             : {}),
@@ -280,5 +329,21 @@ export class HistoryCompactionService {
     return repairModelHistoryItems(
       effectiveHistoryAfterLatestCompaction(await this.deps.sessionStore.loadItems(input.threadId))
     )
+    } catch (error) {
+      // Classify the failure and suppress auto-compaction accordingly.
+      const message = error instanceof Error ? error.message : String(error)
+      const isContextOverflow = /context.*(length|window|exceed|overflow)/i.test(message)
+      const isAuthError = /\b(401|403|auth|unauthorized|forbidden)\b/i.test(message)
+      this.suppression = classifyCompactionFailure({ message, isContextOverflow, isAuthError })
+      await this.deps.events.record({
+        kind: 'error',
+        threadId: input.threadId,
+        turnId: input.turnId,
+        message: `Compaction failed (suppression level ${this.suppression}): ${message}`,
+        code: 'compaction_suppressed',
+        severity: 'warning'
+      })
+      return input.items
+    }
   }
 }
