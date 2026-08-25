@@ -13,6 +13,14 @@ import type { UsageSnapshot } from '../contracts/usage.js'
 import type { ThreadStore } from '../ports/thread-store.js'
 import type { TurnService } from '../services/turn-service.js'
 import { loadWorkspaceAgentProfiles } from './workspace-agents.js'
+import {
+  canSpawnSubagent,
+  incrementDepth,
+  buildInterAgentCompletionMessage,
+  formatInterAgentMessageForParent,
+  DEFAULT_MAX_SUBAGENT_DEPTH,
+  type InterAgentCompletionMessage
+} from './multi-agent-types.js'
 
 const ChildRunUsage = z.object({
   promptTokens: z.number().int().nonnegative().default(0),
@@ -52,8 +60,17 @@ export const ChildRunRecord = z.object({
   /** Parent policy captured when the child was created. */
   approvalPolicy: ApprovalPolicySchema.optional(),
   sandboxMode: SandboxModeSchema.optional(),
+  /** Structured inter-agent completion message (Codex-style). */
+  completionMessage: z.object({
+    kind: z.enum(['FINAL_ANSWER', 'STATUS_UPDATE', 'ERROR', 'REQUEST_PARENT']),
+    payload: z.string(),
+    childId: z.string(),
+    parentThreadId: z.string(),
+  }).optional(),
   /** True when this child is detached from the parent turn lifecycle. */
   detached: z.boolean().optional(),
+  /** Nesting depth: 0 = top-level agent, 1 = child, 2 = grandchild, etc. */
+  depth: z.number().int().nonnegative().default(0),
   status: z.enum(['queued', 'running', 'completed', 'failed', 'aborted']),
   summary: z.string().optional(),
   evidence: z.array(z.string().min(1).max(2_000)).max(32).optional(),
@@ -243,6 +260,8 @@ export class DelegationRuntime {
     /** Forward GUI design-canvas scope into the child turn when present. */
     guiDesignCanvas?: boolean
     returnFormat?: ChildReturnFormat
+    /** Current nesting depth of the parent agent (0 = top-level). */
+    parentDepth?: number
     /**
      * When true, runChild returns the queued ChildRunRecord immediately and
      * continues execution in the background. The detached run gets its own
@@ -298,6 +317,15 @@ export class DelegationRuntime {
     const resolvedReasoningEffort = profile?.reasoningEffort
     const returnFormat = input.returnFormat ?? 'summary'
 
+    // --- Depth nesting guard (borrowed from Grok Build subagents_max_depth) ---
+    const maxDepth = config.maxSubagentDepth ?? DEFAULT_MAX_SUBAGENT_DEPTH
+    const parentDepth = input.parentDepth ?? 0
+    const depthCheck = canSpawnSubagent(parentDepth, maxDepth)
+    if (!depthCheck.allowed) {
+      throw new Error(depthCheck.reason!)
+    }
+    const childDepth = incrementDepth(parentDepth)
+
     // Reserve against the per-thread child-count limit before persisting anything.
     await this.ensureSeeded(input.parentThreadId)
     if (!this.reserveChild(input.parentThreadId)) {
@@ -320,6 +348,7 @@ export class DelegationRuntime {
       ...(input.approvalPolicy ? { approvalPolicy: input.approvalPolicy } : {}),
       ...(input.sandboxMode ? { sandboxMode: input.sandboxMode } : {}),
       returnFormat,
+      depth: childDepth,
       ...(input.detach ? { detached: true } : {}),
       status: 'queued',
       childSeq: this.nextChildSeq(id),
@@ -432,6 +461,11 @@ export class DelegationRuntime {
       const finishedAt = this.now()
       const usage = result.usage ?? record.usage
       const contractError = childContractError(returnFormat, result.evidence)
+      // Build structured inter-agent completion message (Codex-style).
+      const completionMessage = buildInterAgentCompletionMessage({
+        childRecord: record,
+        format: returnFormat
+      })
       record = ChildRunRecord.parse({
         ...record,
         status: contractError ? 'failed' : 'completed',
@@ -441,6 +475,12 @@ export class DelegationRuntime {
         toolInvocations: result.toolInvocations,
         prefixReused: result.prefixReused,
         inheritedHistoryItems: result.inheritedHistoryItems,
+        completionMessage: {
+          kind: completionMessage.kind,
+          payload: completionMessage.payload,
+          childId: completionMessage.childId,
+          parentThreadId: completionMessage.parentThreadId
+        },
         ...(contractError ? { error: contractError } : {}),
         durationMs: elapsedMs(startedAt, finishedAt),
         updatedAt: finishedAt

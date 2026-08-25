@@ -464,6 +464,24 @@ function resolveWriteToolFilePath(filePath: string | undefined, workspaceRoot: s
 }
 
 function runtimeStatusText(event: RuntimeStatusEventPayload): string {
+  if (event.kind === 'subagent_update' && event.subagentRun) {
+    const run = event.subagentRun
+    const label = `子代理 ${run.agentName}`
+    if (run.status === 'queued') return i18n.t('common:subagentQueued', { defaultValue: `${label} 排队等待中…`, label })
+    if (run.status === 'running') return i18n.t('common:subagentRunning', { defaultValue: `${label} 正在调查…`, label })
+    if (run.status === 'completed') {
+      const summary = run.summary?.trim()
+      return summary
+        ? i18n.t('common:subagentCompletedWithSummary', { defaultValue: `${label} 完成：${summary}`, label, summary })
+        : i18n.t('common:subagentCompleted', { defaultValue: `${label} 完成`, label })
+    }
+    if (run.status === 'cancelled') return i18n.t('common:subagentCancelled', { defaultValue: `${label} 已取消`, label })
+    return i18n.t('common:subagentFailed', {
+      defaultValue: run.error ? `${label} 失败：${run.error}` : `${label} 失败`,
+      label,
+      error: run.error ?? ''
+    })
+  }
   if (event.kind === 'tool_result_upload_wait') {
     if (event.toolName) {
       let displayName = event.toolName

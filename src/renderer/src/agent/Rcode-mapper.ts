@@ -1489,6 +1489,29 @@ function toolReadyFromEvent(event: CoreRuntimeEventJson): ToolEventPayload | nul
 
 function runtimeStatusFromEvent(event: CoreRuntimeEventJson): RuntimeStatusEventPayload | null {
   const seq = typeof event.seq === 'number' ? event.seq : Date.now()
+  // Raw server StreamEvents (type field) forwarded through the SSE bridge:
+  // subagent_update carries delegated-task lifecycle info for the chat UI.
+  const rawType = (event as { type?: unknown }).type
+  if (rawType === 'subagent_update') {
+    const run = (event as { run?: Record<string, unknown> }).run ?? {}
+    return {
+      kind: 'subagent_update',
+      itemId: `runtime_status_subagent_${String(run.id ?? seq)}_${seq}`,
+      turnId: event.turnId,
+      createdAt: event.timestamp,
+      message: typeof run.summary === 'string' ? run.summary : undefined,
+      subagentRun: {
+        id: String(run.id ?? ''),
+        batchId: String(run.batchId ?? ''),
+        agentName: String(run.agentName ?? ''),
+        task: String(run.task ?? ''),
+        status: (run.status as 'queued' | 'running' | 'completed' | 'failed' | 'cancelled') ?? 'running',
+        ...(typeof run.summary === 'string' ? { summary: run.summary } : {}),
+        ...(typeof run.error === 'string' ? { error: run.error } : {}),
+        ...(typeof run.turns === 'number' ? { turns: run.turns } : {})
+      }
+    }
+  }
   if (event.kind === 'error' && event.code === 'compaction_summary_fallback') {
     const key = event.turnId ?? event.threadId ?? event.seq ?? Date.now()
     return {

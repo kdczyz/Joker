@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { MODEL_ENDPOINT_FORMATS } from './model-endpoint-format.js'
+import { DEFAULT_MAX_SUBAGENT_DEPTH } from '../delegation/multi-agent-types.js'
 
 export const RUNTIME_CAPABILITY_CONTRACT_VERSION = 1
 
@@ -299,6 +300,13 @@ export const SubagentsCapabilityConfig = CapabilityToggleConfig.extend({
   maxParallel: z.number().int().nonnegative().default(0),
   /** Hard cap on total children per parent thread. */
   maxChildRuns: z.number().int().nonnegative().default(0),
+  /**
+   * Max nested depth for subagents. Prevents runaway recursion by rejecting
+   * spawns whose parent depth already reached the limit (borrowed from Grok
+   * Build's subagents_max_depth). 0 = only top-level agents; 1 = one level of
+   * children, etc. Defaults to {@link DEFAULT_MAX_SUBAGENT_DEPTH}.
+   */
+  maxSubagentDepth: z.number().int().nonnegative().default(DEFAULT_MAX_SUBAGENT_DEPTH),
   /**
    * Tool policy applied to children that do not resolve a profile. Defaults to
    * `inherit` so a delegated subagent follows the MAIN agent's tools AND

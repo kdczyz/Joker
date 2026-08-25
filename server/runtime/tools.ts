@@ -11,7 +11,8 @@ import { executeMcpTool, listMcpToolDefinitions } from "../integrations/mcpClien
 import { generateImage, type ImageQuality, type ImageSize } from "../providers/imageProvider";
 import { listSubagents } from "../agent/subagents";
 import { assertNotSymlinkEscape, assertPathInsideWorkspace, getWorkspaceRoot, resolveWorkspacePath, sandboxPolicyName } from "../security/sandbox";
-import type { AgentToolName, BuiltinToolName, DiffResult, ExecutorResult, ManagedProcessSnapshot, PermissionMode, ToolCall, ToolDefinition, ToolResult } from "../shared/types";
+import type { AgentToolName, BuiltinToolName, DiffResult, ExecutorResult, ManagedProcessSnapshot, PermissionMode, StreamEvent, SubagentRunUpdate, ToolCall, ToolDefinition, ToolResult } from "../shared/types";
+import { runSubagentBatch } from "../agent/subagentRunner";
 
 const ignoredWorkspaceEntries = new Set([
   ".DS_Store",
@@ -306,27 +307,62 @@ export async function getRegisteredTools(projectPath?: string): Promise<ToolDefi
   return [...builtins, ...(await listMcpToolDefinitions(projectPath))];
 }
 
+/**
+ * Byte-stable tool definitions for prompt-cache friendliness.
+ *
+ * The static portion (every tool except delegate_agents) is cached and only
+ * rebuilt when MCP registrations or memory settings change. delegate_agents is
+ * rebuilt only when the subagent name list actually changes — its dynamic
+ * agent list lives ONLY in the parameter enum (never in the description), so
+ * adding/removing a subagent invalidates the smallest possible cache prefix.
+ */
+let staticToolDefinitionsCache: Array<{ type: "function"; function: { name: AgentToolName; description: string; parameters: Record<string, unknown> } }> | undefined;
+let lastDelegateAgentNamesKey: string | undefined;
+let delegateToolDefinitionCache: { type: "function"; function: { name: AgentToolName; description: string; parameters: Record<string, unknown> } } | undefined;
+
+export async function invalidateToolDefinitionCache(): Promise<void> {
+  staticToolDefinitionsCache = undefined;
+  delegateToolDefinitionCache = undefined;
+  lastDelegateAgentNamesKey = undefined;
+}
+
 export async function getToolDefinitions(projectPath?: string) {
   const tools = await getRegisteredTools(projectPath);
+
+  if (!staticToolDefinitionsCache) {
+    staticToolDefinitionsCache = tools
+      .filter((tool) => tool.name !== "delegate_agents")
+      .map((tool) => ({
+        type: "function" as const,
+        function: { name: tool.name, description: tool.description, parameters: tool.inputSchema }
+      }));
+  }
+
   const agents = await listSubagents(projectPath);
-  return tools.map((tool) => ({
-    type: "function",
-    function: {
-      name: tool.name,
-      description: tool.name === "delegate_agents"
-        ? `${tool.description} Available agents: ${agents.map((agent) => `${agent.name} (${agent.description})`).join("; ")}.`
-        : tool.description,
-      parameters: tool.name === "delegate_agents"
-        ? {
-            ...tool.inputSchema,
+  const namesKey = agents.map((agent) => agent.name).join(",");
+  if (!delegateToolDefinitionCache || namesKey !== lastDelegateAgentNamesKey) {
+    const delegateTool = tools.find((tool) => tool.name === "delegate_agents");
+    if (delegateTool) {
+      const properties = delegateTool.inputSchema.properties as Record<string, Record<string, unknown>>;
+      const tasksProperty = properties.tasks as Record<string, unknown>;
+      const itemsProperty = tasksProperty.items as Record<string, Record<string, unknown>>;
+      delegateToolDefinitionCache = {
+        type: "function",
+        function: {
+          name: "delegate_agents",
+          // Static description: agent availability is conveyed via the enum only,
+          // so definition bytes stay stable across most turns.
+          description: `${delegateTool.description} Pick agent names from the enum; unknown names are rejected with the list of valid names.`,
+          parameters: {
+            ...delegateTool.inputSchema,
             properties: {
-              ...(tool.inputSchema.properties as Record<string, unknown>),
+              ...properties,
               tasks: {
-                ...((tool.inputSchema.properties as Record<string, Record<string, unknown>>).tasks),
+                ...tasksProperty,
                 items: {
-                  ...(((tool.inputSchema.properties as Record<string, Record<string, unknown>>).tasks.items as Record<string, unknown>)),
+                  ...itemsProperty,
                   properties: {
-                    ...((((tool.inputSchema.properties as Record<string, Record<string, unknown>>).tasks.items as Record<string, Record<string, unknown>>).properties)),
+                    ...itemsProperty.properties,
                     agent: {
                       type: "string",
                       enum: agents.map((agent) => agent.name),
@@ -337,9 +373,15 @@ export async function getToolDefinitions(projectPath?: string) {
               }
             }
           }
-        : tool.inputSchema
+        }
+      };
     }
-  })) as Array<{ type: "function"; function: { name: AgentToolName; description: string; parameters: Record<string, unknown> } }>;
+    lastDelegateAgentNamesKey = namesKey;
+  }
+
+  const result = [...staticToolDefinitionsCache];
+  if (delegateToolDefinitionCache) result.push(delegateToolDefinitionCache);
+  return result as Array<{ type: "function"; function: { name: AgentToolName; description: string; parameters: Record<string, unknown> } }>;
 }
 
 function getString(value: unknown, field: string): string {
@@ -358,6 +400,8 @@ interface ToolExecutionContext {
   permissionMode?: PermissionMode;
   providerId?: string;
   signal?: AbortSignal;
+  /** Buffered subagent_update events produced by a delegate_agents run; drained by the agent loop. */
+  subagentEventSink?: StreamEvent[];
 }
 
 async function resolveReadableToolPath(input: unknown, projectPath: string | undefined, allowOutsideWorkspace: boolean) {
@@ -809,6 +853,34 @@ export async function executeTool(call: ToolCall, projectPath?: string, context?
       executorResult = await portableExecutor.run({ command, cwd, projectPath, allowOutsideWorkspace, signal: context?.signal });
       exitCode = executorResult.exitCode;
       result = buildExecutorToolResult(call, executorResult, context);
+    } else if (call.name === "delegate_agents") {
+      const tasks = Array.isArray(call.arguments.tasks) ? call.arguments.tasks : [];
+      if (tasks.length === 0) throw new Error("tasks is required");
+      const agents = await listSubagents(projectPath);
+      const definitionsByName = new Map(agents.map((agent) => [agent.name, agent]));
+      const strategy = call.arguments.strategy === "sequential" || call.arguments.strategy === "parallel" || call.arguments.strategy === "auto"
+        ? call.arguments.strategy
+        : "auto";
+      const eventSink = context?.subagentEventSink;
+      const { content } = await runSubagentBatch(
+        definitionsByName,
+        tasks.map((entry) => ({ agent: String(entry.agent ?? ""), task: String(entry.task ?? "") })),
+        {
+          strategy,
+          projectPath,
+          providerId: context?.providerId,
+          parentMode: context?.permissionMode ?? "workspace_write",
+          signal: context?.signal,
+          executeTool,
+          emit: (event) => {
+            if (event.type !== "subagent_update") return;
+            eventSink?.push(event);
+            const run = event.run as SubagentRunUpdate;
+            console.log(`[Subagent] ${run.agentName} -> ${run.status}${run.summary ? `: ${run.summary.slice(0, 80)}` : ""}`);
+          }
+        }
+      );
+      result = { toolCallId: call.id, name: call.name, ok: true, content };
     } else {
       throw new Error(`Unknown tool: ${call.name}`);
     }

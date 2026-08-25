@@ -38,8 +38,9 @@ export function extractCompactionStateSnapshot(
   for (const item of items) {
     switch (item.kind) {
       case 'tool_call': {
-        // 提取文件路径（read_file, write_file, edit_file 等）
-        if (item.toolName === 'read' || item.toolName === 'write' || item.toolName === 'edit') {
+        // 只统计真正的写操作：read ≠ modified，把 read 路径混入会误导后续
+        // 模型去“继续编辑”只读过的文件。
+        if (item.toolName === 'write' || item.toolName === 'edit') {
           const path = extractPathFromArguments(item.arguments)
           if (path) editedFiles.add(path)
         }
@@ -105,6 +106,13 @@ export function buildCompactionStateRecoveryPrompt(
   // 编辑过的文件
   if (snapshot.editedFiles.length > 0) {
     lines.push(`Files modified in this session: ${snapshot.editedFiles.join(', ')}`)
+  }
+
+  // 用户原始意图：压缩后最容易被丢失的信息，优先保留。
+  if (snapshot.userMessageSummary.length > 0) {
+    lines.push(
+      `User instructions from before compaction: ${snapshot.userMessageSummary.slice(-5).join(' | ')}`
+    )
   }
 
   if (lines.length === 0) return undefined

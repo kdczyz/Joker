@@ -401,6 +401,7 @@ export type RuntimeStatusEventPayload = {
     | 'tool_catalog_changed'
     | 'tool_storm_suppressed'
     | 'compaction_summary_fallback'
+    | 'subagent_update'
   itemId: string
   turnId?: string
   createdAt?: string
@@ -408,6 +409,17 @@ export type RuntimeStatusEventPayload = {
   toolResultCount?: number
   status?: number
   attempt?: number
+  /** subagent_update: run lifecycle info for the delegated task. */
+  subagentRun?: {
+    id: string
+    batchId: string
+    agentName: string
+    task: string
+    status: 'queued' | 'running' | 'completed' | 'failed' | 'cancelled'
+    summary?: string
+    error?: string
+    turns?: number
+  }
   maxAttempts?: number
   delayMs?: number
   changeKind?: 'additive' | 'breaking'

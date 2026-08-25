@@ -218,6 +218,9 @@ export const CompactionEvent = RuntimeEventBase.extend({
   // `/compact` command. Absent on legacy/auto events (treated as auto).
   auto: z.boolean().optional(),
   pinnedConstraints: z.array(z.string()).optional(),
+  // Post-compaction state recovery prompt (recovered edited files, recent
+  // actions, user intent) injected into the first request after compaction.
+  stateRecovery: z.string().min(1).optional(),
   sourceDigest: z.string().min(1).optional(),
   digestMarker: z.string().min(1).optional(),
   sourceItemIds: z.array(z.string().min(1)).optional()

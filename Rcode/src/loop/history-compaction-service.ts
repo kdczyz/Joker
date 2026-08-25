@@ -27,7 +27,7 @@ import {
   type SuppressionLevel,
   SUPPRESS_NONE,
   clearTurnSuppression,
-  clearOnContextChange,
+  clearOnSuccess as clearSuppressOnSuccess,
   classifyCompactionFailure,
   isSuppressed
 } from './compaction-suppress.js'
@@ -77,7 +77,10 @@ export class HistoryCompactionService {
 
   /** Clear suppression after a successful model response. */
   clearOnSuccess(): void {
-    this.suppression = clearOnContextChange(this.suppression)
+    // A healthy model response proves connectivity and credentials, so any
+    // suppression level (including STICKY and AUTH) is released. Without this
+    // reset a single transient failure would silence auto-compaction forever.
+    this.suppression = clearSuppressOnSuccess(this.suppression)
   }
 
   /** Get the current suppression level for external inspection. */
@@ -134,6 +137,7 @@ export class HistoryCompactionService {
     const committed = await rewriteItemHistoryWithRetry<{
       history: TurnItem[]
       result: ReturnType<ContextCompactor['compact']> | null
+      foldedItems: TurnItem[]
     }>({
       sessionStore: this.deps.sessionStore,
       threadId: input.threadId,
@@ -152,7 +156,7 @@ export class HistoryCompactionService {
           return {
             changed: false,
             items: snapshot.items,
-            value: { history: currentItems, result: null }
+            value: { history: currentItems, result: null, foldedItems: [] }
           }
         }
         let result = this.deps.compactor.compact({
@@ -169,7 +173,7 @@ export class HistoryCompactionService {
           return {
             changed: false,
             items: snapshot.items,
-            value: { history: currentItems, result: null }
+            value: { history: currentItems, result: null, foldedItems: [] }
           }
         }
         // A model summary generated for a stale snapshot must not be applied
@@ -181,7 +185,7 @@ export class HistoryCompactionService {
             return {
               changed: false,
               items: snapshot.items,
-              value: { history: currentItems, result: null }
+              value: { history: currentItems, result: null, foldedItems: [] }
             }
           }
           const compactionModel = resolveCompactionModel({
@@ -260,7 +264,7 @@ export class HistoryCompactionService {
             return {
               changed: false,
               items: snapshot.items,
-              value: { history: currentItems, result: null }
+              value: { history: currentItems, result: null, foldedItems: [] }
             }
           }
           if (modelSummary) {
@@ -277,6 +281,12 @@ export class HistoryCompactionService {
             })
           }
         }
+        // Keep the folded source items so the post-compaction state recovery
+        // snapshot can be extracted from what was actually summarized.
+        const foldedItemIds = new Set(
+          result.summaryItem.kind === 'compaction' ? result.summaryItem.sourceItemIds ?? [] : []
+        )
+        const foldedItems = currentItems.filter((item) => foldedItemIds.has(item.id))
         return {
           changed: true,
           items: insertCompactionIntoVisibleHistory({
@@ -284,7 +294,7 @@ export class HistoryCompactionService {
             compactedItems: result.next,
             summaryItem: result.summaryItem
           }),
-          value: { history: result.next, result }
+          value: { history: result.next, result, foldedItems }
         }
       }
     })
@@ -293,10 +303,10 @@ export class HistoryCompactionService {
       if (result) {
         this.deps.clearReadTracker?.(input.threadId)
         await this.deps.rewriteThreadItemsFromSession(input.threadId)
-        // Build state recovery prompt from the folded items so the first
-        // post-compaction request has key context (borrowed from Grok Build's
-        // CompactionStateContext / <system-reminder> pattern).
-        const snapshot = extractCompactionStateSnapshot(committed.value.history)
+        // Build state recovery prompt from the folded source items so the
+        // first post-compaction request has key context (borrowed from Grok
+        // Build's CompactionStateContext / <system-reminder> pattern).
+        const snapshot = extractCompactionStateSnapshot(committed.value.foldedItems)
         const recoveryPrompt = buildCompactionStateRecoveryPrompt(
           snapshot,
           result.summaryItem.kind === 'compaction' ? result.summaryItem.summary : ''

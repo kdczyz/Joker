@@ -514,6 +514,9 @@ export class AgentLoop {
     try {
       goalTimer = await this.goalTurns.begin(threadId)
       await this.recordPipelineStage(threadId, turnId, 'setup')
+      // A new turn is a fresh chance for auto-compaction: release TURN-level
+      // suppression left over from a transient failure in a previous turn.
+      this.historyCompaction.clearTurnSuppression()
       if (!delegatedSdkRuntime && this.opts.toolStorm?.enabled !== false) {
         this.toolStormBreakers.set(turnId, new ToolStormBreaker(this.opts.toolStorm))
       }

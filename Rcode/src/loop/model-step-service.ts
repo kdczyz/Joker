@@ -625,6 +625,11 @@ export class ModelStepService {
         return { markdown: `\n![generated image](${relativePath})\n` }
       }
     })
+    // A successful model round proves connectivity and credentials; release
+    // any compaction suppression left by a previous transient failure.
+    if (streamed.kind === 'completed' || streamed.kind === 'tool_calls') {
+      this.deps.historyCompaction.clearOnSuccess()
+    }
     return this.deps.roundOutcome.resolve({
       threadId,
       turnId,

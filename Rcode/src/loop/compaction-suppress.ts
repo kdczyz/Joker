@@ -10,21 +10,19 @@
  * - TURN:      suppressed for the current turn only; cleared at next turn start
  * - STICKY:    survives turn boundaries; cleared only on context budget change
  *              (successful compaction, rewind, or model switch)
- * - UNTIL_SUCCESS: survives until a successful model response (200)
- * - AUTH:      survives until login/token refresh (auth-expired errors)
+ * - AUTH:      survives until login/token refresh or a successful model
+ *              response proves credentials work again
  */
 
 export const SUPPRESS_NONE = 0 as const
 export const SUPPRESS_TURN = 1 as const
 export const SUPPRESS_STICKY = 2 as const
-export const SUPPRESS_UNTIL_SUCCESS = 3 as const
-export const SUPPRESS_AUTH = 4 as const
+export const SUPPRESS_AUTH = 3 as const
 
 export type SuppressionLevel =
   | typeof SUPPRESS_NONE
   | typeof SUPPRESS_TURN
   | typeof SUPPRESS_STICKY
-  | typeof SUPPRESS_UNTIL_SUCCESS
   | typeof SUPPRESS_AUTH
 
 /**
@@ -86,12 +84,12 @@ export function clearOnContextChange(level: SuppressionLevel): SuppressionLevel 
 }
 
 /**
- * Clear suppression after a successful model response (HTTP 200).
- * Clears UNTIL_SUCCESS and TURN.
+ * Clear suppression after a successful model response. A healthy response
+ * proves both connectivity and credentials, so every suppression level is
+ * released (including AUTH).
  */
-export function clearOnSuccess(level: SuppressionLevel): SuppressionLevel {
-  if (level === SUPPRESS_UNTIL_SUCCESS || level === SUPPRESS_TURN) return SUPPRESS_NONE
-  return level
+export function clearOnSuccess(_level: SuppressionLevel): SuppressionLevel {
+  return SUPPRESS_NONE
 }
 
 /**

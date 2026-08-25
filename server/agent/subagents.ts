@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { readdir, readFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
@@ -13,6 +13,8 @@ export interface SubagentDefinition {
   tools?: string[];
   model?: string;
   permissionMode?: string;
+  /** Hard upper bound for the effective permission mode at run time (min(parent, ceiling)). */
+  permissionCeiling?: string;
   maxTurns?: number;
 }
 
@@ -66,6 +68,30 @@ function frontmatterValue(frontmatter: string, key: string) {
   return frontmatter.match(new RegExp(`^${key}:\\s*["']?(.+?)["']?\\s*$`, "m"))?.[1]?.trim();
 }
 
+/**
+ * Supports both inline values and YAML block scalars for long prompts:
+ *
+ *   prompt: |
+ *     Multi-line
+ *     instructions here
+ *
+ * Also accepts ">"/">-" folded style. Falls back to the inline parser.
+ */
+function frontmatterBlockValue(frontmatter: string, key: string): string | undefined {
+  const lines = frontmatter.split("\n");
+  const startIndex = lines.findIndex((line) => new RegExp(`^${key}:\\s*(\\||>)[+-]?\\s*$`).test(line));
+  if (startIndex === -1) return undefined;
+  const collected: string[] = [];
+  for (let i = startIndex + 1; i < lines.length; i++) {
+    const line = lines[i];
+    if (/^[A-Za-z_][\w-]*\s*:/.test(line)) break; // next frontmatter key ends the block
+    // Strip one level of indentation (2 spaces or tab).
+    collected.push(line.replace(/^(?: {2}|\t)/, ""));
+  }
+  const text = collected.join("\n").trim();
+  return text.length > 0 ? text : undefined;
+}
+
 function parseTools(value?: string) {
   if (!value) return undefined;
   const tools = value
@@ -90,16 +116,42 @@ export function parseSubagent(filePath: string, content: string, scope: Subagent
     description,
     path: filePath,
     scope,
-    prompt: frontmatterValue(frontmatter, "prompt") ?? bodyPrompt ?? "",
+    prompt: frontmatterBlockValue(frontmatter, "prompt") ?? frontmatterValue(frontmatter, "prompt") ?? bodyPrompt ?? "",
     tools: parseTools(frontmatterValue(frontmatter, "tools")),
     model: frontmatterValue(frontmatter, "model"),
     permissionMode: frontmatterValue(frontmatter, "permissionMode") ?? frontmatterValue(frontmatter, "permission_mode"),
+    permissionCeiling:
+      frontmatterValue(frontmatter, "permissionCeiling") ?? frontmatterValue(frontmatter, "permission_ceiling"),
     maxTurns: Number.isFinite(maxTurns) ? Math.max(1, Math.min(12, Math.floor(maxTurns))) : undefined
   };
 }
 
+async function directoryFingerprint(root: string): Promise<string> {
+  try {
+    const info = await stat(root);
+    return `${root}:${info.mtimeMs}`;
+  } catch {
+    return `${root}:missing`;
+  }
+}
+
+interface CacheEntry {
+  fingerprint: string;
+  agents: SubagentDefinition[];
+}
+
+/** mtime-keyed per-directory cache; avoids re-reading .md files every agent step. */
+const scanCache = new Map<string, CacheEntry>();
+
 async function scanAgentRoot(root: string, scope: SubagentDefinition["scope"]) {
-  if (!existsSync(root)) return [];
+  const fingerprint = await directoryFingerprint(root);
+  const cached = scanCache.get(root);
+  if (cached && cached.fingerprint === fingerprint) return cached.agents;
+
+  if (!existsSync(root)) {
+    scanCache.set(root, { fingerprint, agents: [] });
+    return [];
+  }
   const entries = await readdir(root, { withFileTypes: true });
   const agents: SubagentDefinition[] = [];
   for (const entry of entries) {
@@ -108,6 +160,7 @@ async function scanAgentRoot(root: string, scope: SubagentDefinition["scope"]) {
     const parsed = parseSubagent(filePath, await readFile(filePath, "utf8"), scope);
     if (parsed) agents.push(parsed);
   }
+  scanCache.set(root, { fingerprint, agents });
   return agents;
 }
 
@@ -121,6 +174,11 @@ export async function listSubagents(projectPath?: string) {
   for (const agent of userAgents) agents.set(agent.name, agent);
   for (const agent of projectAgents) agents.set(agent.name, agent);
   return [...agents.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Test/settings helper: drop all cached subagent scans. */
+export function invalidateSubagentCache(): void {
+  scanCache.clear();
 }
 
 export async function getSubagent(name: string, projectPath?: string) {

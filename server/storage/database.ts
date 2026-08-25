@@ -31,6 +31,8 @@ export interface AgentUsageEventInput {
   requestId?: string;
   model?: string;
   provider?: string;
+  /** Distinguishes main-loop calls from delegated subagent runs in usage analytics. */
+  source?: "parent" | "subagent";
   rawInputTokens?: number;
   promptTokens?: number;
   completionTokens?: number;
@@ -59,6 +61,11 @@ export interface AgentUsageSummary {
     hitRate: number;
   };
   aiCalls: number;
+  bySource: Array<{
+    source: "parent" | "subagent";
+    totalTokens: number;
+    calls: number;
+  }>;
   byModel: Array<{
     model: string;
     totalTokens: number;
@@ -428,6 +435,7 @@ function migrateDatabase(db: DatabaseSync) {
   tryExec(db, "ALTER TABLE agent_usage_events ADD COLUMN cache_creation_tokens INTEGER NOT NULL DEFAULT 0");
   tryExec(db, "ALTER TABLE agent_usage_events ADD COLUMN raw_input_tokens INTEGER NOT NULL DEFAULT 0");
   tryExec(db, "ALTER TABLE agent_usage_events ADD COLUMN input_token_semantics INTEGER NOT NULL DEFAULT 0");
+  tryExec(db, "ALTER TABLE agent_usage_events ADD COLUMN source TEXT NOT NULL DEFAULT 'parent'");
   tryExec(db, "ALTER TABLE memories ADD COLUMN source TEXT NOT NULL DEFAULT 'manual'");
   tryExec(db, "ALTER TABLE memories ADD COLUMN access_count INTEGER NOT NULL DEFAULT 0");
   tryExec(db, "ALTER TABLE memories ADD COLUMN last_accessed_at TEXT");
@@ -731,9 +739,9 @@ export function recordAgentUsageEvent(event: AgentUsageEventInput) {
       id, created_at, event_type, project_path, conversation_id, request_id,
       model, provider, raw_input_tokens, prompt_tokens, completion_tokens, total_tokens,
       cached_tokens, cache_read_tokens, cache_creation_tokens, input_token_semantics,
-      session_was_existing
+      session_was_existing, source
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
     createdAt,
@@ -751,13 +759,24 @@ export function recordAgentUsageEvent(event: AgentUsageEventInput) {
     toSafeInteger(event.cacheReadTokens ?? event.cachedTokens),
     toSafeInteger(event.cacheCreationTokens),
     1,
-    typeof event.sessionWasExisting === "boolean" ? (event.sessionWasExisting ? 1 : 0) : null
+    typeof event.sessionWasExisting === "boolean" ? (event.sessionWasExisting ? 1 : 0) : null,
+    event.source === "subagent" ? "subagent" : "parent"
   );
   return id;
 }
 
 export function getAgentUsageSummary(): AgentUsageSummary {
   const db = getDatabase();
+  const bySourceRows = db.prepare(`
+    SELECT
+      COALESCE(source, 'parent') AS source,
+      COALESCE(SUM(total_tokens), 0) AS totalTokens,
+      COUNT(*) AS calls
+    FROM agent_usage_events
+    WHERE event_type = 'ai_call'
+    GROUP BY COALESCE(source, 'parent')
+  `).all() as Array<{ source: string; totalTokens: number; calls: number }>;
+
   const totals = db.prepare(`
     SELECT
       COALESCE(SUM(raw_input_tokens), 0) AS rawInputTokens,
@@ -865,6 +884,11 @@ export function getAgentUsageSummary(): AgentUsageSummary {
       hitRate: prompts.total > 0 ? prompts.sessionHits / prompts.total : 0
     },
     aiCalls: totals.aiCalls,
+    bySource: bySourceRows.map((row) => ({
+      source: row.source === "subagent" ? "subagent" as const : "parent" as const,
+      totalTokens: row.totalTokens,
+      calls: row.calls
+    })),
     byModel,
     daily: dailyRows,
     recent: recentRows.map((row) => ({

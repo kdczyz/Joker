@@ -63,6 +63,12 @@ interface AgentTomlConfig {
   secrets?: {
     allowed_env?: string[];
   };
+  subagents?: {
+    max_concurrency?: number;
+    queue_timeout_ms?: number;
+    total_timeout_ms?: number;
+    report_max_chars?: number;
+  };
   tools?: ToolConfig[];
 }
 
@@ -91,6 +97,12 @@ export interface RuntimeConfig {
   };
   secrets: {
     allowedEnv: string[];
+  };
+  subagents: {
+    maxConcurrency: number;
+    queueTimeoutMs: number;
+    totalTimeoutMs: number;
+    reportMaxChars: number;
   };
 }
 
@@ -185,7 +197,13 @@ function buildRuntimeConfig(): RuntimeConfig {
           agentConfig.computer_control?.dangerous_commands_require_approval ?? true,
         blockedCommands: agentConfig.computer_control?.command_policy?.blocked ?? []
       },
-      secrets: { allowedEnv: agentConfig.secrets?.allowed_env ?? [] }
+      secrets: { allowedEnv: agentConfig.secrets?.allowed_env ?? [] },
+      subagents: {
+        maxConcurrency: agentConfig.subagents?.max_concurrency ?? 3,
+        queueTimeoutMs: agentConfig.subagents?.queue_timeout_ms ?? 60_000,
+        totalTimeoutMs: agentConfig.subagents?.total_timeout_ms ?? 120_000,
+        reportMaxChars: agentConfig.subagents?.report_max_chars ?? 4_000
+      }
     };
   }
 
@@ -213,7 +231,13 @@ function buildRuntimeConfig(): RuntimeConfig {
         agentConfig.computer_control?.dangerous_commands_require_approval ?? true,
       blockedCommands: agentConfig.computer_control?.command_policy?.blocked ?? []
     },
-    secrets: { allowedEnv: agentConfig.secrets?.allowed_env ?? [] }
+    secrets: { allowedEnv: agentConfig.secrets?.allowed_env ?? [] },
+    subagents: {
+      maxConcurrency: agentConfig.subagents?.max_concurrency ?? 3,
+      queueTimeoutMs: agentConfig.subagents?.queue_timeout_ms ?? 60_000,
+      totalTimeoutMs: agentConfig.subagents?.total_timeout_ms ?? 120_000,
+      reportMaxChars: agentConfig.subagents?.report_max_chars ?? 4_000
+    }
   };
 }
 

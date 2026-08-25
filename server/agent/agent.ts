@@ -5,6 +5,7 @@ import { evaluatePermission } from "../security/permissionRules";
 import { executeTool } from "../runtime/tools";
 import { runHooks } from "./hooks";
 import { runAutoLearning } from "./autoLearning";
+import { withRetry, sleep, isTransientAiError } from "./retry";
 import { hasBillableProviderUsage, normalizeProviderUsage } from "../providers/providerUsage";
 import type { AgentAttachment, AgentMessage, PendingApproval, PermissionMode, StreamEvent, TaskPlan, ToolCall, ToolResult, ToolRisk } from "../shared/types";
 import {
@@ -169,6 +170,7 @@ async function* continueConversationStream(
   options: { providerId?: string; model?: string; thinkingMode?: ThinkingMode; skillNames?: string[]; projectPath?: string; requestId?: string; signal?: AbortSignal; messageInput?: string }
 ): AsyncGenerator<StreamEvent> {
   let step = 0;
+  const subagentEventSink: StreamEvent[] = [];
   let billedPromptTokens = 0;
   let billedRawInputTokens = 0;
   let billedCompletionTokens = 0;
@@ -179,7 +181,7 @@ async function* continueConversationStream(
       throw new Error(`Agent reached the ${MAX_AGENT_STEPS}-step safety limit. Refine the task or continue in a new turn.`);
     }
     if (conversation.toolCallQueue.length > 0) {
-      const queueCompleted = yield* processToolCallQueueStream(conversation, mode, options, "");
+      const queueCompleted = yield* processToolCallQueueStream(conversation, mode, options, "", subagentEventSink);
       if (!queueCompleted) return;
     }
 
@@ -192,10 +194,15 @@ async function* continueConversationStream(
     let reasoningContent = "";
     let reasoningDetails: Array<Record<string, unknown>> | undefined;
 
-    // 流式调用 AI，逐 token 输出（带 429 重试）
-    let aiRetries = 0;
-    let aiSuccess = false;
-    while (aiRetries < 3 && !aiSuccess) {
+    // 流式调用 AI，逐 token 输出（统一重试：429/terminated/fetch failed 指数退避 + jitter）
+    // 注意：必须保持流式 yield，因此不用 withRetry 包裹整个消费循环，
+    // 而是复用其判定函数与退避策略手动循环。
+    let aiAttempt = 0;
+    while (true) {
+      contentBuffer = "";
+      toolCalls = [];
+      reasoningContent = "";
+      reasoningDetails = undefined;
       try {
         for await (const event of callAiStream(conversation.messages, { ...options, mode, sessionId: conversation.id })) {
           if (event.type === "text_delta") {
@@ -264,19 +271,16 @@ async function* continueConversationStream(
             }
           }
         }
-        aiSuccess = true;
+        break;
       } catch (error) {
         const msg = error instanceof Error ? error.message : String(error);
-        if (msg.includes("429") && aiRetries < 2) {
-          aiRetries++;
-          const wait = 2000 * aiRetries;
-          console.log(`[Agent] 429 rate limited, retry ${aiRetries}/3 after ${wait}ms`);
-          yield { type: "text_delta", content: `\n\n⏳ 速率受限，等待 ${wait / 1000} 秒后重试...\n\n` };
-          await new Promise((r) => setTimeout(r, wait));
-          contentBuffer = "";
-          toolCalls = [];
-          reasoningContent = "";
-          reasoningDetails = undefined;
+        if (error instanceof Error && error.name === "AbortError") throw error;
+        if (aiAttempt < 3 && isTransientAiError(msg)) {
+          aiAttempt += 1;
+          const wait = 1500 * Math.pow(2, aiAttempt - 1) + Math.random() * 600;
+          console.log(`[Agent] transient AI failure (attempt ${aiAttempt}/3), retrying in ${Math.round(wait)}ms: ${msg.slice(0, 120)}`);
+          yield { type: "text_delta", content: `\n\n⏳ 上游暂时不可用（${msg.slice(0, 60)}），${Math.round(wait / 1000)} 秒后自动重试（第 ${aiAttempt} 次）...\n\n` };
+          await sleep(wait, options.signal);
           continue;
         }
         throw error;
@@ -324,7 +328,7 @@ async function* continueConversationStream(
     }
 
     conversation.toolCallQueue = [...toolCalls];
-    const queueCompleted = yield* processToolCallQueueStream(conversation, mode, options, contentBuffer);
+    const queueCompleted = yield* processToolCallQueueStream(conversation, mode, options, contentBuffer, subagentEventSink);
     if (!queueCompleted) return;
   }
 }
@@ -333,7 +337,8 @@ async function* processToolCallQueueStream(
   conversation: Conversation,
   mode: PermissionMode,
   options: { providerId?: string; model?: string; thinkingMode?: ThinkingMode; projectPath?: string; signal?: AbortSignal },
-  contentBuffer: string
+  contentBuffer: string,
+  subagentEventSink?: StreamEvent[]
 ): AsyncGenerator<StreamEvent, boolean> {
   while (conversation.toolCallQueue.length > 0) {
     if (options.signal?.aborted) {
@@ -434,14 +439,19 @@ async function* processToolCallQueueStream(
     }
 
     conversation.toolCallQueue.shift();
+    const subagentEventSink: StreamEvent[] = [];
     const result = await executeTool(toolCall, options.projectPath, {
       conversationId: conversation.id,
       providerId: options.providerId,
       permissionMode: mode,
       permissionEffect: approvalDecision.effect,
       permissionReason: approvalDecision.reason,
-      signal: options.signal
+      signal: options.signal,
+      subagentEventSink
     });
+    for (const event of subagentEventSink.splice(0)) {
+      if (event.type === "subagent_update") yield event;
+    }
     await runHooks("PostToolUse", {
       projectPath: options.projectPath,
       conversationId: conversation.id,
