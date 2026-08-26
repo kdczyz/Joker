@@ -2,7 +2,7 @@
 
 <img src="docs/assets/logo.png" alt="Joker" width="160" align="center" />
 
-# ⌁ Joker
+# Joker
 
 ### Local-first, Permission-Controlled AI Coding Agent
 
