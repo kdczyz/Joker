@@ -65,7 +65,7 @@ function makeClawChannel(patch: Partial<ClawImChannelV1> = {}): ClawImChannelV1 
     provider: 'feishu',
     label: 'Feishu Agent',
     enabled: true,
-    model: 'deepseek-v4-flash',
+    model: 'big-pickle',
     threadId: '',
     workspaceRoot: clawWorkspaceRoot,
     agentProfile: {
@@ -263,9 +263,9 @@ describe('ScheduleRuntime', () => {
     expect(store.read().schedule.tasks[0]).toMatchObject({
       title: 'Ship review reminder',
       workspaceRoot: reminderWorkspaceRoot,
-      providerId: 'deepseek',
-      model: 'deepseek-v4-flash',
-      reasoningEffort: 'max',
+      providerId: 'opencode-zen',
+      model: 'big-pickle',
+      reasoningEffort: 'medium',
       mode: 'plan',
       schedule: { kind: 'at', atTime: future }
     })
@@ -304,11 +304,11 @@ describe('ScheduleRuntime', () => {
     expect(JSON.parse(String(createRequest))).toMatchObject({
       title: '[Scheduled task] Task',
       workspace: testWorkspaceRoot,
-      model: 'deepseek-v4-flash',
+      model: 'big-pickle',
       mode: 'agent'
     })
     expect(JSON.parse(String(turnRequest))).toMatchObject({
-      model: 'deepseek-v4-flash',
+      model: 'big-pickle',
       reasoningEffort: 'max',
       // Headless turn: a user_input request would hang until timeout.
       disableUserInput: true
@@ -358,7 +358,7 @@ describe('ScheduleRuntime', () => {
     )?.[2]?.body
     expect(JSON.parse(String(createRequest))).toMatchObject({
       workspace: clawWorkspaceRoot,
-      model: 'deepseek-v4-flash'
+      model: 'big-pickle'
     })
     const turnBody = JSON.parse(String(turnRequest))
     expect(turnBody.prompt).toContain('[Claw managed instructions]')
