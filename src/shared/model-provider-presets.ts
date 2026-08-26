@@ -407,7 +407,7 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
   },
   {
     id: 'opencode-zen',
-    name: 'Rcode -Free',
+    name: 'Rcode-free',
     category: 'api',
     baseUrl: 'https://opencode.ai/zen/v1',
     endpointFormat: 'chat_completions',

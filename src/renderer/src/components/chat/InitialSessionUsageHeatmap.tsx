@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import {
@@ -273,6 +273,22 @@ function HeatmapGrid({
 }): ReactElement {
   const { t, i18n } = useTranslation('common')
   const [usageMode, setUsageMode] = useState<UsageMode>('daily')
+  const [hovered, setHovered] = useState<{ bucket: DailyUsageBucket; left: number; top: number } | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+
+  // Show an instant custom tooltip (no native `title` delay) above the hovered
+  // cell. Uses the cell's bounding rect so it tracks whichever cell is active.
+  const showTooltip = (bucket: DailyUsageBucket, target: HTMLElement) => {
+    onSelect(bucket)
+    const cellRect = target.getBoundingClientRect()
+    const containerRect = containerRef.current?.getBoundingClientRect()
+    if (!containerRect) return
+    setHovered({
+      bucket,
+      left: cellRect.left - containerRect.left + cellRect.width / 2,
+      top: cellRect.top - containerRect.top
+    })
+  }
 
   // Decide once whether to drive intensity from tokens or turns (driven by the
   // raw daily data, so it stays consistent across all aggregation modes).
@@ -345,7 +361,7 @@ function HeatmapGrid({
   }, [columns, i18n.language, loading, columnCount])
 
   return (
-    <div className="w-full min-w-0">
+    <div ref={containerRef} className="relative w-full min-w-0">
       <div className="max-w-full pb-1">
         {/* Daily / Weekly / Cumulative toggle */}
         <div className="mb-2 flex items-center justify-end gap-0.5 text-[11px]">
@@ -369,7 +385,7 @@ function HeatmapGrid({
           })}
         </div>
 
-        <div>
+        <div onMouseLeave={() => setHovered(null)}>
           <div
             className="grid w-full gap-1"
             style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
@@ -417,10 +433,10 @@ function HeatmapGrid({
                         <button
                           key={bucket.date}
                           type="button"
-                          title={dailySummary(bucket, t, i18n.language)}
                           aria-label={dailySummary(bucket, t, i18n.language)}
-                          onMouseEnter={() => onSelect(bucket)}
-                          onFocus={() => onSelect(bucket)}
+                          onMouseEnter={(event) => showTooltip(bucket, event.currentTarget)}
+                          onFocus={(event) => showTooltip(bucket, event.currentTarget)}
+                          onBlur={() => setHovered(null)}
                           onClick={() => onSelect(bucket)}
                           className={`aspect-square w-full rounded-[2px] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ds-bg ${
                             isEmpty ? 'border-ds-border-muted bg-ds-subtle' : 'border'
@@ -432,6 +448,17 @@ function HeatmapGrid({
                   </span>
                 ))}
           </div>
+
+          {/* Instant custom tooltip — no native `title` delay */}
+          {hovered && (
+            <div
+              role="tooltip"
+              className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-ds-border bg-ds-popover px-2.5 py-1.5 text-[12px] leading-4 text-ds-ink shadow-lg"
+              style={{ left: hovered.left, top: hovered.top - 8 }}
+            >
+              {dailySummary(hovered.bucket, t, i18n.language)}
+            </div>
+          )}
         </div>
 
         {/* Month labels at the bottom, aligned with the column grid */}

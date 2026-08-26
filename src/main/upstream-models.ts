@@ -210,7 +210,7 @@ async function readConfiguredModelGroups(settings: AppSettingsV1): Promise<Model
         }
         groups.push({
           providerId: zenProfile.id,
-          label: `${zenProfile.name} (内置免费)`,
+          label: zenProfile.name,
           modelIds,
           modelProfiles
         })
