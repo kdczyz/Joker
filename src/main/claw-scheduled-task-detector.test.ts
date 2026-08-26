@@ -5,6 +5,7 @@ import {
   defaultKeyboardShortcuts,
   defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
+  DEFAULT_MODEL_PROVIDER_ID,
   defaultScheduleSettings,
   defaultWorkflowSettings,
   defaultWriteSettings,
@@ -20,6 +21,7 @@ function settings(endpointFormat: ModelEndpointFormat): AppSettingsV1 {
   provider.baseUrl = 'https://model.example/v1'
   provider.providers[0] = {
     ...provider.providers[0],
+    id: DEFAULT_MODEL_PROVIDER_ID,
     apiKey: 'sk-test',
     baseUrl: 'https://model.example/v1',
     endpointFormat
@@ -32,7 +34,10 @@ function settings(endpointFormat: ModelEndpointFormat): AppSettingsV1 {
     chatContentMaxWidthPx: 896,
     provider,
     agents: {
-      Joker: defaultJokerRuntimeSettings()
+      Joker: {
+        ...defaultJokerRuntimeSettings(),
+        providerId: DEFAULT_MODEL_PROVIDER_ID
+      }
     },
     workspaceRoot: '/tmp/workspace',
     conversationWorkspaceRoot: '~/Documents/Joker',
