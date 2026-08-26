@@ -349,7 +349,7 @@ export function SidebarTreeRow({
   const rail = activeVariant === 'rail'
   const actionsClass =
     actionsVisibility === 'hidden'
-      ? 'pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100'
+      ? 'invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100'
       : actionsVisibility === 'visible'
         ? 'opacity-100'
         : 'opacity-60 group-hover:opacity-100 focus-within:opacity-100'

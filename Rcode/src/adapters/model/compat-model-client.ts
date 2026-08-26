@@ -559,19 +559,10 @@ export class CompatModelClient implements ModelClient {
         this.config.baseUrl,
         this.modelReasoningFor(model)
       ),
-      supportsImages: this.modelSupportsImageInput(model)
+      // 所有模型均以真实图片部分发送；不支持识图的模型由提供商报错并
+      // 在上层映射为「模型不支持识图」的提示。
+      supportsImages: true
     })
-  }
-
-  /**
-   * Whether the resolved model accepts image input. Tool-result images are
-   * only forwarded as real image parts to vision models; text-only models
-   * get a text summary instead. Defaults to true when no capability
-   * resolver is configured (the runtime always sets one).
-   */
-  private modelSupportsImageInput(model: string): boolean {
-    if (!this.config.modelCapabilities) return true
-    return this.capabilitiesForModel(model).supportsVision
   }
 
   private async *streamSse(

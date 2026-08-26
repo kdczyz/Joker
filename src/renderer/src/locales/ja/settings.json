@@ -1534,5 +1534,7 @@
   "dataMigrationConfirmCancel_stop": "宛先データを変更する前にこの移行をキャンセルしますか?",
   "dataMigrationConfirmCancel_cleanup": "この移行をキャンセルして、ステージングされた一時データを削除しますか?",
   "dataMigrationConfirmCancel_rollback": "現在のアトミック アクションの後でキャンセルし、すでに適用されている変更をロールバックしますか?ロールバックが完了するまで、Rcode を開いたままにしておきます。",
-  "dataMigrationReportLocation": "現地レポート"
+  "dataMigrationReportLocation": "現地レポート",
+  "tokenRecordTitle": "トークン記録",
+  "tokenRecordDescription": "ローカルセッションから集計した日次のトークン使用量、キャッシュヒット、コンテキスト節約の概要。"
 }

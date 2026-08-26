@@ -13,7 +13,17 @@ import {
 } from '../src/contracts/capabilities.js'
 import { modelCapabilitiesForModel } from '../src/loop/model-context-profile.js'
 import { DeterministicWebProvider } from '../src/ports/web-provider.js'
+import { BING_ENGINE } from '../src/adapters/tool/web-search-engines/bing.js'
 import type { ToolHostContext } from '../src/ports/tool-host.js'
+
+const BING_SEARCH_FIXTURE = `
+<ol id="b_results">
+<li class="b_algo"><h2><a href="https://one.example.test/a">One Result</a></h2>
+<p class="b_lineclamp4">First snippet text.</p></li>
+<li class="b_algo"><h2><a href="https://two.example.test/b">Second Result</a></h2>
+<p class="b_lineclamp4">Second snippet text.</p></li>
+</ol>
+`
 
 function buildContext(): ToolHostContext {
   return {
@@ -534,20 +544,70 @@ describe('Web tool provider', () => {
     })
   })
 
-  it('returns unavailable-provider errors for search without a search provider', async () => {
+  it('runs keyless search through the built-in engine chain over the shared transport', async () => {
     const config = RcodeCapabilitiesConfig.parse({
       web: {
         enabled: true,
+        fetchEnabled: true,
         searchEnabled: true,
-        provider: 'missing'
+        provider: 'bing'
       }
     })
+    const requestedUrls: string[] = []
     const host = new LocalToolHost({
-      registry: new CapabilityRegistry(buildWebToolProviders(config.web).providers)
+      registry: new CapabilityRegistry(buildWebToolProviders(config.web, {
+        transport: {
+          request: async (request) => {
+            requestedUrls.push(request.url.href)
+            return responseForTest({ body: BING_SEARCH_FIXTURE, contentType: 'text/html' })
+          },
+          resolveHost: async () => [{ address: '93.184.216.34', family: 4 }]
+        }
+      }).providers)
     })
 
     const result = await host.execute({
-      callId: 'call_1',
+      callId: 'call_keyless',
+      toolName: 'web_search',
+      arguments: { query: 'Rcode web' }
+    }, buildContext())
+
+    expect(requestedUrls).toEqual([BING_ENGINE.requestUrl('Rcode web')])
+    expect(result.item).toMatchObject({ kind: 'tool_result', isError: false })
+    if (result.item.kind === 'tool_result') {
+      expect(result.item.output).toMatchObject({
+        provider: 'keyless',
+        results: [
+          { url: 'https://one.example.test/a', title: 'One Result', rank: 1 },
+          { url: 'https://two.example.test/b', title: 'Second Result', rank: 2 }
+        ],
+        telemetry: {
+          provider: 'keyless',
+          engine: 'bing',
+          cacheStatus: 'miss'
+        }
+      })
+    }
+  })
+
+  it('surfaces a deterministic failure when every keyless engine is unreachable', async () => {
+    const config = RcodeCapabilitiesConfig.parse({
+      web: {
+        enabled: true,
+        searchEnabled: true
+      }
+    })
+    const host = new LocalToolHost({
+      registry: new CapabilityRegistry(buildWebToolProviders(config.web, {
+        transport: {
+          request: async () => responseForTest({ status: 500 }),
+          resolveHost: async () => [{ address: '93.184.216.34', family: 4 }]
+        }
+      }).providers)
+    })
+
+    const result = await host.execute({
+      callId: 'call_all_fail',
       toolName: 'web_search',
       arguments: { query: 'Rcode web' }
     }, buildContext())
@@ -555,10 +615,7 @@ describe('Web tool provider', () => {
     expect(result.item).toMatchObject({ kind: 'tool_result', isError: true })
     if (result.item.kind === 'tool_result') {
       expect(result.item.output).toMatchObject({
-        error: {
-          code: 'provider_unavailable',
-          message: 'web search provider is unavailable'
-        }
+        error: { code: 'search_failed' }
       })
     }
   })

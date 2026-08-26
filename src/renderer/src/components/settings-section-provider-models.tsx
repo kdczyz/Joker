@@ -18,7 +18,6 @@ import {
 } from 'lucide-react'
 import {
   MODEL_ENDPOINT_FORMATS,
-  inferModelSupportsVision,
   type ModelEndpointFormat,
   type ModelProviderProfileV1,
   type ModelReasoningEffort,
@@ -662,12 +661,7 @@ export function ProviderModelsManager({
               spellCheck={false}
               autoFocus
               onChange={(e) => {
-                const modelId = e.target.value
-                const shouldAutoVision = editor.mode === 'add' && editor.form.kind === 'chat'
-                updateForm({
-                  modelId,
-                  ...(shouldAutoVision ? { visionInput: inferModelSupportsVision(modelId, provider.id) } : {})
-                })
+                updateForm({ modelId: e.target.value })
               }}
             />
             <span className="text-[12px] font-normal leading-5 text-ds-faint">{t('providerModelIdHint')}</span>
@@ -734,12 +728,6 @@ export function ProviderModelsManager({
                 </span>
               </label>
               <div className="grid gap-2 md:grid-cols-2">
-                <ToggleField
-                  label={t('providerModelVisionLabel')}
-                  description={t('providerModelVisionDesc')}
-                  checked={editor.form.visionInput}
-                  onChange={(value) => updateForm({ visionInput: value })}
-                />
                 <ToggleField
                   label={t('providerModelToolsLabel')}
                   description={t('providerModelToolsDesc')}

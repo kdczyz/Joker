@@ -1,7 +1,8 @@
 import type { ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
-import { LogOut, ShieldCheck, User } from 'lucide-react'
+import { BarChart3, LogOut, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../auth/AuthGate'
+import { InitialSessionUsageHeatmap } from './chat/InitialSessionUsageHeatmap'
 
 export function ProfileSettingsSection(): ReactElement {
   const { t } = useTranslation('settings')
@@ -55,6 +56,21 @@ export function ProfileSettingsSection(): ReactElement {
           </div>
         </div>
       )}
+
+      <div className="rounded-2xl border border-ds-border bg-ds-card p-5">
+        <div className="mb-4 flex items-start gap-3">
+          <BarChart3 className="mt-0.5 h-5 w-5 shrink-0 text-ds-muted" strokeWidth={1.75} />
+          <div>
+            <div className="text-[14px] font-medium text-ds-ink">{t('tokenRecordTitle')}</div>
+            <p className="mt-1 text-[13px] leading-relaxed text-ds-muted">
+              {t('tokenRecordDescription')}
+            </p>
+          </div>
+        </div>
+        <div className="-mx-2">
+          <InitialSessionUsageHeatmap />
+        </div>
+      </div>
 
       <div className="rounded-2xl border border-ds-border bg-ds-card p-5">
         <button

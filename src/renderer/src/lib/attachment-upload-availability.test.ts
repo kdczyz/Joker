@@ -7,15 +7,13 @@ describe('isChatAttachmentUploadEnabled', () => {
       runtimeConnection: 'ready',
       route: 'chat',
       mode: 'agent',
-      attachmentStoreAvailable: true,
-      modelSupportsImageInput: true
+      attachmentStoreAvailable: true
     })).toBe(true)
     expect(isChatAttachmentUploadEnabled({
       runtimeConnection: 'ready',
       route: 'chat',
       mode: 'plan',
-      attachmentStoreAvailable: true,
-      modelSupportsImageInput: true
+      attachmentStoreAvailable: true
     })).toBe(true)
   })
 
@@ -24,8 +22,7 @@ describe('isChatAttachmentUploadEnabled', () => {
       runtimeConnection: 'ready',
       route: 'write',
       mode: 'agent',
-      attachmentStoreAvailable: true,
-      modelSupportsImageInput: true
+      attachmentStoreAvailable: true
     })).toBe(true)
   })
 
@@ -34,33 +31,30 @@ describe('isChatAttachmentUploadEnabled', () => {
       runtimeConnection: 'connecting',
       route: 'chat',
       mode: 'agent',
-      attachmentStoreAvailable: true,
-      modelSupportsImageInput: true
+      attachmentStoreAvailable: true
     })).toBe(false)
     expect(isChatAttachmentUploadEnabled({
       runtimeConnection: 'ready',
       route: 'settings',
       mode: 'agent',
-      attachmentStoreAvailable: true,
-      modelSupportsImageInput: true
+      attachmentStoreAvailable: true
     })).toBe(false)
   })
 
-  it('enables composer attachments for both text models and vision models', () => {
+  it('enables composer attachments regardless of model image capability', () => {
+    // 所有模型均可上传图片，上传可用性不再依赖模型视觉能力。
     expect(isChatAttachmentUploadEnabled({
       runtimeConnection: 'ready',
       route: 'chat',
       mode: 'agent',
-      attachmentStoreAvailable: true,
-      modelSupportsImageInput: true
+      attachmentStoreAvailable: true
     })).toBe(true)
     expect(isChatAttachmentUploadEnabled({
       runtimeConnection: 'ready',
       route: 'chat',
       mode: 'agent',
-      attachmentStoreAvailable: true,
-      modelSupportsImageInput: false
-    })).toBe(true)
+      attachmentStoreAvailable: false
+    })).toBe(false)
   })
 
   it('enables composer attachments in Design mode assistants', () => {
@@ -68,8 +62,7 @@ describe('isChatAttachmentUploadEnabled', () => {
       runtimeConnection: 'ready',
       route: 'design',
       mode: 'agent',
-      attachmentStoreAvailable: true,
-      modelSupportsImageInput: true
+      attachmentStoreAvailable: true
     })).toBe(true)
   })
 })

@@ -18,13 +18,14 @@ import {
 } from '../../hooks/use-model-usage'
 
 type CalendarCell = DailyUsageBucket | null
-type CalendarWeek = {
+type CalendarColumn = {
   key: string
   cells: CalendarCell[]
 }
 type UsageTotalsBucket = DailyUsageBucket & { days: number; activeDays: number }
 type UsageRangeKey = 'all' | '90d' | '30d' | '7d'
 type UsageTabKey = 'overview' | 'models'
+type UsageMode = 'daily' | 'weekly' | 'cumulative'
 
 const USAGE_HEATMAP_GRID_DAYS = 26 * 7
 const USAGE_RANGE_DAYS: Record<UsageRangeKey, number> = {
@@ -34,6 +35,7 @@ const USAGE_RANGE_DAYS: Record<UsageRangeKey, number> = {
   '7d': 7
 }
 const USAGE_RANGE_KEYS: UsageRangeKey[] = ['all', '90d', '30d', '7d']
+const USAGE_MODE_KEYS: UsageMode[] = ['daily', 'weekly', 'cumulative']
 const MODEL_USAGE_COLORS = ['#4f83df', '#6b99e5', '#8db3ed', '#b8cff6']
 const MODEL_USAGE_BREAKDOWN_COLORS = {
   cachedInput: '#9bd8ff',
@@ -42,33 +44,116 @@ const MODEL_USAGE_BREAKDOWN_COLORS = {
 } as const
 const EMPTY_DAILY_USAGE_BUCKETS: DailyUsageBucket[] = []
 
-export const USAGE_HEATMAP_INTENSITY_CLASSES = [
-  'border-ds-border-muted bg-ds-subtle',
-  'border-emerald-400 bg-emerald-500 dark:border-emerald-400/35 dark:bg-emerald-700',
-  'border-teal-400 bg-teal-500 dark:border-teal-300/40 dark:bg-teal-600',
-  'border-cyan-600 bg-cyan-600 dark:border-cyan-300/50 dark:bg-cyan-400',
-  'border-blue-700 bg-blue-700 dark:border-blue-300/60 dark:bg-blue-400'
-]
+function lerpChannel(start: number, end: number, t: number): number {
+  return Math.round(start + (end - start) * t)
+}
+
+function lerpColor(hexA: string, hexB: string, t: number): string {
+  const a = hexA.replace('#', '')
+  const b = hexB.replace('#', '')
+  const ar = Number.parseInt(a.slice(0, 2), 16)
+  const ag = Number.parseInt(a.slice(2, 4), 16)
+  const ab = Number.parseInt(a.slice(4, 6), 16)
+  const br = Number.parseInt(b.slice(0, 2), 16)
+  const bg = Number.parseInt(b.slice(2, 4), 16)
+  const bb = Number.parseInt(b.slice(4, 6), 16)
+  const r = lerpChannel(ar, br, t)
+  const g = lerpChannel(ag, bg, t)
+  const bl = lerpChannel(ab, bb, t)
+  return `#${[r, g, bl].map((channel) => channel.toString(16).padStart(2, '0')).join('')}`
+}
+
+// Continuous blue gradient from blue-300 (lightest, level 1) to blue-700
+// (darkest, level N). The same stops drive both light and dark themes so the
+// color scale always progresses from light to dark as token usage increases.
+const USAGE_HEATMAP_BLUE_START = '#93c5fd' // blue-300
+const USAGE_HEATMAP_BLUE_END = '#1d4ed8' // blue-700
+const USAGE_HEATMAP_LEVELS = 8
+
+export const USAGE_HEATMAP_BLUE_STOPS: string[] = Array.from(
+  { length: USAGE_HEATMAP_LEVELS },
+  (_, index) => lerpColor(USAGE_HEATMAP_BLUE_START, USAGE_HEATMAP_BLUE_END, index / (USAGE_HEATMAP_LEVELS - 1))
+)
 
 export const USAGE_HEATMAP_CONTRAST_COLORS = [
   { level: 0, light: '#f5f7fb', dark: '#2a2a2a' },
-  { level: 1, light: '#10b981', dark: '#047857' },
-  { level: 2, light: '#14b8a6', dark: '#0d9488' },
-  { level: 3, light: '#0891b2', dark: '#22d3ee' },
-  { level: 4, light: '#1d4ed8', dark: '#60a5fa' }
-] as const
+  ...USAGE_HEATMAP_BLUE_STOPS.map((color, index) => ({
+    level: index + 1,
+    light: color,
+    dark: color
+  }))
+]
 
-function calendarWeeks(buckets: CalendarCell[]): CalendarWeek[] {
-  const weeks: CalendarWeek[] = []
-  for (let index = 0; index < buckets.length; index += 7) {
-    const weekCells = buckets.slice(index, index + 7)
-    while (weekCells.length < 7) weekCells.push(null)
-    weeks.push({
-      key: weekCells.find((cell) => cell)?.date ?? `week-${index / 7}`,
-      cells: weekCells
+function calendarColumns(buckets: CalendarCell[], cellsPerColumn: number): CalendarColumn[] {
+  const columns: CalendarColumn[] = []
+  for (let index = 0; index < buckets.length; index += cellsPerColumn) {
+    const colCells = buckets.slice(index, index + cellsPerColumn)
+    while (colCells.length < cellsPerColumn) colCells.push(null)
+    columns.push({
+      key: colCells.find((cell) => cell)?.date ?? `col-${index / cellsPerColumn}`,
+      cells: colCells
     })
   }
-  return weeks
+  return columns
+}
+
+// Roll daily buckets up into one bucket per week. Used for the "weekly" mode.
+function aggregateWeeklyBuckets(buckets: DailyUsageBucket[]): DailyUsageBucket[] {
+  const weekly: DailyUsageBucket[] = []
+  for (let index = 0; index < buckets.length; index += 7) {
+    const weekDays = buckets.slice(index, index + 7)
+    const firstDay = weekDays[0]
+    let costCnyTotal: number | null = null
+    let hasCny = false
+    let costCnySum = 0
+    const inputTokens = weekDays.reduce((sum, b) => sum + b.inputTokens, 0)
+    const outputTokens = weekDays.reduce((sum, b) => sum + b.outputTokens, 0)
+    const cachedTokens = weekDays.reduce((sum, b) => sum + b.cachedTokens, 0)
+    const cacheMissTokens = weekDays.reduce((sum, b) => sum + b.cacheMissTokens, 0)
+    const totalTokens = weekDays.reduce((sum, b) => sum + b.totalTokens, 0)
+    const reasoningTokens = weekDays.reduce((sum, b) => sum + b.reasoningTokens, 0)
+    const costUsd = weekDays.reduce((sum, b) => sum + b.costUsd, 0)
+    const tokenEconomySavingsTokens = weekDays.reduce(
+      (sum, b) => sum + b.tokenEconomySavingsTokens,
+      0
+    )
+    const turns = weekDays.reduce((sum, b) => sum + b.turns, 0)
+    const threadCount = weekDays.reduce((sum, b) => sum + b.threadCount, 0)
+    for (const day of weekDays) {
+      if (day.costCny != null) {
+        hasCny = true
+        costCnySum += day.costCny
+      }
+    }
+    if (hasCny) costCnyTotal = costCnySum
+    weekly.push({
+      date: firstDay?.date ?? `week-${index / 7}`,
+      inputTokens,
+      outputTokens,
+      reasoningTokens,
+      cachedTokens,
+      cacheMissTokens,
+      totalTokens,
+      costUsd,
+      costCny: costCnyTotal,
+      tokenEconomySavingsTokens,
+      turns,
+      threadCount,
+      cacheHitRate: null
+    })
+  }
+  return weekly
+}
+
+// Return the cumulative running total per day. Used for the "cumulative" mode.
+function aggregateCumulativeBuckets(buckets: DailyUsageBucket[]): DailyUsageBucket[] {
+  let runningTokens = 0
+  let runningTurns = 0
+  return buckets.map((bucket) => {
+    runningTokens += bucket.totalTokens
+    runningTurns += bucket.turns
+    return { ...bucket, totalTokens: runningTokens, turns: runningTurns }
+  })
 }
 
 export function usageHeatmapIntensityLevel(
@@ -76,10 +161,16 @@ export function usageHeatmapIntensityLevel(
   maxTokens: number,
   maxTurns: number
 ): number {
-  const metric = maxTokens > 0 ? bucket.totalTokens : bucket.turns
-  const max = maxTokens > 0 ? maxTokens : maxTurns
-  if (metric <= 0 || max <= 0) return 0
-  return Math.max(1, Math.min(4, Math.ceil((metric / max) * 4)))
+  return intensityLevelFromValue(
+    maxTokens > 0 ? bucket.totalTokens : bucket.turns,
+    maxTokens > 0 ? maxTokens : maxTurns,
+    USAGE_HEATMAP_BLUE_STOPS.length
+  )
+}
+
+function intensityLevelFromValue(value: number, max: number, levels: number): number {
+  if (value <= 0 || max <= 0) return 0
+  return Math.max(1, Math.min(levels, Math.ceil((value / max) * levels)))
 }
 
 function usageHasBucketActivity(bucket: Pick<DailyUsageBucket, 'totalTokens' | 'turns'>): boolean {
@@ -174,68 +265,185 @@ function dailySummary(
 function HeatmapGrid({
   buckets,
   loading,
-  selected,
   onSelect
 }: {
   buckets: DailyUsageBucket[]
   loading: boolean
-  selected: DailyUsageBucket | null
   onSelect: (bucket: DailyUsageBucket) => void
 }): ReactElement {
   const { t, i18n } = useTranslation('common')
-  const weeks = useMemo(() => calendarWeeks(buckets), [buckets])
-  const maxTokens = useMemo(() => Math.max(0, ...buckets.map((bucket) => bucket.totalTokens)), [buckets])
-  const maxTurns = useMemo(() => Math.max(0, ...buckets.map((bucket) => bucket.turns)), [buckets])
-  const skeletonWeeks = Array.from({ length: Math.ceil(USAGE_HEATMAP_GRID_DAYS / 7) }, (_, week) =>
-    Array.from({ length: 7 }, (_, day) => week * 7 + day)
+  const [usageMode, setUsageMode] = useState<UsageMode>('daily')
+
+  // Decide once whether to drive intensity from tokens or turns (driven by the
+  // raw daily data, so it stays consistent across all aggregation modes).
+  const maxDailyTokens = useMemo(() => Math.max(0, ...buckets.map((b) => b.totalTokens)), [buckets])
+  const maxDailyTurns = useMemo(() => Math.max(0, ...buckets.map((b) => b.turns)), [buckets])
+  const useTokens = maxDailyTokens > 0
+
+  // Aggregate buckets and compute the per-cell intensity metric for the
+  // current mode. The intensity metric is decoupled from the bucket fields so
+  // tooltips can still show daily values in cumulative mode.
+  const { displayBuckets, intensityValues, cellsPerColumn } = useMemo(() => {
+    if (usageMode === 'weekly') {
+      const weekly = aggregateWeeklyBuckets(buckets)
+      const values = weekly.map((b) => (useTokens ? b.totalTokens : b.turns))
+      return { displayBuckets: weekly, intensityValues: values, cellsPerColumn: 1 }
+    }
+    if (usageMode === 'cumulative') {
+      const values = buckets.map((b, index) => {
+        let runningTokens = 0
+        let runningTurns = 0
+        for (let i = 0; i <= index; i += 1) {
+          runningTokens += buckets[i].totalTokens
+          runningTurns += buckets[i].turns
+        }
+        return useTokens ? runningTokens : runningTurns
+      })
+      return { displayBuckets: buckets, intensityValues: values, cellsPerColumn: 7 }
+    }
+    return {
+      displayBuckets: buckets,
+      intensityValues: buckets.map((b) => (useTokens ? b.totalTokens : b.turns)),
+      cellsPerColumn: 7
+    }
+  }, [buckets, usageMode, useTokens])
+
+  const maxIntensity = useMemo(
+    () => Math.max(0, ...intensityValues),
+    [intensityValues]
   )
-  const weekCount = loading ? skeletonWeeks.length : Math.max(weeks.length, 1)
+
+  const columns = useMemo(
+    () => calendarColumns(displayBuckets, cellsPerColumn),
+    [displayBuckets, cellsPerColumn]
+  )
+  const skeletonColumns = Array.from(
+    { length: Math.ceil(USAGE_HEATMAP_GRID_DAYS / cellsPerColumn) },
+    (_, col) => Array.from({ length: cellsPerColumn }, (_, cell) => col * cellsPerColumn + cell)
+  )
+  const columnCount = loading
+    ? skeletonColumns.length
+    : Math.max(columns.length, 1)
+
+  // Month labels: emit a short month name on the first column whose top cell
+  // belongs to a new month, otherwise leave the slot blank.
+  const monthLabels = useMemo(() => {
+    if (loading) return Array.from({ length: columnCount }, () => '')
+    const labels: string[] = []
+    let prevMonth: number | null = null
+    for (const col of columns) {
+      const top = col.cells[0]
+      const month = top?.date ? new Date(`${top.date}T00:00:00.000Z`).getUTCMonth() + 1 : null
+      if (month && month !== prevMonth) {
+        labels.push(formatMonthShort(month, i18n.language))
+        prevMonth = month
+      } else {
+        labels.push('')
+      }
+    }
+    return labels
+  }, [columns, i18n.language, loading, columnCount])
 
   return (
     <div className="w-full min-w-0">
       <div className="max-w-full pb-1">
-        <div
-          className="grid w-full gap-1"
-          style={{ gridTemplateColumns: `repeat(${weekCount}, minmax(0, 1fr))` }}
-          aria-label={t('usageHeatmapGridLabel')}
-        >
-          {loading
-            ? skeletonWeeks.map((week) => (
-                <span key={week[0]} className="grid grid-rows-7 gap-1">
-                  {week.map((cell) => (
-                    <span
-                      key={cell}
-                      className="aspect-square w-full animate-pulse rounded-[3px] border border-ds-border-muted bg-ds-subtle"
-                    />
-                  ))}
-                </span>
-              ))
-            : weeks.map((week) => (
-                <span key={week.key} className="grid grid-rows-7 gap-1">
-                  {week.cells.map((bucket, index) =>
-                    bucket ? (
-                      <button
-                        key={bucket.date}
-                        type="button"
-                        title={dailySummary(bucket, t, i18n.language)}
-                        aria-label={dailySummary(bucket, t, i18n.language)}
-                        onMouseEnter={() => onSelect(bucket)}
-                        onFocus={() => onSelect(bucket)}
-                        onClick={() => onSelect(bucket)}
-                        className={`aspect-square w-full rounded-[3px] border transition focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-ds-bg ${USAGE_HEATMAP_INTENSITY_CLASSES[usageHeatmapIntensityLevel(bucket, maxTokens, maxTurns)]} ${
-                          selected?.date === bucket.date ? 'ring-2 ring-accent ring-offset-2 ring-offset-ds-bg' : ''
-                        }`}
-                      />
-                    ) : (
+        {/* Daily / Weekly / Cumulative toggle */}
+        <div className="mb-2 flex items-center justify-end gap-0.5 text-[11px]">
+          {USAGE_MODE_KEYS.map((mode) => {
+            const active = usageMode === mode
+            return (
+              <button
+                key={mode}
+                type="button"
+                onClick={() => setUsageMode(mode)}
+                className={`rounded px-2 py-0.5 transition ${
+                  active
+                    ? 'bg-ds-accent-soft font-medium text-ds-accent'
+                    : 'text-ds-muted hover:bg-ds-subtle hover:text-ds-ink'
+                }`}
+                aria-pressed={active}
+              >
+                {t(`usageHeatmapMode${mode.charAt(0).toUpperCase()}${mode.slice(1)}`)}
+              </button>
+            )
+          })}
+        </div>
+
+        <div>
+          <div
+            className="grid w-full gap-1"
+            style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
+            aria-label={t('usageHeatmapGridLabel')}
+          >
+            {loading
+              ? skeletonColumns.map((col) => (
+                  <span
+                    key={col[0]}
+                    className={`grid gap-1 ${cellsPerColumn === 1 ? '' : 'grid-rows-7'}`}
+                  >
+                    {col.map((cell) => (
                       <span
-                        key={`blank-${week.key}-${index}`}
-                        className="aspect-square w-full rounded-[3px] border border-ds-border-muted bg-ds-subtle"
-                        aria-hidden
+                        key={cell}
+                        className="aspect-square w-full animate-pulse rounded-[2px] border border-ds-border-muted bg-ds-subtle"
                       />
-                    )
-                  )}
-                </span>
-              ))}
+                    ))}
+                  </span>
+                ))
+              : columns.map((col, colIndex) => (
+                  <span
+                    key={col.key}
+                    className={`grid gap-1 ${cellsPerColumn === 1 ? '' : 'grid-rows-7'}`}
+                  >
+                    {col.cells.map((bucket, cellIndex) => {
+                      const globalIndex = colIndex * cellsPerColumn + cellIndex
+                      const value = intensityValues[globalIndex] ?? 0
+                      const level = intensityLevelFromValue(
+                        value,
+                        maxIntensity,
+                        USAGE_HEATMAP_BLUE_STOPS.length
+                      )
+                      const isEmpty = level === 0
+                      const stop = isEmpty ? undefined : USAGE_HEATMAP_BLUE_STOPS[level - 1]
+                      if (!bucket) {
+                        return (
+                          <span
+                            key={`blank-${col.key}-${cellIndex}`}
+                            className="aspect-square w-full rounded-[2px] border border-ds-border-muted bg-ds-subtle"
+                            aria-hidden
+                          />
+                        )
+                      }
+                      return (
+                        <button
+                          key={bucket.date}
+                          type="button"
+                          title={dailySummary(bucket, t, i18n.language)}
+                          aria-label={dailySummary(bucket, t, i18n.language)}
+                          onMouseEnter={() => onSelect(bucket)}
+                          onFocus={() => onSelect(bucket)}
+                          onClick={() => onSelect(bucket)}
+                          className={`aspect-square w-full rounded-[2px] focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 focus-visible:ring-offset-ds-bg ${
+                            isEmpty ? 'border-ds-border-muted bg-ds-subtle' : 'border'
+                          }`}
+                          style={isEmpty ? undefined : { backgroundColor: stop, borderColor: stop }}
+                        />
+                      )
+                    })}
+                  </span>
+                ))}
+          </div>
+        </div>
+
+        {/* Month labels at the bottom, aligned with the column grid */}
+        <div className="mt-1 grid gap-1" style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}>
+          {monthLabels.map((label, index) => (
+            <span
+              key={index}
+              className="truncate text-[10px] leading-tight text-ds-faint"
+            >
+              {label}
+            </span>
+          ))}
         </div>
       </div>
     </div>
@@ -259,6 +467,12 @@ function formatChartDate(date: string, locale: string): string {
   const parsed = new Date(`${date}T00:00:00.000Z`)
   if (Number.isNaN(parsed.getTime())) return date
   return new Intl.DateTimeFormat(locale, { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(parsed)
+}
+
+function formatMonthShort(month: number, locale: string): string {
+  if (month < 1 || month > 12) return ''
+  const date = new Date(Date.UTC(2026, month - 1, 1))
+  return new Intl.DateTimeFormat(locale, { month: 'short', timeZone: 'UTC' }).format(date)
 }
 
 function formatTokenCount(value: number, locale: string): string {
@@ -701,7 +915,6 @@ export function InitialSessionUsageHeatmapView({
                 <HeatmapGrid
                   buckets={heatmapBuckets}
                   loading={state.loading && heatmapBuckets.length === 0}
-                  selected={activeBucket}
                   onSelect={setActiveBucket}
                 />
                 <p className="text-[11.5px] leading-5 text-ds-faint">

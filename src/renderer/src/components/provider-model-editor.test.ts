@@ -71,7 +71,6 @@ describe('provider-model-editor', () => {
       modelId: 'New-Model',
       contextWindowTokens: 256_000,
       maxOutputTokens: 16_000,
-      visionInput: true,
       supportsToolCalling: false
     }))
     expect(next.models).toContain('New-Model')
@@ -144,7 +143,6 @@ describe('provider-model-editor', () => {
     const form = providerModelFormForExisting(target, 'chat', 'seeing-thinker')
     expect(form.contextWindowTokens).toBe(1_000_000)
     expect(form.maxOutputTokens).toBe(32_000)
-    expect(form.visionInput).toBe(true)
     expect(form.reasoningEnabled).toBe(true)
     expect(form.reasoningEfforts).toEqual(['off', 'high'])
     expect(form.reasoningDefaultEffort).toBe('high')
@@ -318,18 +316,4 @@ describe('provider-model-editor', () => {
     expect(describeContextWindowTokens(24_512)).toBe('24512')
   })
 
-  it('infers visionInput in providerModelFormForExisting when profile is absent', () => {
-    const target = provider({
-      models: ['gpt-4o', 'claude-3-5-sonnet', 'deepseek-chat'],
-      modelProfiles: {}
-    })
-    const gpt4oForm = providerModelFormForExisting(target, 'chat', 'gpt-4o')
-    expect(gpt4oForm.visionInput).toBe(true)
-
-    const claudeForm = providerModelFormForExisting(target, 'chat', 'claude-3-5-sonnet')
-    expect(claudeForm.visionInput).toBe(true)
-
-    const deepseekForm = providerModelFormForExisting(target, 'chat', 'deepseek-chat')
-    expect(deepseekForm.visionInput).toBe(false)
-  })
 })

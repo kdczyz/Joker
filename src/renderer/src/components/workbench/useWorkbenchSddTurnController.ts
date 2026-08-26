@@ -12,15 +12,11 @@ import { providerIdForComposerModel } from '../../store/chat-store-helpers'
 import { threadHasPendingRuntimeWork } from '../../store/chat-store-runtime-helpers'
 import { useWriteWorkspaceStore } from '../../write/write-workspace-store'
 import { PENDING_INFOGRAPHIC_PROTOCOL } from '../../write/infographic-pending'
-import { confirmDialog } from '../../lib/confirm-dialog'
 import { uploadRuntimeImageAttachment } from '../../lib/runtime-image-attachment'
 import {
   composerReasoningEffortRequestValue,
   type ComposerReasoningEffort
 } from '../chat/FloatingComposerModelPicker'
-import {
-  firstVisionCapableComposerModel
-} from './useWorkbenchComposerCapabilities'
 import type { ComposerAttachmentScope } from '../workbench-composer-attachments'
 import {
   buildComposerDocumentContextPrompt,
@@ -64,14 +60,12 @@ type UseWorkbenchSddTurnControllerParams = {
   resolvedWriteAssistantProviderId: string
   runtimeConnection: RuntimeConnectionStatus
   runtimeInfo: CoreRuntimeInfoJson | null
-  selectedModelSupportsImageInput: boolean
   sendMessage: ChatState['sendMessage']
   sendPlanTurn: (text: string, overrides?: PlanTurnOverrides) => Promise<boolean>
   setAttachmentUploadError: (message: string | null) => void
   setComposerMode: (mode: 'plan' | 'agent') => void
   setError: (message: string | null) => void
   setInput: (value: string) => void
-  setWriteAssistantModel: (model: string, providerId?: string) => void
   writeAssistantModel: string
   clearComposerAttachments: (scope?: ComposerAttachmentScope) => void
   ensureSddAssistantThreadForDraft: (draft: SddDraft) => Promise<string | null>
@@ -146,14 +140,12 @@ export function useWorkbenchSddTurnController({
   resolvedWriteAssistantProviderId,
   runtimeConnection,
   runtimeInfo,
-  selectedModelSupportsImageInput,
   sendMessage,
   sendPlanTurn,
   setAttachmentUploadError,
   setComposerMode,
   setError,
   setInput,
-  setWriteAssistantModel,
   writeAssistantModel,
   clearComposerAttachments,
   ensureSddAssistantThreadForDraft,
@@ -308,10 +300,6 @@ export function useWorkbenchSddTurnController({
     writeAssistantModel
   ])
 
-  const firstVisionCapableModel = useCallback((): { modelId: string; providerId?: string } | null => {
-    return firstVisionCapableComposerModel(composerModelGroups)
-  }, [composerModelGroups])
-
   const sendSddPrototypeTurn = useCallback(async (
     payload: SddPrototypeTurnPayload
   ): Promise<boolean> => {
@@ -320,19 +308,6 @@ export function useWorkbenchSddTurnController({
     if (runtimeConnection !== 'ready') {
       useSddDraftStore.getState().setOperationStatus('error', t('runtimeActionNeedsConnection'))
       return false
-    }
-
-    if (payload.image && !selectedModelSupportsImageInput) {
-      const visionSelection = firstVisionCapableModel()
-      if (!visionSelection) {
-        useSddDraftStore.getState().setOperationStatus('error', t('sddPrototypeNoVisionModel'))
-        return false
-      }
-      const switchModel = await confirmDialog(
-        t('sddPrototypeSwitchVisionModel', { model: visionSelection.modelId })
-      )
-      if (!switchModel) return false
-      setWriteAssistantModel(visionSelection.modelId, visionSelection.providerId)
     }
 
     const threadId = await ensureSddAssistantThreadForDraft(draft)
@@ -387,12 +362,9 @@ export function useWorkbenchSddTurnController({
   }, [
     composerModelGroups,
     ensureSddAssistantThreadForDraft,
-    firstVisionCapableModel,
     openSddAssistantPanel,
     runtimeConnection,
-    selectedModelSupportsImageInput,
     sendMessage,
-    setWriteAssistantModel,
     t,
     uploadSddImagesAsAttachments
   ])
@@ -448,8 +420,7 @@ export function useWorkbenchSddTurnController({
 
     const supportsImageAttachments =
       collected.images.length > 0 &&
-      runtimeInfo?.capabilities.model.inputModalities.includes('image') === true &&
-      runtimeInfo.capabilities.attachments.available === true &&
+      runtimeInfo?.capabilities.attachments.available === true &&
       typeof window.RcodeGui?.uploadRuntimeImageAttachment === 'function'
 
     let imagesForPrompt = collected.images

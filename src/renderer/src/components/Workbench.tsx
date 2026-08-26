@@ -645,7 +645,6 @@ export function Workbench(): ReactElement {
   ])
 
   const {
-    selectedModelSupportsImageInput,
     selectedContextWindowTokens
   } = useWorkbenchComposerCapabilities({
     route,
@@ -675,12 +674,10 @@ export function Workbench(): ReactElement {
   } = useWorkbenchAttachmentRuntime({
     activeThreadId,
     composerMode,
-    modelUnsupportedMessage: t('composerAttachmentModelUnsupported'),
     rightPanelMode,
     route,
     runtimeConnection,
     runtimeInfo,
-    selectedModelSupportsImageInput,
     threads,
     workspaceRoot
   })
@@ -691,8 +688,8 @@ export function Workbench(): ReactElement {
   } = useWorkbenchSddTurnController({
     activeGuiPlan, attachmentUploadEnabled, blocks, busy, composerAttachments, composerMode,
     composerModelGroups, composerReasoningEffort, input, resolvedWriteAssistantProviderId,
-    runtimeConnection, runtimeInfo, selectedModelSupportsImageInput, sendMessage, sendPlanTurn,
-    setAttachmentUploadError, setComposerMode, setError, setInput, setWriteAssistantModel,
+    runtimeConnection, runtimeInfo, sendMessage, sendPlanTurn,
+    setAttachmentUploadError, setComposerMode, setError, setInput,
     writeAssistantModel, clearComposerAttachments, ensureSddAssistantThreadForDraft, getAttachmentScope,
     openSddAssistantPanel,
     startNewSddAssistantConversation: startNewSddThreadConversation

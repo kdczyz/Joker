@@ -107,14 +107,14 @@ export function isOpenCodeZenFreeModelId(id: string): boolean {
 
 export function getKnownOpenCodeZenFreeModelIds(): string[] {
   return liveZenModelsCache?.models ?? [
-    'nemotron-3.5-lightning-free',
-    'nemotron-3-ultra-free',
     'big-pickle',
-    'mimo-v2.5-free',
     'hy3-free',
+    'mimo-v2.5-free',
+    'muse-spark-1.2-contributor-free',
+    'nemotron-3-ultra-free',
+    'nemotron-3.5-lightning-free',
     'x-preview-f-free',
     'deepseek-v4-flash-free',
-    'muse-spark-1.2-contributor-free',
     'laguna-s-2.1-free'
   ]
 }

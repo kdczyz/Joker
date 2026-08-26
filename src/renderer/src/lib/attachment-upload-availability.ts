@@ -3,7 +3,6 @@ export type AttachmentUploadAvailabilityInput = {
   route: string
   mode: 'plan' | 'agent'
   attachmentStoreAvailable?: boolean
-  modelSupportsImageInput?: boolean
 }
 
 export function isChatAttachmentUploadEnabled(input: AttachmentUploadAvailabilityInput): boolean {

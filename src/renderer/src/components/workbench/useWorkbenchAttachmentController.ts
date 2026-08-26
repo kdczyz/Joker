@@ -14,7 +14,6 @@ import type {
 
 export type WorkbenchAttachmentControllerOptions = {
   attachmentUploadEnabled: boolean
-  selectedModelSupportsImageInput: boolean
   attachmentCapabilities?: ImageAttachmentUploadCapabilities
   activeThreadId: string | null
   setAttachmentUploadBusy: (busy: boolean) => void
@@ -47,7 +46,6 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 
 export function useWorkbenchAttachmentController({
   attachmentUploadEnabled,
-  selectedModelSupportsImageInput,
   attachmentCapabilities,
   activeThreadId,
   setAttachmentUploadBusy,

@@ -53,6 +53,31 @@ export type RuntimeImageAttachmentServiceDependencies = {
   readClipboardSource?: () => Promise<LoadedImageSource>
 }
 
+/**
+ * The runtime admits at most one in-flight attachment upload per store
+ * (`/v1/attachments` returns 429 "an attachment upload is already in progress"
+ * otherwise). All renderer uploads go through this service, so serialize them
+ * here instead of surfacing the runtime's admission limit as user errors.
+ */
+let uploadQueueTail: Promise<unknown> = Promise.resolve()
+
+function enqueueUpload<T>(task: () => Promise<T>): Promise<T> {
+  const run = uploadQueueTail.then(task, task)
+  uploadQueueTail = run.catch(() => undefined)
+  return run
+}
+
+/** Bounded retry for transient 429s from other direct uploaders. */
+const UPLOAD_BUSY_RETRY_DELAYS_MS = [150, 300, 600, 1200]
+
+export function isUploadBusyMessage(message: string): boolean {
+  return /already in progress|rate.?limit|429/i.test(message)
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
+
 const attachmentCapabilitiesSchema = z.object({
   maxImageBytes: z.number().int().positive(),
   maxImageDimension: z.number().int().positive(),
@@ -116,9 +141,8 @@ export async function uploadRuntimeImageAttachment(
       height: prepared.fallback.height,
       wasCompressed: prepared.fallback.wasCompressed
     }
-    const response = await dependencies.runtimeRequest(
-      '/v1/attachments',
-      'POST',
+    const response = await postAttachmentUploadWithRetry(
+      dependencies,
       JSON.stringify({
         name: request.name?.trim() || source.name,
         mimeType: prepared.upload.mimeType,
@@ -147,6 +171,31 @@ export async function uploadRuntimeImageAttachment(
   } catch (error) {
     return { ok: false, message: error instanceof Error ? error.message : String(error) }
   }
+}
+
+/** Serialized entry point: queue concurrent callers before any work starts. */
+export async function uploadRuntimeImageAttachmentQueued(
+  request: RuntimeImageAttachmentUploadRequest,
+  dependencies: RuntimeImageAttachmentServiceDependencies
+): Promise<RuntimeImageAttachmentUploadResult> {
+  return enqueueUpload(() => uploadRuntimeImageAttachment(request, dependencies))
+}
+
+/**
+ * Retry transient 429 "already in progress" responses from other direct
+ * uploaders that bypass this service's queue (e.g. extension providers).
+ */
+async function postAttachmentUploadWithRetry(
+  dependencies: RuntimeImageAttachmentServiceDependencies,
+  body: string
+): Promise<RuntimeRequestResult> {
+  let response = await dependencies.runtimeRequest('/v1/attachments', 'POST', body)
+  for (const delayMs of UPLOAD_BUSY_RETRY_DELAYS_MS) {
+    if (response.ok || !isUploadBusyMessage(runtimeResponseError(response, ''))) break
+    await sleep(delayMs)
+    response = await dependencies.runtimeRequest('/v1/attachments', 'POST', body)
+  }
+  return response
 }
 
 export async function prepareRuntimeImageAttachment(

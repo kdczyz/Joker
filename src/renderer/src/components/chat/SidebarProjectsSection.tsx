@@ -274,7 +274,10 @@ export function SidebarProjectsSection({
     ).flatMap((workspacePath) => {
       const group = byWorkspace.get(workspaceRootIdentityKey(workspacePath))
       return group ? [group] : []
-    })
+    }).filter(([workspacePath]) =>
+      // default_workspace 是应用的内置默认工作区,不作为可管理项目展示在侧边栏。
+      workspaceRootIdentityKey(workspacePath) !== '~/.Rcode/default_workspace'
+    )
   }, [sidebarOrder.workspacePaths, unorderedDisplayGroups])
 
   const workspacePathsForOrder = useMemo(() => reconcileSidebarWorkspaceOrder(
@@ -896,6 +899,8 @@ export function SidebarProjectsSection({
   }
 
   const handleRemoveWorkspace = async (workspacePath: string): Promise<void> => {
+    // default_workspace 是应用内置默认工作区,禁止移除。
+    if (workspaceRootIdentityKey(workspacePath) === '~/.Rcode/default_workspace') return
     openActionDialog({
       title: t('sidebarWorkspaceRemoveDialogTitle', { name: workspaceLabelFromPath(workspacePath) }),
       description: t('sidebarWorkspaceRemoveDialogDescription'),
@@ -1276,6 +1281,7 @@ export function SidebarProjectsSection({
           onArchiveThreads={() => void handleArchiveWorkspaceThreads(workspaceContextMenu.workspacePath)}
           onRemove={() => void handleRemoveWorkspace(workspaceContextMenu.workspacePath)}
           archiveDisabled={archivableWorkspaceThreads(workspaceContextMenu.workspacePath).length === 0}
+          removeDisabled={workspaceRootIdentityKey(workspaceContextMenu.workspacePath) === '~/.Rcode/default_workspace'}
           t={t}
         />
       ) : null}

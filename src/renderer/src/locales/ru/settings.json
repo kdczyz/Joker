@@ -1532,5 +1532,7 @@
   "dataMigrationConfirmCancel_stop": "Отменить эту миграцию до того, как она изменит какие-либо целевые данные?",
   "dataMigrationConfirmCancel_cleanup": "Отменить эту миграцию и удалить промежуточные временные данные?",
   "dataMigrationConfirmCancel_rollback": "Отменить после текущего атомарного действия и отменить уже примененные изменения? Держите Rcode открытым до завершения отката.",
-  "dataMigrationReportLocation": "Локальный отчет"
+  "dataMigrationReportLocation": "Локальный отчет",
+  "tokenRecordTitle": "Запись токенов",
+  "tokenRecordDescription": "Сводка ежедневного использования токенов, попаданий в кэш и экономии контекста в локальных сессиях."
 }

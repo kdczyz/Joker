@@ -24,12 +24,10 @@ type WorkbenchAttachmentRuntimeOptions = {
   canvasDocument?: CanvasDocument
   canvasSelectedIds?: ReadonlySet<string>
   composerMode: 'plan' | 'agent'
-  modelUnsupportedMessage: string
   rightPanelMode: RightPanelMode | null
   route: string
   runtimeConnection: RuntimeConnectionStatus
   runtimeInfo: CoreRuntimeInfoJson | null
-  selectedModelSupportsImageInput: boolean
   threads: NormalizedThread[]
   workspaceRoot: string
 }
@@ -39,12 +37,10 @@ export function useWorkbenchAttachmentRuntime({
   canvasDocument,
   canvasSelectedIds,
   composerMode,
-  modelUnsupportedMessage,
   rightPanelMode,
   route,
   runtimeConnection,
   runtimeInfo,
-  selectedModelSupportsImageInput,
   threads,
   workspaceRoot
 }: WorkbenchAttachmentRuntimeOptions) {
@@ -74,20 +70,11 @@ export function useWorkbenchAttachmentRuntime({
     runtimeConnection,
     route,
     mode: composerMode,
-    attachmentStoreAvailable: runtimeInfo?.capabilities.attachments.available,
-    modelSupportsImageInput: selectedModelSupportsImageInput
+    attachmentStoreAvailable: runtimeInfo?.capabilities.attachments.available
   })
   const webAccessAvailable =
     runtimeInfo?.capabilities.web.fetch.available === true ||
     runtimeInfo?.capabilities.web.search.available === true
-
-  useEffect(() => {
-    setAttachmentUploadError((prev) => {
-      if (prev !== modelUnsupportedMessage) return prev
-      if (composerAttachments.length === 0 || selectedModelSupportsImageInput) return null
-      return prev
-    })
-  }, [composerAttachments.length, modelUnsupportedMessage, selectedModelSupportsImageInput])
 
   useEffect(() => {
     setAttachmentUploadError(null)
@@ -134,7 +121,6 @@ export function useWorkbenchAttachmentRuntime({
     removeComposerAttachment
   } = useWorkbenchAttachmentController({
     attachmentUploadEnabled,
-    selectedModelSupportsImageInput,
     attachmentCapabilities: runtimeInfo?.capabilities.attachments,
     activeThreadId,
     setAttachmentUploadBusy,

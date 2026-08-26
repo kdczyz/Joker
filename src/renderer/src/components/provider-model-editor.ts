@@ -5,7 +5,6 @@ import {
   DEFAULT_TEXT_TO_SPEECH_PROTOCOL,
   DEFAULT_VIDEO_GENERATION_PROTOCOL,
   MODEL_REASONING_EFFORTS,
-  inferModelSupportsVision,
   isComposerChatModelId,
   isImageGenerationModelId,
   isMusicGenerationModelId,
@@ -47,7 +46,6 @@ export type ProviderModelForm = {
   /** null means "not specified" — Rcode falls back to its built-in default. */
   contextWindowTokens: number | null
   maxOutputTokens: number | null
-  visionInput: boolean
   supportsToolCalling: boolean
   reasoningEnabled: boolean
   reasoningEfforts: ModelReasoningEffort[]
@@ -105,7 +103,6 @@ export function newProviderModelForm(
     modelId: '',
     contextWindowTokens: kind === 'chat' ? 256_000 : null,
     maxOutputTokens: null,
-    visionInput: false,
     supportsToolCalling: true,
     reasoningEnabled: false,
     reasoningEfforts: [...PROVIDER_MODEL_REASONING_EFFORT_CHOICES],
@@ -134,15 +131,13 @@ export function providerModelFormForExisting(
     return {
       ...base,
       contextWindowTokens: null,
-      maxOutputTokens: null,
-      visionInput: inferModelSupportsVision(modelId, provider.id)
+      maxOutputTokens: null
     }
   }
   return {
     ...base,
     contextWindowTokens: profile.contextWindowTokens ?? null,
     maxOutputTokens: profile.maxOutputTokens ?? null,
-    visionInput: profile.inputModalities.includes('image'),
     supportsToolCalling: profile.supportsToolCalling,
     reasoningEnabled: Boolean(profile.reasoning),
     reasoningEfforts: profile.reasoning
@@ -436,10 +431,11 @@ function chatProfileFromForm(form: ProviderModelForm): ModelProviderModelProfile
     ...(form.maxOutputTokens && form.maxOutputTokens > 0
       ? { maxOutputTokens: form.maxOutputTokens }
       : {}),
-    inputModalities: form.visionInput ? ['text', 'image'] : ['text'],
+    // 所有模型默认开启图片输入；不支持识图的模型由提供商报错并提示。
+    inputModalities: ['text', 'image'],
     outputModalities: ['text'],
     supportsToolCalling: form.supportsToolCalling,
-    messageParts: form.visionInput ? ['text', 'image_url'] : ['text'],
+    messageParts: ['text', 'image_url'],
     ...(form.reasoningEnabled && form.reasoningEfforts.length > 0
       ? { reasoning: reasoningCapabilityFromForm(form) }
       : {}),

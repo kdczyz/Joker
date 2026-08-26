@@ -4,7 +4,6 @@ const path = require("node:path");
 const projectRoot = path.resolve(__dirname, "..");
 
 const generatedPaths = [
-  "build",
   "dist",
   "dist-server",
   "dist-server-bundle",

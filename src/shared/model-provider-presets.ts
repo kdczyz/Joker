@@ -407,39 +407,39 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
   },
   {
     id: 'opencode-zen',
-    name: 'OpenCode Zen',
+    name: 'Rcode -Free',
     category: 'api',
     baseUrl: 'https://opencode.ai/zen/v1',
     endpointFormat: 'chat_completions',
+    // Free tier models (OpenCode Zen backend). Display names from the official
+    // picker: Big Pickle, Hy3 Free, MiMo V2.5 Free, Muse Spark 1.2 Free,
+    // Nemotron 3 Ultra Free, Nemotron 3.5 Lightning Free, Ox Alpha Free (Unlimited).
+    // x-preview-f-free is the API id for "Ox Alpha Free (Unlimited)".
+    // muse-spark-1.2-contributor-free is the API id for "Muse Spark 1.2 Free".
     models: [
-      'nemotron-3.5-lightning-free',
-      'nemotron-3-ultra-free',
       'big-pickle',
-      'mimo-v2.5-free',
       'hy3-free',
+      'mimo-v2.5-free',
+      'muse-spark-1.2-contributor-free',
+      'nemotron-3-ultra-free',
+      'nemotron-3.5-lightning-free',
       'x-preview-f-free',
       'deepseek-v4-flash-free',
-      'muse-spark-1.2-contributor-free',
       'laguna-s-2.1-free'
     ],
     modelProfiles: {
-      'nemotron-3.5-lightning-free': textChatProfile(262_144),
-      'nemotron-3-ultra-free': textChatProfile(262_144),
       'big-pickle': textChatProfile(131_072),
-      'mimo-v2.5-free': textChatProfile(1_048_576, XIAOMI_REASONING),
       'hy3-free': textChatProfile(131_072),
+      'mimo-v2.5-free': textChatProfile(1_048_576, XIAOMI_REASONING),
+      'muse-spark-1.2-contributor-free': textChatProfile(131_072),
+      'nemotron-3-ultra-free': textChatProfile(262_144),
+      'nemotron-3.5-lightning-free': textChatProfile(262_144),
       'x-preview-f-free': textChatProfile(131_072),
       'deepseek-v4-flash-free': textChatProfile(1_000_000, DEEPSEEK_REASONING),
-      'muse-spark-1.2-contributor-free': textChatProfile(131_072),
       'laguna-s-2.1-free': textChatProfile(131_072)
     },
     docsUrl: 'https://opencode.ai/docs/zen',
-    apiKeyUrl: 'https://opencode.ai/console',
-    retry: {
-      maxAttempts: 3,
-      initialDelayMs: 1500,
-      statusCodes: [429, 500, 502, 503, 504]
-    }
+    apiKeyUrl: 'https://opencode.ai/console'
   },
   {
     id: 'moonshot-cn',

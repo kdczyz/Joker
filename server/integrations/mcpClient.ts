@@ -319,6 +319,63 @@ export async function listMcpTools(serverId: string) {
   return testMcpServer(serverId);
 }
 
+// --- Resources / resource templates / prompts (P2 mcp_resource tool backend) ---
+
+type NamedMcpEntry = { uri?: string; name?: string; description?: string };
+
+function asNamedList(result: unknown, key: string): NamedMcpEntry[] {
+  const value = result as Record<string, unknown> | null;
+  const items = value && Array.isArray(value[key]) ? (value[key] as NamedMcpEntry[]) : [];
+  return items;
+}
+
+function enabledServerIds(): string[] {
+  return listMcpServers().filter((item) => item.enabled).map((item) => normalizeServerId(item.id));
+}
+
+/** Aggregate a list-style MCP call across one server or all enabled servers. */
+async function aggregateMcpList(
+  serverId: string | undefined,
+  method: string,
+  listKey: string
+): Promise<Array<Record<string, unknown>>> {
+  const targets = serverId ? [normalizeServerId(serverId)] : enabledServerIds();
+  if (targets.length === 0) throw new Error("No enabled MCP servers configured.");
+  const out: Array<Record<string, unknown>> = [];
+  for (const target of targets) {
+    try {
+      const result = await requestServer(target, method);
+      for (const entry of asNamedList(result, listKey)) {
+        out.push({ ...entry, __server: target });
+      }
+    } catch (error) {
+      // A server that does not support resources/prompts must not break the aggregation.
+      out.push({ __server: target, __error: error instanceof Error ? error.message : String(error) });
+    }
+  }
+  return out;
+}
+
+export async function listMcpResources(serverId?: string) {
+  return aggregateMcpList(serverId, "resources/list", "resources");
+}
+
+export async function readMcpResource(serverId: string, uri: string) {
+  return requestServer(normalizeServerId(serverId), "resources/read", { uri });
+}
+
+export async function listMcpResourceTemplates(serverId?: string) {
+  return aggregateMcpList(serverId, "resources/templates/list", "resourceTemplates");
+}
+
+export async function listMcpPrompts(serverId?: string) {
+  return aggregateMcpList(serverId, "prompts/list", "prompts");
+}
+
+export async function getMcpPrompt(serverId: string, name: string, args?: Record<string, unknown>) {
+  return requestServer(normalizeServerId(serverId), "prompts/get", { name, ...(args ? { arguments: args } : {}) });
+}
+
 export async function trustMcpServer(serverId: string) {
   const server = listMcpServers().find((item) => normalizeServerId(item.id) === serverId || item.id === serverId);
   if (!server) throw new Error(`MCP server not found: ${serverId}`);

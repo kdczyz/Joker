@@ -2,11 +2,20 @@ import { lookup as dnsLookup } from 'node:dns/promises'
 import { request as httpRequest, type IncomingMessage } from 'node:http'
 import { request as httpsRequest } from 'node:https'
 import { isIP, type LookupFunction } from 'node:net'
+import { brotliDecompressSync, gunzipSync, inflateSync } from 'node:zlib'
 import type { RcodeCapabilitiesConfig, WebCapabilityConfig } from '../../contracts/capabilities.js'
-import type { WebFetchResult, WebProvider, WebSearchResult } from '../../ports/web-provider.js'
+import type { WebFetchRequest, WebFetchResult, WebProvider, WebSearchRequest, WebSearchResult } from '../../ports/web-provider.js'
 import { sourceIdFor, UnavailableWebProvider } from '../../ports/web-provider.js'
 import type { CapabilityToolProvider } from './capability-registry.js'
 import { LocalToolHost } from './local-tool-host.js'
+import {
+  SEARCH_ENGINES,
+  KeylessSearchExecutor,
+  resolveSearchEngineChain,
+  type SearchEngineContext,
+  type SearchEngineDef,
+  type SearchEngineId
+} from './web-search-engines/index.js'
 
 const DEFAULT_WEB_TIMEOUT_MS = 15_000
 const DEFAULT_WEB_MAX_BYTES = 1_000_000
@@ -26,12 +35,16 @@ export type FetchWebTransportRequest = {
   url: URL
   lookup: LookupFunction
   signal: AbortSignal
+  /** Extra request headers layered over the secure transport defaults. */
+  headers?: Record<string, string>
 }
 
 export type FetchWebTransportResponse = {
   status: number
   contentType?: string
   location?: string
+  /** Wire format of `body`; transparently decompressed by the shared reader. */
+  contentEncoding?: string
   body: AsyncIterable<Uint8Array>
   cancel(): void
 }
@@ -67,6 +80,57 @@ export type WebToolProviderBuildResult = {
 export type WebToolProviderOptions = {
   provider?: WebProvider
   nowIso?: () => string
+  /** Test hook for cooldown/clock behavior of the keyless search executor. */
+  nowMs?: () => number
+  /** Test hooks for the secure web transport used by fetch and keyless search. */
+  transport?: {
+    resolveHost?: (hostname: string) => Promise<ResolvedAddress[]>
+    request?: (request: FetchWebTransportRequest) => Promise<FetchWebTransportResponse>
+  }
+}
+
+/**
+ * Wraps the secure fetch provider with built-in keyless multi-engine search
+ * (DuckDuckGo / Bing / Baidu). Exposes the winning engine and cache status so
+ * tool telemetry can report them instead of a hardcoded miss.
+ */
+export class KeylessWebProvider implements WebProvider {
+  readonly id = 'keyless'
+  readonly engines: SearchEngineDef[]
+  private readonly executor: KeylessSearchExecutor
+  private readonly inner: FetchWebProvider
+  lastSearch?: {
+    engine: string
+    cacheStatus: 'hit' | 'miss'
+    attempts: string[]
+  }
+
+  constructor(inner: FetchWebProvider, engines: SearchEngineDef[], options: { nowMs?: () => number } = {}) {
+    this.inner = inner
+    this.engines = engines
+    this.executor = new KeylessSearchExecutor(this.searchContext(), { nowMs: options.nowMs })
+  }
+
+  async fetch(request: WebFetchRequest): Promise<WebFetchResult> {
+    return this.inner.fetch(request)
+  }
+
+  async search(request: WebSearchRequest): Promise<WebSearchResult[]> {
+    const outcome = await this.executor.search(this.engines, request)
+    this.lastSearch = {
+      engine: outcome.engine,
+      cacheStatus: outcome.cacheStatus,
+      attempts: outcome.attempts
+    }
+    return outcome.results
+  }
+
+  private searchContext(): SearchEngineContext {
+    return {
+      requestDocument: (request) => this.inner.requestDocument(request),
+      nowIso: () => new Date().toISOString()
+    }
+  }
 }
 
 export function buildWebToolProviders(
@@ -83,9 +147,24 @@ export function buildWebToolProviders(
     }
   }
 
-  const provider: WebProvider = options.provider ?? (web.fetchEnabled ? new FetchWebProvider(web, {
-    nowIso: options.nowIso
-  }) : new UnavailableWebProvider(web.provider))
+  // Keyless search rides the same secure transport as web_fetch, so the
+  // fetch provider is required whenever either capability is on.
+  const needsTransport = Boolean(web.fetchEnabled || web.searchEnabled)
+  const base: WebProvider = options.provider ?? (needsTransport
+    ? new FetchWebProvider(web, {
+        nowIso: options.nowIso,
+        ...(options.transport?.resolveHost ? { resolveHost: options.transport.resolveHost } : {}),
+        ...(options.transport?.request ? { request: options.transport.request } : {})
+      })
+    : new UnavailableWebProvider(web.provider))
+  let provider = base
+  let keyless: KeylessWebProvider | undefined
+  if (!options.provider && web.searchEnabled && base instanceof FetchWebProvider) {
+    keyless = new KeylessWebProvider(base, resolveSearchEngineChain(web.provider), {
+      nowMs: options.nowMs
+    })
+    provider = keyless
+  }
   const tools = []
   if (web.fetchEnabled) {
     tools.push(createFetchTool(web, provider))
@@ -222,13 +301,21 @@ function createSearchTool(config: WebCapabilityConfig, provider: WebProvider) {
           timeoutMs,
           signal: context.abortSignal
         })
+        const keyless = provider instanceof KeylessWebProvider ? provider.lastSearch : undefined
         return {
           output: searchOutput(query, provider.id, results, telemetry({
             startedAt,
             policy: 'allowed',
             provider: provider.id,
             query,
-            resultCount: results.length
+            resultCount: results.length,
+            ...(keyless
+              ? {
+                  engine: keyless.engine,
+                  enginesAttempted: keyless.attempts,
+                  cacheStatus: keyless.cacheStatus as 'hit' | 'miss' | 'stale'
+                }
+              : {})
           }))
         }
       } catch (error) {
@@ -257,12 +344,23 @@ export class FetchWebProvider implements WebProvider {
     this.request = options.request ?? requestWithPinnedLookup
   }
 
-  async fetch(request: {
+  /**
+   * Secure document retrieval shared by web_fetch and the built-in keyless
+   * search engines: URL policy, DNS pinning, redirects, and byte caps.
+   */
+  async requestDocument(request: {
     url: string
     maxBytes: number
     timeoutMs: number
     signal: AbortSignal
-  }): Promise<WebFetchResult> {
+    headers?: Record<string, string>
+  }): Promise<{
+    finalUrl: string
+    contentType?: string
+    chunks: Uint8Array[]
+    totalBytes: number
+    truncated: boolean
+  }> {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), request.timeoutMs)
     const onAbort = () => controller.abort()
@@ -279,7 +377,8 @@ export class FetchWebProvider implements WebProvider {
         response = await this.request({
           url: policy.url,
           lookup: pinnedLookup(policy.url.hostname, resolved),
-          signal: controller.signal
+          signal: controller.signal,
+          ...(request.headers ? { headers: request.headers } : {})
         })
 
         if (!isRedirectStatus(response.status)) break
@@ -304,26 +403,32 @@ export class FetchWebProvider implements WebProvider {
       // Oversized pages truncate at maxBytes via the streaming read below.
       // Hard-failing on the declared content-length made most real pages
       // unfetchable whenever the model passed a small byte budget.
-      const body = await readResponseBody(response, request.maxBytes)
-      const buffer = Buffer.concat(body.chunks)
-      const contentType = response.contentType
-      const raw = buffer.toString('utf8')
-      const extracted = extractReadableText(raw, contentType)
-      const finalUrl = currentUrl.href
       return {
-        sourceId: sourceIdFor('fetch', finalUrl),
-        url: request.url,
-        finalUrl,
-        title: extracted.title,
-        contentType,
-        text: extracted.text,
-        retrievedAt: this.nowIso(),
-        byteCount: body.totalBytes,
-        truncated: body.truncated
+        finalUrl: currentUrl.href,
+        contentType: response.contentType,
+        ...decompressResponseBody(await readResponseBody(response, request.maxBytes), response.contentEncoding, request.maxBytes)
       }
     } finally {
       clearTimeout(timeout)
       request.signal.removeEventListener('abort', onAbort)
+    }
+  }
+
+  async fetch(request: WebFetchRequest): Promise<WebFetchResult> {
+    const document = await this.requestDocument(request)
+    const buffer = Buffer.concat(document.chunks)
+    const raw = buffer.toString('utf8')
+    const extracted = extractReadableText(raw, document.contentType)
+    return {
+      sourceId: sourceIdFor('fetch', document.finalUrl),
+      url: request.url,
+      finalUrl: document.finalUrl,
+      title: extracted.title,
+      contentType: document.contentType,
+      text: extracted.text,
+      retrievedAt: this.nowIso(),
+      byteCount: document.totalBytes,
+      truncated: document.truncated
     }
   }
 
@@ -374,9 +479,11 @@ function requestWithPinnedLookup(request: FetchWebTransportRequest): Promise<Fet
       lookup: request.lookup,
       headers: {
         accept: 'text/html, text/plain, application/xhtml+xml;q=0.9, */*;q=0.1',
-        // Node's http client does not transparently decompress responses. Ask
-        // for the representation we can account for byte-for-byte instead.
-        'accept-encoding': 'identity'
+        // Advertise compression like a real browser would; the shared reader
+        // below decompresses gzip/deflate/br transparently. Requesting
+        // identity is a classic scraper tell and also wastes bandwidth.
+        'accept-encoding': 'gzip, deflate, br',
+        ...(request.headers ?? {})
       }
     }, (response) => resolve(transportResponse(response)))
     outbound.once('error', reject)
@@ -389,6 +496,7 @@ function transportResponse(response: IncomingMessage): FetchWebTransportResponse
     status: response.statusCode ?? 0,
     contentType: headerValue(response.headers['content-type']),
     location: headerValue(response.headers.location),
+    contentEncoding: headerValue(response.headers['content-encoding']),
     body: response,
     cancel: () => response.destroy()
   }
@@ -421,6 +529,37 @@ async function readResponseBody(response: FetchWebTransportResponse, maxBytes: n
     totalBytes += chunk.length
   }
   return { chunks, totalBytes, truncated: false }
+}
+
+/**
+ * Transparently undo gzip/deflate/brotli transfer encodings. The wire cap
+ * bounds what we download; the decoded payload is re-capped so byte counts
+ * stay meaningful for callers that treat `totalBytes` as document size.
+ */
+function decompressResponseBody(
+  body: { chunks: Uint8Array[]; totalBytes: number; truncated: boolean },
+  encoding: string | undefined,
+  maxBytes: number
+): { chunks: Uint8Array[]; totalBytes: number; truncated: boolean } {
+  if (!encoding || encoding === 'identity' || body.chunks.length === 0) return body
+  const wire = Buffer.concat(body.chunks.map((chunk) => Buffer.from(chunk)))
+  let decoded: Buffer
+  try {
+    if (/\bgzip\b/i.test(encoding)) decoded = gunzipSync(wire)
+    else if (/\bdeflate\b/i.test(encoding)) decoded = inflateSync(wire)
+    else if (/\bbr\b/i.test(encoding)) decoded = brotliDecompressSync(wire)
+    else return body
+  } catch {
+    // Malformed payload: surface whatever arrived rather than failing hard.
+    return body
+  }
+  const truncated = body.truncated || decoded.length > maxBytes
+  const capped = decoded.length > maxBytes ? decoded.subarray(0, maxBytes) : decoded
+  return {
+    chunks: [new Uint8Array(capped)],
+    totalBytes: capped.length,
+    truncated
+  }
 }
 
 async function awaitWithAbort<T>(operation: Promise<T>, signal: AbortSignal): Promise<T> {
@@ -914,6 +1053,10 @@ function telemetry(input: {
   query?: string
   byteCount?: number
   resultCount?: number
+  /** Winning keyless engine when the search went through the built-in chain. */
+  engine?: string
+  enginesAttempted?: string[]
+  cacheStatus?: 'hit' | 'miss' | 'stale'
 }): Record<string, unknown> {
   return {
     provider: input.provider,
@@ -922,7 +1065,9 @@ function telemetry(input: {
     byteCount: input.byteCount,
     resultCount: input.resultCount,
     durationMs: Date.now() - input.startedAt,
-    cacheStatus: 'miss',
+    ...(input.engine ? { engine: input.engine } : {}),
+    ...(input.enginesAttempted ? { enginesAttempted: input.enginesAttempted } : {}),
+    cacheStatus: input.cacheStatus ?? 'miss',
     policy: input.policy
   }
 }

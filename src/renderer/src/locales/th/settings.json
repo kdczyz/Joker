@@ -1532,5 +1532,7 @@
   "dataMigrationConfirmCancel_stop": "ยกเลิกการย้ายข้อมูลนี้ก่อนที่จะเปลี่ยนข้อมูลปลายทางใดๆ หรือไม่",
   "dataMigrationConfirmCancel_cleanup": "ยกเลิกการย้ายข้อมูลนี้และนำข้อมูลชั่วคราวที่จัดไว้ออกไหม",
   "dataMigrationConfirmCancel_rollback": "ยกเลิกหลังจากการดำเนินการอะตอมมิกปัจจุบันและย้อนกลับการเปลี่ยนแปลงที่ใช้แล้วหรือไม่ เปิด Rcode ไว้จนกว่าการย้อนกลับจะเสร็จสิ้น",
-  "dataMigrationReportLocation": "รายงานท้องถิ่น"
+  "dataMigrationReportLocation": "รายงานท้องถิ่น",
+  "tokenRecordTitle": "บันทึกโทเค็น",
+  "tokenRecordDescription": "สรุปการใช้โทเค็นรายวัน การเข้าชมแคช และการประหยัดบริบทจากเซสชันในเครื่องของคุณ"
 }

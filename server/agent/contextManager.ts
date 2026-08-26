@@ -4,6 +4,7 @@ import path from "node:path";
 import { listLearningRecords, listMemories, searchMemories } from "../storage/database";
 import { getWorkspaceRoot } from "../security/sandbox";
 import { activateSkills } from "./skills";
+import { skillCatalogPrompt } from "../runtime/skillTool";
 import { getMemorySettings } from "./memory";
 import type { AgentMessage, ContextSnapshot } from "../shared/types";
 import { BYTES_PER_TOKEN, estimateTokens } from "./tokenBudget";
@@ -80,7 +81,8 @@ export async function buildProjectContextBundle(projectPath?: string, prompt = "
     rules ? `.agent/rules guidance:\n${rules}` : "",
     memoryText ? `Project memory:\n${memoryText}` : "",
     learningText ? `Verified learning records:\n${learningText}` : "",
-    skillText ? `Activated skills:\n${skillText}` : ""
+    skillText ? `Activated skills:\n${skillText}` : "",
+    await skillCatalogPrompt(projectPath)
   ].filter(Boolean);
   return {
     content: sections.join("\n\n"),

@@ -721,7 +721,7 @@ export function FloatingComposerModelPicker({
               </div>
             ) : (
               providerMenuGroups.map((group) => {
-                const selectedModel = composerModelMenuItemSelected({
+                const isModelSelected = composerModelMenuItemSelected({
                   groupProviderId: group.providerId,
                   selectedProviderId,
                   currentModel,
@@ -738,7 +738,7 @@ export function FloatingComposerModelPicker({
                     active={activeProviderId === group.providerId}
                     selected={selectedProviderId === group.providerId}
                     title={group.label}
-                    subtitle={selectedModel}
+                    subtitle={isModelSelected ? currentModel : ''}
                     badge={
                       isFreeProvider ? (
                         <span className="inline-flex h-4 shrink-0 items-center rounded-full border border-amber-300/70 bg-amber-50 px-1.5 text-[9.5px] font-semibold leading-none text-amber-700 dark:border-amber-700/60 dark:bg-amber-950/30 dark:text-amber-300">

@@ -1,4 +1,5 @@
-import { useEffect, type FormEvent, type ReactElement } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type ReactElement } from 'react'
+import { createPortal } from 'react-dom'
 import {
   Archive,
   ExternalLink,
@@ -56,6 +57,30 @@ export type RenameThreadDialogState = {
   submitting: boolean
 }
 
+function useViewportFitPosition(
+  initialX: number,
+  initialY: number
+): [React.RefObject<HTMLDivElement | null>, { left: number; top: number }] {
+  const ref = useRef<HTMLDivElement>(null)
+  const [fit, setFit] = useState<{ left: number; top: number } | null>(null)
+
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const rect = el.getBoundingClientRect()
+    const padding = 8
+    const maxLeft = Math.max(padding, window.innerWidth - rect.width - padding)
+    const maxTop = Math.max(padding, window.innerHeight - rect.height - padding)
+    setFit({
+      left: Math.min(Math.max(initialX, padding), maxLeft),
+      top: Math.min(Math.max(initialY, padding), maxTop)
+    })
+  }, [initialX, initialY])
+
+  const position = fit ?? { left: initialX, top: initialY }
+  return [ref, position]
+}
+
 export function ThreadRenameDialog({
   state,
   onClose,
@@ -72,7 +97,7 @@ export function ThreadRenameDialog({
   const nextTitle = state.value.trim()
   const canSubmit = Boolean(nextTitle) && nextTitle !== state.thread.title && !state.submitting
   useEscapeToClose(onClose, state.submitting)
-  return (
+  const dialog = (
     <div
       role="dialog"
       aria-modal="true"
@@ -108,6 +133,7 @@ export function ThreadRenameDialog({
       </form>
     </div>
   )
+  return typeof document !== 'undefined' ? createPortal(dialog, document.body) : dialog
 }
 
 export function MoveThreadDialog({
@@ -127,7 +153,7 @@ export function MoveThreadDialog({
   const fromWorkspace = normalizeWorkspaceRoot(state.thread.workspace)
   const selectedTarget = state.targetWorkspace ? normalizeWorkspaceRoot(state.targetWorkspace) : ''
   useEscapeToClose(onClose, state.submitting)
-  return (
+  const dialog = (
     <div
       role="dialog"
       aria-modal="true"
@@ -209,6 +235,7 @@ export function MoveThreadDialog({
       </div>
     </div>
   )
+  return typeof document !== 'undefined' ? createPortal(dialog, document.body) : dialog
 }
 
 export function ThreadContextMenu({
@@ -242,16 +269,18 @@ export function ThreadContextMenu({
 }): ReactElement {
   const archived = state.thread.archived === true
   const pinned = state.thread.pinned === true
+  const [menuRef, position] = useViewportFitPosition(state.x, state.y)
   const run = (action: () => void): void => {
     onClose()
     action()
   }
-  return (
+  const menu = (
     <div
+      ref={menuRef}
       role="menu"
       aria-label={state.thread.title}
       className="ds-thread-context-menu ds-no-drag fixed z-50 min-w-[210px] rounded-[16px] border border-ds-border bg-ds-card/95 p-1.5 text-[13px] text-ds-ink shadow-[0_18px_52px_rgba(20,47,95,0.18)] backdrop-blur-xl dark:bg-ds-card"
-      style={{ left: state.x, top: state.y }}
+      style={{ left: position.left, top: position.top }}
       onPointerDown={(event) => event.stopPropagation()}
     >
       <MenuItem
@@ -274,6 +303,7 @@ export function ThreadContextMenu({
       <MenuItem icon={<Trash2 className="h-3.5 w-3.5" strokeWidth={1.9} />} label={t('sidebarThreadDelete')} disabled={busy} danger onClick={() => run(onDelete)} />
     </div>
   )
+  return typeof document !== 'undefined' ? createPortal(menu, document.body) : menu
 }
 
 export function WorkspaceContextMenu({
@@ -284,6 +314,7 @@ export function WorkspaceContextMenu({
   onArchiveThreads,
   onRemove,
   archiveDisabled,
+  removeDisabled = false,
   t
 }: {
   state: WorkspaceContextMenuState
@@ -293,27 +324,38 @@ export function WorkspaceContextMenu({
   onArchiveThreads: () => void
   onRemove: () => void
   archiveDisabled: boolean
+  removeDisabled?: boolean
   t: Translate
 }): ReactElement {
+  const [menuRef, position] = useViewportFitPosition(state.x, state.y)
   const run = (action: () => void): void => {
     onClose()
     action()
   }
-  return (
+  const menu = (
     <div
+      ref={menuRef}
       role="menu"
       aria-label={state.workspacePath}
       className="ds-workspace-context-menu ds-no-drag fixed z-50 min-w-[230px] rounded-[16px] border border-ds-border bg-ds-card/95 p-1.5 text-[13px] text-ds-ink shadow-[0_18px_52px_rgba(20,47,95,0.18)] backdrop-blur-xl dark:bg-ds-card"
-      style={{ left: state.x, top: state.y }}
+      style={{ left: position.left, top: position.top }}
       onPointerDown={(event) => event.stopPropagation()}
     >
       <MenuItem icon={<Plus className="h-3.5 w-3.5" strokeWidth={1.9} />} label={t('sidebarWorkspaceNewThread')} disabled={false} onClick={() => run(onNewThread)} />
       <MenuItem icon={<ExternalLink className="h-3.5 w-3.5" strokeWidth={1.9} />} label={t('sidebarWorkspaceOpenInSystem')} disabled={false} onClick={() => run(onOpenInSystem)} />
       <MenuItem icon={<Archive className="h-3.5 w-3.5" strokeWidth={1.9} />} label={t('sidebarWorkspaceArchiveThreads')} disabled={archiveDisabled} onClick={() => run(onArchiveThreads)} />
       <div className="my-1 h-px bg-ds-border-muted" />
-      <MenuItem icon={<Trash2 className="h-3.5 w-3.5" strokeWidth={1.9} />} label={t('sidebarWorkspaceRemove')} disabled={false} danger onClick={() => run(onRemove)} />
+      <MenuItem
+        icon={<Trash2 className="h-3.5 w-3.5" strokeWidth={1.9} />}
+        label={t('sidebarWorkspaceRemove')}
+        disabled={removeDisabled}
+        title={removeDisabled ? t('sidebarWorkspaceRemoveDisabledHint') : undefined}
+        danger
+        onClick={() => run(onRemove)}
+      />
     </div>
   )
+  return typeof document !== 'undefined' ? createPortal(menu, document.body) : menu
 }
 
 export function SidebarActionDialog({
@@ -328,7 +370,7 @@ export function SidebarActionDialog({
   t: Translate
 }): ReactElement {
   useEscapeToClose(onClose, state.submitting)
-  return (
+  const dialog = (
     <div
       role="dialog"
       aria-modal="true"
@@ -374,6 +416,7 @@ export function SidebarActionDialog({
       </div>
     </div>
   )
+  return typeof document !== 'undefined' ? createPortal(dialog, document.body) : dialog
 }
 
 function DialogActions({

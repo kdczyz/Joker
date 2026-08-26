@@ -238,7 +238,7 @@ describe('InitialSessionUsageHeatmap', () => {
   })
 
   it('uses turns as the intensity fallback when token totals are unavailable', () => {
-    expect(usageHeatmapIntensityLevel({ totalTokens: 0, turns: 3 }, 0, 6)).toBe(2)
+    expect(usageHeatmapIntensityLevel({ totalTokens: 0, turns: 3 }, 0, 6)).toBe(4)
     expect(usageHeatmapIntensityLevel({ totalTokens: 0, turns: 0 }, 0, 6)).toBe(0)
   })
 

@@ -6,9 +6,10 @@ function normalizePathForMatch(path: string): string {
 // ~/.deepseekgui 形式,这里对两套路径都要认,并归一到同一个身份键,
 // 避免同一个默认工作区在侧栏里出现两份。
 function isDefaultWorkspacePath(normalized: string): boolean {
+  // normalized 已经由 normalizePathForMatch 转为小写，所以这里统一用小写匹配。
   return (
-    normalized === '~/.Rcode/default_workspace'
-    || normalized.endsWith('/.Rcode/default_workspace')
+    normalized === '~/.rcode/default_workspace'
+    || normalized.endsWith('/.rcode/default_workspace')
     || normalized === '~/.deepseekgui/default_workspace'
     || normalized.endsWith('/.deepseekgui/default_workspace')
   )

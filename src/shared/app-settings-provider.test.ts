@@ -1681,7 +1681,7 @@ describe('provider presets', () => {
   it('exposes opencode-zen preset with free models and correct capabilities', () => {
     const preset = getModelProviderPreset('opencode-zen')
     expect(preset).toBeDefined()
-    expect(preset!.name).toBe('OpenCode Zen')
+    expect(preset!.name).toBe('Rcode -Free')
     expect(preset!.baseUrl).toBe('https://opencode.ai/zen/v1')
     expect(preset!.endpointFormat).toBe('chat_completions')
     expect(preset!.models).toContain('nemotron-3.5-lightning-free')

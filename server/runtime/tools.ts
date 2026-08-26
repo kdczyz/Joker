@@ -13,6 +13,32 @@ import { listSubagents } from "../agent/subagents";
 import { assertNotSymlinkEscape, assertPathInsideWorkspace, getWorkspaceRoot, resolveWorkspacePath, sandboxPolicyName } from "../security/sandbox";
 import type { AgentToolName, BuiltinToolName, DiffResult, ExecutorResult, ManagedProcessSnapshot, PermissionMode, StreamEvent, SubagentRunUpdate, ToolCall, ToolDefinition, ToolResult } from "../shared/types";
 import { runSubagentBatch } from "../agent/subagentRunner";
+import { formatWebSearchOutput, runWebSearch, type WebSearchEngine } from "./webSearch";
+import { buildRepoMap } from "./repoMap";
+import { runTaskGraphTool } from "./taskGraphTool";
+import { runLoadSkillTool } from "./skillTool";
+import {
+  acquireLspSession,
+  lspCloseDocument,
+  lspDefinition,
+  lspDocumentSymbol,
+  lspGetDiagnostics,
+  lspHover,
+  lspImplementation,
+  lspOpenDocument,
+  lspReferences,
+  lspWorkspaceSymbol,
+  releaseLspSession
+} from "../lsp/client";
+import { findLanguageServerForFile, languageIdForFile, listLanguageServers } from "../lsp/servers";
+import { runVerify, type VerifyScope } from "./verifyTool";
+import {
+  getMcpPrompt,
+  listMcpPrompts,
+  listMcpResourceTemplates,
+  listMcpResources,
+  readMcpResource
+} from "../integrations/mcpClient";
 
 const ignoredWorkspaceEntries = new Set([
   ".DS_Store",
@@ -265,6 +291,76 @@ const inputSchemas: Record<BuiltinToolName, Record<string, unknown>> = {
       }
     },
     required: ["tasks"]
+  },
+  web_search: {
+    type: "object",
+    properties: {
+      query: { type: "string", description: "Search query." },
+      limit: { type: "number", minimum: 1, maximum: 20, description: "Maximum results. Defaults to 8." },
+      engines: { type: "array", items: { type: "string", enum: ["duckduckgo", "bing"] }, description: "Engines to try in order. Defaults to duckduckgo then bing; failures fall through to the next engine." }
+    },
+    required: ["query"]
+  },
+  lsp: {
+    type: "object",
+    properties: {
+      operation: { type: "string", enum: ["goToDefinition", "findReferences", "hover", "documentSymbol", "workspaceSymbol", "goToImplementation", "getDiagnostics"], description: "LSP operation to perform." },
+      filePath: { type: "string", description: "Path to the source file (workspace-relative or absolute)." },
+      line: { type: "number", description: "1-based line number (required for position-based operations)." },
+      character: { type: "number", description: "1-based character offset (required for position-based operations)." },
+      query: { type: "string", description: "Search query (used by workspaceSymbol)." }
+    },
+    required: ["operation", "filePath"]
+  },
+  repo_map: {
+    type: "object",
+    properties: {
+      query: { type: "string", description: "Optional task/search intent used to rank files and symbols." },
+      path: { type: "string", description: "Workspace-relative directory or file to map. Defaults to the workspace root." },
+      maxFiles: { type: "number", description: "Maximum ranked files to return. Defaults to 20." },
+      maxSymbolsPerFile: { type: "number", description: "Maximum symbols returned per file. Defaults to 12." },
+      maxScanFiles: { type: "number", description: "Maximum source/config files scanned before truncating. Defaults to 2500." },
+      refresh: { type: "boolean", description: "Bypass the short-lived in-process cache." }
+    }
+  },
+  task_graph: {
+    type: "object",
+    properties: {
+      action: { type: "string", enum: ["add", "list", "next", "start", "complete", "fail", "pause", "resume", "cancel", "set_concurrency"], description: "Task graph action. Tasks become runnable only when their dependencies succeed." },
+      id: { type: "string" },
+      title: { type: "string" },
+      dependsOn: { type: "array", items: { type: "string" } },
+      priority: { type: "number" },
+      maxAttempts: { type: "number" },
+      error: { type: "string" },
+      concurrency: { type: "number" }
+    },
+    required: ["action"]
+  },
+  load_skill: {
+    type: "object",
+    properties: {
+      skill_id: { type: "string", description: "Skill id from the Available skills catalog in your instructions. Unknown ids return the list of valid ids." }
+    },
+    required: ["skill_id"]
+  },
+  verify_changes: {
+    type: "object",
+    properties: {
+      scope: { type: "string", enum: ["focused", "full"], description: "Focused runs typecheck plus targeted tests for git-changed files; full also runs lint and build. Defaults to focused." },
+      path: { type: "string", description: "Project directory inside the workspace containing the package.json to verify. Defaults to project root." }
+    }
+  },
+  mcp_resource: {
+    type: "object",
+    properties: {
+      operation: { type: "string", enum: ["list_resources", "read_resource", "list_resource_templates", "list_prompts", "get_prompt"], description: "MCP resource/prompt operation." },
+      serverId: { type: "string", description: "MCP server id. Omit for list operations to aggregate across all enabled servers." },
+      uri: { type: "string", description: "Resource or template URI (required for read_resource; template URI for get_prompt when arguments are provided)." },
+      name: { type: "string", description: "Prompt name (required for get_prompt)." },
+      args: { type: "object", additionalProperties: true, description: "Prompt arguments for get_prompt." }
+    },
+    required: ["operation"]
   }
 };
 
@@ -297,6 +393,13 @@ export const registeredTools: ToolDefinition[] = [
   { id: "git_commit", name: "git_commit", description: "Create a git commit with the staged changes.", inputSchema: inputSchemas.git_commit, source: "builtin", risk: "high", requiresSandbox: true, requiresExecutor: true, defaultApproval: "ask", approvalMode: "ask" },
   { id: "git_push", name: "git_push", description: "Push a branch to a Git remote after explicit approval.", inputSchema: inputSchemas.git_push, source: "builtin", risk: "high", requiresSandbox: true, requiresExecutor: true, defaultApproval: "ask", approvalMode: "ask" }
   ,{ id: "delegate_agents", name: "delegate_agents", description: "Delegate independent research, review, debugging, or test-analysis tasks to isolated subagents and merge their concise reports. Prefer this when two or more scopes can be investigated independently.", inputSchema: inputSchemas.delegate_agents, source: "builtin", risk: "low", requiresSandbox: false, defaultApproval: "allow", approvalMode: "allow" }
+  ,{ id: "web_search", name: "web_search", description: "Search the web with multiple engines (DuckDuckGo, Bing) with no API key required. Engine failures fall through to the next engine; results are deduplicated by URL.", inputSchema: inputSchemas.web_search, source: "builtin", risk: "medium", requiresSandbox: false, defaultApproval: "allow", approvalMode: "allow" }
+  ,{ id: "lsp", name: "lsp", description: "Query a language server for TypeScript/JavaScript, Python, Rust, Go, C/C++, JSON, and YAML. Supports goToDefinition, findReferences, hover, documentSymbol, workspaceSymbol, goToImplementation, and getDiagnostics. Positions are 1-based (line/character as shown in editors). Requires a matching language server on PATH; missing servers return a helpful install hint instead of crashing.", inputSchema: inputSchemas.lsp, source: "builtin", risk: "low", requiresSandbox: false, defaultApproval: "allow", approvalMode: "allow" }
+  ,{ id: "repo_map", name: "repo_map", description: "Build a compact, ranked map of the local codebase before reading files. Uses path/symbol/import extraction, git recency, and BM25-like scoring with a scan budget. Prefer this before broad grep/read passes when you need to understand an unfamiliar repository.", inputSchema: inputSchemas.repo_map, source: "builtin", risk: "low", requiresSandbox: true, defaultApproval: "allow", approvalMode: "allow" }
+  ,{ id: "task_graph", name: "task_graph", description: "Plan and drive a dependency-aware task graph for this thread. actions: \"add\" (id,title,dependsOn?,priority?,maxAttempts?), \"list\", \"next\" (runnable now), \"start\" (id), \"complete\" (id), \"fail\" (id,error), \"pause\"/\"resume\"/\"cancel\" (id), \"set_concurrency\" (concurrency). Tasks become runnable only when their dependencies succeed.", inputSchema: inputSchemas.task_graph, source: "builtin", risk: "low", requiresSandbox: false, defaultApproval: "allow", approvalMode: "allow" }
+  ,{ id: "load_skill", name: "load_skill", description: "Load the full instructions of an available skill by its id (see the Available skills catalog in your instructions). Call this when a request matches a skill but its instructions were not auto-activated.", inputSchema: inputSchemas.load_skill, source: "builtin", risk: "low", requiresSandbox: false, defaultApproval: "allow", approvalMode: "allow" }
+  ,{ id: "verify_changes", name: "verify_changes", description: "Run project-aware acceptance checks for files changed in the workspace. Focused scope selects adjacent tests and typecheck; full scope also runs lint and build. Stops at the first failing check and reports which step failed.", inputSchema: inputSchemas.verify_changes, source: "builtin", risk: "low", requiresSandbox: true, requiresExecutor: true, defaultApproval: "allow", approvalMode: "allow" }
+  ,{ id: "mcp_resource", name: "mcp_resource", description: "Read MCP resources, resource templates, and prompts from configured MCP servers. list_resources/list_prompts/list_resource_templates aggregate across enabled servers when serverId is omitted; read_resource and get_prompt require the target.", inputSchema: inputSchemas.mcp_resource, source: "builtin", risk: "low", requiresSandbox: false, defaultApproval: "allow", approvalMode: "allow" }
 ];
 
 export async function getRegisteredTools(projectPath?: string): Promise<ToolDefinition[]> {
@@ -562,6 +665,202 @@ function buildExecutorToolResult(
   };
 }
 
+const POSITION_REQUIRED_OPERATIONS = new Set(["goToDefinition", "findReferences", "hover", "goToImplementation"]);
+
+/**
+ * Execute the built-in `lsp` tool: resolve the file's language server,
+ * acquire/reuse a session, open the document, run the requested operation.
+ * Missing language servers return a friendly install hint (ok:false), not a crash.
+ */
+async function executeLspTool(
+  call: ToolCall,
+  projectPath: string | undefined,
+  allowOutsideWorkspace: boolean,
+  context?: ToolExecutionContext
+): Promise<ToolResult> {
+  const operation = getString(call.arguments.operation, "operation");
+  const rawPath = getString(call.arguments.filePath, "filePath");
+
+  const serverDef = findLanguageServerForFile(rawPath);
+  if (!serverDef) {
+    const supported = listLanguageServers().map((def) => `${def.key} (${def.extensions.join(", ")})`).join("; ");
+    return {
+      toolCallId: call.id,
+      name: call.name,
+      ok: false,
+      content: `No language server registered for "${rawPath}". Supported: ${supported}.`
+    };
+  }
+
+  const filePath = allowOutsideWorkspace
+    ? (await resolveWorkspacePath(rawPath, projectPath)).canonicalPath
+    : (await assertPathInsideWorkspace(rawPath, projectPath)).canonicalPath;
+  const workspaceRoot = getWorkspaceRoot(projectPath);
+
+  let line = getNumber(call.arguments.line, 0) - 1;
+  let character = getNumber(call.arguments.character, 0) - 1;
+  if (POSITION_REQUIRED_OPERATIONS.has(operation) && (line < 0 || character < 0)) {
+    return {
+      toolCallId: call.id,
+      name: call.name,
+      ok: false,
+      content: `Operation "${operation}" requires 1-based line and character arguments.`
+    };
+  }
+  if (line < 0) line = 0;
+  if (character < 0) character = 0;
+
+  let session;
+  try {
+    session = await acquireLspSession(workspaceRoot, serverDef.key);
+  } catch (error) {
+    return {
+      toolCallId: call.id,
+      name: call.name,
+      ok: false,
+      content: error instanceof Error ? error.message : String(error)
+    };
+  }
+
+  try {
+    let content = "";
+    try {
+      content = await readFile(filePath, "utf8");
+    } catch (error) {
+      return {
+        toolCallId: call.id,
+        name: call.name,
+        ok: false,
+        content: `Cannot read file: ${error instanceof Error ? error.message : String(error)}`
+      };
+    }
+    const languageId = languageIdForFile(filePath) ?? "plaintext";
+    await lspOpenDocument(session, filePath, content, languageId);
+
+    let payload: unknown;
+    switch (operation) {
+      case "goToDefinition":
+        payload = await lspDefinition(session, filePath, line, character);
+        break;
+      case "findReferences":
+        payload = await lspReferences(session, filePath, line, character);
+        break;
+      case "hover":
+        payload = await lspHover(session, filePath, line, character);
+        break;
+      case "goToImplementation":
+        payload = await lspImplementation(session, filePath, line, character);
+        break;
+      case "documentSymbol":
+        payload = await lspDocumentSymbol(session, filePath);
+        break;
+      case "workspaceSymbol": {
+        const query = typeof call.arguments.query === "string" ? call.arguments.query : "";
+        if (!query.trim()) {
+          return { toolCallId: call.id, name: call.name, ok: false, content: "workspaceSymbol requires a query argument." };
+        }
+        payload = await lspWorkspaceSymbol(session, query);
+        break;
+      }
+      case "getDiagnostics": {
+        const diagnostics = await lspGetDiagnostics(session, filePath);
+        payload = diagnostics;
+        break;
+      }
+      default:
+        return {
+          toolCallId: call.id,
+          name: call.name,
+          ok: false,
+          content: `Unknown LSP operation: ${operation}`
+        };
+    }
+
+    try { await lspCloseDocument(session, filePath); } catch { /* best-effort close */ }
+    const serialized = JSON.stringify(payload, null, 2);
+    return {
+      toolCallId: call.id,
+      name: call.name,
+      ok: true,
+      content: serialized === undefined || serialized === "null"
+        ? `No result for ${operation} at ${filePath}:${line + 1}:${character + 1}.`
+        : serialized.slice(0, 12000)
+    };
+  } catch (error) {
+    return {
+      toolCallId: call.id,
+      name: call.name,
+      ok: false,
+      content: `LSP ${operation} failed: ${error instanceof Error ? error.message : String(error)}`
+    };
+  } finally {
+    releaseLspSession(workspaceRoot, serverDef.key);
+  }
+}
+
+/**
+ * Execute the built-in `mcp_resource` tool: list/read resources and prompts
+ * across configured MCP servers. List operations aggregate when serverId is
+ * omitted; read/get operations require the specific target.
+ */
+async function executeMcpResourceTool(call: ToolCall): Promise<ToolResult> {
+  const operation = getString(call.arguments.operation, "operation");
+  const serverId = typeof call.arguments.serverId === "string" && call.arguments.serverId.trim() ? call.arguments.serverId.trim() : undefined;
+
+  try {
+    let payload: unknown;
+    switch (operation) {
+      case "list_resources":
+        payload = await listMcpResources(serverId);
+        break;
+      case "list_resource_templates":
+        payload = await listMcpResourceTemplates(serverId);
+        break;
+      case "list_prompts":
+        payload = await listMcpPrompts(serverId);
+        break;
+      case "read_resource": {
+        const uri = getString(call.arguments.uri, "uri");
+        if (!serverId) {
+          return { toolCallId: call.id, name: call.name, ok: false, content: "read_resource requires a serverId argument." };
+        }
+        payload = await readMcpResource(serverId, uri);
+        break;
+      }
+      case "get_prompt": {
+        const name = getString(call.arguments.name, "name");
+        if (!serverId) {
+          return { toolCallId: call.id, name: call.name, ok: false, content: "get_prompt requires a serverId argument." };
+        }
+        const args = call.arguments.args && typeof call.arguments.args === "object" && !Array.isArray(call.arguments.args)
+          ? call.arguments.args as Record<string, unknown>
+          : undefined;
+        payload = await getMcpPrompt(serverId, name, args);
+        break;
+      }
+      default:
+        return { toolCallId: call.id, name: call.name, ok: false, content: `Unknown mcp_resource operation: ${operation}` };
+    }
+
+    const serialized = JSON.stringify(payload, null, 2);
+    return {
+      toolCallId: call.id,
+      name: call.name,
+      ok: true,
+      content: serialized === undefined || serialized === "null" || serialized === "[]"
+        ? `No results for ${operation}${serverId ? ` on ${serverId}` : ""}.`
+        : serialized.slice(0, 12000)
+    };
+  } catch (error) {
+    return {
+      toolCallId: call.id,
+      name: call.name,
+      ok: false,
+      content: `mcp_resource ${operation} failed: ${error instanceof Error ? error.message : String(error)}`
+    };
+  }
+}
+
 export async function executeTool(call: ToolCall, projectPath?: string, context?: ToolExecutionContext): Promise<ToolResult> {
   const startedAt = Date.now();
   const allowOutsideWorkspace = context?.permissionMode === "full_access";
@@ -738,6 +1037,58 @@ export async function executeTool(call: ToolCall, projectPath?: string, context?
       const response = await fetch(url, { signal: context?.signal });
       const text = await response.text();
       result = { toolCallId: call.id, name: call.name, ok: response.ok, exitCode: response.status, content: text.slice(0, 12000) };
+    } else if (call.name === "web_search") {
+      const query = getString(call.arguments.query, "query");
+      const engines = Array.isArray(call.arguments.engines)
+        ? call.arguments.engines.filter((engine): engine is WebSearchEngine => typeof engine === "string")
+        : undefined;
+      const search = await runWebSearch({ query, engines, signal: context?.signal });
+      result = { toolCallId: call.id, name: call.name, ok: search.results.length > 0 || search.engineErrors.length === 0, content: formatWebSearchOutput(search) };
+    } else if (call.name === "lsp") {
+      result = await executeLspTool(call, projectPath, allowOutsideWorkspace, context);
+    } else if (call.name === "repo_map") {
+      const mapTarget = call.arguments.path
+        ? (await resolveReadableToolPath(call.arguments.path, projectPath, allowOutsideWorkspace)).canonicalPath
+        : undefined;
+      const map = await buildRepoMap({
+        workspaceRoot: getWorkspaceRoot(projectPath),
+        targetPath: mapTarget,
+        query: typeof call.arguments.query === "string" ? call.arguments.query : undefined,
+        maxFiles: typeof call.arguments.maxFiles === "number" ? call.arguments.maxFiles : undefined,
+        maxSymbolsPerFile: typeof call.arguments.maxSymbolsPerFile === "number" ? call.arguments.maxSymbolsPerFile : undefined,
+        maxScanFiles: typeof call.arguments.maxScanFiles === "number" ? call.arguments.maxScanFiles : undefined,
+        refresh: call.arguments.refresh === true,
+        signal: context?.signal
+      });
+      result = { toolCallId: call.id, name: call.name, ok: true, content: JSON.stringify(map, null, 2).slice(0, 12000) };
+    } else if (call.name === "task_graph") {
+      const graphOutput = await runTaskGraphTool(
+        { action: getString(call.arguments.action, "action"), ...call.arguments },
+        { conversationId: context?.conversationId, projectPath, workspaceRoot: getWorkspaceRoot(projectPath) }
+      );
+      const hasError = typeof graphOutput.error === "string";
+      result = {
+        toolCallId: call.id,
+        name: call.name,
+        ok: !hasError,
+        content: JSON.stringify(graphOutput, null, 2).slice(0, 12000)
+      };
+    } else if (call.name === "load_skill") {
+      const skillResult = await runLoadSkillTool({ skill_id: call.arguments.skill_id }, projectPath);
+      result = { toolCallId: call.id, name: call.name, ok: skillResult.ok, content: skillResult.content };
+    } else if (call.name === "verify_changes") {
+      const verifyCwd = call.arguments.path ? (await resolveReadableToolPath(call.arguments.path, projectPath, allowOutsideWorkspace)).canonicalPath : getWorkspaceRoot(projectPath);
+      const verifyScope: VerifyScope = call.arguments.scope === "full" ? "full" : "focused";
+      const verifyOutcome = await runVerify(
+        { cwd: verifyCwd, scope: verifyScope, signal: context?.signal },
+        async (command) => {
+          const outcome = await portableExecutor.run({ command, cwd: verifyCwd, projectPath, allowOutsideWorkspace, signal: context?.signal });
+          return { ok: outcome.ok, output: executorOutput(outcome) };
+        }
+      );
+      result = { toolCallId: call.id, name: call.name, ok: verifyOutcome.ok, content: verifyOutcome.content.slice(0, 12000) };
+    } else if (call.name === "mcp_resource") {
+      result = await executeMcpResourceTool(call);
     } else if (call.name === "run_shell") {
       if (!runtimeConfig.computerControl.enabled || !runtimeConfig.computerControl.shell) {
         throw new Error("Computer control shell is disabled by config/agent.toml");

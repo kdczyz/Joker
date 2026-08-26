@@ -94,7 +94,14 @@ export type BuiltinToolName =
   | "git_stage"
   | "git_commit"
   | "git_push"
-  | "delegate_agents";
+  | "delegate_agents"
+  | "web_search"
+  | "lsp"
+  | "repo_map"
+  | "task_graph"
+  | "load_skill"
+  | "verify_changes"
+  | "mcp_resource";
 
 export type AgentToolName = BuiltinToolName | `mcp__${string}__${string}` | string;
 

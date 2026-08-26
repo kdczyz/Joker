@@ -53,10 +53,11 @@ describe('TurnAttachmentService', () => {
     })
   })
 
-  it('uses a text fallback when a text-only model receives a new image attachment', async () => {
+  it('sends real image attachments regardless of model image capability', async () => {
     const content = imageAttachment()
     const service = new TurnAttachmentService(store(content))
 
+    // 所有模型均可上传并接收图片；不支持识图的模型由提供商报错。
     const resolved = await service.resolveTurnAttachments({
       attachmentIds: [content.id],
       threadId: 'thread_1',
@@ -68,12 +69,11 @@ describe('TurnAttachmentService', () => {
     })
 
     expect(resolved).toEqual({
-      imageAttachments: [],
-      textFallbacks: [expect.objectContaining({
+      imageAttachments: [expect.objectContaining({
         id: content.id,
-        dataBase64: content.data.toString('base64'),
-        wasCompressed: false
+        dataBase64: content.data.toString('base64')
       })],
+      textFallbacks: [],
       documents: []
     })
   })

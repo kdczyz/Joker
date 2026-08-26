@@ -89,15 +89,17 @@ export class ModelStreamCollector {
         // chunks, and do not let a later completed marker clear an error.
         if (this.stopReason !== 'error') this.stopReason = chunk.stopReason
         return { intents: [] }
-      case 'error':
+      case 'error': {
         this.stopReason = 'error'
+        const visionRejection = describeModelVisionRejection(chunk.message)
         return {
           intents: [{
             kind: 'model_error',
-            message: chunk.message,
+            message: visionRejection ?? chunk.message,
             ...(chunk.code ? { code: chunk.code } : {})
           }]
         }
+      }
     }
   }
 
@@ -164,6 +166,23 @@ export class ModelStreamCollector {
       }]
     }
   }
+}
+
+/**
+ * Detect provider rejections caused by image input on a non-vision model.
+ * All models now receive real image parts; when the upstream model cannot
+ * process them, surface a clear "model does not support vision" message
+ * instead of the raw provider error.
+ */
+export function describeModelVisionRejection(rawMessage: string): string | undefined {
+  const message = rawMessage.toLowerCase()
+  if (!message) return undefined
+  const mentionsImage = /image|图片|vision|multimodal|visual/.test(message)
+  if (!mentionsImage) return undefined
+  const rejectsInput =
+    /not.?support|unsupport|unsupported|invalid|cannot|can't|unable|拒绝|不支持|无法/.test(message)
+  if (!rejectsInput) return undefined
+  return '当前模型不支持识图，请更换支持视觉能力的模型后再发送图片。'
 }
 
 /** O(1)-append, lazily joined stream text accumulator. */

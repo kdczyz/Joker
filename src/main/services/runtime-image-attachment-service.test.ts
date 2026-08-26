@@ -6,10 +6,12 @@ import sharp from 'sharp'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
   assertSourceByteLength,
+  isUploadBusyMessage,
   MAX_RUNTIME_IMAGE_OUTPUT_BYTES,
   MAX_RUNTIME_IMAGE_SOURCE_PIXELS,
   prepareRuntimeImageAttachment,
-  uploadRuntimeImageAttachment
+  uploadRuntimeImageAttachment,
+  uploadRuntimeImageAttachmentQueued
 } from './runtime-image-attachment-service'
 import { MAX_RUNTIME_IMAGE_SOURCE_BYTES } from '../ipc/app-ipc-schemas/runtime-image-attachment'
 
@@ -126,6 +128,72 @@ describe('runtime image attachment service', () => {
       source: { kind: 'base64', dataBase64: 'not-base64!', mimeType: 'image/png' }
     }, { runtimeRequest })).resolves.toMatchObject({ ok: false, message: expect.stringMatching(/Base64/) })
     expect(MAX_RUNTIME_IMAGE_SOURCE_PIXELS).toBe(100_000_000)
+  })
+
+  it('serializes queued uploads so only one POST hits the runtime at a time', async () => {
+    const source = await sharp({
+      create: { width: 32, height: 24, channels: 3, background: '#112233' }
+    }).png().toBuffer()
+    let inFlight = 0
+    let maxInFlight = 0
+    let uploadCalls = 0
+    const runtimeRequest = vi.fn(async (path: string, _method?: string, body?: string) => {
+      if (path === '/v1/runtime/info') return runtimeInfoResponse()
+      uploadCalls += 1
+      const callIndex = uploadCalls
+      inFlight += 1
+      maxInFlight = Math.max(maxInFlight, inFlight)
+      // Simulate a slow first upload so a concurrent second caller would
+      // overlap unless the queue serializes them.
+      if (callIndex === 1) await new Promise((resolve) => setTimeout(resolve, 50))
+      inFlight -= 1
+      return attachmentResponse(JSON.parse(body ?? '{}'))
+    })
+    const dependencies = { runtimeRequest }
+    const base64Source = { kind: 'base64' as const, dataBase64: source.toString('base64'), mimeType: 'image/png' }
+
+    const [first, second] = await Promise.all([
+      uploadRuntimeImageAttachmentQueued({ source: base64Source, name: 'a.png' }, dependencies),
+      uploadRuntimeImageAttachmentQueued({ source: base64Source, name: 'b.png' }, dependencies)
+    ])
+
+    expect(first.ok).toBe(true)
+    expect(second.ok).toBe(true)
+    expect(maxInFlight).toBe(1)
+  })
+
+  it('retries transient 429 busy responses before succeeding', async () => {
+    const source = await sharp({
+      create: { width: 32, height: 24, channels: 3, background: '#445566' }
+    }).png().toBuffer()
+    let uploadCalls = 0
+    const runtimeRequest = vi.fn(async (path: string, _method?: string, body?: string) => {
+      if (path === '/v1/runtime/info') return runtimeInfoResponse()
+      uploadCalls += 1
+      if (uploadCalls === 1) {
+        return {
+          ok: false,
+          status: 429,
+          body: JSON.stringify({ message: 'an attachment upload is already in progress' })
+        }
+      }
+      return attachmentResponse(JSON.parse(body ?? '{}'))
+    })
+
+    const result = await uploadRuntimeImageAttachment({
+      source: { kind: 'base64', dataBase64: source.toString('base64'), mimeType: 'image/png' },
+      name: 'retry.png'
+    }, { runtimeRequest })
+
+    expect(result).toMatchObject({ ok: true, attachment: { name: 'retry.png' } })
+    expect(uploadCalls).toBe(2)
+  })
+
+  it('classifies busy messages without retrying permanent failures', () => {
+    expect(isUploadBusyMessage('an attachment upload is already in progress')).toBe(true)
+    expect(isUploadBusyMessage('rate limited by runtime')).toBe(true)
+    expect(isUploadBusyMessage('attachment validation failed')).toBe(false)
+    expect(isUploadBusyMessage('attachment upload failed (HTTP 500)')).toBe(false)
   })
 })
 

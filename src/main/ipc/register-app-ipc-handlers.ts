@@ -118,7 +118,7 @@ import {
   workspaceRootSchema,
   legacySessionImportPayloadSchema
 } from './app-ipc-schemas'
-import { uploadRuntimeImageAttachment } from '../services/runtime-image-attachment-service'
+import { uploadRuntimeImageAttachmentQueued } from '../services/runtime-image-attachment-service'
 import {
   createApprovalConsentToken,
   RCODE_APPROVAL_CONSENT_HEADER
@@ -833,7 +833,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       runtimeImageAttachmentUploadPayloadSchema,
       payload
     )
-    return uploadRuntimeImageAttachment(request, { runtimeRequest })
+    return uploadRuntimeImageAttachmentQueued(request, { runtimeRequest })
   })
 
   ipcMain.handle('approval:decide', async (event, payload: unknown) => {
