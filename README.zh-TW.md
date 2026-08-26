@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⌁ Joker code
+<img src="docs/assets/logo.png" alt="Joker" width="160" align="center" />
+
+# ⌁ Joker
 
 ### 本地優先、權限可控的 AI Coding Agent
 
@@ -26,12 +28,12 @@
 
 ## ✦ 專案簡介
 
-Joker code 是一個面向真實開發工作的本地 AI Agent 框架。它透過桌面客戶端連接 OpenAI-compatible 模型，在專案工作區內呼叫檔案、終端機、Git、瀏覽器與桌面自動化工具，並以 `allow / ask / deny` 權限規則控制操作範圍。
+Joker 是一個面向真實開發工作的本地 AI Agent 框架。它透過桌面客戶端連接 OpenAI-compatible 模型，在專案工作區內呼叫檔案、終端機、Git、瀏覽器與桌面自動化工具，並以 `allow / ask / deny` 權限規則控制操作範圍。
 
 專案同時包含 Android 客戶端與 Cloudflare 遠端服務：電腦在線時，可從手機進入公開的專案和對話繼續執行 Agent 任務；電腦離線時，Work 模式仍可透過雲端代理聊天或生成圖片。
 
 > [!IMPORTANT]
-> Joker code 依賴路徑校驗、指令分析、工具審批和審計記錄提供便攜式安全邊界，但不宣稱具備 OS 級沙箱。涉及生產環境、敏感資料或高權限指令時，仍應使用容器、專用帳號或隔離主機。
+> Joker 依賴路徑校驗、指令分析、工具審批和審計記錄提供便攜式安全邊界，但不宣稱具備 OS 級沙箱。涉及生產環境、敏感資料或高權限指令時，仍應使用容器、專用帳號或隔離主機。
 
 ## ◈ 核心能力
 
@@ -52,8 +54,8 @@ Joker code 是一個面向真實開發工作的本地 AI Agent 框架。它透�
 
 ```mermaid
 flowchart LR
-    U[開發者] --> D[Joker code Desktop]
-    U --> M[Joker code Android]
+    U[開發者] --> D[Joker Desktop]
+    U --> M[Joker Android]
 
     D --> A[Local Agent Server]
     A --> P[AI Providers]
@@ -125,11 +127,11 @@ npm run remote:test      # Cloudflare 遠端服務測試
 - **短時記憶**：依 token 預算保留最近完整對話輪次，將較早內容壓縮為本地摘要，並限制超長工具輸出。
 - **長期記憶**：以專案路徑隔離儲存至本機 SQLite，依關鍵字關聯度、重要度和時效召回；支援過期時間、去重和敏感憑證攔截。
 
-內建 `memory-management` Skill 提供統一適配約定。其他開源 Memory Skill 也可將持久化操作委託給 `memory_search`、`memory_store` 和 `memory_forget`，無需直接依賴 Joker code 的資料庫結構。關閉「Skill 適配」後，這三個工具不會暴露給模型。
+內建 `memory-management` Skill 提供統一適配約定。其他開源 Memory Skill 也可將持久化操作委託給 `memory_search`、`memory_store` 和 `memory_forget`，無需直接依賴 Joker 的資料庫結構。關閉「Skill 適配」後，這三個工具不會暴露給模型。
 
 ## ⚙ 長期行程工作階段
 
-開發伺服器、檔案監聽器等不會自行結束的指令由 Joker code 代管，無需添加 `&` 或 `nohup`：
+開發伺服器、檔案監聽器等不會自行結束的指令由 Joker 代管，無需添加 `&` 或 `nohup`：
 
 - `start_process`：啟動長期行程並回傳工作階段 ID、PID 和啟動輸出。
 - `read_process`：讀取目前狀態和最近輸出。
@@ -137,11 +139,11 @@ npm run remote:test      # Cloudflare 遠端服務測試
 - `stop_process`：停止行程及其子行程樹。
 - `list_processes`：列出目前專案的代管行程。
 
-聊天輸入框的「終端機」入口可檢視狀態、PID、指令與輸出。Joker code 服務結束時會清理仍在執行的代管行程，不會在重啟後自動恢復舊指令。
+聊天輸入框的「終端機」入口可檢視狀態、PID、指令與輸出。Joker 服務結束時會清理仍在執行的代管行程，不會在重啟後自動恢復舊指令。
 
 ## ◉ macOS 桌面控制
 
-Joker code 可連接本地 `native-devtools-mcp`，讀取和操作 macOS 應用程式介面：
+Joker 可連接本地 `native-devtools-mcp`，讀取和操作 macOS 應用程式介面：
 
 ```bash
 npm install -g native-devtools-mcp@0.10.1
@@ -157,7 +159,7 @@ native-devtools-mcp setup
 
 ## 🔐 權限與安全
 
-Joker code 採用「工作區邊界 + 工具審批 + 審計記錄」的分層策略：
+Joker 採用「工作區邊界 + 工具審批 + 審計記錄」的分層策略：
 
 - 專案內讀取、編輯、搜尋、測試和構建可依策略自動執行。
 - 安裝依賴、聯網、遷移與容器修改會在執行前提示。
@@ -207,6 +209,6 @@ Joker/
 
 <div align="center">
 
-**Joker code · Code locally, approve explicitly, collaborate anywhere.**
+**Joker · Code locally, approve explicitly, collaborate anywhere.**
 
 </div>

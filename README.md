@@ -1,6 +1,8 @@
 <div align="center">
 
-# ⌁ Joker code
+<img src="docs/assets/logo.png" alt="Joker" width="160" align="center" />
+
+# ⌁ Joker
 
 ### Local-first, Permission-Controlled AI Coding Agent
 
@@ -26,12 +28,12 @@ Empowering AI to understand code, edit files, test & build, manage Git workflows
 
 ## ✦ Introduction
 
-Joker code is a local-first AI Agent framework designed for real-world software engineering workflows. Through its desktop client, it connects to any OpenAI-compatible model, invoking tools across files, terminal, Git, browser, and desktop automation within project workspaces, governed by granular `allow / ask / deny` permission rules.
+Joker is a local-first AI Agent framework designed for real-world software engineering workflows. Through its desktop client, it connects to any OpenAI-compatible model, invoking tools across files, terminal, Git, browser, and desktop automation within project workspaces, governed by granular `allow / ask / deny` permission rules.
 
 The project also includes an Android mobile client and Cloudflare-backed remote services: when your computer is online, you can access public projects and sessions from your phone to continue running Agent tasks; when your computer is offline, Work mode allows chat interactions and image generation via cloud proxy.
 
 > [!IMPORTANT]
-> Joker code relies on path validation, command analysis, tool approvals, and audit logging to provide a portable security perimeter. It does not claim an OS-level sandbox. For production environments, sensitive data, or high-privilege commands, containers, dedicated user accounts, or isolated machines should still be used.
+> Joker relies on path validation, command analysis, tool approvals, and audit logging to provide a portable security perimeter. It does not claim an OS-level sandbox. For production environments, sensitive data, or high-privilege commands, containers, dedicated user accounts, or isolated machines should still be used.
 
 ## ◈ Core Capabilities
 
@@ -52,8 +54,8 @@ The project also includes an Android mobile client and Cloudflare-backed remote 
 
 ```mermaid
 flowchart LR
-    U[Developer] --> D[Joker code Desktop]
-    U --> M[Joker code Android]
+    U[Developer] --> D[Joker Desktop]
+    U --> M[Joker Android]
 
     D --> A[Local Agent Server]
     A --> P[AI Providers]
@@ -125,11 +127,11 @@ In **Settings → Memory**, you can configure two context tiers:
 - **Short-term Memory**: Retains the most recent full dialogue turns within a token budget, compresses earlier turns into local summaries, and caps oversized tool outputs.
 - **Long-term Memory**: Isolated by project path and persisted to local SQLite; recalled based on keyword relevance, importance, and recency. Supports TTL expiration, deduplication, and credential redaction.
 
-The built-in `memory-management` Skill provides standard adaptation contracts. Other open-source Memory Skills can delegate persistence to `memory_search`, `memory_store`, and `memory_forget` without direct dependencies on Joker code's database schema. When "Skill Adaptation" is disabled, these three tools will not be exposed to models.
+The built-in `memory-management` Skill provides standard adaptation contracts. Other open-source Memory Skills can delegate persistence to `memory_search`, `memory_store`, and `memory_forget` without direct dependencies on Joker's database schema. When "Skill Adaptation" is disabled, these three tools will not be exposed to models.
 
 ## ⚙ Long-Running Process Sessions
 
-Commands that do not terminate on their own (e.g., dev servers, file watchers) are managed by Joker code without needing `&` or `nohup`:
+Commands that do not terminate on their own (e.g., dev servers, file watchers) are managed by Joker without needing `&` or `nohup`:
 
 - `start_process`: Starts a background process and returns its session ID, PID, and initial output.
 - `read_process`: Reads current status and recent output logs.
@@ -137,11 +139,11 @@ Commands that do not terminate on their own (e.g., dev servers, file watchers) a
 - `stop_process`: Stops the process and its entire child process tree.
 - `list_processes`: Lists all managed processes for the active project.
 
-Access the "Terminal" entry next to the chat input to inspect process status, PIDs, commands, and output logs. Managed processes are gracefully terminated when the Joker code server exits and are not automatically resumed upon restart.
+Access the "Terminal" entry next to the chat input to inspect process status, PIDs, commands, and output logs. Managed processes are gracefully terminated when the Joker server exits and are not automatically resumed upon restart.
 
 ## ◉ macOS Desktop Control
 
-Joker code can connect to a local `native-devtools-mcp` service to inspect and interact with macOS application windows:
+Joker can connect to a local `native-devtools-mcp` service to inspect and interact with macOS application windows:
 
 ```bash
 npm install -g native-devtools-mcp@0.10.1
@@ -157,7 +159,7 @@ It is recommended to set UI-modifying actions to `ask`. The Agent prioritizes Ac
 
 ## 🔐 Permissions & Security
 
-Joker code adopts a tiered defense strategy: **Workspace Boundaries + Tool Approvals + Audit Logs**:
+Joker adopts a tiered defense strategy: **Workspace Boundaries + Tool Approvals + Audit Logs**:
 
 - In-workspace read, edit, search, test, and build tasks can execute automatically based on policy.
 - Dependency installation, network requests, migrations, and container modifications prompt before execution.
@@ -207,6 +209,6 @@ Joker/
 
 <div align="center">
 
-**Joker code · Code locally, approve explicitly, collaborate anywhere.**
+**Joker · Code locally, approve explicitly, collaborate anywhere.**
 
 </div>

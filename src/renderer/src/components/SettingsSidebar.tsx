@@ -1,7 +1,7 @@
 import type { Dispatch, ReactElement, SetStateAction } from 'react'
-import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, GitBranch, Github, Globe, Keyboard, Layers, Palette, Puzzle, RefreshCw, Search, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
+import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, Cloud, GitBranch, Github, Globe, Keyboard, Layers, Palette, Puzzle, RefreshCw, Search, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
 
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch' | 'github'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch' | 'github' | 'cloudflare'
 
 export function SettingsSidebar({
   category,
@@ -64,6 +64,15 @@ export function SettingsSidebar({
         >
           <Github className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('github')}
+        </button>
+        <button
+          type="button"
+          data-cursor-spotlight-target
+          className={catCls('cloudflare')}
+          onClick={() => setCategory('cloudflare')}
+        >
+          <Cloud className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
+          {t('cloudflare')}
         </button>
         <button
           type="button"

@@ -180,6 +180,21 @@ const api = {
     ipcRenderer.invoke('github:mcp:status'),
   authGithubLogin: () =>
     ipcRenderer.invoke('auth:github:login'),
+  // --- Cloudflare OAuth 授权 ---
+  cloudflareOAuthConnect: (options?: { clientId?: string }) =>
+    ipcRenderer.invoke('cloudflare:oauth:connect', {
+      clientId: options?.clientId
+    }),
+  cloudflareOAuthDisconnect: () =>
+    ipcRenderer.invoke('cloudflare:oauth:disconnect'),
+  cloudflareStatus: () =>
+    ipcRenderer.invoke('cloudflare:status'),
+  cloudflareGetClientId: () =>
+    ipcRenderer.invoke('cloudflare:get-client-id'),
+  cloudflareSetClientId: (clientId: string) =>
+    ipcRenderer.invoke('cloudflare:set-client-id', { clientId }),
+  cloudflareClearClientId: () =>
+    ipcRenderer.invoke('cloudflare:clear-client-id'),
   ensurePptMaster: () => ipcRenderer.invoke('ppt-master:ensure'),
   openSkillRoot: (rootPath) =>
     ipcRenderer.invoke('skill:open-root', rootPath),

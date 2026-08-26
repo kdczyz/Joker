@@ -571,6 +571,15 @@ export type JokerGuiApi = ExtensionIpcApi & {
   githubMcpStatus: () => Promise<{ enabled: boolean }>
   /** 登录界面「使用 GitHub 登录」：主进程跑 PKCE 拿到 token 后交后端换取 Joker 会话。 */
   authGithubLogin: () => Promise<AuthGithubLoginResult>
+  // --- Cloudflare OAuth 授权 ---
+  /** 弹出浏览器完成 Cloudflare OAuth（PKCE）。`clientId` 可选，未传时回退到环境变量 / 已保存值。 */
+  cloudflareOAuthConnect: (options?: { clientId?: string }) => Promise<CloudflareConnectResult>
+  /** 撤销远端 token 并清除本地凭据。 */
+  cloudflareOAuthDisconnect: () => Promise<{ ok: boolean }>
+  cloudflareStatus: () => Promise<CloudflareStatusResult>
+  cloudflareGetClientId: () => Promise<{ clientId: string | null }>
+  cloudflareSetClientId: (clientId: string) => Promise<{ ok: boolean }>
+  cloudflareClearClientId: () => Promise<{ ok: boolean }>
   /** Install/repair the managed PPT Master skill and its isolated Python environment. */
   ensurePptMaster: () => Promise<PptMasterEnsureResult>
   openSkillRoot: (rootPath: string) => Promise<PathOpenResult>
@@ -880,6 +889,26 @@ export interface GithubCreatePrPayload {
 }
 
 export type GithubCreatePrResult = { ok: boolean; htmlUrl?: string; message?: string }
+
+// --- Cloudflare OAuth 授权 (shared contract) ---
+
+export interface CloudflareUserInfo {
+  /** OIDC subject — stable unique id. */
+  sub: string
+  email: string | null
+  emailVerified: boolean
+  name: string | null
+  preferredUsername: string | null
+  picture: string | null
+}
+
+export type CloudflareConnectResult = { ok: true; user: CloudflareUserInfo } | { ok: false; message: string }
+
+export type CloudflareStatusResult = {
+  connected: boolean
+  user: CloudflareUserInfo | null
+  scope: string | null
+}
 
 // --- GitHub OAuth 登录（登录界面「使用 GitHub 登录」，纯本地身份，不依赖账号服务器） ---
 

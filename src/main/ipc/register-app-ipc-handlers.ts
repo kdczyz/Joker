@@ -161,6 +161,18 @@ import {
 } from '../codex-auth'
 import { startGithubOAuth } from '../github-oauth'
 import {
+  startCloudflareOAuth,
+  revokeCloudflareToken
+} from '../cloudflare-oauth'
+import {
+  storeCloudflareCredentials,
+  getCloudflareCredentials,
+  clearCloudflareCredentials,
+  storeCloudflareClientId,
+  getCloudflareClientId,
+  clearCloudflareClientId
+} from '../services/cloudflare-credential-store'
+import {
   syncGithubAccountToEnvironment,
   clearGithubAccountFromEnvironment
 } from '../github-environment-bridge'
@@ -1231,6 +1243,65 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       user: creds?.user ?? null,
       scope: creds?.scope ?? null
     }
+  })
+
+  // --- Cloudflare OAuth 授权 ---
+  ipcMain.handle('cloudflare:oauth:connect', async (_, payload: unknown) => {
+    const { clientId } = parseIpcPayload(
+      'cloudflare:oauth:connect',
+      z.object({ clientId: z.string().optional() }).strict(),
+      payload
+    )
+    if (clientId?.trim()) {
+      await storeCloudflareClientId(clientId.trim())
+    }
+    const result = await startCloudflareOAuth(
+      async (url: string) => {
+        await shell.openExternal(url)
+      },
+      clientId
+    )
+    if (!result.ok) return { ok: false, message: result.message }
+    await storeCloudflareCredentials(result.credentials)
+    return { ok: true, user: result.credentials.user }
+  })
+
+  ipcMain.handle('cloudflare:oauth:disconnect', async () => {
+    const creds = await getCloudflareCredentials()
+    if (creds) {
+      await revokeCloudflareToken(creds.accessToken)
+    }
+    await clearCloudflareCredentials()
+    return { ok: true }
+  })
+
+  ipcMain.handle('cloudflare:status', async () => {
+    const creds = await getCloudflareCredentials()
+    return {
+      connected: Boolean(creds),
+      user: creds?.user ?? null,
+      scope: creds?.scope ?? null
+    }
+  })
+
+  ipcMain.handle('cloudflare:get-client-id', async () => {
+    const clientId = await getCloudflareClientId()
+    return { clientId }
+  })
+
+  ipcMain.handle('cloudflare:set-client-id', async (_, payload: unknown) => {
+    const { clientId } = parseIpcPayload(
+      'cloudflare:set-client-id',
+      z.object({ clientId: z.string().min(1) }).strict(),
+      payload
+    )
+    await storeCloudflareClientId(clientId.trim())
+    return { ok: true }
+  })
+
+  ipcMain.handle('cloudflare:clear-client-id', async () => {
+    await clearCloudflareClientId()
+    return { ok: true }
   })
 
   ipcMain.handle('github:list-repos', async () => {
