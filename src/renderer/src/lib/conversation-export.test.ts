@@ -8,7 +8,7 @@ import {
 const labels: ConversationExportLabels = {
   exportedAt: 'Exported',
   user: 'You',
-  assistant: 'Rcode',
+  assistant: 'Joker',
   attachments: 'Attachments',
   referencedFiles: 'Referenced files',
   generatedFiles: 'Generated files',

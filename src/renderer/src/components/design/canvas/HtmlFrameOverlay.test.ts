@@ -145,7 +145,7 @@ function appendHtmlFrame(
 describe('HtmlFrameOverlay preview gating', () => {
   it('mounts the webview for skeleton placeholders before the first stable HTML lands', () => {
     expect(shouldRenderHtmlFrameWebview({
-      fileUrl: 'file:///workspace/.Rcode-design/screen/v1.html',
+      fileUrl: 'file:///workspace/.Joker-design/screen/v1.html',
       previewState: 'skeleton',
       hasRenderableContent: false
     })).toBe(true)
@@ -161,7 +161,7 @@ describe('HtmlFrameOverlay preview gating', () => {
 
   it('keeps transient partial HTML off-screen until the first renderable revision exists', () => {
     expect(shouldRenderHtmlFrameWebview({
-      fileUrl: 'file:///workspace/.Rcode-design/screen/v1.html',
+      fileUrl: 'file:///workspace/.Joker-design/screen/v1.html',
       previewState: 'transient',
       hasRenderableContent: false
     })).toBe(false)
@@ -169,7 +169,7 @@ describe('HtmlFrameOverlay preview gating', () => {
 
   it('keeps showing the last good preview while later writes are transient', () => {
     expect(shouldRenderHtmlFrameWebview({
-      fileUrl: 'file:///workspace/.Rcode-design/screen/v1.html',
+      fileUrl: 'file:///workspace/.Joker-design/screen/v1.html',
       previewState: 'transient',
       hasRenderableContent: true
     })).toBe(true)
@@ -213,8 +213,8 @@ describe('HtmlFrameOverlay async preview epoch policy', () => {
     const epoch = {
       shapeId: 'shape-1',
       artifactId: 'screen',
-      artifactRelativePath: '.Rcode-design/doc/screen/v1.html',
-      previewWebviewUrl: 'file:///workspace/.Rcode-design/doc/screen/v1.html?rev=3',
+      artifactRelativePath: '.Joker-design/doc/screen/v1.html',
+      previewWebviewUrl: 'file:///workspace/.Joker-design/doc/screen/v1.html?rev=3',
       previewRevision: 3,
       webviewMountNonce: 8
     }
@@ -222,13 +222,13 @@ describe('HtmlFrameOverlay async preview epoch policy', () => {
     expect(htmlFramePreviewAsyncEpochMatches(epoch, { ...epoch })).toBe(true)
     expect(htmlFramePreviewAsyncEpochMatches(epoch, {
       ...epoch,
-      artifactRelativePath: '.Rcode-design/doc/screen/v2.html',
-      previewWebviewUrl: 'file:///workspace/.Rcode-design/doc/screen/v2.html?rev=1',
+      artifactRelativePath: '.Joker-design/doc/screen/v2.html',
+      previewWebviewUrl: 'file:///workspace/.Joker-design/doc/screen/v2.html?rev=1',
       previewRevision: 1
     })).toBe(false)
     expect(htmlFramePreviewAsyncEpochMatches(epoch, {
       ...epoch,
-      previewWebviewUrl: 'file:///workspace/.Rcode-design/doc/screen/v1.html?rev=4',
+      previewWebviewUrl: 'file:///workspace/.Joker-design/doc/screen/v1.html?rev=4',
       previewRevision: 4
     })).toBe(false)
     expect(htmlFramePreviewAsyncEpochMatches(epoch, { ...epoch, webviewMountNonce: 9 })).toBe(false)
@@ -303,10 +303,10 @@ describe('HtmlFrameOverlay native webview scaling', () => {
   })
 
   it('uses a stable isolated partition per frame so file:// zoom does not leak', () => {
-    expect(htmlFrameWebviewPartition('Screen 1')).toBe('Rcode-proto-frame-screen-1')
-    expect(htmlFrameWebviewPartition('Screen 2')).toBe('Rcode-proto-frame-screen-2')
-    expect(htmlFrameWebviewPartition('Screen 1')).toBe('Rcode-proto-frame-screen-1')
-    expect(htmlFrameWebviewPartition('')).toBe('Rcode-proto-frame-frame')
+    expect(htmlFrameWebviewPartition('Screen 1')).toBe('Joker-proto-frame-screen-1')
+    expect(htmlFrameWebviewPartition('Screen 2')).toBe('Joker-proto-frame-screen-2')
+    expect(htmlFrameWebviewPartition('Screen 1')).toBe('Joker-proto-frame-screen-1')
+    expect(htmlFrameWebviewPartition('')).toBe('Joker-proto-frame-frame')
   })
 })
 
@@ -584,8 +584,8 @@ describe('HtmlFrameOverlay preview ready promotion policy', () => {
       previewStatus: 'pending',
       previewRenderState: 'renderable',
       drawingActive: false,
-      artifactRelativePath: '.Rcode-design/doc/screen/v2.html',
-      previewRelativePath: '.Rcode-design/doc/screen/v2.html'
+      artifactRelativePath: '.Joker-design/doc/screen/v2.html',
+      previewRelativePath: '.Joker-design/doc/screen/v2.html'
     })).toBe(true)
   })
 
@@ -594,22 +594,22 @@ describe('HtmlFrameOverlay preview ready promotion policy', () => {
       previewStatus: 'pending',
       previewRenderState: 'renderable',
       drawingActive: false,
-      artifactRelativePath: '.Rcode-design/doc/screen/v2.html',
-      previewRelativePath: '.Rcode-design/doc/screen/v1.html'
+      artifactRelativePath: '.Joker-design/doc/screen/v2.html',
+      previewRelativePath: '.Joker-design/doc/screen/v1.html'
     })).toBe(false)
     expect(htmlFrameShouldPromotePreviewToReady({
       previewStatus: 'pending',
       previewRenderState: 'transient',
       drawingActive: false,
-      artifactRelativePath: '.Rcode-design/doc/screen/v2.html',
-      previewRelativePath: '.Rcode-design/doc/screen/v2.html'
+      artifactRelativePath: '.Joker-design/doc/screen/v2.html',
+      previewRelativePath: '.Joker-design/doc/screen/v2.html'
     })).toBe(false)
     expect(htmlFrameShouldPromotePreviewToReady({
       previewStatus: 'pending',
       previewRenderState: 'renderable',
       drawingActive: true,
-      artifactRelativePath: '.Rcode-design/doc/screen/v2.html',
-      previewRelativePath: '.Rcode-design/doc/screen/v2.html'
+      artifactRelativePath: '.Joker-design/doc/screen/v2.html',
+      previewRelativePath: '.Joker-design/doc/screen/v2.html'
     })).toBe(false)
   })
 })

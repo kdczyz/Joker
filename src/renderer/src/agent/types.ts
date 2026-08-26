@@ -8,9 +8,9 @@ import type {
   CoreRuntimeInfoJson,
   CoreRuntimeSkillJson,
   CoreRuntimeToolDiagnosticsJson
-} from './Rcode-contract'
+} from './Joker-contract'
 import type { ApprovalPolicy, SandboxMode } from '@shared/app-settings'
-import type { ComposerContextAttachment } from '@Rcode/extension-api'
+import type { ComposerContextAttachment } from '@joker-code/extension-api'
 
 export type ToolItemKind = 'tool_call' | 'command_execution' | 'file_change'
 export type RuntimeErrorSeverity = 'info' | 'warning' | 'error'
@@ -491,7 +491,7 @@ export type ThreadErrorOptions = {
   terminal?: boolean
 }
 
-/** Cumulative usage/cost for a Rcode thread. */
+/** Cumulative usage/cost for a Joker thread. */
 export type ThreadUsageSnapshot = {
   inputTokens: number
   outputTokens: number
@@ -529,7 +529,7 @@ export type ThreadEventSink = {
   onUsage?(usage: ThreadUsageSnapshot): void
 }
 
-export type AgentProviderId = 'Rcode' | 'grok-build'
+export type AgentProviderId = 'Joker' | 'grok-build'
 
 export interface AgentProvider {
   readonly id: AgentProviderId
@@ -599,7 +599,7 @@ export interface AgentProvider {
   getToolDiagnostics?(): Promise<CoreRuntimeToolDiagnosticsJson>
   getMcpOAuthDiagnostics?(): Promise<CoreMcpOAuthDiagnosticJson[]>
   clearMcpOAuthCredentials?(serverId?: string): Promise<string[]>
-  authorizeMcpOAuthCredentials?(serverId: string): Promise<import('./Rcode-contract').CoreMcpOAuthAuthorizeResponseJson>
+  authorizeMcpOAuthCredentials?(serverId: string): Promise<import('./Joker-contract').CoreMcpOAuthAuthorizeResponseJson>
   listSkills?(): Promise<CoreRuntimeSkillJson[]>
   uploadAttachment?(input: {
     name: string

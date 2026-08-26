@@ -1,4 +1,4 @@
-import { MAX_COMPOSER_CONTEXT_ATTACHMENTS } from '@Rcode/extension-api'
+import { MAX_COMPOSER_CONTEXT_ATTACHMENTS } from '@joker-code/extension-api'
 import { workspaceRootScopeKey } from '../lib/workspace-path'
 import type { ChatState, ChatStoreGet, ChatStoreSet } from './chat-store-types'
 

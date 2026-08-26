@@ -123,7 +123,7 @@ export function buildHtmlFrameGeneratingSketchCss(
   elements.forEach((el, index) => {
     const window = windows[index]
     if (!window) return
-    const name = `Rcode-hfgen-el-${index}`
+    const name = `Joker-hfgen-el-${index}`
     if (el.kind === 'rect') {
       const fillIn = Math.min(window.end + 3, 92)
       parts.push(
@@ -147,21 +147,21 @@ export function buildHtmlFrameGeneratingSketchCss(
       .map((frame) => `${pct(frame.pct)}%{left:${pct(frame.left)}%;top:${pct(frame.top)}%}`)
       .join('')
     parts.push(
-      `@keyframes Rcode-hfgen-brush{0%{left:${pct(first.left)}%;top:${pct(first.top)}%;opacity:1}` +
+      `@keyframes Joker-hfgen-brush{0%{left:${pct(first.left)}%;top:${pct(first.top)}%;opacity:1}` +
         waypointFrames +
         `93%{opacity:1}96%{opacity:0}` +
         `100%{left:${pct(last.left)}%;top:${pct(last.top)}%;opacity:0}}`
     )
-    parts.push(`.Rcode-hfgen-brush{animation:Rcode-hfgen-brush ${CYCLE_MS}ms linear infinite}`)
+    parts.push(`.Joker-hfgen-brush{animation:Joker-hfgen-brush ${CYCLE_MS}ms linear infinite}`)
   }
 
-  parts.push(`@keyframes Rcode-hfgen-fade{0%,93%{opacity:1}97%,100%{opacity:0}}`)
-  parts.push(`.Rcode-hfgen-sketch{animation:Rcode-hfgen-fade ${CYCLE_MS}ms linear infinite}`)
+  parts.push(`@keyframes Joker-hfgen-fade{0%,93%{opacity:1}97%,100%{opacity:0}}`)
+  parts.push(`.Joker-hfgen-sketch{animation:Joker-hfgen-fade ${CYCLE_MS}ms linear infinite}`)
   parts.push(
     `@media (prefers-reduced-motion: reduce){` +
-      `.Rcode-hfgen-sketch{animation:none}` +
-      `.Rcode-hfgen-sketch rect,.Rcode-hfgen-sketch line{animation:none;stroke-dashoffset:0}` +
-      `.Rcode-hfgen-brush{display:none}}`
+      `.Joker-hfgen-sketch{animation:none}` +
+      `.Joker-hfgen-sketch rect,.Joker-hfgen-sketch line{animation:none;stroke-dashoffset:0}` +
+      `.Joker-hfgen-brush{display:none}}`
   )
   return parts.join('\n')
 }
@@ -185,12 +185,12 @@ export function HtmlFrameGeneratingCanvas({
     <div className="pointer-events-none absolute inset-0 overflow-hidden text-accent">
       <style>{SKETCH_CSS}</style>
       <div className="absolute inset-0 bg-gradient-to-br from-[#fffaf0]/95 to-[#eef6ff]/95 dark:from-[#15171c]/95 dark:to-[#101625]/95" />
-      <svg className="Rcode-hfgen-sketch absolute inset-0 h-full w-full" aria-hidden="true">
+      <svg className="Joker-hfgen-sketch absolute inset-0 h-full w-full" aria-hidden="true">
         {SKETCH_ELEMENTS.map((el, index) =>
           el.kind === 'rect' ? (
             <rect
               key={index}
-              className={`Rcode-hfgen-el-${index}`}
+              className={`Joker-hfgen-el-${index}`}
               x={`${el.x}%`}
               y={`${el.y}%`}
               width={`${el.w}%`}
@@ -209,7 +209,7 @@ export function HtmlFrameGeneratingCanvas({
           ) : (
             <line
               key={index}
-              className={`Rcode-hfgen-el-${index}`}
+              className={`Joker-hfgen-el-${index}`}
               x1={`${el.x1}%`}
               y1={`${el.y1}%`}
               x2={`${el.x2}%`}
@@ -226,7 +226,7 @@ export function HtmlFrameGeneratingCanvas({
         )}
       </svg>
       <div
-        className="Rcode-hfgen-brush absolute"
+        className="Joker-hfgen-brush absolute"
         aria-hidden="true"
         style={{
           width: brushSize,

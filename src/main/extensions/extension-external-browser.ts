@@ -566,7 +566,7 @@ export function externalBrowserPartition(
     .update(`external-browser\0desktop\0${extensionId}`)
     .digest('hex')
     .slice(0, 32)
-  return `persist:Rcode-external-${digest}`
+  return `persist:Joker-external-${digest}`
 }
 
 export function normalizeExternalBrowserBounds(

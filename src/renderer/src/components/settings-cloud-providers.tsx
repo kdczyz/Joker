@@ -110,7 +110,7 @@ export function CloudProvidersPanel({
   // Listen for config.sync events from RemoteAgent (real-time sync)
   useEffect(() => {
     if (!authenticated) return
-    const unsub = window.RcodeGui.remoteAgent.onConfigSync(() => {
+    const unsub = window.JokerGui.remoteAgent.onConfigSync(() => {
       void refresh(true)
     })
     return unsub
@@ -147,7 +147,7 @@ export function CloudProvidersPanel({
       setConfig(next)
       setNotice({ tone: 'success', message: `「${provider.name}」已保存到云端账号` })
       // Notify other devices to sync
-      void window.RcodeGui.remoteAgent.notifyConfigSync()
+      void window.JokerGui.remoteAgent.notifyConfigSync()
     } catch (error) {
       setNotice({ tone: 'error', message: error instanceof Error ? error.message : '保存到云端失败' })
     } finally {
@@ -163,7 +163,7 @@ export function CloudProvidersPanel({
       setConfig(next)
       setNotice({ tone: 'success', message: `已从云端删除「${name}」` })
       // Notify other devices to sync
-      void window.RcodeGui.remoteAgent.notifyConfigSync()
+      void window.JokerGui.remoteAgent.notifyConfigSync()
     } catch (error) {
       setNotice({ tone: 'error', message: error instanceof Error ? error.message : '删除云端配置失败' })
     } finally {
@@ -186,7 +186,7 @@ export function CloudProvidersPanel({
           <h3 className="text-[14px] font-semibold text-ds-ink">云端账号配置</h3>
         </div>
         <p className="mt-2 text-[13px] text-ds-muted">
-          登录 Rcode 账号后，接口与模型配置将自动在电脑端和手机端之间实时同步。
+          登录 Joker 账号后，接口与模型配置将自动在电脑端和手机端之间实时同步。
         </p>
       </div>
     )

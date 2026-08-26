@@ -743,11 +743,11 @@ function useMediaPreviewUrls(media: TimelineMediaReference[]): Record<string, st
               previewUrl: `data:${content.attachment.mimeType};base64,${content.dataBase64}`
             }
           }
-          if (request.mode === 'workspace-image' && request.path && typeof window.RcodeGui?.readWorkspaceImage === 'function') {
+          if (request.mode === 'workspace-image' && request.path && typeof window.JokerGui?.readWorkspaceImage === 'function') {
             const previewUrl = await readGeneratedWorkspaceImagePreview({
               path: request.path,
               ...(workspaceRoot ? { workspaceRoot } : {}),
-              readImage: window.RcodeGui.readWorkspaceImage
+              readImage: window.JokerGui.readWorkspaceImage
             })
             if (previewUrl) return { key: request.key, previewUrl }
           }
@@ -825,7 +825,7 @@ function MediaPreviewTile({
           ? t('generatedFileSaveFailed')
           : t('generatedFileDownload')
   const handleSaveAs = async (): Promise<void> => {
-    if (saveState === 'saving' || typeof window.RcodeGui?.saveWorkspaceFileAs !== 'function') return
+    if (saveState === 'saving' || typeof window.JokerGui?.saveWorkspaceFileAs !== 'function') return
     const data = dataUrlPayload(previewUrl)
     if (!filePath && !data) {
       setSaveState('error')
@@ -833,7 +833,7 @@ function MediaPreviewTile({
     }
     setSaveState('saving')
     try {
-      const result = await window.RcodeGui.saveWorkspaceFileAs({
+      const result = await window.JokerGui.saveWorkspaceFileAs({
         suggestedName: title,
         ...(filePath ? { sourcePath: filePath } : {}),
         ...(workspaceRoot ? { workspaceRoot } : {}),
@@ -850,7 +850,7 @@ function MediaPreviewTile({
       }
     } catch (error) {
       setSaveState('error')
-      void window.RcodeGui?.logError?.('file-save-as', 'Failed to save generated file', {
+      void window.JokerGui?.logError?.('file-save-as', 'Failed to save generated file', {
         message: error instanceof Error ? error.message : String(error),
         filePath,
         title
@@ -858,8 +858,8 @@ function MediaPreviewTile({
     }
   }
   const handleArtifactAction = async (action: 'open' | 'reveal'): Promise<void> => {
-    if (!canOpenArtifact || typeof window.RcodeGui?.openExtensionArtifact !== 'function') return
-    const result = await window.RcodeGui.openExtensionArtifact({
+    if (!canOpenArtifact || typeof window.JokerGui?.openExtensionArtifact !== 'function') return
+    const result = await window.JokerGui.openExtensionArtifact({
       artifactId: media.artifactId!,
       ownerExtensionId: media.ownerExtensionId!,
       ownerExtensionVersion: media.ownerExtensionVersion!,
@@ -1572,7 +1572,7 @@ function AssistantExportButton({
   const [error, setError] = useState('')
 
   const handleExport = async (format: WriteExportFormat): Promise<void> => {
-    if (typeof window.RcodeGui?.exportWriteDocument !== 'function') {
+    if (typeof window.JokerGui?.exportWriteDocument !== 'function') {
       setError(t('writeExportUnavailable'))
       return
     }
@@ -1582,8 +1582,8 @@ function AssistantExportButton({
     try {
       const parsedDate = createdAt ? new Date(createdAt) : new Date()
       const date = Number.isNaN(parsedDate.getTime()) ? new Date() : parsedDate
-      const title = `Rcode-answer-${date.toISOString().replace(/[:.]/g, '-')}`
-      const result = await window.RcodeGui.exportWriteDocument({
+      const title = `Joker-answer-${date.toISOString().replace(/[:.]/g, '-')}`
+      const result = await window.JokerGui.exportWriteDocument({
         title,
         workspaceRoot: workspaceRoot || undefined,
         format,

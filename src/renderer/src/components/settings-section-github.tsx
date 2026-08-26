@@ -15,7 +15,7 @@ import {
   SettingsCard,
   SettingRow
 } from './settings-controls'
-import type { GithubRepoInfo, GithubStatusResult } from '@shared/Rcode-gui-api'
+import type { GithubRepoInfo, GithubStatusResult } from '@shared/Joker-gui-api'
 
 const inputClass =
   'w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-normal text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30'
@@ -39,7 +39,7 @@ export function GithubSettingsSection(): ReactElement {
 
   const loadMcpStatus = useCallback(async (): Promise<void> => {
     try {
-      const r = await window.RcodeGui.githubMcpStatus()
+      const r = await window.JokerGui.githubMcpStatus()
       setMcpEnabled(r.enabled)
     } catch {
       setMcpEnabled(false)
@@ -50,12 +50,12 @@ export function GithubSettingsSection(): ReactElement {
     setLoading(true)
     setError('')
     try {
-      const s = await window.RcodeGui.githubStatus()
+      const s = await window.JokerGui.githubStatus()
       setStatus(s)
       if (s.connected) {
         setReposLoading(true)
         try {
-          const list = await window.RcodeGui.githubListRepos()
+          const list = await window.JokerGui.githubListRepos()
           setRepos(list)
         } catch (err) {
           setError(err instanceof Error ? err.message : String(err))
@@ -84,7 +84,7 @@ export function GithubSettingsSection(): ReactElement {
     setError('')
     try {
       // 不传 clientId/clientSecret：完全使用主进程内置常量，普通用户不需要也不能改。
-      const result = await window.RcodeGui.githubOAuthConnect()
+      const result = await window.JokerGui.githubOAuthConnect()
       if (!result.ok) {
         setError(result.message)
         return
@@ -99,7 +99,7 @@ export function GithubSettingsSection(): ReactElement {
 
   const disconnect = async (): Promise<void> => {
     setError('')
-    await window.RcodeGui.githubOAuthDisconnect()
+    await window.JokerGui.githubOAuthDisconnect()
     await loadAccount()
   }
 
@@ -108,10 +108,10 @@ export function GithubSettingsSection(): ReactElement {
     setError('')
     try {
       if (mcpEnabled) {
-        await window.RcodeGui.githubDisableMcp()
+        await window.JokerGui.githubDisableMcp()
         setMcpEnabled(false)
       } else {
-        const r = await window.RcodeGui.githubEnableMcp()
+        const r = await window.JokerGui.githubEnableMcp()
         if (!r.ok) {
           setError(r.message ?? '启用 GitHub MCP 失败')
           return
@@ -129,7 +129,7 @@ export function GithubSettingsSection(): ReactElement {
     setReposLoading(true)
     setError('')
     try {
-      const list = await window.RcodeGui.githubListRepos()
+      const list = await window.JokerGui.githubListRepos()
       setRepos(list)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
@@ -141,7 +141,7 @@ export function GithubSettingsSection(): ReactElement {
   const clone = async (repo: GithubRepoInfo): Promise<void> => {
     setError('')
     try {
-      const result = await window.RcodeGui.githubCloneRepo(repo.cloneUrl, repo.name)
+      const result = await window.JokerGui.githubCloneRepo(repo.cloneUrl, repo.name)
       if (result.cancelled) return
       if (result.targetDir) {
         setCloned((prev) => [...prev.filter((c) => c.fullName !== repo.fullName), { fullName: repo.fullName, localPath: result.targetDir! }])
@@ -154,7 +154,7 @@ export function GithubSettingsSection(): ReactElement {
   const push = async (repo: ClonedRepo, branch?: string): Promise<void> => {
     setError('')
     try {
-      await window.RcodeGui.githubPush(repo.localPath, branch)
+      await window.JokerGui.githubPush(repo.localPath, branch)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }
@@ -163,7 +163,7 @@ export function GithubSettingsSection(): ReactElement {
   const pull = async (repo: ClonedRepo, branch?: string): Promise<void> => {
     setError('')
     try {
-      await window.RcodeGui.githubPull(repo.localPath, branch)
+      await window.JokerGui.githubPull(repo.localPath, branch)
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
     }
@@ -179,10 +179,10 @@ export function GithubSettingsSection(): ReactElement {
   ): Promise<void> => {
     setError('')
     try {
-      const result = await window.RcodeGui.githubCreatePr({ owner, repo, title, head, base, body })
+      const result = await window.JokerGui.githubCreatePr({ owner, repo, title, head, base, body })
       if (result.htmlUrl) {
-        if (typeof window.RcodeGui.openExternal === 'function') {
-          await window.RcodeGui.openExternal(result.htmlUrl)
+        if (typeof window.JokerGui.openExternal === 'function') {
+          await window.JokerGui.openExternal(result.htmlUrl)
         } else {
           window.open(result.htmlUrl, '_blank', 'noopener,noreferrer')
         }
@@ -194,8 +194,8 @@ export function GithubSettingsSection(): ReactElement {
   }
 
   const openExternal = (url: string): void => {
-    if (typeof window.RcodeGui.openExternal === 'function') {
-      void window.RcodeGui.openExternal(url)
+    if (typeof window.JokerGui.openExternal === 'function') {
+      void window.JokerGui.openExternal(url)
     } else {
       window.open(url, '_blank', 'noopener,noreferrer')
     }

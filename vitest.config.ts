@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     environment: 'node',
     env: {
-      RCODE_DISABLE_OS_CREDENTIAL_STORE: '1'
+      JOKER_DISABLE_OS_CREDENTIAL_STORE: '1'
     },
     include: ['src/**/*.test.ts'],
     ...(process.platform === 'win32' ? { maxWorkers: 2 } : {})

@@ -1,9 +1,9 @@
 /**
  * Maps GrokBuildEvent (from grok-build ACP runtime) to ThreadEventSink events
  * that the chat store understands. This is the bridge between grok-build's
- * streaming event model and Rcode's SSE-based event model.
+ * streaming event model and Joker's SSE-based event model.
  */
-import type { GrokBuildEvent } from '@shared/Rcode-gui-api'
+import type { GrokBuildEvent } from '@shared/Joker-gui-api'
 import type {
   ThreadDeltaEvent,
   ToolEventPayload,

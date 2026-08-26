@@ -13,7 +13,7 @@ import {
   MediaResourceLeaseSchema,
   type Locale,
   type Theme
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import {
   dialog,
   ipcMain,
@@ -247,7 +247,7 @@ export function startExtensionNotificationPump(
       if (!result.ok) return
       const parsed = extensionNotificationSnapshotResponseSchema.safeParse(safeJsonParse(result.body))
       if (!parsed.success) {
-        options.logError?.('extension-notification', 'Rcode returned an invalid notification snapshot.', {
+        options.logError?.('extension-notification', 'Joker returned an invalid notification snapshot.', {
           issues: parsed.error.issues.map((issue) => ({
             path: issue.path.join('.'),
             message: issue.message
@@ -314,14 +314,14 @@ export function registerExtensionIpcHandlers(
     const parent = options.getMainWindow()
     const result = parent
       ? await dialog.showOpenDialog(parent, {
-          title: 'Install Rcode extension package',
+          title: 'Install Joker extension package',
           properties: ['openFile'],
-          filters: [{ name: 'Rcode Extension', extensions: ['Rcodex'] }]
+          filters: [{ name: 'Joker Extension', extensions: ['Jokerx'] }]
         })
       : await dialog.showOpenDialog({
-          title: 'Install Rcode extension package',
+          title: 'Install Joker extension package',
           properties: ['openFile'],
-          filters: [{ name: 'Rcode Extension', extensions: ['Rcodex'] }]
+          filters: [{ name: 'Joker Extension', extensions: ['Jokerx'] }]
         })
     return { canceled: result.canceled, path: result.canceled ? null : result.filePaths[0] ?? null }
   })
@@ -331,11 +331,11 @@ export function registerExtensionIpcHandlers(
     const parent = options.getMainWindow()
     const result = parent
       ? await dialog.showOpenDialog(parent, {
-          title: 'Load Rcode extension development directory',
+          title: 'Load Joker extension development directory',
           properties: ['openDirectory']
         })
       : await dialog.showOpenDialog({
-          title: 'Load Rcode extension development directory',
+          title: 'Load Joker extension development directory',
           properties: ['openDirectory']
         })
     return { canceled: result.canceled, path: result.canceled ? null : result.filePaths[0] ?? null }
@@ -594,9 +594,9 @@ export function registerExtensionIpcHandlers(
         : `Change permissions for ${request.extensionId} ${expectedVersion}?`,
       detail: [
         enableAfterApply === 'global'
-          ? 'After approval, Rcode will apply these permissions to the selected workspace and enable the extension globally.'
+          ? 'After approval, Joker will apply these permissions to the selected workspace and enable the extension globally.'
           : enableAfterApply === 'workspace'
-            ? 'After approval, Rcode will apply these permissions and enable the extension in the selected workspace.'
+            ? 'After approval, Joker will apply these permissions and enable the extension in the selected workspace.'
             : '',
         formatPermissionChangeReviewDetail(currentPermissions, nextPermissions)
       ].filter(Boolean).join('\n\n')
@@ -703,7 +703,7 @@ export function registerExtensionIpcHandlers(
     }, consentRequestId, {
       title: 'Roll back extension',
       message: `Roll back ${request.extensionId}?`,
-      detail: 'Rcode will switch to the retained previous package and a compatible state snapshot.'
+      detail: 'Joker will switch to the retained previous package and a compatible state snapshot.'
     }, () => options.runtimeRequest(
       `/v1/extensions/${encodeURIComponent(request.extensionId)}/rollback`,
       'POST',
@@ -803,7 +803,7 @@ export function registerExtensionIpcHandlers(
     if (!result.ok) throw runtimeResultError(result)
     const response = safeJsonParse(result.body)
     if (!isRecord(response) || response.responded !== true) {
-      throw new Error('Rcode returned an invalid extension notification response.')
+      throw new Error('Joker returned an invalid extension notification response.')
     }
     return true
   })
@@ -916,12 +916,12 @@ function registerViewIpcHandlers(
     )
     if (!result.ok) throw runtimeResultError(result)
     const runtimeSession = parseRuntimeViewSession(result.body)
-    if (!runtimeSession) throw new Error('Rcode returned an invalid extension View Session.')
+    if (!runtimeSession) throw new Error('Joker returned an invalid extension View Session.')
     if (
       runtimeSession.extensionId !== identity.extensionId ||
       runtimeSession.extensionVersion !== view.extensionVersion ||
       runtimeSession.contributionId !== request.contributionId
-    ) throw new Error('Rcode returned a mismatched extension View Session.')
+    ) throw new Error('Joker returned a mismatched extension View Session.')
     const record = options.viewSessions.create({
       sessionId: runtimeSession.sessionId,
       runtimeSessionId: runtimeSession.sessionId,
@@ -1429,7 +1429,7 @@ function registerAccountIpcHandlers(options: RegisterExtensionIpcHandlersOptions
       title: 'Connect provider account',
       message: `Start account authorization for ${request.providerId}?`,
       detail: [
-        `Rcode will activate ${request.extensionId} for the declared authentication flow. Extension Webviews cannot approve this action.`,
+        `Joker will activate ${request.extensionId} for the declared authentication flow. Extension Webviews cannot approve this action.`,
         effectiveScopes.length ? `OAuth scopes: ${effectiveScopes.join(', ')}` : undefined
       ].filter(Boolean).join('\n\n')
     }, () => options.runtimeRequest(
@@ -1480,7 +1480,7 @@ function registerAccountIpcHandlers(options: RegisterExtensionIpcHandlersOptions
     const callback = await options.credentialSurface.prompt(options.getMainWindow(), {
       title: 'Complete provider authorization',
       message: 'Paste the final OAuth callback URL from your browser.',
-      detail: `Rcode will validate the authorization state and connect it to ${request.extensionId}. The callback URL is never exposed to extension code or Webviews.`,
+      detail: `Joker will validate the authorization state and connect it to ${request.extensionId}. The callback URL is never exposed to extension code or Webviews.`,
       label: 'OAuth callback URL',
       placeholder: 'https://callback.example/?code=...&state=...',
       submitLabel: 'Complete authorization'
@@ -1588,7 +1588,7 @@ function registerAccountIpcHandlers(options: RegisterExtensionIpcHandlersOptions
     const credential = await options.credentialSurface.prompt(options.getMainWindow(), {
       title: 'Add provider account',
       message: `Enter an API key for ${request.providerId}.`,
-      detail: `The key will be stored by Rcode and associated with ${request.extensionId}. Extension Webviews never receive it.`,
+      detail: `The key will be stored by Joker and associated with ${request.extensionId}. Extension Webviews never receive it.`,
       label: 'API key',
       placeholder: 'Paste API key',
       submitLabel: 'Save account'
@@ -1680,7 +1680,7 @@ function registerAccountIpcHandlers(options: RegisterExtensionIpcHandlersOptions
     const credential = await options.credentialSurface.prompt(options.getMainWindow(), {
       title: 'Replace provider API key',
       message: `Enter the replacement API key for the selected ${request.providerId} account.`,
-      detail: 'Rcode replaces the protected credential atomically. The account reference and existing provider bindings stay unchanged.',
+      detail: 'Joker replaces the protected credential atomically. The account reference and existing provider bindings stay unchanged.',
       label: 'Replacement API key',
       placeholder: 'Paste replacement API key',
       submitLabel: 'Replace API key'
@@ -1751,14 +1751,14 @@ function registerAccountIpcHandlers(options: RegisterExtensionIpcHandlersOptions
       senderId: event.sender.id
     }, undefined, {
       title: 'Use extension model provider',
-      message: `Allow ${extension.manifest.displayName ?? request.extensionId} to handle Rcode model requests?`,
+      message: `Allow ${extension.manifest.displayName ?? request.extensionId} to handle Joker model requests?`,
       detail: [
         `Provider: ${provider.displayName} (${request.providerId})`,
         `Model: ${request.modelId}`,
         `Account reference: ${request.accountId}`,
         'The extension Node adapter can receive:',
         ...dataCategories.map((category) => `• ${category}`),
-        'Rcode stores only the provider, opaque account reference, model, extension version, and acknowledgement. Credential material is not copied into this binding. Requests will fail explicitly if this exact provider/account/model becomes unavailable.'
+        'Joker stores only the provider, opaque account reference, model, extension version, and acknowledgement. Credential material is not copied into this binding. Requests will fail explicitly if this exact provider/account/model becomes unavailable.'
       ].join('\n')
     }, () => options.runtimeRequest(
       '/v1/extensions/model-providers/binding',
@@ -1945,7 +1945,7 @@ async function resolveInstallIdentity(
       extensionId: extensionIdSchema.parse(record.id),
       extensionVersion: String(record.version),
       requestedPermissions: [...manifest.data.permissions],
-      sourceKind: 'Local .Rcodex archive',
+      sourceKind: 'Local .Jokerx archive',
       sourceLabel: request.path,
       mutable: false,
       ...(archiveSha256 ? { archiveSha256 } : {}),
@@ -1954,7 +1954,7 @@ async function resolveInstallIdentity(
     }
   }
   const manifest = ExtensionManifestSchema.parse(
-    JSON.parse(await readFile(join(request.path, 'Rcode-extension.json'), 'utf8'))
+    JSON.parse(await readFile(join(request.path, 'Joker-extension.json'), 'utf8'))
   )
   return {
     extensionId: `${manifest.publisher}.${manifest.name}`,
@@ -2048,7 +2048,7 @@ function contributionRiskLabels(manifest: ReturnType<typeof ExtensionManifestSch
     labels.unshift('Runs Node code with your operating-system user privileges.')
   }
   if (manifest.contributes.hostContentScripts.length > 0) {
-    labels.push(`Direct DOM: can read or change visible Rcode workbench content (${manifest.contributes.hostContentScripts.length} contribution(s)).`)
+    labels.push(`Direct DOM: can read or change visible Joker workbench content (${manifest.contributes.hostContentScripts.length} contribution(s)).`)
   }
   if (manifest.contributes.modelProviders.length > 0) {
     labels.push(`Model provider: receives complete model-visible prompts, attachments, and tool definitions when selected (${manifest.contributes.modelProviders.length} provider(s)).`)
@@ -2082,7 +2082,7 @@ function permissionRiskLabels(permissions: readonly string[]): string[] {
     labels.push('Media export permission can write to user-approved output targets.')
   }
   if (permissions.some((permission) => permission === 'agent.run' || permission === 'tools.register')) {
-    labels.push('Agent and tool permissions can start private Agent runs and expose declared tools to Rcode.')
+    labels.push('Agent and tool permissions can start private Agent runs and expose declared tools to Joker.')
   }
   if (permissions.some((permission) => permission === 'hostDom')) {
     labels.push('Direct DOM permission can read and alter visible workbench content and may imitate ordinary UI.')
@@ -2131,7 +2131,7 @@ function formatInstallReviewDetail(review: ExtensionInstallReview): string {
   const signature = review.signatureStatus === 'verified'
     ? 'verified'
     : review.signatureStatus === 'present-unverified'
-      ? 'signature present, but not verified by Rcode'
+      ? 'signature present, but not verified by Joker'
       : 'unsigned'
   const permissions = boundedReviewList(review.requestedPermissions, 40)
   const risks = boundedReviewList(review.contributionRisks, 12)
@@ -2147,8 +2147,8 @@ function formatInstallReviewDetail(review: ExtensionInstallReview): string {
       ? `Requested broker permissions:\n${permissions}`
       : 'This package requests no broker permissions.',
     review.sourceKind === 'Custom HTTPS Index'
-      ? 'Rcode will download this exact version, verify the displayed SHA-256, then revalidate the package manifest, integrity, compatibility, and permission metadata before activation.'
-      : 'Rcode will revalidate package integrity, compatibility, and declared resources before activation.'
+      ? 'Joker will download this exact version, verify the displayed SHA-256, then revalidate the package manifest, integrity, compatibility, and permission metadata before activation.'
+      : 'Joker will revalidate package integrity, compatibility, and declared resources before activation.'
   ].join('\n\n').slice(0, 16_384)
 }
 
@@ -2205,8 +2205,8 @@ function localContributionId(value: string, extensionId: string): string {
 
 function extensionSessionHeaders(record: { runtimeSessionId: string; nonce: string }): Record<string, string> {
   return {
-    'x-Rcode-extension-session-id': record.runtimeSessionId,
-    'x-Rcode-extension-session-nonce': record.nonce
+    'x-Joker-extension-session-id': record.runtimeSessionId,
+    'x-Joker-extension-session-nonce': record.nonce
   }
 }
 
@@ -2325,7 +2325,7 @@ async function pumpExtensionViewEvents(
           failure.oldestAvailableCursor >= 0
         ) {
           options.viewSessions.sendToGuest(sessionId, 'ui.message', {
-            channel: 'Rcode.extension.view.overflow',
+            channel: 'Joker.extension.view.overflow',
             payload: {
               code: 'cursor_expired',
               oldestAvailableCursor: failure.oldestAvailableCursor
@@ -2433,7 +2433,7 @@ async function syncWorkbenchEnvironmentToRuntime(
       JSON.stringify(environment)
     )
     if (!result.ok) {
-      options.logError?.('extension-workbench', 'Rcode rejected the workbench environment update.', {
+      options.logError?.('extension-workbench', 'Joker rejected the workbench environment update.', {
         status: result.status
       })
     }
@@ -2480,7 +2480,7 @@ async function presentProtectedAccountAuthorization(
     await options.credentialSurface.presentAuthorization(options.getMainWindow(), {
       title: 'Authorize provider account',
       message: `Complete authorization for ${providerId}.`,
-      detail: `This protected Rcode window is isolated from ${extensionId}, its Webviews, and host content scripts.`,
+      detail: `This protected Joker window is isolated from ${extensionId}, its Webviews, and host content scripts.`,
       verificationUrl,
       ...(session.userCode ? { userCode: session.userCode } : {}),
       ...(session.expiresAt ? { expiresAt: session.expiresAt } : {})
@@ -2498,7 +2498,7 @@ async function presentProtectedAccountAuthorization(
     })
     return runtimeFailure(
       'EXTENSION_PROTECTED_SURFACE_FAILED',
-      'Rcode could not present the protected account authorization window.',
+      'Joker could not present the protected account authorization window.',
       502
     )
   }
@@ -2529,7 +2529,7 @@ function runtimeResultError(result: ExtensionRuntimeRequestResult): Error {
   const parsed = safeJsonParse(result.body)
   const message = isRecord(parsed) && typeof parsed.message === 'string'
     ? parsed.message
-    : `Rcode extension request failed (${result.status}).`
+    : `Joker extension request failed (${result.status}).`
   return new Error(message.slice(0, 2_000))
 }
 

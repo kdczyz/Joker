@@ -1,4 +1,4 @@
-import { isExtensionViewSafeMethod } from '@Rcode/extension-api'
+import { isExtensionViewSafeMethod } from '@joker-code/extension-api'
 
 /** Stable, fail-closed methods exposed to sandboxed extension Webviews. */
 export function isAllowedExtensionViewMethod(method: string): boolean {

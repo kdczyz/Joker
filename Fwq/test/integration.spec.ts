@@ -62,7 +62,7 @@ function expectNoMessage(socket: WebSocket, type: string, ms = 500): Promise<voi
   });
 }
 
-describe("Rcode remote server", () => {
+describe("Joker remote server", () => {
   it("distinguishes direct image requests from image-related questions", () => {
     expect(shouldGenerateWorkImage("生成一个安静的湖边夜景")).toBe(true);
     expect(shouldGenerateWorkImage("帮我画一只戴围巾的猫")).toBe(true);
@@ -286,7 +286,7 @@ describe("Rcode remote server", () => {
       headers: authorization,
       body: JSON.stringify({
         role: "agent",
-        device: { id: "mac-1", name: "MacBook Pro", platform: "darwin", ready: true, projectName: "Rcode" }
+        device: { id: "mac-1", name: "MacBook Pro", platform: "darwin", ready: true, projectName: "Joker" }
       })
     });
     const agentTicket = await responseJson(agentTicketResponse);

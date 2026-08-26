@@ -44,7 +44,7 @@ function props(overrides: Partial<DesignAIRailProps> = {}): DesignAIRailProps {
 
 beforeEach(() => {
   useDesignWorkspaceStore.setState({
-    workspaceRoot: '/tmp/Rcode-design',
+    workspaceRoot: '/tmp/Joker-design',
     artifacts: [],
     activeArtifactId: null,
     designContext: { designTarget: 'web' },
@@ -57,14 +57,14 @@ describe('DesignAIRail target toggle', () => {
   it('derives visible drawing titles from the first design request', () => {
     expect(designThreadTitleLooksDefault('Design Assistant', '设计助手')).toBe(true)
     expect(designThreadTitleLooksDefault('设计助手', '设计助手')).toBe(true)
-    expect(designThreadTitleLooksDefault('Rcode mobile settings')).toBe(false)
+    expect(designThreadTitleLooksDefault('Joker mobile settings')).toBe(false)
     expect(deriveDesignThreadTitleFromBlocks([
       {
         kind: 'user',
         id: 'u1',
-        text: '帮我设计一个 Rcode 移动端设置页。需要深色主题和账号设置。'
+        text: '帮我设计一个 Joker 移动端设置页。需要深色主题和账号设置。'
       }
-    ])).toBe('帮我设计一个 Rcode 移动端设置页')
+    ])).toBe('帮我设计一个 Joker 移动端设置页')
   })
 
   it('shows a derived drawing title instead of the default assistant title', () => {
@@ -74,20 +74,20 @@ describe('DesignAIRail target toggle', () => {
         {
           kind: 'user',
           id: 'u1',
-          text: '帮我设计一个 Rcode 线程列表页面。包含搜索、会话分组和底部导航。'
+          text: '帮我设计一个 Joker 线程列表页面。包含搜索、会话分组和底部导航。'
         }
       ],
       designThreads: [{
         id: 'thread-current-document',
         title: 'Design Assistant',
-        workspace: '/tmp/Rcode-design',
+        workspace: '/tmp/Joker-design',
         model: 'deepseek-chat',
         mode: 'agent',
         updatedAt: '2026-07-03T00:00:00.000Z'
       }]
     })))
 
-    expect(html).toContain('帮我设计一个 Rcode 线程列表页面')
+    expect(html).toContain('帮我设计一个 Joker 线程列表页面')
     expect(html).not.toContain('>Design Assistant</span>')
   })
 
@@ -155,7 +155,7 @@ describe('DesignAIRail target toggle', () => {
       designThreads: [{
         id: 'thread-current-document',
         title: 'Design Assistant',
-        workspace: '/tmp/Rcode-design',
+        workspace: '/tmp/Joker-design',
         model: 'deepseek-chat',
         mode: 'agent',
         updatedAt: '2026-07-03T00:00:00.000Z'

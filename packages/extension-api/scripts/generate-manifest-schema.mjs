@@ -9,16 +9,16 @@ import {
 } from '../dist/manifest.js'
 
 const packageRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..')
-const outputPath = resolve(packageRoot, 'schema/Rcode-extension.schema.json')
+const outputPath = resolve(packageRoot, 'schema/Joker-extension.schema.json')
 const schema = toJSONSchema(ExtensionManifestSchema, {
   io: 'input',
   target: 'draft-2020-12',
   unrepresentable: 'throw',
   reused: 'ref'
 })
-schema.$id = 'https://Rcode.dev/schemas/extensions/manifest/v1.json'
-schema.title = 'Rcode Extension Manifest v1'
-schema.description = 'Canonical schema for Rcode-extension.json'
+schema.$id = 'https://Joker.dev/schemas/extensions/manifest/v1.json'
+schema.title = 'Joker Extension Manifest v1'
+schema.description = 'Canonical schema for Joker-extension.json'
 schema.allOf = [
   permissionCondition({ browser: true }, 'webview'),
   ...Object.entries(MANIFEST_CONTRIBUTION_PERMISSION_REQUIREMENTS).flatMap(
@@ -31,7 +31,7 @@ const output = `${JSON.stringify(schema, null, 2)}\n`
 if (process.argv.includes('--check')) {
   const current = await readFile(outputPath, 'utf8').catch(() => '')
   if (current.replace(/\r\n/gu, '\n') !== output) {
-    console.error('EXT_SCHEMA_STALE: schema/Rcode-extension.schema.json is not generated from ExtensionManifestSchema')
+    console.error('EXT_SCHEMA_STALE: schema/Joker-extension.schema.json is not generated from ExtensionManifestSchema')
     process.exitCode = 1
   }
 } else {

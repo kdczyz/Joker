@@ -1,13 +1,13 @@
 import { createHash } from 'node:crypto'
 import type { AppSettingsV1 } from '../../shared/app-settings'
-import { getRcodeRuntimeSettings } from '../../shared/app-settings'
+import { getJokerRuntimeSettings } from '../../shared/app-settings'
 import {
-  loadRcodeProjectConfig,
-  type RcodeProjectConfigLoadResult
-} from '../../../Rcode/src/config/project-config.js'
-import { McpServerConfig } from '../../../Rcode/src/contracts/capabilities.js'
+  loadJokerProjectConfig,
+  type JokerProjectConfigLoadResult
+} from '../../../Joker/src/config/project-config.js'
+import { McpServerConfig } from '../../../Joker/src/contracts/capabilities.js'
 
-export const GENERATED_PROJECT_MCP_SERVER_PREFIX = '__Rcode_project_'
+export const GENERATED_PROJECT_MCP_SERVER_PREFIX = '__Joker_project_'
 
 export type ProjectConfigTrustStatus = 'untrusted' | 'trusted' | 'stale'
 
@@ -21,7 +21,7 @@ export type ProjectConfigServerSummary = {
 export type ProjectConfigState = {
   workspaceRoot: string
   path: string
-  status: RcodeProjectConfigLoadResult['status']
+  status: JokerProjectConfigLoadResult['status']
   message?: string
   digest?: string
   trust: ProjectConfigTrustStatus
@@ -34,8 +34,8 @@ export async function readProjectConfigState(
   settings: AppSettingsV1,
   workspaceRoot: string
 ): Promise<ProjectConfigState> {
-  const loaded = await loadRcodeProjectConfig(workspaceRoot)
-  const grants = getRcodeRuntimeSettings(settings).projectConfig.grants
+  const loaded = await loadJokerProjectConfig(workspaceRoot)
+  const grants = getJokerRuntimeSettings(settings).projectConfig.grants
   const workspaceGrant = grants.find((grant) =>
     comparablePath(grant.workspaceRoot) === comparablePath(loaded.workspaceRoot)
   )
@@ -69,11 +69,11 @@ export async function readProjectConfigState(
 export async function approvedProjectMcpServers(
   settings: AppSettingsV1
 ): Promise<Record<string, Record<string, unknown>>> {
-  const grants = getRcodeRuntimeSettings(settings).projectConfig.grants
+  const grants = getJokerRuntimeSettings(settings).projectConfig.grants
   const servers: Record<string, Record<string, unknown>> = {}
   const seenWorkspaces = new Set<string>()
   for (const grant of grants.slice(0, 64)) {
-    const loaded = await loadRcodeProjectConfig(grant.workspaceRoot)
+    const loaded = await loadJokerProjectConfig(grant.workspaceRoot)
     if (loaded.status !== 'valid' || loaded.digest !== grant.configDigest) continue
     const workspaceKey = comparablePath(loaded.workspaceRoot)
     if (seenWorkspaces.has(workspaceKey)) continue

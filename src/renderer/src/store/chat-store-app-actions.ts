@@ -1,6 +1,6 @@
 import type i18next from 'i18next'
 import type { AppSettingsV1, ModelReasoningEffort } from '@shared/app-settings'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 import { rendererRuntimeClient } from '../agent/runtime-client'
 import { extensionWorkbenchClient } from '../extensions/extension-workbench-client'
 import type { ChatState, ChatStoreGet, ChatStoreSet, InitialSetupMode, PluginHostRoute, SettingsRouteSection } from './chat-store-types'
@@ -136,7 +136,7 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
         (group) => group.providerId === nextProviderId
       )?.extensionProvider
       // Persist the chosen model as the desktop's DEFAULT model
-      // (settings.agents.Rcode.model). Every entry point that follows the
+      // (settings.agents.Joker.model). Every entry point that follows the
       // desktop default — IM/WeChat, remote device sessions, scheduled tasks —
       // reads this value, so the composer model picker now acts as
       // "set default model": whichever model you switch to becomes the default.
@@ -144,10 +144,10 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
         !extensionProvider &&
         trimmed &&
         trimmed.toLowerCase() !== 'auto' &&
-        typeof window.RcodeGui !== 'undefined'
+        typeof window.JokerGui !== 'undefined'
       ) {
-        void window.RcodeGui.saveSettingsSilent({
-          agents: { Rcode: { model: trimmed, providerId: nextProviderId } }
+        void window.JokerGui.saveSettingsSilent({
+          agents: { Joker: { model: trimmed, providerId: nextProviderId } }
         })
       }
     },
@@ -168,10 +168,10 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
 
     loadComposerModels: async () => {
       if (getComposerModelLoadPromise()) return getComposerModelLoadPromise()!
-      if (typeof window.RcodeGui === 'undefined') return
+      if (typeof window.JokerGui === 'undefined') return
       const task = (async () => {
         const [res, extensionProviders] = await Promise.all([
-          window.RcodeGui.fetchUpstreamModels(),
+          window.JokerGui.fetchUpstreamModels(),
           extensionWorkbenchClient.listModelProviders(get().workspaceRoot || undefined).catch(() => [])
         ])
         const extensionGroups: ModelProviderModelGroup[] = extensionProviders.flatMap((provider) => {
@@ -323,7 +323,7 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
     },
 
     reloadUiSettings: async () => {
-      if (typeof window.RcodeGui === 'undefined') return
+      if (typeof window.JokerGui === 'undefined') return
       const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
       const workspaceRoot = normalizeWorkspaceRoot(settings.workspaceRoot)
       applyTheme(settings.theme)

@@ -1,12 +1,12 @@
 /**
- * Backend selection store - manages the choice between Rcode and grok-build runtimes.
+ * Backend selection store - manages the choice between Joker and grok-build runtimes.
  * Uses localStorage for persistence since this is a renderer-level concern.
  */
 import { create } from 'zustand'
 import { getProvider, switchProvider, getActiveProviderId } from '../agent/registry'
 import type { AgentProviderId } from '../agent/types'
 
-const BACKEND_STORAGE_KEY = 'Rcode.backend'
+const BACKEND_STORAGE_KEY = 'Joker.backend'
 
 interface BackendState {
   /** Currently selected backend */
@@ -29,21 +29,21 @@ interface BackendState {
 function loadBackend(): AgentProviderId {
   try {
     const stored = localStorage.getItem(BACKEND_STORAGE_KEY)
-    if (stored === 'grok-build' || stored === 'Rcode') return stored
+    if (stored === 'grok-build' || stored === 'Joker') return stored
   } catch { /* ignore */ }
-  return 'Rcode'
+  return 'Joker'
 }
 
-/** Resolve the provider config from Rcode settings for grok-build connection. */
+/** Resolve the provider config from Joker settings for grok-build connection. */
 async function resolveGrokProviderConfig(): Promise<{
   apiKey: string
   baseUrl: string
   model: string
   providerId: string
 }> {
-  const settings = await window.RcodeGui.getSettings()
-  const providerId = settings.agents?.Rcode?.providerId || settings.provider?.providers?.[0]?.id || ''
-  const model = settings.agents?.Rcode?.model || ''
+  const settings = await window.JokerGui.getSettings()
+  const providerId = settings.agents?.Joker?.providerId || settings.provider?.providers?.[0]?.id || ''
+  const model = settings.agents?.Joker?.model || ''
 
   const provider = settings.provider?.providers?.find(p => p.id === providerId)
   const apiKey = provider?.apiKey ?? ''
@@ -78,7 +78,7 @@ export const useBackendStore = create<BackendState>((set, get) => ({
         return
       }
 
-      const result = await window.RcodeGui.grok.connect({
+      const result = await window.JokerGui.grok.connect({
         cwd,
         apiKey: config.apiKey,
         baseUrl: config.baseUrl || undefined,
@@ -109,7 +109,7 @@ export const useBackendStore = create<BackendState>((set, get) => ({
 
   disconnectGrok: async () => {
     try {
-      await window.RcodeGui.grok.disconnect()
+      await window.JokerGui.grok.disconnect()
     } catch { /* ignore */ }
     set({ grokConnected: false, grokStatus: '已断开' })
   }
@@ -124,18 +124,18 @@ export async function initializeBackend(): Promise<void> {
     try {
       const config = await resolveGrokProviderConfig()
       if (!config.apiKey) {
-        // Fall back to Rcode if no API key is configured
-        switchProvider('Rcode')
-        useBackendStore.setState({ backend: 'Rcode', grokConnected: false, grokStatus: '未配置 API Key，已回退到 Rcode' })
+        // Fall back to Joker if no API key is configured
+        switchProvider('Joker')
+        useBackendStore.setState({ backend: 'Joker', grokConnected: false, grokStatus: '未配置 API Key，已回退到 Joker' })
         return
       }
 
-      const cwd = await window.RcodeGui.getSettings().then(s => {
-        return s.workspaceRoot || s.conversationWorkspaceRoot || window.RcodeGui.homeDir
-      }).catch(() => window.RcodeGui.homeDir)
+      const cwd = await window.JokerGui.getSettings().then(s => {
+        return s.workspaceRoot || s.conversationWorkspaceRoot || window.JokerGui.homeDir
+      }).catch(() => window.JokerGui.homeDir)
       if (cwd) {
         try {
-          const result = await window.RcodeGui.grok.connect({
+          const result = await window.JokerGui.grok.connect({
             cwd,
             apiKey: config.apiKey,
             baseUrl: config.baseUrl || undefined,
@@ -154,12 +154,12 @@ export async function initializeBackend(): Promise<void> {
             })
             return
           }
-        } catch { /* fall through to Rcode */ }
+        } catch { /* fall through to Joker */ }
       }
-    } catch { /* fall through to Rcode */ }
+    } catch { /* fall through to Joker */ }
 
-    // Fall back to Rcode if grok-build connection fails
-    switchProvider('Rcode')
-    useBackendStore.setState({ backend: 'Rcode', grokConnected: false, grokStatus: '连接失败，已回退到 Rcode' })
+    // Fall back to Joker if grok-build connection fails
+    switchProvider('Joker')
+    useBackendStore.setState({ backend: 'Joker', grokConnected: false, grokStatus: '连接失败，已回退到 Joker' })
   }
 }

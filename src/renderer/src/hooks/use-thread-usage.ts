@@ -150,12 +150,12 @@ export function formatCacheMissReason(reason: string): string {
 }
 
 export async function loadThreadUsage(threadId: string): Promise<ThreadUsageSummary | null> {
-  if (typeof window.RcodeGui?.runtimeRequest !== 'function') return null
+  if (typeof window.JokerGui?.runtimeRequest !== 'function') return null
   const params = new URLSearchParams({
     group_by: 'thread',
     thread_id: threadId
   })
-  const r = await window.RcodeGui.runtimeRequest(`/v1/usage?${params.toString()}`, 'GET')
+  const r = await window.JokerGui.runtimeRequest(`/v1/usage?${params.toString()}`, 'GET')
   if (!r.ok || !r.body.trim()) return null
   const parsed = parseUsageResponse<{
     buckets?: Array<Record<string, unknown>>

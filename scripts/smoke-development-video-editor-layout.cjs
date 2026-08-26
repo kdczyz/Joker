@@ -49,27 +49,27 @@ const PROCESS_OUTPUT_LIMIT = 128 * 1024
 async function main() {
   const timeoutMs = positiveIntegerArgument('--timeout-ms', DEFAULT_TIMEOUT_MS)
   const repositoryRoot = resolve(argumentValue('--repository-root') ?? join(__dirname, '..'))
-  const extensionRoot = join(repositoryRoot, 'examples', 'extensions', 'Rcode-video-editor')
+  const extensionRoot = join(repositoryRoot, 'examples', 'extensions', 'Joker-video-editor')
   const electronExecutable = require('electron')
   const viteCli = join(repositoryRoot, 'node_modules', 'vite', 'bin', 'vite.js')
   const rendererConfig = join(repositoryRoot, 'scripts', 'vite-development-renderer.config.mjs')
   const mainEntry = join(repositoryRoot, 'out', 'main', 'index.js')
   const extensionEntry = join(extensionRoot, 'dist', 'host', 'extension.js')
-  const extensionRuntimeModule = join(repositoryRoot, 'Rcode', 'dist', 'extensions', 'index.js')
+  const extensionRuntimeModule = join(repositoryRoot, 'Joker', 'dist', 'extensions', 'index.js')
   for (const [label, path] of [
     ['Electron executable', electronExecutable],
     ['Vite CLI', viteCli],
     ['development renderer config', rendererConfig],
     ['built development Main entry', mainEntry],
     ['built development extension entry', extensionEntry],
-    ['built Rcode extension runtime', extensionRuntimeModule]
+    ['built Joker extension runtime', extensionRuntimeModule]
   ]) {
     if (!existsSync(path)) throw new Error(`${label} is missing: ${path}. Run npm run build first.`)
   }
 
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-video-editor-development-layout-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-video-editor-development-layout-'))
   const home = join(temporaryRoot, 'home')
-  const profile = join(home, '.Rcode', 'data')
+  const profile = join(home, '.Joker', 'data')
   const userData = join(temporaryRoot, 'electron-user-data')
   const appData = join(temporaryRoot, 'app-data')
   const localAppData = join(temporaryRoot, 'local-app-data')
@@ -78,7 +78,7 @@ async function main() {
   await mkdir(workspaceParent, { recursive: true })
   const workspaceRoot = await mkdtemp(join(workspaceParent, 'video-editor-development-layout-'))
   const evidenceRoot = resolve(
-    argumentValue('--evidence-dir') ?? join(tmpdir(), 'Rcode-video-editor-development-layout-evidence')
+    argumentValue('--evidence-dir') ?? join(tmpdir(), 'Joker-video-editor-development-layout-evidence')
   )
   const runtimePort = await availablePort()
   let rendererPort = await availablePort()
@@ -114,7 +114,7 @@ async function main() {
       explicitUserData: userData
     }).map(async (directory) => {
       await mkdir(directory, { recursive: true })
-      await writeFile(join(directory, 'Rcode-settings.json'), serializedSettings)
+      await writeFile(join(directory, 'Joker-settings.json'), serializedSettings)
     }))
 
     const isolatedEnvironment = developmentRendererEnvironment(
@@ -128,7 +128,7 @@ async function main() {
     )
     isolatedEnvironment.NODE_ENV = 'development'
 
-    runRepositoryRcode([
+    runRepositoryJoker([
       'extension', 'install',
       '--development', extensionRoot,
       '--data-dir', profile,
@@ -172,12 +172,12 @@ async function main() {
     let workbench = await findWorkbenchWindow(electronApplication, timeoutMs)
     await electronApplication.evaluate(({ BrowserWindow }) => {
       const window = BrowserWindow.getAllWindows().find((candidate) => !candidate.isDestroyed())
-      if (!window) throw new Error('Rcode development workbench BrowserWindow is unavailable')
+      if (!window) throw new Error('Joker development workbench BrowserWindow is unavailable')
       const bounds = window.getBounds()
       window.setBounds({ ...bounds, width: 1_800, height: 1_100 }, false)
     })
     await workbench.evaluate(() => {
-      localStorage.setItem('Rcode.layout.leftSidebarCollapsed', '1')
+      localStorage.setItem('Joker.layout.leftSidebarCollapsed', '1')
     })
     await workbench.reload({ waitUntil: 'domcontentloaded' })
     workbench = await findWorkbenchWindow(electronApplication, timeoutMs)
@@ -203,14 +203,14 @@ async function main() {
           guestWebContentsId
         )
         await writeFile(
-          join(evidenceRoot, `Rcode-video-editor-development-sidebar-${width}.png`),
+          join(evidenceRoot, `Joker-video-editor-development-sidebar-${width}.png`),
           Buffer.from(guestPngBase64, 'base64')
         )
       }
     }
 
     process.stdout.write(
-      `Development Rcode Video Editor layout smoke OK (${process.platform}/${process.arch}): ` +
+      `Development Joker Video Editor layout smoke OK (${process.platform}/${process.arch}): ` +
       `${measurements.map(({ targetWidth, host, guest }) =>
         `${targetWidth}px host=${Math.round(host.width)}x${Math.round(host.height)} ` +
         `guest=${guest.innerWidth}x${guest.innerHeight} scroll=${guest.scrollWidth}`
@@ -236,7 +236,7 @@ async function main() {
     }
     await waitForPortsClosed([runtimePort, rendererPort], 2_000)
       .catch((error) => cleanupErrors.push(error))
-    if (process.env.RCODE_KEEP_DEVELOPMENT_VIDEO_EDITOR_LAYOUT_SMOKE === '1') {
+    if (process.env.JOKER_KEEP_DEVELOPMENT_VIDEO_EDITOR_LAYOUT_SMOKE === '1') {
       process.stderr.write(`Preserved development layout profile: ${temporaryRoot}\n`)
       process.stderr.write(`Preserved development layout workspace: ${workspaceRoot}\n`)
     } else {
@@ -263,8 +263,8 @@ async function main() {
   }
 }
 
-function runRepositoryRcode(args, repositoryRoot, environment, timeoutMs) {
-  const cli = join(repositoryRoot, 'examples', 'extensions', 'run-repository-Rcode-cli.mjs')
+function runRepositoryJoker(args, repositoryRoot, environment, timeoutMs) {
+  const cli = join(repositoryRoot, 'examples', 'extensions', 'run-repository-Joker-cli.mjs')
   const result = spawnSync(process.execPath, [cli, ...args], {
     cwd: repositoryRoot,
     env: environment,
@@ -275,7 +275,7 @@ function runRepositoryRcode(args, repositoryRoot, environment, timeoutMs) {
   if (result.error) throw result.error
   if (result.status !== 0) {
     throw new Error(
-      `Repository Rcode CLI failed (${result.signal ?? result.status ?? 'unknown'}): ` +
+      `Repository Joker CLI failed (${result.signal ?? result.status ?? 'unknown'}): ` +
       `${String(result.stderr || result.stdout).trim().slice(-8_000)}`
     )
   }

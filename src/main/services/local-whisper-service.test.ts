@@ -28,7 +28,7 @@ describe('local-whisper-service helpers', () => {
   let rootDir = ''
 
   beforeEach(async () => {
-    rootDir = await mkdtemp(join(tmpdir(), 'Rcode-local-whisper-'))
+    rootDir = await mkdtemp(join(tmpdir(), 'Joker-local-whisper-'))
     vi.mocked(app.getPath).mockReturnValue(rootDir)
     _internals.setLocalWhisperDownloadStateForTest(null)
     _internals.resetShutdownForTest()
@@ -108,11 +108,11 @@ describe('local-whisper-service helpers', () => {
     // Resources (no bundled model), but the repo's bundled model is reachable via
     // app.getAppPath(). This is the exact scenario that previously reported
     // "local Whisper model is not downloaded".
-    const fakeResources = await mkdtemp(join(tmpdir(), 'Rcode-whisper-res-'))
+    const fakeResources = await mkdtemp(join(tmpdir(), 'Joker-whisper-res-'))
     const prevResourcesPath = (process as { resourcesPath?: string }).resourcesPath
     ;(process as { resourcesPath?: string }).resourcesPath = fakeResources
 
-    const appRoot = await mkdtemp(join(tmpdir(), 'Rcode-whisper-app-'))
+    const appRoot = await mkdtemp(join(tmpdir(), 'Joker-whisper-app-'))
     const modelPath = join(appRoot, 'resources', 'whisper', 'models', model.id, model.fileName)
     await mkdir(dirname(modelPath), { recursive: true })
     await writeFile(modelPath, 'bundled', 'utf8')

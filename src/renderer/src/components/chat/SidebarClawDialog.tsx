@@ -28,7 +28,7 @@ import {
   type ClawRunMode,
   type SandboxMode
 } from '@shared/app-settings'
-import type { ClawImInstallQrResult } from '@shared/Rcode-gui-api'
+import type { ClawImInstallQrResult } from '@shared/Joker-gui-api'
 import { confirmDialog } from '../../lib/confirm-dialog'
 import { clawModelSelectOptions, mergeClawModelOptions } from '../../lib/claw-model-options'
 import {
@@ -231,9 +231,9 @@ export function ClawAddImDialog({
 
   useEffect(() => {
     let cancelled = false
-    if (typeof window.RcodeGui?.getSettings !== 'function') return
+    if (typeof window.JokerGui?.getSettings !== 'function') return
     setLoadingConfig(true)
-    void window.RcodeGui
+    void window.JokerGui
       .getSettings()
       .then((settings) => {
         if (cancelled) return
@@ -247,8 +247,8 @@ export function ClawAddImDialog({
         setSecret(settings.claw.im.secret.trim())
         setResponseTimeoutSec(Math.round(settings.claw.im.responseTimeoutMs / 1000))
         setRunMode(settings.claw.im.mode)
-        setImApprovalPolicy(settings.claw.im.approvalPolicy ?? settings.agents.Rcode.approvalPolicy)
-        setImSandboxMode(settings.claw.im.sandboxMode ?? settings.agents.Rcode.sandboxMode)
+        setImApprovalPolicy(settings.claw.im.approvalPolicy ?? settings.agents.Joker.approvalPolicy)
+        setImSandboxMode(settings.claw.im.sandboxMode ?? settings.agents.Joker.sandboxMode)
         setConfiguredModelOptions(clawModelSelectOptions(settings))
       })
       .catch((e: unknown) => {
@@ -287,7 +287,7 @@ export function ClawAddImDialog({
   )
   const bindingPayload = useMemo(() => {
     const payload: Record<string, unknown> = {
-      kind: 'Rcode.claw-im',
+      kind: 'Joker.claw-im',
       provider: effectiveProvider,
       endpoint,
       method: 'POST',
@@ -328,7 +328,7 @@ export function ClawAddImDialog({
 
   const startOfficialInstallQr = async (): Promise<void> => {
     if (!officialInstallProvider) return
-    if (typeof window.RcodeGui?.startClawImInstallQr !== 'function') {
+    if (typeof window.JokerGui?.startClawImInstallQr !== 'function') {
       setInstallQr({
         status: 'error',
         url: '',
@@ -347,7 +347,7 @@ export function ClawAddImDialog({
     setInstallQr({ status: 'loading', url: '', deviceCode: '', userCode: '', timeLeft: 0, error: '' })
     let result: ClawImInstallQrResult
     try {
-      result = await window.RcodeGui.startClawImInstallQr(officialInstallProvider, {
+      result = await window.JokerGui.startClawImInstallQr(officialInstallProvider, {
         isLark: officialInstallProvider === 'feishu' && officialInstallTarget === 'lark'
       })
     } catch (e) {
@@ -400,7 +400,7 @@ export function ClawAddImDialog({
     }, 1000)
     const waitForInstall = async (): Promise<void> => {
       try {
-        const poll = await window.RcodeGui.pollClawImInstall(officialInstallProvider, result.deviceCode)
+        const poll = await window.JokerGui.pollClawImInstall(officialInstallProvider, result.deviceCode)
         if (installAttempt !== installAttemptRef.current) return
         if (poll.done) {
           clearInstallTimers()

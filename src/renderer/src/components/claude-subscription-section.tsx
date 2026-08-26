@@ -71,7 +71,7 @@ export function ClaudeSubscriptionSection({
 
   const checkSdk = useCallback(async (): Promise<void> => {
     try {
-      const s = await window.RcodeGui.claudeSubscriptionSdkStatus()
+      const s = await window.JokerGui.claudeSubscriptionSdkStatus()
       if (s.installed) {
         setSdk('ready')
         return
@@ -89,7 +89,7 @@ export function ClaudeSubscriptionSection({
     setSdk('downloading')
     setProgress({ received: 0, total: 0 })
     try {
-      applyDownload(await window.RcodeGui.claudeSubscriptionSdkInstall())
+      applyDownload(await window.JokerGui.claudeSubscriptionSdkInstall())
     } catch (err) {
       setSdk('missing')
       setSdkNote(`${t('claudeSubSdkFailed')}: ${err instanceof Error ? err.message : ''}`)
@@ -102,7 +102,7 @@ export function ClaudeSubscriptionSection({
     setModelsBusy(true)
     setModelsNote(null)
     try {
-      const ids = await window.RcodeGui.claudeSubscriptionModels(token?.trim() || undefined)
+      const ids = await window.JokerGui.claudeSubscriptionModels(token?.trim() || undefined)
       if (ids.length > 0) {
         onModelsChange(ids)
         setModelsNote(t('claudeSubModelsFetched').replace('{count}', String(ids.length)))
@@ -119,7 +119,7 @@ export function ClaudeSubscriptionSection({
   const refreshStatus = async (): Promise<void> => {
     setStatus('checking')
     try {
-      const res = await window.RcodeGui.claudeSubscriptionStatus()
+      const res = await window.JokerGui.claudeSubscriptionStatus()
       setStatus(res.loggedIn ? 'logged-in' : 'logged-out')
     } catch {
       setStatus('logged-out')
@@ -131,7 +131,7 @@ export function ClaudeSubscriptionSection({
   }, [checkSdk])
   // The download runs in main; subscribe so progress shows even after remounting.
   useEffect(
-    () => window.RcodeGui.onClaudeSubscriptionSdkProgress((state) => applyDownload(state)),
+    () => window.JokerGui.onClaudeSubscriptionSdkProgress((state) => applyDownload(state)),
     [applyDownload]
   )
 
@@ -139,7 +139,7 @@ export function ClaudeSubscriptionSection({
     setBusy(true)
     setMessage(null)
     try {
-      const res = await window.RcodeGui.claudeSubscriptionLogin()
+      const res = await window.JokerGui.claudeSubscriptionLogin()
       if (res.ok) {
         onTokenChange(res.token)
         setStatus('logged-in')

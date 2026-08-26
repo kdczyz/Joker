@@ -93,20 +93,20 @@ export function useSddTrace(input: {
     }
     let cancelled = false
     const load = async (): Promise<void> => {
-      if (typeof window.RcodeGui?.readWorkspaceFile !== 'function') return
-      const requirement = await window.RcodeGui
+      if (typeof window.JokerGui?.readWorkspaceFile !== 'function') return
+      const requirement = await window.JokerGui
         .readWorkspaceFile({ workspaceRoot, path: draftRelativePath })
         .catch(() => null)
       if (!cancelled) setDiskRequirement(requirement?.ok ? requirement.content : null)
       if (!planIsActive) {
-        const plan = await window.RcodeGui
+        const plan = await window.JokerGui
           .readWorkspaceFile({ workspaceRoot, path: planRelativePath })
           .catch(() => null)
         if (!cancelled) setDiskPlan(plan?.ok ? plan.content : null)
       }
       const tracePath = sddDraftTraceRelativePath(draftRelativePath)
       if (tracePath) {
-        const trace = await window.RcodeGui
+        const trace = await window.JokerGui
           .readWorkspaceFile({ workspaceRoot, path: tracePath })
           .catch(() => null)
         if (!cancelled) setSnapshot(trace?.ok ? parseTraceSnapshot(trace.content) : null)
@@ -163,8 +163,8 @@ export function useSddTrace(input: {
           await saveActiveSddDraftToDisk()
           return
         }
-        if (typeof window.RcodeGui?.writeWorkspaceFile !== 'function') return
-        const written = await window.RcodeGui.writeWorkspaceFile({
+        if (typeof window.JokerGui?.writeWorkspaceFile !== 'function') return
+        const written = await window.JokerGui.writeWorkspaceFile({
           workspaceRoot,
           path: draftRelativePath,
           content: next

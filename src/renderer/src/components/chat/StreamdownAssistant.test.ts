@@ -64,11 +64,11 @@ describe('reasoning HTML comment presentation', () => {
   }
 
   it('hides a completed comment from settled reasoning without changing surrounding Markdown', () => {
-    const source = '**Clarifying model identity as Rcode**\n\n<!-- -->'
+    const source = '**Clarifying model identity as Joker**\n\n<!-- -->'
     const html = renderReasoning(source)
 
     expect(source).toContain('<!-- -->')
-    expect(html).toContain('Clarifying model identity as Rcode')
+    expect(html).toContain('Clarifying model identity as Joker')
     expect(html).not.toContain('&lt;!-- --&gt;')
     expect(html).not.toContain('<!-- -->')
   })

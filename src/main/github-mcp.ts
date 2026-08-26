@@ -1,12 +1,12 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
-import { resolveRcodeMcpJsonPath } from './claw-schedule-mcp-config'
+import { resolveJokerMcpJsonPath } from './claw-schedule-mcp-config'
 
 /**
- * 一键把「已登录的 GitHub OAuth token」注入到 Rcode 的 MCP 配置里，
+ * 一键把「已登录的 GitHub OAuth token」注入到 Joker 的 MCP 配置里，
  * 让内置 agent 通过官方 GitHub MCP 服务器直接管理仓库 / Issue / PR 等。
  *
- * 写入的目标与运行时读取的是同一份文件（~/.Rcode/mcp.json），
+ * 写入的目标与运行时读取的是同一份文件（~/.Joker/mcp.json），
  * 且仅新增/更新 `github` 这一个服务器条目，不会破坏用户已有的其它 MCP 服务器
  * （计划任务同步逻辑 buildSyncedClawScheduleMcpJson 也会保留 userServers）。
  *
@@ -40,7 +40,7 @@ async function readMcpJson(path: string): Promise<Record<string, unknown> | null
 //   2. 官方推荐的本地形态是 docker / brew / go install，但都需要额外装运行时。
 //   3. 最稳的形式是远程 streamable-http MCP，由 GitHub 托管：
 //      https://api.githubcopilot.com/mcp/
-//      Rcode runtime 已支持 transport=streamable-http + OAuth provider，
+//      Joker runtime 已支持 transport=streamable-http + OAuth provider，
 //      第一次连接会按运行时 OAuth 流程引导用户在浏览器里授权 GitHub。
 // 改动后，OAuth token 不再写进 mcp.json（远程 MCP 自己处理 OAuth），
 // 减少本机 token 暴露面。
@@ -61,7 +61,7 @@ function githubServerEntry(): Record<string, unknown> {
  * 引导用户在浏览器里完成 GitHub 授权（与 VS Code 等编辑器走同一条 OAuth 流）。
  */
 export async function enableGithubMcp(): Promise<void> {
-  const path = resolveRcodeMcpJsonPath()
+  const path = resolveJokerMcpJsonPath()
   const current = (await readMcpJson(path)) ?? {}
   const servers = isRecord(current.servers) ? current.servers : {}
 
@@ -81,7 +81,7 @@ export async function enableGithubMcp(): Promise<void> {
  * 从 mcp.json 中移除 github MCP 服务器条目（保留其它服务器）。
  */
 export async function disableGithubMcp(): Promise<void> {
-  const path = resolveRcodeMcpJsonPath()
+  const path = resolveJokerMcpJsonPath()
   const current = await readMcpJson(path)
   if (!current) return
 
@@ -103,7 +103,7 @@ export async function disableGithubMcp(): Promise<void> {
  * github MCP 服务器条目是否已存在且启用。
  */
 export async function isGithubMcpEnabled(): Promise<boolean> {
-  const path = resolveRcodeMcpJsonPath()
+  const path = resolveJokerMcpJsonPath()
   const current = await readMcpJson(path)
   if (!current) return false
   const servers = isRecord(current.servers) ? current.servers : {}

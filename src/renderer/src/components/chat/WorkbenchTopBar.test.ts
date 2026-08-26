@@ -4,7 +4,7 @@ import { act, create as createRenderer } from 'react-test-renderer'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../i18n'
 import { WorkbenchSideRail, WorkbenchTopActions } from './WorkbenchTopBar'
-import { ExtensionContributionsSchema } from '@Rcode/extension-api'
+import { ExtensionContributionsSchema } from '@joker-code/extension-api'
 import {
   ContributionRegistry,
   ExtensionWorkbenchSnapshotSchema
@@ -116,7 +116,7 @@ describe('WorkbenchSideRail', () => {
     expect(html).toContain('aria-label="MCP &amp; Skills"')
     expect(html).toContain('data-contribution-id="extension:acme.issues/issues"')
     expect(html).toContain(
-      'src="Rcode-extension://acme.issues/assets/issues.svg?RcodeHostResource=icon"'
+      'src="Joker-extension://acme.issues/assets/issues.svg?JokerHostResource=icon"'
     )
     expect(html).toContain('data-tooltip="Summary"')
     expect(html).toContain('data-contribution-id="extension:acme.issues/summary"')

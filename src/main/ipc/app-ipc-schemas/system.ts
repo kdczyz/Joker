@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { DESKTOP_COMMANDS } from '../../../shared/Rcode-gui-api'
+import { DESKTOP_COMMANDS } from '../../../shared/Joker-gui-api'
 import { SPEECH_TRANSCRIPTION_MAX_BASE64_CHARS, SPEECH_TRANSCRIPTION_MAX_DURATION_MS } from '../../../shared/speech-to-text'
 import {
   TERMINAL_DEFAULT_COLS,

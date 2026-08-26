@@ -6,7 +6,7 @@ import test from "node:test";
 import { activateSkills } from "./skills";
 
 test("auto-learning can be activated explicitly without occupying every task context", async () => {
-  const projectPath = await mkdtemp(path.join(os.tmpdir(), "rcode-skills-"));
+  const projectPath = await mkdtemp(path.join(os.tmpdir(), "joker-skills-"));
   const skillRoot = path.join(projectPath, ".agent", "skills", "auto-learning");
   await mkdir(skillRoot, { recursive: true });
   await mkdir(path.join(skillRoot, "agents"), { recursive: true });

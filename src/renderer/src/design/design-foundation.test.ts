@@ -15,25 +15,25 @@ function artifact(partial: Partial<DesignArtifact> & { id: string }): DesignArti
   return {
     kind: 'html',
     title: partial.id,
-    relativePath: `.Rcode-design/doc/${partial.id}/v1.html`,
+    relativePath: `.Joker-design/doc/${partial.id}/v1.html`,
     createdAt,
     updatedAt: createdAt,
-    versions: [{ id: `${partial.id}-v1`, relativePath: `.Rcode-design/doc/${partial.id}/v1.html`, createdAt, summary: '' }],
+    versions: [{ id: `${partial.id}-v1`, relativePath: `.Joker-design/doc/${partial.id}/v1.html`, createdAt, summary: '' }],
     ...partial
   }
 }
 
 describe('designSpecPath', () => {
   it('places design.md under the 设计稿 directory', () => {
-    expect(designSpecPath('abc123')).toBe('.Rcode-design/abc123/design.md')
+    expect(designSpecPath('abc123')).toBe('.Joker-design/abc123/design.md')
   })
 })
 
 describe('buildDesignSpecStub', () => {
   it('is a markdown brief that embeds the raw brief text', () => {
-    const stub = buildDesignSpecStub('A fan site for IRCODE')
+    const stub = buildDesignSpecStub('A fan site for IJOKER')
     expect(stub).toContain('# Design brief')
-    expect(stub).toContain('A fan site for IRCODE')
+    expect(stub).toContain('A fan site for IJOKER')
     expect(stub).toContain('Information architecture')
     expect(stub).toContain('State & responsiveness plan')
     expect(stub).toContain('Implementation notes')
@@ -42,14 +42,14 @@ describe('buildDesignSpecStub', () => {
 
 describe('buildDesignSpecPrompt', () => {
   const prompt = buildDesignSpecPrompt({
-    brief: 'An IRCODE fan hub',
+    brief: 'An IJOKER fan hub',
     workspaceRoot: '/ws',
-    designMdPath: '.Rcode-design/doc/design.md',
-    existingPages: [{ name: 'Home', htmlPath: '.Rcode-design/doc/home/v1.html', summary: 'landing' }]
+    designMdPath: '.Joker-design/doc/design.md',
+    existingPages: [{ name: 'Home', htmlPath: '.Joker-design/doc/home/v1.html', summary: 'landing' }]
   })
 
   it('writes design.md first, then requires a parseable pages block', () => {
-    expect(prompt).toContain('.Rcode-design/doc/design.md')
+    expect(prompt).toContain('.Joker-design/doc/design.md')
     expect(prompt).toContain('Design target: Web')
     expect(prompt).toContain('1280x800 desktop page frame')
     expect(prompt).toContain('Web brief:')
@@ -61,7 +61,7 @@ describe('buildDesignSpecPrompt', () => {
   })
 
   it('restricts edits to design.md and forbids designing screens yet', () => {
-    expect(prompt).toContain('Modify ONLY `.Rcode-design/doc/design.md`')
+    expect(prompt).toContain('Modify ONLY `.Joker-design/doc/design.md`')
     expect(prompt).toContain('do NOT design screens yet')
   })
 
@@ -74,7 +74,7 @@ describe('buildDesignSpecPrompt', () => {
     const appPrompt = buildDesignSpecPrompt({
       brief: 'A habit tracker',
       workspaceRoot: '/ws',
-      designMdPath: '.Rcode-design/doc/design.md',
+      designMdPath: '.Joker-design/doc/design.md',
       designContext: { designTarget: 'app' }
     })
 
@@ -88,15 +88,15 @@ describe('buildDesignSpecPrompt', () => {
 
 describe('buildDesignLogoPrompt', () => {
   const prompt = buildDesignLogoPrompt({
-    brief: 'An IRCODE fan hub',
+    brief: 'An IJOKER fan hub',
     workspaceRoot: '/ws',
-    artifactRelativePath: '.Rcode-design/doc/logo/v1.html',
+    artifactRelativePath: '.Joker-design/doc/logo/v1.html',
     designSystemMdPath: PROJECT_DESIGN_SYSTEM_PATH,
     designContext: { brandColor: '#d4af37' }
   })
 
   it('lets the agent choose inline SVG or a generated raster', () => {
-    expect(prompt).toContain('.Rcode-design/doc/logo/v1.html')
+    expect(prompt).toContain('.Joker-design/doc/logo/v1.html')
     expect(prompt).toContain('inline SVG')
     expect(prompt).toContain('generate_image')
   })
@@ -130,10 +130,10 @@ describe('buildFoundationFollowLines', () => {
 
   it('points pages at the brief, tokens, and on-canvas siblings', () => {
     const lines = buildFoundationFollowLines({
-      designMdPath: '.Rcode-design/doc/design.md',
+      designMdPath: '.Joker-design/doc/design.md',
       designSystemMdPath: PROJECT_DESIGN_SYSTEM_PATH
     }).join('\n')
-    expect(lines).toContain('.Rcode-design/doc/design.md')
+    expect(lines).toContain('.Joker-design/doc/design.md')
     expect(lines).toContain(PROJECT_DESIGN_SYSTEM_PATH)
     expect(lines).toContain('reuse its exact tokens, component trees, slots, and variants')
     expect(lines).toContain('existing project foundation')

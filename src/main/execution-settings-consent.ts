@@ -6,17 +6,17 @@ import type {
   SandboxMode
 } from '../shared/app-settings'
 
-export type RcodeExecutionSecuritySettings = {
+export type JokerExecutionSecuritySettings = {
   approvalPolicy: ApprovalPolicy
   sandboxMode: SandboxMode
 }
 
-export type RcodeExecutionSettingsChange = {
-  current: RcodeExecutionSecuritySettings
-  next: RcodeExecutionSecuritySettings
+export type JokerExecutionSettingsChange = {
+  current: JokerExecutionSecuritySettings
+  next: JokerExecutionSecuritySettings
 }
 
-export type RcodeExecutionSettingsConsentAction = RcodeExecutionSettingsChange & {
+export type JokerExecutionSettingsConsentAction = JokerExecutionSettingsChange & {
   senderId: number
   senderProcessId: number
   senderRoutingId: number
@@ -31,26 +31,26 @@ const CONSENT_LIFETIME_MS = 30_000
 const MAX_PENDING_CONSENTS = 32
 
 /**
- * Detect a renderer request that would change Rcode's approval/sandbox boundary.
+ * Detect a renderer request that would change Joker's approval/sandbox boundary.
  * Full settings snapshots are common, so equal values are deliberately ignored.
  */
-export function RcodeExecutionSettingsChange(
+export function JokerExecutionSettingsChange(
   current: AppSettingsV1,
   patch: AppSettingsPatch
-): RcodeExecutionSettingsChange | undefined {
-  const RcodePatch = patch.agents?.Rcode
-  if (!RcodePatch || (
-    !Object.prototype.hasOwnProperty.call(RcodePatch, 'approvalPolicy') &&
-    !Object.prototype.hasOwnProperty.call(RcodePatch, 'sandboxMode')
+): JokerExecutionSettingsChange | undefined {
+  const JokerPatch = patch.agents?.Joker
+  if (!JokerPatch || (
+    !Object.prototype.hasOwnProperty.call(JokerPatch, 'approvalPolicy') &&
+    !Object.prototype.hasOwnProperty.call(JokerPatch, 'sandboxMode')
   )) return undefined
 
-  const currentSettings: RcodeExecutionSecuritySettings = {
-    approvalPolicy: current.agents.Rcode.approvalPolicy,
-    sandboxMode: current.agents.Rcode.sandboxMode
+  const currentSettings: JokerExecutionSecuritySettings = {
+    approvalPolicy: current.agents.Joker.approvalPolicy,
+    sandboxMode: current.agents.Joker.sandboxMode
   }
-  const next: RcodeExecutionSecuritySettings = {
-    approvalPolicy: RcodePatch.approvalPolicy ?? currentSettings.approvalPolicy,
-    sandboxMode: RcodePatch.sandboxMode ?? currentSettings.sandboxMode
+  const next: JokerExecutionSecuritySettings = {
+    approvalPolicy: JokerPatch.approvalPolicy ?? currentSettings.approvalPolicy,
+    sandboxMode: JokerPatch.sandboxMode ?? currentSettings.sandboxMode
   }
   return executionSettingsEqual(currentSettings, next)
     ? undefined
@@ -58,8 +58,8 @@ export function RcodeExecutionSettingsChange(
 }
 
 export function executionSettingsEqual(
-  left: RcodeExecutionSecuritySettings,
-  right: RcodeExecutionSecuritySettings
+  left: JokerExecutionSecuritySettings,
+  right: JokerExecutionSecuritySettings
 ): boolean {
   return left.approvalPolicy === right.approvalPolicy && left.sandboxMode === right.sandboxMode
 }
@@ -69,7 +69,7 @@ export function executionSettingsEqual(
  * preload; it makes the native decision a required input to the persistence
  * call instead of treating a renderer settings payload as authorization.
  */
-export class RcodeExecutionSettingsConsentService {
+export class JokerExecutionSettingsConsentService {
   private readonly pending = new Map<string, ConsentRecord>()
 
   constructor(
@@ -77,7 +77,7 @@ export class RcodeExecutionSettingsConsentService {
     private readonly randomToken: () => string = () => randomBytes(32).toString('base64url')
   ) {}
 
-  issue(action: RcodeExecutionSettingsConsentAction): string {
+  issue(action: JokerExecutionSettingsConsentAction): string {
     const now = this.now()
     this.prune(now)
     if (this.pending.size >= MAX_PENDING_CONSENTS) {
@@ -91,7 +91,7 @@ export class RcodeExecutionSettingsConsentService {
     return token
   }
 
-  consume(token: string, action: RcodeExecutionSettingsConsentAction): boolean {
+  consume(token: string, action: JokerExecutionSettingsConsentAction): boolean {
     const record = this.pending.get(token)
     // A presented token is consumed even when its binding is wrong.
     this.pending.delete(token)
@@ -106,7 +106,7 @@ export class RcodeExecutionSettingsConsentService {
   }
 }
 
-function actionKey(action: RcodeExecutionSettingsConsentAction): string {
+function actionKey(action: JokerExecutionSettingsConsentAction): string {
   return JSON.stringify([
     action.current.approvalPolicy,
     action.current.sandboxMode,

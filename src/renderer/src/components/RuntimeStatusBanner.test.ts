@@ -2,15 +2,15 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { afterEach, describe, expect, it } from 'vitest'
 import { vi } from 'vitest'
-import type { RcodeRuntimeStatusPayload } from '@shared/Rcode-gui-api'
+import type { JokerRuntimeStatusPayload } from '@shared/Joker-gui-api'
 import { RuntimeStatusBanner } from './RuntimeStatusBanner'
 
 const storeState = vi.hoisted(() => ({
-  runtimeStatus: null as RcodeRuntimeStatusPayload | null
+  runtimeStatus: null as JokerRuntimeStatusPayload | null
 }))
 
 vi.mock('../store/chat-store', () => ({
-  useChatStore: (selector: (state: { runtimeStatus: RcodeRuntimeStatusPayload | null }) => unknown) =>
+  useChatStore: (selector: (state: { runtimeStatus: JokerRuntimeStatusPayload | null }) => unknown) =>
     selector(storeState)
 }))
 

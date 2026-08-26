@@ -1,4 +1,4 @@
-import { EXTENSION_VIEW_SAFE_METHODS } from '@Rcode/extension-api'
+import { EXTENSION_VIEW_SAFE_METHODS } from '@joker-code/extension-api'
 import { describe, expect, it } from 'vitest'
 import { isAllowedExtensionViewMethod } from './extension-view-methods'
 

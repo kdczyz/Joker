@@ -9,7 +9,7 @@ import {
   parseMemoryProfileImport,
   type MemoryImportEntry
 } from '@shared/memory-import-export'
-import type { CoreMemoryRecordJson } from '../agent/Rcode-contract'
+import type { CoreMemoryRecordJson } from '../agent/Joker-contract'
 import { confirmDialog } from '../lib/confirm-dialog'
 import { workspaceRootIdentityKey } from '../lib/workspace-path'
 import { SettingsCard, SettingRow, Toggle } from './settings-controls'
@@ -159,8 +159,8 @@ function memoryImportDedupKey(input: {
 export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): ReactElement {
   const {
     t,
-    Rcode,
-    updateRcode,
+    Joker,
+    updateJoker,
     expandHomePath,
     memoryRecords,
     memoryDiagnostics,
@@ -250,14 +250,14 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
       .filter(Boolean)
 
   const exportMemories = async (): Promise<void> => {
-    if (typeof window.RcodeGui?.exportMemoryMarkdown !== 'function') {
+    if (typeof window.JokerGui?.exportMemoryMarkdown !== 'function') {
       setNotice(t('memoryExportUnavailable'))
       return
     }
     setExportBusy(true)
     setNotice(null)
     try {
-      const result = await window.RcodeGui.exportMemoryMarkdown({
+      const result = await window.JokerGui.exportMemoryMarkdown({
         markdown: buildMemoryMarkdownExport({ records: memoryRecords ?? [] }),
         defaultFileName: defaultMemoryExportFileName()
       })
@@ -379,8 +379,8 @@ export function MemorySettingsSection({ ctx }: { ctx: Record<string, any> }): Re
         description={t('memoryEnableDesc')}
         control={
           <Toggle
-            checked={Rcode?.memoryEnabled ?? false}
-            onChange={(checked: boolean) => updateRcode({ memoryEnabled: checked })}
+            checked={Joker?.memoryEnabled ?? false}
+            onChange={(checked: boolean) => updateJoker({ memoryEnabled: checked })}
           />
         }
       />

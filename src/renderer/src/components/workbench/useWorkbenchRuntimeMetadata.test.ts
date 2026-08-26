@@ -89,7 +89,7 @@ import { useWorkbenchRuntimeMetadata } from './useWorkbenchRuntimeMetadata'
 const baselineSkill = {
   id: 'baseline',
   name: 'Baseline',
-  root: '/workspace/.Rcode/skills/baseline',
+  root: '/workspace/.Joker/skills/baseline',
   scope: 'project' as const,
   legacy: true
 }
@@ -125,7 +125,7 @@ describe('useWorkbenchRuntimeMetadata', () => {
       validationErrors: []
     })
     vi.stubGlobal('window', {
-      RcodeGui: { listSkills: runtime.listLocalSkills }
+      JokerGui: { listSkills: runtime.listLocalSkills }
     })
   })
 

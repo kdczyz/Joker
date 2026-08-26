@@ -10,7 +10,7 @@ import {
 const createdAt = '2026-07-02T00:00:00.000Z'
 
 function artifact(id: string, patch: Partial<DesignArtifact> = {}): DesignArtifact {
-  const relativePath = `.Rcode-design/doc/${id}/v1.html`
+  const relativePath = `.Joker-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',
@@ -32,13 +32,13 @@ describe('direction scorecard', () => {
       artifacts: [
         artifact('home', {
           title: 'Home',
-          versions: [{ id: 'home-v1', relativePath: '.Rcode-design/doc/home/v1.html', createdAt, summary: 'Clear hero.' }],
+          versions: [{ id: 'home-v1', relativePath: '.Joker-design/doc/home/v1.html', createdAt, summary: 'Clear hero.' }],
           implementedAt: '2026-07-02T01:00:00.000Z',
           prototypeLinks: [{ targetTitle: 'Checkout', targetArtifactId: 'checkout' }]
         }),
         artifact('checkout', {
           title: 'Checkout',
-          designMdPath: '.Rcode-design/doc/checkout/DESIGN.md',
+          designMdPath: '.Joker-design/doc/checkout/DESIGN.md',
           implementedAt: '2026-07-02T01:10:00.000Z'
         })
       ]

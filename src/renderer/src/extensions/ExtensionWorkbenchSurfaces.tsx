@@ -64,7 +64,7 @@ export function resolveCommandOpenView(
   )
 }
 
-export const EXTENSION_SURFACE_LAYOUT_STORAGE_KEY = 'Rcode.extension.surface-layout.v1'
+export const EXTENSION_SURFACE_LAYOUT_STORAGE_KEY = 'Joker.extension.surface-layout.v1'
 
 export function readStoredExtensionSurfaceId(
   storage: Pick<Storage, 'getItem'>

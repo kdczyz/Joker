@@ -567,7 +567,7 @@ export async function ensureDesignBoardArtifact(
   const docId = store.ensureActiveDocument()
   const createdAt = new Date().toISOString()
   const artifactId = createDesignArtifactId()
-  const relativePath = `.Rcode-design/${docId}/${artifactId}/canvas.json`
+  const relativePath = `.Joker-design/${docId}/${artifactId}/canvas.json`
   const artifact: DesignArtifact & { kind: 'canvas' } = {
     id: artifactId,
     kind: 'canvas',

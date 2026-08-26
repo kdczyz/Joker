@@ -38,7 +38,7 @@ import {
 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 import type { AttachmentReference, ReviewTarget } from '../../agent/types'
 import { useChatStore } from '../../store/chat-store'
 import { CodexUsageBadge } from './CodexUsageBadge'
@@ -627,12 +627,12 @@ export function FloatingComposer({
     && !pendingUserInputBlock
 
   useEffect(() => {
-    if (!useWorktreePool || !effectiveWorkspaceRoot || typeof window.RcodeGui?.getGitBranches !== 'function') {
+    if (!useWorktreePool || !effectiveWorkspaceRoot || typeof window.JokerGui?.getGitBranches !== 'function') {
       setWorktreeBranches([])
       return
     }
     let cancelled = false
-    void window.RcodeGui.getGitBranches(effectiveWorkspaceRoot).then((result) => {
+    void window.JokerGui.getGitBranches(effectiveWorkspaceRoot).then((result) => {
       if (cancelled || !result.ok) return
       const names = result.branches.map((branch) => branch.name)
       setWorktreeBranches(names)
@@ -674,7 +674,7 @@ export function FloatingComposer({
     !promptOptimizationBusy &&
     input.trim().length > 0 &&
     typeof window !== 'undefined' &&
-    typeof window.RcodeGui?.optimizePrompt === 'function'
+    typeof window.JokerGui?.optimizePrompt === 'function'
   const goalRuntimeStartedAtMs = goalRuntimeStartedAtRef.current
   const liveGoalElapsedSeconds =
     busy && activeThreadGoal?.status === 'active' && goalRuntimeStartedAtMs != null
@@ -930,7 +930,7 @@ export function FloatingComposer({
     const sourceText = input
     setPromptOptimizationBusy(true)
     setPromptOptimizationError(null)
-    void window.RcodeGui.optimizePrompt({ text: sourceText })
+    void window.JokerGui.optimizePrompt({ text: sourceText })
       .then((result) => {
         if (!result.ok) {
           setPromptOptimizationError(result.message)
@@ -1155,7 +1155,7 @@ export function FloatingComposer({
       const paths: string[] = []
       for (const file of pathFiles) {
         try {
-          const path = window.RcodeGui.getPathForFile(file)
+          const path = window.JokerGui.getPathForFile(file)
           if (path) paths.push(path)
         } catch {
           // ignore files we cannot resolve a filesystem path for

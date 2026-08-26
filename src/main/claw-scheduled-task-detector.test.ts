@@ -3,7 +3,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -32,10 +32,10 @@ function settings(endpointFormat: ModelEndpointFormat): AppSettingsV1 {
     chatContentMaxWidthPx: 896,
     provider,
     agents: {
-      Rcode: defaultRcodeRuntimeSettings()
+      Joker: defaultJokerRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -174,8 +174,8 @@ describe('detectClawScheduledTaskRequest endpoint formats', () => {
         }
       }
     })
-    appSettings.agents.Rcode = {
-      ...appSettings.agents.Rcode,
+    appSettings.agents.Joker = {
+      ...appSettings.agents.Joker,
       providerId: 'codex', model: 'gpt-5.6-sol', apiKey: credentials,
       baseUrl: 'https://chatgpt.com/backend-api/codex', endpointFormat: 'responses'
     }

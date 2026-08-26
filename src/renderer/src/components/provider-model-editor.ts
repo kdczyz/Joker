@@ -43,7 +43,7 @@ export type ProviderModelForm = {
   /** Empty when adding; the edited model id otherwise (rename removes this entry). */
   originalModelId: string
   modelId: string
-  /** null means "not specified" — Rcode falls back to its built-in default. */
+  /** null means "not specified" — Joker falls back to its built-in default. */
   contextWindowTokens: number | null
   maxOutputTokens: number | null
   supportsToolCalling: boolean

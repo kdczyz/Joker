@@ -1,7 +1,7 @@
 import {
-  isRcodeBranchWorktreePath,
-  resolveRcodeBranchWorktreeProjectPath
-} from '@shared/Rcode-worktree-path'
+  isJokerBranchWorktreePath,
+  resolveJokerBranchWorktreeProjectPath
+} from '@shared/Joker-worktree-path'
 import type { ThreadWorktreeRecord } from './thread-worktree-registry'
 import { normalizeWorkspaceRoot, workspaceRootIdentityKey } from './workspace-path'
 
@@ -22,7 +22,7 @@ export function resolveProjectWorkspacePath(
 ): string {
   const normalized = normalizeWorkspaceRoot(workspacePath)
   if (!normalized) return ''
-  if (!isRcodeBranchWorktreePath(normalized)) return normalized
+  if (!isJokerBranchWorktreePath(normalized)) return normalized
 
   const key = workspaceRootIdentityKey(normalized)
   for (const record of Object.values(options.threadWorktrees ?? {})) {
@@ -33,7 +33,7 @@ export function resolveProjectWorkspacePath(
     }
   }
 
-  const resolved = resolveRcodeBranchWorktreeProjectPath(
+  const resolved = resolveJokerBranchWorktreeProjectPath(
     normalized,
     options.candidateProjectPaths ?? []
   )
@@ -42,5 +42,5 @@ export function resolveProjectWorkspacePath(
 
 export function shouldOmitFromCodeWorkspaceRoots(workspacePath: string): boolean {
   const normalized = normalizeWorkspaceRoot(workspacePath)
-  return Boolean(normalized) && isRcodeBranchWorktreePath(normalized)
+  return Boolean(normalized) && isJokerBranchWorktreePath(normalized)
 }

@@ -6,7 +6,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultModelProviderProfile,
   defaultScheduleSettings,
@@ -98,13 +98,13 @@ function settingsWith(
       providers: [defaultModelProviderProfile('', '')]
     },
     agents: {
-      Rcode: {
-        ...defaultRcodeRuntimeSettings(),
+      Joker: {
+        ...defaultJokerRuntimeSettings(),
         apiKey: 'test-key'
       }
     },
     workspaceRoot: testWorkspaceRoot,
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: { enabled: true, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -154,7 +154,7 @@ function createRuntime(initial: AppSettingsV1, runtimeRequest = vi.fn()) {
 
 describe('ScheduleRuntime', () => {
   beforeEach(() => {
-    testWorkspaceRoot = mkdtempSync(join(tmpdir(), 'Rcode-schedule-runtime-'))
+    testWorkspaceRoot = mkdtempSync(join(tmpdir(), 'Joker-schedule-runtime-'))
     clawWorkspaceRoot = mkdtempSync(join(testWorkspaceRoot, 'claw-'))
   })
 
@@ -272,7 +272,7 @@ describe('ScheduleRuntime', () => {
     expect(store.read().claw.tasks).toEqual([])
   })
 
-  it('starts a Rcode thread with a Schedule title and records running status', async () => {
+  it('starts a Joker thread with a Schedule title and records running status', async () => {
     const task = makeTask({ reasoningEffort: 'max' })
     const runtimeRequest = vi.fn(async (_settings, path, init) => {
       if (path === '/v1/threads') {
@@ -366,7 +366,7 @@ describe('ScheduleRuntime', () => {
     expect(turnBody.prompt).toContain('Run the task')
   })
 
-  it('reads assistant text from the real Rcode thread detail shape', async () => {
+  it('reads assistant text from the real Joker thread detail shape', async () => {
     const task = makeTask()
     const runtimeRequest = vi.fn(async (_settings, path, init) => {
       if (path === '/v1/threads') {
@@ -751,7 +751,7 @@ describe('ScheduleRuntime', () => {
       slotState.set(params.poolIndex, { dirty: true })
       return {
         poolIndex: params.poolIndex,
-        path: join(projectWorkspaceRoot, `.Rcode-worktrees/pool-${params.poolIndex}`),
+        path: join(projectWorkspaceRoot, `.Joker-worktrees/pool-${params.poolIndex}`),
         branch: `pool-${params.poolIndex}`,
         inUse: true,
         taskId: params.taskId,

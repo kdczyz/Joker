@@ -38,11 +38,11 @@ import {
  */
 function releaseThreadWorktreeIfNeeded(threadId: string | null): void {
   if (!threadId || typeof window === 'undefined') return
-  if (typeof window.RcodeGui?.releaseWorktree !== 'function') return
+  if (typeof window.JokerGui?.releaseWorktree !== 'function') return
   const record = readThreadWorktreeRegistry().worktrees[threadId]
   if (!record) return
   if (record.poolIndex === undefined) return
-  void window.RcodeGui
+  void window.JokerGui
     .releaseWorktree({
       projectPath: record.projectPath,
       poolIndex: record.poolIndex
@@ -666,7 +666,7 @@ export function createMaintenanceActions(
     const wtRecord = readThreadWorktreeRegistry().worktrees[targetId]
     if (wtRecord?.poolIndex !== undefined) {
       try {
-        await window.RcodeGui.releaseWorktree({
+        await window.JokerGui.releaseWorktree({
           projectPath: wtRecord.projectPath,
           poolIndex: wtRecord.poolIndex
         })
@@ -734,7 +734,7 @@ export function createMaintenanceActions(
     }
     const checkpointId = targetBlock.meta?.workspaceCheckpointId
     if (checkpointId) {
-      const restored = await window.RcodeGui.restoreGitCheckpoint({
+      const restored = await window.JokerGui.restoreGitCheckpoint({
         checkpointId,
         ...(state.activeThreadId ? { expectedThreadId: state.activeThreadId } : {}),
         ...(state.workspaceRoot ? { expectedWorkspaceRoot: state.workspaceRoot } : {})
@@ -835,7 +835,7 @@ export function createMaintenanceActions(
       return
     }
     const { activeThreadId, workspaceRoot } = get()
-    let restored = await window.RcodeGui.restoreGitCheckpoint({
+    let restored = await window.JokerGui.restoreGitCheckpoint({
       checkpointId: targetCheckpointId,
       ...(activeThreadId ? { expectedThreadId: activeThreadId } : {}),
       ...(workspaceRoot ? { expectedWorkspaceRoot: workspaceRoot } : {})
@@ -865,7 +865,7 @@ export function createMaintenanceActions(
         set({ error: i18n.t('common:rollbackWorkspaceBusyError') })
         return
       }
-      restored = await window.RcodeGui
+      restored = await window.JokerGui
         .restoreGitCheckpoint({
           checkpointId: targetCheckpointId,
           allowPartialRestore: true,
@@ -945,7 +945,7 @@ export function createMaintenanceActions(
       )
       if (!stillSubmitting) return
       const msg = formatRuntimeError(e)
-      void window.RcodeGui.logError('approval', 'Failed to submit approval decision', {
+      void window.JokerGui.logError('approval', 'Failed to submit approval decision', {
         message: msg,
         blockId
       }).catch(() => undefined)
@@ -1032,7 +1032,7 @@ export function createMaintenanceActions(
       }))
     } catch (e) {
       const msg = formatRuntimeError(e)
-      void window.RcodeGui.logError('user-input', 'Failed to resolve user input', {
+      void window.JokerGui.logError('user-input', 'Failed to resolve user input', {
         message: msg,
         blockId
       }).catch(() => undefined)
@@ -1073,7 +1073,7 @@ export function createMaintenanceActions(
       await p.interruptTurn(activeThreadId, currentTurnId, { discard: options?.discard === true })
     } catch (e) {
       const msg = formatRuntimeError(e)
-      void window.RcodeGui.logError('interrupt', 'Failed to interrupt turn', { message: msg }).catch(() => undefined)
+      void window.JokerGui.logError('interrupt', 'Failed to interrupt turn', { message: msg }).catch(() => undefined)
       set({
         error: msg,
         ...(shouldOpenSettingsForError(e)

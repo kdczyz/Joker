@@ -19,7 +19,7 @@ const {
   desktopSmokeWorkspaceParent,
   desktopUserDataCandidates,
   resolveDesktopLaunchSelection,
-  runPackagedRcode,
+  runPackagedJoker,
   terminateProcessTree,
   waitForPortsClosed
 } = require('./smoke-packaged-extension-desktop.cjs')
@@ -49,7 +49,7 @@ async function main() {
     argumentValue('--runtime-executable')
   )
   if (!runtimeExecutable) {
-    throw new Error(`The packaged Rcode application at ${resourcesDir} is not host-native for ${process.arch}`)
+    throw new Error(`The packaged Joker application at ${resourcesDir} is not host-native for ${process.arch}`)
   }
   const desktopLaunchSelection = resolveDesktopLaunchSelection({
     resourcesDir,
@@ -58,14 +58,14 @@ async function main() {
     desktopExecutable: argumentValue('--desktop-executable')
   })
   const unpackedRoot = join(resourcesDir, 'app.asar.unpacked')
-  const runtimeEntry = join(unpackedRoot, 'Rcode', 'dist', 'cli', 'serve-entry.js')
+  const runtimeEntry = join(unpackedRoot, 'Joker', 'dist', 'cli', 'serve-entry.js')
   validatePackagedResources(resourcesDir, unpackedRoot)
   const archive = await resolveVideoEditorArchive(resourcesDir, argumentValue('--archive'))
 
   const repositoryRoot = resolve(argumentValue('--repository-root') ?? join(__dirname, '..'))
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-video-editor-layout-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-video-editor-layout-'))
   const home = join(temporaryRoot, 'home')
-  const profile = join(home, '.Rcode', 'data')
+  const profile = join(home, '.Joker', 'data')
   const userData = join(temporaryRoot, 'electron-user-data')
   const appData = join(temporaryRoot, 'app-data')
   const localAppData = join(temporaryRoot, 'local-app-data')
@@ -74,7 +74,7 @@ async function main() {
   await mkdir(workspaceParent, { recursive: true })
   const workspaceRoot = await mkdtemp(join(workspaceParent, 'video-editor-layout-'))
   const evidenceRoot = resolve(
-    argumentValue('--evidence-dir') ?? join(tmpdir(), 'Rcode-video-editor-layout-evidence')
+    argumentValue('--evidence-dir') ?? join(tmpdir(), 'Joker-video-editor-layout-evidence')
   )
   const runtimePort = await availablePort()
   const cleanupErrors = []
@@ -105,7 +105,7 @@ async function main() {
       explicitUserData: userData
     }).map(async (directory) => {
       await mkdir(directory, { recursive: true })
-      await writeFile(join(directory, 'Rcode-settings.json'), serializedSettings)
+      await writeFile(join(directory, 'Joker-settings.json'), serializedSettings)
     }))
 
     const isolatedEnvironment = createIsolatedEnvironment(process.env, {
@@ -114,7 +114,7 @@ async function main() {
       localAppData,
       temporaryDirectory
     })
-    runPackagedRcode(
+    runPackagedJoker(
       desktopLaunchSelection.cliExecutable,
       runtimeEntry,
       [
@@ -139,12 +139,12 @@ async function main() {
     let workbench = await findWorkbenchWindow(electronApplication, timeoutMs)
     await electronApplication.evaluate(({ BrowserWindow }) => {
       const window = BrowserWindow.getAllWindows().find((candidate) => !candidate.isDestroyed())
-      if (!window) throw new Error('Rcode workbench BrowserWindow is unavailable')
+      if (!window) throw new Error('Joker workbench BrowserWindow is unavailable')
       const bounds = window.getBounds()
       window.setBounds({ ...bounds, width: 1_800, height: 1_100 }, false)
     })
     await workbench.evaluate(() => {
-      localStorage.setItem('Rcode.layout.leftSidebarCollapsed', '1')
+      localStorage.setItem('Joker.layout.leftSidebarCollapsed', '1')
     })
     await workbench.reload({ waitUntil: 'domcontentloaded' })
     workbench = await findWorkbenchWindow(electronApplication, timeoutMs)
@@ -170,14 +170,14 @@ async function main() {
           guestWebContentsId
         )
         await writeFile(
-          join(evidenceRoot, `Rcode-video-editor-sidebar-${width}.png`),
+          join(evidenceRoot, `Joker-video-editor-sidebar-${width}.png`),
           Buffer.from(guestPngBase64, 'base64')
         )
       }
     }
 
     process.stdout.write(
-      `Packaged Rcode Video Editor layout smoke OK (${process.platform}/${process.arch}): ` +
+      `Packaged Joker Video Editor layout smoke OK (${process.platform}/${process.arch}): ` +
       `${measurements.map(({ targetWidth, host, guest }) =>
         `${targetWidth}px host=${Math.round(host.width)}x${Math.round(host.height)} ` +
         `guest=${guest.innerWidth}x${guest.innerHeight} scroll=${guest.scrollWidth}`
@@ -196,7 +196,7 @@ async function main() {
       }).catch((error) => cleanupErrors.push(error))
     }
     await waitForPortsClosed([runtimePort], 2_000).catch((error) => cleanupErrors.push(error))
-    if (process.env.RCODE_KEEP_PACKAGED_VIDEO_EDITOR_LAYOUT_SMOKE === '1') {
+    if (process.env.JOKER_KEEP_PACKAGED_VIDEO_EDITOR_LAYOUT_SMOKE === '1') {
       process.stderr.write(`Preserved packaged layout profile: ${temporaryRoot}\n`)
       process.stderr.write(`Preserved packaged layout workspace: ${workspaceRoot}\n`)
     } else {
@@ -218,7 +218,7 @@ async function main() {
 }
 
 async function grantVideoEditorWorkspaceTrust(unpackedRoot, profile, workspaceRoot) {
-  const modulePath = join(unpackedRoot, 'Rcode', 'dist', 'extensions', 'index.js')
+  const modulePath = join(unpackedRoot, 'Joker', 'dist', 'extensions', 'index.js')
   const extensionModule = await import(
     `${pathToFileURL(modulePath).href}?layout-smoke=${Date.now()}-${Math.random()}`
   )
@@ -301,7 +301,7 @@ async function evaluateVisibleVideoEditorGuest(electronApplication, guestWebCont
   return electronApplication.evaluate(async ({ webContents }, input) => {
     const guest = webContents.fromId(input.guestWebContentsId)
     if (!guest || guest.isDestroyed() || guest.getType() !== 'webview') {
-      throw new Error(`Visible Rcode Video Editor guest ${input.guestWebContentsId} is unavailable`)
+      throw new Error(`Visible Joker Video Editor guest ${input.guestWebContentsId} is unavailable`)
     }
     return guest.executeJavaScript(input.expression, true)
   }, { guestWebContentsId, expression })
@@ -315,7 +315,7 @@ async function waitForVisibleGuestReady(electronApplication, guestWebContentsId,
       electronApplication,
       guestWebContentsId,
       `(() => ({
-        ready: document.readyState === 'complete' && typeof globalThis.RcodeExtension?.request === 'function',
+        ready: document.readyState === 'complete' && typeof globalThis.JokerExtension?.request === 'function',
         surface: Boolean(document.querySelector('.empty-project-primary, .workbench-tabs')),
         text: document.body?.innerText?.slice(0, 2_000) ?? ''
       }))()`
@@ -379,8 +379,8 @@ async function readHostGeometry(workbench) {
       configuredWidth: Number.isFinite(configuredWidth) ? configuredWidth : rectangle.width,
       sectionHeight: sectionRectangle.height,
       shellWidth: shellRectangle?.width ?? null,
-      storedLeftWidth: localStorage.getItem('Rcode.layout.leftSidebarWidth'),
-      storedRightWidth: localStorage.getItem('Rcode.layout.rightInspectorWidth'),
+      storedLeftWidth: localStorage.getItem('Joker.layout.leftSidebarWidth'),
+      storedRightWidth: localStorage.getItem('Joker.layout.rightInspectorWidth'),
       webviews: candidates.map(({ candidate, rectangle }) => ({
         id: typeof candidate.getWebContentsId === 'function' ? candidate.getWebContentsId() : null,
         width: rectangle.width,

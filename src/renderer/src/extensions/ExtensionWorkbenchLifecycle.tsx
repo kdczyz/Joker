@@ -1,4 +1,4 @@
-import { ExtensionIdSchema, NotificationOptionsSchema } from '@Rcode/extension-api'
+import { ExtensionIdSchema, NotificationOptionsSchema } from '@joker-code/extension-api'
 import type {
   ExtensionNotificationSnapshot,
   ExtensionWorkbenchNotification
@@ -80,7 +80,7 @@ export function ExtensionWorkbenchLifecycle(): ReactElement {
         await syncHostContentScriptPlan(plan, extensionWorkspaceRoot)
       })
       .catch((error) => {
-        void window.RcodeGui?.logError?.('extension-content-script', 'Failed to sync host content scripts', {
+        void window.JokerGui?.logError?.('extension-content-script', 'Failed to sync host content scripts', {
           message: error instanceof Error ? error.message : String(error)
         })
       })
@@ -90,11 +90,11 @@ export function ExtensionWorkbenchLifecycle(): ReactElement {
     const refresh = (): void => {
       void loadComposerModels()
     }
-    window.addEventListener('Rcode:provider-bindings-changed', refresh)
-    return () => window.removeEventListener('Rcode:provider-bindings-changed', refresh)
+    window.addEventListener('Joker:provider-bindings-changed', refresh)
+    return () => window.removeEventListener('Joker:provider-bindings-changed', refresh)
   }, [loadComposerModels])
 
-  useEffect(() => window.RcodeGui.onExtensionNotifications((payload) => {
+  useEffect(() => window.JokerGui.onExtensionNotifications((payload) => {
     const next = parseExtensionNotificationSnapshot(payload)
     const liveIds = new Set(next.map((notification) => notification.notificationId))
     for (const notificationId of respondingNotifications.current) {
@@ -111,13 +111,13 @@ export function ExtensionWorkbenchLifecycle(): ReactElement {
       (notification) => notification.notificationId !== notificationId
     ))
     try {
-      await window.RcodeGui.extensionRespondNotification({
+      await window.JokerGui.extensionRespondNotification({
         notificationId,
         ...(actionId === undefined ? {} : { actionId })
       })
     } catch (error) {
       respondingNotifications.current.delete(notificationId)
-      void window.RcodeGui.logError('extension-notification', 'Failed to respond to extension notification', {
+      void window.JokerGui.logError('extension-notification', 'Failed to respond to extension notification', {
         message: error instanceof Error ? error.message : String(error)
       })
     }

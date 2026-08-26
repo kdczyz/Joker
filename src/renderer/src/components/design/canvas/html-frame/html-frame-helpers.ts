@@ -16,7 +16,7 @@ const FRAME_AUTO_GROW_MAX_WIDTH = 7_680
 const FRAME_AUTO_GROW_MIN_WIDTH = 240
 const FRAME_AUTO_GROW_MAX_HEIGHT = 12_000
 const FRAME_AUTO_GROW_MIN_HEIGHT = 180
-const HTML_FRAME_SCROLLBAR_STYLE_ID = '__Rcode_html_frame_auto_crop_scrollbars__'
+const HTML_FRAME_SCROLLBAR_STYLE_ID = '__Joker_html_frame_auto_crop_scrollbars__'
 
 export const HTML_FRAME_CONTENT_SIZE_QUERY = `(() => {
   try {
@@ -481,5 +481,5 @@ export function htmlFrameWebviewPartition(shapeId: string): string {
     .replace(/[^a-z0-9_-]+/g, '-')
     .replace(/^-+|-+$/g, '')
     .slice(0, 80)
-  return `Rcode-proto-frame-${safeId || 'frame'}`
+  return `Joker-proto-frame-${safeId || 'frame'}`
 }

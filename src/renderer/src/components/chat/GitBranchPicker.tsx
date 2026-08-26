@@ -59,11 +59,11 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   const load = useCallback(async (): Promise<void> => {
-    if (!root || typeof window.RcodeGui?.getGitBranches !== 'function') return
+    if (!root || typeof window.JokerGui?.getGitBranches !== 'function') return
     setLoading(true)
     setError(null)
     try {
-      const next = await window.RcodeGui.getGitBranches(root)
+      const next = await window.JokerGui.getGitBranches(root)
       setResult(next)
       if (!next.ok) setError(next.message)
     } catch (e) {
@@ -188,7 +188,7 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
     setActingKind('switch')
     setError(null)
     try {
-      const next = await window.RcodeGui.switchGitBranch(root, branch)
+      const next = await window.JokerGui.switchGitBranch(root, branch)
       setResult(next)
       if (!next.ok) {
         setError(next.message)
@@ -262,7 +262,7 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
     setActingKind('switch')
     setError(null)
     try {
-      const next = await window.RcodeGui.createAndSwitchGitBranch(root, branch)
+      const next = await window.JokerGui.createAndSwitchGitBranch(root, branch)
       setResult(next)
       if (!next.ok) {
         setError(next.message)
@@ -284,7 +284,7 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
     setActingKind('worktree')
     setError(null)
     try {
-      const next = await window.RcodeGui.checkoutGitBranchWorktree(root, branch)
+      const next = await window.JokerGui.checkoutGitBranchWorktree(root, branch)
       setResult(next)
       if (!next.ok) {
         setError(next.message)
@@ -312,7 +312,7 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
     setActingKind('worktree')
     setError(null)
     try {
-      const next = await window.RcodeGui.createGitBranchWorktree(root, branch)
+      const next = await window.JokerGui.createGitBranchWorktree(root, branch)
       setResult(next)
       if (!next.ok) {
         setError(next.message)

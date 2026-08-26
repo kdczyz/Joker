@@ -4,7 +4,7 @@ import { DatabaseSync } from "node:sqlite";
 import test from "node:test";
 
 test("migrates cache-inclusive legacy input to fresh-input semantics once", async () => {
-  const databasePath = `/tmp/rcode-usage-migration-${process.pid}-${Date.now()}.sqlite`;
+  const databasePath = `/tmp/joker-usage-migration-${process.pid}-${Date.now()}.sqlite`;
   process.env.LOCAL_DATABASE_PATH = databasePath;
 
   const legacy = new DatabaseSync(databasePath);

@@ -19,7 +19,7 @@ import { artifact, createdAt, installDesignDocument } from './design-board.test-
 
 beforeEach(() => {
   vi.stubGlobal('window', {
-    RcodeGui: {
+    JokerGui: {
       writeWorkspaceFile: vi.fn(async () => ({ ok: true as const }))
     }
   })

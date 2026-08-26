@@ -27,7 +27,7 @@ describe('application state migration', () => {
       workspaceRoot: 'C:\\Users\\Alice\\Project',
       conversationWorkspaceRoot: 'C:\\Users\\Alice\\Chats',
       provider: { providers: [] },
-      agents: { Rcode: { dataDir: 'C:\\unsafe' } },
+      agents: { Joker: { dataDir: 'C:\\unsafe' } },
       terminal: { shell: 'cmd.exe' },
       log: { enabled: false }
     })

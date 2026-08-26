@@ -9,7 +9,7 @@ import {
 } from './sdd-draft-store'
 import { deleteSddDraft, saveActiveSddDraftToDisk, syncActiveSddDraftFromDisk } from './sdd-draft-actions'
 
-const SDD_DRAFT_REGISTRY_STORAGE_KEY = 'Rcode.sdd.draft.registry.v1'
+const SDD_DRAFT_REGISTRY_STORAGE_KEY = 'Joker.sdd.draft.registry.v1'
 
 function createMemoryStorage(): Storage {
   const items = new Map<string, string>()
@@ -43,7 +43,7 @@ describe('sdd-draft-store', () => {
     vi.stubGlobal('localStorage', createMemoryStorage())
     vi.stubGlobal('window', {
       localStorage,
-      RcodeGui: {
+      JokerGui: {
         writeWorkspaceFile: vi.fn()
       }
     })
@@ -65,7 +65,7 @@ describe('sdd-draft-store', () => {
 
     useSddDraftStore.getState().setActiveDraft(draft, '# Requirement')
 
-    expect(draft.id).toBe('/tmp/app:.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md')
+    expect(draft.id).toBe('/tmp/app:.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md')
     expect(readRememberedSddDraft('/tmp/app')?.id).toBe(draft.id)
     expect(readRememberedSddDraft('/tmp/other')).toBeNull()
   })
@@ -118,7 +118,7 @@ describe('sdd-draft-store', () => {
       drafts: {
         valid: {
           workspaceRoot: '/tmp/valid/',
-          relativePath: '.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+          relativePath: '.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
           createdAt: '2026-01-01T00:00:00.000Z'
         },
         invalid: {
@@ -132,7 +132,7 @@ describe('sdd-draft-store', () => {
     expect(readRememberedSddDraft('/tmp/valid')).toMatchObject({
       id: 'valid',
       workspaceRoot: '/tmp/valid',
-      relativePath: '.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      relativePath: '.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       updatedAt: '2026-01-01T00:00:00.000Z'
     })
     expect(readRememberedSddDraft('/tmp/missing')).toBeNull()
@@ -206,10 +206,10 @@ describe('sdd-draft-store', () => {
   it('saves the active draft to disk and updates clean state', async () => {
     const writeWorkspaceFile = vi.fn().mockResolvedValue({
       ok: true,
-      path: '/tmp/app/.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      path: '/tmp/app/.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       savedAt: '2026-01-01T00:00:00.000Z'
     })
-    window.RcodeGui.writeWorkspaceFile = writeWorkspaceFile
+    window.JokerGui.writeWorkspaceFile = writeWorkspaceFile
     const draft = createSddDraft({
       id: '123e4567-e89b-12d3-a456-426614174000',
       workspaceRoot: '/tmp/app',
@@ -222,7 +222,7 @@ describe('sdd-draft-store', () => {
 
     expect(writeWorkspaceFile).toHaveBeenCalledWith({
       workspaceRoot: '/tmp/app',
-      path: '.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      path: '.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       content: '# Draft updated'
     })
     expect(useSddDraftStore.getState()).toMatchObject({
@@ -235,10 +235,10 @@ describe('sdd-draft-store', () => {
   it('deletes a draft folder and clears the active remembered draft', async () => {
     const deleteWorkspaceEntry = vi.fn().mockResolvedValue({
       ok: true,
-      path: '/tmp/app/.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000',
+      path: '/tmp/app/.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000',
       deletedAt: '2026-01-01T00:00:00.000Z'
     })
-    window.RcodeGui.deleteWorkspaceEntry = deleteWorkspaceEntry
+    window.JokerGui.deleteWorkspaceEntry = deleteWorkspaceEntry
     const draft = createSddDraft({
       id: '123e4567-e89b-12d3-a456-426614174000',
       workspaceRoot: '/tmp/app',
@@ -250,7 +250,7 @@ describe('sdd-draft-store', () => {
 
     expect(deleteWorkspaceEntry).toHaveBeenCalledWith({
       workspaceRoot: '/tmp/app',
-      path: '.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000'
+      path: '.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000'
     })
     expect(readRememberedSddDraft('/tmp/app')).toBeNull()
     expect(readRememberedSddDraftContent(draft)).toBeNull()
@@ -258,7 +258,7 @@ describe('sdd-draft-store', () => {
   })
 
   it('forgets a remembered draft when its disk folder is already missing', async () => {
-    window.RcodeGui.deleteWorkspaceEntry = vi.fn().mockResolvedValue({
+    window.JokerGui.deleteWorkspaceEntry = vi.fn().mockResolvedValue({
       ok: false,
       message: 'ENOENT: no such file or directory'
     })
@@ -278,13 +278,13 @@ describe('sdd-draft-store', () => {
     const draft = createSddDraft({
       id: '123e4567-e89b-12d3-a456-426614174000',
       workspaceRoot: '/tmp/app',
-      absolutePath: '/tmp/app/.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      absolutePath: '/tmp/app/.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       now: 1
     })
     useSddDraftStore.getState().setActiveDraft(draft, '# Draft')
 
     await expect(syncActiveSddDraftFromDisk({
-      path: '/tmp/app/.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      path: '/tmp/app/.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       content: '# Draft updated by AI',
       size: 21,
       truncated: false
@@ -301,14 +301,14 @@ describe('sdd-draft-store', () => {
     const draft = createSddDraft({
       id: '123e4567-e89b-12d3-a456-426614174000',
       workspaceRoot: '/tmp/app',
-      absolutePath: '/tmp/app/.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      absolutePath: '/tmp/app/.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       now: 1
     })
     useSddDraftStore.getState().setActiveDraft(draft, '# Draft')
     useSddDraftStore.getState().setContent('# Local unsaved draft')
 
     await expect(syncActiveSddDraftFromDisk({
-      path: '/tmp/app/.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      path: '/tmp/app/.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       content: '# External draft',
       size: 16,
       truncated: false
@@ -322,7 +322,7 @@ describe('sdd-draft-store', () => {
   })
 
   it('keeps the draft dirty when disk save fails', async () => {
-    window.RcodeGui.writeWorkspaceFile = vi.fn().mockResolvedValue({
+    window.JokerGui.writeWorkspaceFile = vi.fn().mockResolvedValue({
       ok: false,
       message: 'write failed'
     })

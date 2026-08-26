@@ -6,7 +6,7 @@ import {
   type KeyboardShortcutsConfigV1
 } from '@shared/app-settings'
 
-export const SETTINGS_CHANGED_EVENT = 'Rcode:settings-changed'
+export const SETTINGS_CHANGED_EVENT = 'Joker:settings-changed'
 
 export function emitRendererSettingsChanged(settings: AppSettingsV1): void {
   if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return
@@ -22,8 +22,8 @@ export function useKeyboardShortcutSettings(): KeyboardShortcutsConfigV1 {
       if (!cancelled) setShortcuts(normalizeKeyboardShortcuts(settings.keyboardShortcuts))
     }
 
-    if (typeof window.RcodeGui?.getSettings === 'function') {
-      void window.RcodeGui.getSettings().then(apply).catch(() => undefined)
+    if (typeof window.JokerGui?.getSettings === 'function') {
+      void window.JokerGui.getSettings().then(apply).catch(() => undefined)
     }
 
     const onSettingsChanged = (event: Event): void => {

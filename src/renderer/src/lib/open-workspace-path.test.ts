@@ -24,7 +24,7 @@ describe('openWorkspacePathInEditor', () => {
     const openEditorPath = vi.fn(async () => {
       throw new Error('editor launch failed')
     })
-    vi.stubGlobal('window', { RcodeGui: { openEditorPath } })
+    vi.stubGlobal('window', { JokerGui: { openEditorPath } })
 
     await expect(openWorkspacePathInEditor({ path: '/tmp/demo.ts' })).resolves.toEqual({
       ok: false,
@@ -40,7 +40,7 @@ describe('revealWorkspacePathInFileManager', () => {
       path: '/tmp/workspace/notes.md',
       editorId: 'file-manager'
     }))
-    vi.stubGlobal('window', { RcodeGui: { openEditorPath } })
+    vi.stubGlobal('window', { JokerGui: { openEditorPath } })
 
     await expect(
       revealWorkspacePathInFileManager('/tmp/workspace/notes.md', '/tmp/workspace')
@@ -54,7 +54,7 @@ describe('revealWorkspacePathInFileManager', () => {
 
   it('returns a failed result when the bridge rejects the request', async () => {
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         openEditorPath: vi.fn(async () => {
           throw new Error('reveal failed')
         })
@@ -79,7 +79,7 @@ describe('exact workspace file actions', () => {
       path: '/tmp/workspace/presentations/brief.pptx',
       editorId: 'system'
     }))
-    vi.stubGlobal('window', { RcodeGui: { resolveWorkspaceFile, openEditorPath } })
+    vi.stubGlobal('window', { JokerGui: { resolveWorkspaceFile, openEditorPath } })
 
     await expect(
       openWorkspaceFileWithSystemDefault('presentations/brief.pptx', '/tmp/workspace')
@@ -99,7 +99,7 @@ describe('exact workspace file actions', () => {
   it('does not open a missing or ambiguous presentation', async () => {
     const openEditorPath = vi.fn()
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         resolveWorkspaceFile: vi.fn(async () => ({ ok: false as const, message: 'File not found.' })),
         openEditorPath
       }
@@ -114,24 +114,24 @@ describe('exact workspace file actions', () => {
   it('resolves the same exact file before revealing it in the file manager', async () => {
     const openEditorPath = vi.fn(async () => ({
       ok: true as const,
-      path: '/tmp/workspace/brief.Rcode-ppt.html',
+      path: '/tmp/workspace/brief.Joker-ppt.html',
       editorId: 'file-manager'
     }))
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         resolveWorkspaceFile: vi.fn(async () => ({
           ok: true as const,
-          path: '/tmp/workspace/brief.Rcode-ppt.html'
+          path: '/tmp/workspace/brief.Joker-ppt.html'
         })),
         openEditorPath
       }
     })
 
     await expect(
-      revealWorkspaceFileInFileManager('brief.Rcode-ppt.html', '/tmp/workspace')
+      revealWorkspaceFileInFileManager('brief.Joker-ppt.html', '/tmp/workspace')
     ).resolves.toMatchObject({ ok: true, editorId: 'file-manager' })
     expect(openEditorPath).toHaveBeenCalledWith({
-      path: '/tmp/workspace/brief.Rcode-ppt.html',
+      path: '/tmp/workspace/brief.Joker-ppt.html',
       workspaceRoot: '/tmp/workspace',
       editorId: 'file-manager',
       openPolicy: 'presentation-artifact'
@@ -142,26 +142,26 @@ describe('exact workspace file actions', () => {
     const contentSha256 = 'a'.repeat(64)
     const openEditorPath = vi.fn(async () => ({
       ok: true as const,
-      path: '/tmp/workspace/brief.Rcode-ppt.html',
+      path: '/tmp/workspace/brief.Joker-ppt.html',
       editorId: 'system'
     }))
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         resolveWorkspaceFile: vi.fn(async () => ({
           ok: true as const,
-          path: '/tmp/workspace/brief.Rcode-ppt.html'
+          path: '/tmp/workspace/brief.Joker-ppt.html'
         })),
         openEditorPath
       }
     })
 
     await expect(openWorkspaceFileWithSystemDefault(
-      'brief.Rcode-ppt.html',
+      'brief.Joker-ppt.html',
       '/tmp/workspace',
       contentSha256
     )).resolves.toMatchObject({ ok: true })
     expect(openEditorPath).toHaveBeenCalledWith({
-      path: '/tmp/workspace/brief.Rcode-ppt.html',
+      path: '/tmp/workspace/brief.Joker-ppt.html',
       workspaceRoot: '/tmp/workspace',
       editorId: 'system',
       openPolicy: 'presentation-artifact',
@@ -171,7 +171,7 @@ describe('exact workspace file actions', () => {
 
   it('requires the owning workspace root', async () => {
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         resolveWorkspaceFile: vi.fn(),
         openEditorPath: vi.fn()
       }

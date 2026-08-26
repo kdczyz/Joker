@@ -37,7 +37,7 @@ import {
   RelativePathSchema,
   ResultPreviewSourceSchema,
   type JsonValue
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import type { RegisteredContribution } from '../../extensions/contribution-registry'
 import { boundedPlainText } from '../../extensions/safe-text'
 import {
@@ -924,7 +924,7 @@ function MessageTurn({
       turn.blocks,
       filePreviewWorkspaceRoot,
       isProcessing,
-      typeof window === 'undefined' ? '' : window.RcodeGui?.platform ?? ''
+      typeof window === 'undefined' ? '' : window.JokerGui?.platform ?? ''
     ),
     [turn.blocks, filePreviewWorkspaceRoot, isProcessing]
   )
@@ -962,7 +962,7 @@ function MessageTurn({
   // (Feishu bot streaming) to appear only after turn_completed, which the
   // user perceives as a long delay.
   // Note: `live` is the generic SSE sink output across ALL channels
-  // (Rcode runtime turns, claw channel replies from feishu/weixin/etc),
+  // (Joker runtime turns, claw channel replies from feishu/weixin/etc),
   // not feishu-specific. Removing the !isProcessing gate is intentional
   // for all streaming paths, not just feishu.
   const showLiveAssistant = !!liveContent.trim()

@@ -2,10 +2,10 @@ import type { AppLocale } from './app-locales'
 import type { GuiUpdateChannel } from './gui-update'
 import type { KeyboardShortcutsConfigV1 } from './keyboard-shortcuts'
 import type { LocalWhisperDownloadSourceId } from './local-whisper'
-import type { ApprovalPolicy, SandboxMode } from '../../Rcode/src/contracts/policy.js'
-import type { ComputerUseMode } from '../../Rcode/src/contracts/capabilities.js'
-import type { ModelEndpointFormat } from '../../Rcode/src/contracts/model-endpoint-format.js'
-import type { ToolOutputLimitsConfig } from '../../Rcode/src/contracts/tool-output-limits.js'
+import type { ApprovalPolicy, SandboxMode } from '../../Joker/src/contracts/policy.js'
+import type { ComputerUseMode } from '../../Joker/src/contracts/capabilities.js'
+import type { ModelEndpointFormat } from '../../Joker/src/contracts/model-endpoint-format.js'
+import type { ToolOutputLimitsConfig } from '../../Joker/src/contracts/tool-output-limits.js'
 export {
   DEFAULT_MODEL_ENDPOINT_FORMAT,
   inferModelEndpointFormatFromUrl,
@@ -15,7 +15,7 @@ export {
   normalizeModelEndpointFormat,
   resolveModelEndpointFormat,
   usesChatCompletionsShape
-} from '../../Rcode/src/contracts/model-endpoint-format.js'
+} from '../../Joker/src/contracts/model-endpoint-format.js'
 export { DEFAULT_GUI_UPDATE_CHANNEL, normalizeGuiUpdateChannel, type GuiUpdateChannel } from './gui-update'
 export {
   APPROVAL_POLICIES,
@@ -24,13 +24,13 @@ export {
   SANDBOX_MODES,
   type ApprovalPolicy,
   type SandboxMode
-} from '../../Rcode/src/contracts/policy.js'
+} from '../../Joker/src/contracts/policy.js'
 export {
   DEFAULT_TOOL_OUTPUT_MAX_BYTES,
   DEFAULT_TOOL_OUTPUT_MAX_LINES,
   type ToolOutputLimitsConfig
-} from '../../Rcode/src/contracts/tool-output-limits.js'
-export const RCODE_TOOL_PERMISSION_MODES = [
+} from '../../Joker/src/contracts/tool-output-limits.js'
+export const JOKER_TOOL_PERMISSION_MODES = [
   'always-ask',
   'read-only',
   'sensitive-ask',
@@ -38,7 +38,7 @@ export const RCODE_TOOL_PERMISSION_MODES = [
   'trusted-workspace',
   'bypass'
 ] as const
-export type RcodeToolPermissionMode = (typeof RCODE_TOOL_PERMISSION_MODES)[number]
+export type JokerToolPermissionMode = (typeof JOKER_TOOL_PERMISSION_MODES)[number]
 /**
  * Overall UI text scale factor (applied as `zoom` on the app shell).
  * Previously a fixed enum ('small' | 'medium' | 'large'); now a free numeric
@@ -118,17 +118,17 @@ export const DEFAULT_SCHEDULE_MODEL = ''
 export const SCHEDULE_MODEL_IDS: readonly string[] = []
 export const DEFAULT_SCHEDULE_REASONING_EFFORT = 'medium'
 export const SCHEDULE_REASONING_EFFORT_IDS = ['auto', 'off', 'low', 'medium', 'high', 'max'] as const
-export const MIN_RCODE_LOCAL_PORT = 10_000
+export const MIN_JOKER_LOCAL_PORT = 10_000
 export const DEFAULT_SCHEDULE_INTERNAL_PORT = 18788
 // 这些默认目录与 legacy-data-migration.ts 的 HOME_DATA_MIGRATION_MAPPINGS
 // 一一对应:老安装的 ~/.deepseekgui/* 在启动期被搬到这里。
-export const DEFAULT_WRITE_WORKSPACE_ROOT = '~/.Rcode/write_workspace'
-// 对话工作目录的默认值按平台不同:macOS/Windows 用 ~/Documents/Rcode,
-// Linux 用 ~/.local/share/Rcode/conversations。该默认值由 main 层
+export const DEFAULT_WRITE_WORKSPACE_ROOT = '~/.Joker/write_workspace'
+// 对话工作目录的默认值按平台不同:macOS/Windows 用 ~/Documents/Joker,
+// Linux 用 ~/.local/share/Joker/conversations。该默认值由 main 层
 // (DEFAULT_CONVERSATION_WORKSPACE_ROOT_ABSOLUTE)和 renderer 层
 // (defaultConversationWorkspaceRoot)各自按平台推导。
-export const DEFAULT_RCODE_DATA_DIR = '~/.Rcode/data'
-export const DEFAULT_RCODE_MODEL = 'deepseek-v4-flash-free'
+export const DEFAULT_JOKER_DATA_DIR = '~/.Joker/data'
+export const DEFAULT_JOKER_MODEL = 'deepseek-v4-flash-free'
 export const DEFAULT_PROMPT_OPTIMIZATION_PROMPT = [
   'You rewrite rough spoken or typed instructions into a clear prompt for a coding agent.',
   'Keep the user intent, constraints, names, paths, and concrete details intact.',
@@ -148,7 +148,7 @@ export const DEFAULT_WRITE_INLINE_LONG_COMPLETION_MAX_TOKENS = 256
 export const MIN_WRITE_AUTOSAVE_DELAY_MS = 5_000
 export const MAX_WRITE_AUTOSAVE_DELAY_MS = 1_800_000
 export const DEFAULT_WRITE_AUTOSAVE_DELAY_MS = 180_000
-export const DEFAULT_RCODE_PORT = 18899
+export const DEFAULT_JOKER_PORT = 18899
 export const DEFAULT_LOG_RETENTION_DAYS = 3
 export const CHECKPOINT_CLEANUP_INTERVAL_DAYS = [1, 2, 3, 5, 10] as const
 export type CheckpointCleanupIntervalDays = (typeof CHECKPOINT_CLEANUP_INTERVAL_DAYS)[number]
@@ -295,8 +295,8 @@ export type ModelProviderSettingsPatchV1 = Partial<
   providers?: ModelProviderProfilePatchV1[]
 }
 
-export type RcodeSubagentProfileV1 = {
-  /** Stable key; becomes the Record key in Rcode SubagentsCapabilityConfig.profiles. */
+export type JokerSubagentProfileV1 = {
+  /** Stable key; becomes the Record key in Joker SubagentsCapabilityConfig.profiles. */
   id: string
   enabled: boolean
   name: string
@@ -325,13 +325,13 @@ export type RcodeSubagentProfileV1 = {
   reasoningEffort?: ModelReasoningEffort
 }
 
-export type RcodeSubagentsSettingsV1 = {
+export type JokerSubagentsSettingsV1 = {
   enabled: boolean
   maxParallel?: number
   maxChildRuns?: number
   defaultToolPolicy?: 'readOnly' | 'inherit'
   defaultProfile?: string
-  profiles: RcodeSubagentProfileV1[]
+  profiles: JokerSubagentProfileV1[]
 }
 
 /**
@@ -339,13 +339,13 @@ export type RcodeSubagentsSettingsV1 = {
  * current settings, while an explicitly supplied `profiles` array replaces the
  * roster as a whole (so deleting a profile can be represented unambiguously).
  */
-export type RcodeSubagentsSettingsPatchV1 = Partial<
-  Omit<RcodeSubagentsSettingsV1, 'profiles'>
+export type JokerSubagentsSettingsPatchV1 = Partial<
+  Omit<JokerSubagentsSettingsV1, 'profiles'>
 > & {
-  profiles?: RcodeSubagentProfileV1[]
+  profiles?: JokerSubagentProfileV1[]
 }
 
-export type RcodeRuntimeSettingsV1 = {
+export type JokerRuntimeSettingsV1 = {
   binaryPath: string
   port: number
   autoStart: boolean
@@ -366,46 +366,46 @@ export type RcodeRuntimeSettingsV1 = {
   sandboxMode: SandboxMode
   /** Compress safe tool context before each model call. */
   tokenEconomyMode: boolean
-  /** Detailed token-saving behavior used when building Rcode model requests. */
-  tokenEconomy: RcodeTokenEconomySettingsV1
+  /** Detailed token-saving behavior used when building Joker model requests. */
+  tokenEconomy: JokerTokenEconomySettingsV1
   /** Model-visible output caps for builtin read/bash-style tools. */
-  toolOutputLimits: RcodeToolOutputLimitsSettingsV1
+  toolOutputLimits: JokerToolOutputLimitsSettingsV1
   /** When true, the runtime skips bearer-token auth. Local dev only. */
   insecure: boolean
-  /** GUI-managed MCP progressive discovery/search settings written into Rcode config.json. */
-  mcpSearch: RcodeMcpSearchSettingsV1
-  /** User-local, digest-bound grants for repository `.Rcode/project.json` MCP declarations. */
-  projectConfig: RcodeProjectConfigSettingsV1
-  /** Persistent store backend used by Rcode. */
-  storage: RcodeStorageSettingsV1
-  /** Fallback compaction thresholds and summary behavior. Per-model thresholds live in Rcode config models.profiles. */
-  contextCompaction: RcodeContextCompactionSettingsV1
+  /** GUI-managed MCP progressive discovery/search settings written into Joker config.json. */
+  mcpSearch: JokerMcpSearchSettingsV1
+  /** User-local, digest-bound grants for repository `.Joker/project.json` MCP declarations. */
+  projectConfig: JokerProjectConfigSettingsV1
+  /** Persistent store backend used by Joker. */
+  storage: JokerStorageSettingsV1
+  /** Fallback compaction thresholds and summary behavior. Per-model thresholds live in Joker config models.profiles. */
+  contextCompaction: JokerContextCompactionSettingsV1
   /** Low-level loop guards and model argument repair tuning. */
-  runtimeTuning: RcodeRuntimeTuningSettingsV1
+  runtimeTuning: JokerRuntimeTuningSettingsV1
   /** OpenAI-compatible image generation provider shared by chat agents and Write image tools. */
-  imageGeneration: RcodeImageGenerationSettingsV1
+  imageGeneration: JokerImageGenerationSettingsV1
   /** Speech-to-text provider used for voice input in the composer. */
-  speechToText: RcodeSpeechToTextSettingsV1
+  speechToText: JokerSpeechToTextSettingsV1
   /** Text-to-speech provider exposed to agents as generate_speech. */
-  textToSpeech: RcodeTextToSpeechSettingsV1
+  textToSpeech: JokerTextToSpeechSettingsV1
   /** Model + prompt used by the composer prompt optimization button. */
-  promptOptimization: RcodePromptOptimizationSettingsV1
+  promptOptimization: JokerPromptOptimizationSettingsV1
   /** Music generation provider exposed to agents as generate_music. */
-  musicGeneration: RcodeMusicGenerationSettingsV1
+  musicGeneration: JokerMusicGenerationSettingsV1
   /** Video generation provider exposed to agents as generate_video. */
-  videoGeneration: RcodeVideoGenerationSettingsV1
-  /** GUI-owned model capability profiles written into Rcode `models.profiles`. */
+  videoGeneration: JokerVideoGenerationSettingsV1
+  /** GUI-owned model capability profiles written into Joker `models.profiles`. */
   modelProfiles: Record<string, ModelProviderModelProfileV1>
-  /** Whether long-term memory is enabled in the Rcode runtime. */
+  /** Whether long-term memory is enabled in the Joker runtime. */
   memoryEnabled: boolean
-  /** Native Rcode AGENTS.md instructions injected into every turn. */
-  instructions: RcodeInstructionSettingsV1
+  /** Native Joker AGENTS.md instructions injected into every turn. */
+  instructions: JokerInstructionSettingsV1
   /** Host computer-use (screenshot + mouse/keyboard control) settings. */
-  computerUse: RcodeComputerUseSettingsV1
+  computerUse: JokerComputerUseSettingsV1
   /** First-party design-quality linter applied to frontend output. */
-  quality: RcodeDesignQualitySettingsV1
-  /** GUI-managed subagent profiles written into Rcode SubagentsCapabilityConfig. */
-  subagents?: RcodeSubagentsSettingsV1
+  quality: JokerDesignQualitySettingsV1
+  /** GUI-managed subagent profiles written into Joker SubagentsCapabilityConfig. */
+  subagents?: JokerSubagentsSettingsV1
   /** Global small-model slot. Title & Summary default to this. Empty = follow main model. */
   smallModel?: string
   /** Provider id paired with smallModel for per-provider routing. */
@@ -457,13 +457,13 @@ export type RcodeRuntimeSettingsV1 = {
   openWebSearchProxyUrl?: string
 }
 
-export type RcodeInstructionSettingsV1 = {
+export type JokerInstructionSettingsV1 = {
   enabled: boolean
 }
 
-export function RcodeToolPermissionModeSettings(
-  mode: RcodeToolPermissionMode
-): Pick<RcodeRuntimeSettingsV1, 'approvalPolicy' | 'sandboxMode'> {
+export function JokerToolPermissionModeSettings(
+  mode: JokerToolPermissionMode
+): Pick<JokerRuntimeSettingsV1, 'approvalPolicy' | 'sandboxMode'> {
   switch (mode) {
     case 'always-ask':
       return { approvalPolicy: 'always', sandboxMode: 'danger-full-access' }
@@ -480,9 +480,9 @@ export function RcodeToolPermissionModeSettings(
   }
 }
 
-export function RcodeToolPermissionModeFromSettings(
-  settings: Pick<RcodeRuntimeSettingsV1, 'approvalPolicy' | 'sandboxMode'>
-): RcodeToolPermissionMode {
+export function JokerToolPermissionModeFromSettings(
+  settings: Pick<JokerRuntimeSettingsV1, 'approvalPolicy' | 'sandboxMode'>
+): JokerToolPermissionMode {
   if (settings.approvalPolicy === 'always') return 'always-ask'
   if (settings.approvalPolicy === 'untrusted') return 'sensitive-ask'
   if (
@@ -502,12 +502,12 @@ export function RcodeToolPermissionModeFromSettings(
 }
 
 /** Detection aggressiveness for the design-quality linter. */
-export type RcodeDesignQualityStrictness = 'relaxed' | 'standard' | 'strict'
+export type JokerDesignQualityStrictness = 'relaxed' | 'standard' | 'strict'
 
-export type RcodeDesignQualitySettingsV1 = {
+export type JokerDesignQualitySettingsV1 = {
   /** Master switch. Off means the builtin design-quality hook never fires. */
   enabled: boolean
-  strictness: RcodeDesignQualityStrictness
+  strictness: JokerDesignQualityStrictness
   /** Rule ids to suppress. */
   ignoreRules: string[]
   /** Relative-path glob patterns to skip. */
@@ -516,7 +516,7 @@ export type RcodeDesignQualitySettingsV1 = {
   maxFindings: number
 }
 
-export type RcodeComputerUseSettingsV1 = {
+export type JokerComputerUseSettingsV1 = {
   /** Master switch. Off means the computer_use tool is never registered. */
   enabled: boolean
   /**
@@ -531,7 +531,7 @@ export type RcodeComputerUseSettingsV1 = {
   maxActionsPerTurn: number
 }
 
-export type RcodeImageGenerationSettingsV1 = {
+export type JokerImageGenerationSettingsV1 = {
   enabled: boolean
   /** Existing provider profile to use for image generation. Empty or "custom" uses the fields below. */
   providerId: string
@@ -551,7 +551,7 @@ export type RcodeImageGenerationSettingsV1 = {
   timeoutMs: number
 }
 
-export type RcodeSpeechToTextSettingsV1 = {
+export type JokerSpeechToTextSettingsV1 = {
   enabled: boolean
   /** Existing provider profile to use for speech recognition. Empty or "custom" uses the fields below. */
   providerId: string
@@ -569,7 +569,7 @@ export type RcodeSpeechToTextSettingsV1 = {
   timeoutMs: number
 }
 
-export type RcodeTextToSpeechSettingsV1 = {
+export type JokerTextToSpeechSettingsV1 = {
   enabled: boolean
   /** Existing provider profile to use for speech generation. Empty or "custom" uses the fields below. */
   providerId: string
@@ -587,9 +587,9 @@ export type RcodeTextToSpeechSettingsV1 = {
   timeoutMs: number
 }
 
-export type RcodePromptOptimizationSettingsV1 = {
+export type JokerPromptOptimizationSettingsV1 = {
   enabled: boolean
-  /** Existing provider profile to use. Empty means inherit the active Rcode provider. */
+  /** Existing provider profile to use. Empty means inherit the active Joker provider. */
   providerId: string
   /** Empty means smallModel || main conversation model. */
   model: string
@@ -598,7 +598,7 @@ export type RcodePromptOptimizationSettingsV1 = {
   timeoutMs: number
 }
 
-export type RcodeMusicGenerationSettingsV1 = {
+export type JokerMusicGenerationSettingsV1 = {
   enabled: boolean
   /** Existing provider profile to use for music generation. Empty or "custom" uses the fields below. */
   providerId: string
@@ -611,7 +611,7 @@ export type RcodeMusicGenerationSettingsV1 = {
   timeoutMs: number
 }
 
-export type RcodeVideoGenerationSettingsV1 = {
+export type JokerVideoGenerationSettingsV1 = {
   enabled: boolean
   /** Existing provider profile to use for video generation. Empty or "custom" uses the fields below. */
   providerId: string
@@ -627,38 +627,38 @@ export type RcodeVideoGenerationSettingsV1 = {
   pollIntervalMs: number
 }
 
-export type RcodeMcpSearchMode = 'direct' | 'search' | 'auto'
+export type JokerMcpSearchMode = 'direct' | 'search' | 'auto'
 
-export type RcodeMcpSearchSettingsV1 = {
+export type JokerMcpSearchSettingsV1 = {
   enabled: boolean
-  mode: RcodeMcpSearchMode
+  mode: JokerMcpSearchMode
   autoThresholdToolCount: number
   topKDefault: number
   topKMax: number
   minScore: number
 }
 
-export type RcodeProjectConfigGrantV1 = {
+export type JokerProjectConfigGrantV1 = {
   /** Canonical real workspace path. Project files never persist this grant. */
   workspaceRoot: string
-  /** SHA-256 of the normalized versioned `.Rcode/project.json` document. */
+  /** SHA-256 of the normalized versioned `.Joker/project.json` document. */
   configDigest: string
 }
 
-export type RcodeProjectConfigSettingsV1 = {
-  grants: RcodeProjectConfigGrantV1[]
+export type JokerProjectConfigSettingsV1 = {
+  grants: JokerProjectConfigGrantV1[]
 }
 
-export type RcodeStorageBackend = 'hybrid' | 'file'
+export type JokerStorageBackend = 'hybrid' | 'file'
 
-export type RcodeStorageSettingsV1 = {
-  backend: RcodeStorageBackend
+export type JokerStorageSettingsV1 = {
+  backend: JokerStorageBackend
   sqlitePath: string
 }
 
-export type RcodeCompactionSummaryMode = 'heuristic' | 'model'
+export type JokerCompactionSummaryMode = 'heuristic' | 'model'
 
-export type RcodeHistoryHygieneSettingsV1 = {
+export type JokerHistoryHygieneSettingsV1 = {
   maxToolResultLines: number
   maxToolResultBytes: number
   maxToolResultTokens: number
@@ -667,20 +667,20 @@ export type RcodeHistoryHygieneSettingsV1 = {
   maxArrayItems: number
 }
 
-export type RcodeTokenEconomySettingsV1 = {
+export type JokerTokenEconomySettingsV1 = {
   enabled: boolean
   compressToolDescriptions: boolean
   compressToolResults: boolean
   conciseResponses: boolean
-  historyHygiene: RcodeHistoryHygieneSettingsV1
+  historyHygiene: JokerHistoryHygieneSettingsV1
 }
 
-export type RcodeToolOutputLimitsSettingsV1 = Required<ToolOutputLimitsConfig>
+export type JokerToolOutputLimitsSettingsV1 = Required<ToolOutputLimitsConfig>
 
-export type RcodeContextCompactionSettingsV1 = {
+export type JokerContextCompactionSettingsV1 = {
   defaultSoftThreshold: number
   defaultHardThreshold: number
-  summaryMode: RcodeCompactionSummaryMode
+  summaryMode: JokerCompactionSummaryMode
   summaryTimeoutMs: number
   summaryMaxTokens: number
   summaryInputMaxBytes: number
@@ -690,17 +690,17 @@ export type RcodeContextCompactionSettingsV1 = {
   summaryProviderId?: string
 }
 
-export type RcodeToolStormSettingsV1 = {
+export type JokerToolStormSettingsV1 = {
   enabled: boolean
   windowSize: number
   threshold: number
 }
 
-export type RcodeToolArgumentRepairSettingsV1 = {
+export type JokerToolArgumentRepairSettingsV1 = {
   maxStringBytes: number
 }
 
-export type RcodeRuntimeTuningSettingsV1 = {
+export type JokerRuntimeTuningSettingsV1 = {
   /**
    * 单轮代理任务的总运行时长上限（毫秒），包含模型响应和工具执行。
    */
@@ -711,63 +711,63 @@ export type RcodeRuntimeTuningSettingsV1 = {
    * servers that stay silent while prefilling a very large prompt.
    */
   streamIdleTimeoutMs: number
-  toolStorm: RcodeToolStormSettingsV1
-  toolArgumentRepair: RcodeToolArgumentRepairSettingsV1
+  toolStorm: JokerToolStormSettingsV1
+  toolArgumentRepair: JokerToolArgumentRepairSettingsV1
 }
 
 /**
  * Compatibility shell kept because persisted settings still use the
- * `agents.Rcode` envelope. Prefer operating on the contained
- * `RcodeRuntimeSettingsV1` directly in new code.
+ * `agents.Joker` envelope. Prefer operating on the contained
+ * `JokerRuntimeSettingsV1` directly in new code.
  */
-export type RcodeSettingsEnvelopeV1 = {
-  Rcode: RcodeRuntimeSettingsV1
+export type JokerSettingsEnvelopeV1 = {
+  Joker: JokerRuntimeSettingsV1
 }
 
-/** @deprecated Use `RcodeSettingsEnvelopeV1`. */
-export type AgentRuntimeSettingsMapV1 = RcodeSettingsEnvelopeV1
+/** @deprecated Use `JokerSettingsEnvelopeV1`. */
+export type AgentRuntimeSettingsMapV1 = JokerSettingsEnvelopeV1
 
-export type RcodeRuntimeTuningSettingsPatchV1 = {
+export type JokerRuntimeTuningSettingsPatchV1 = {
   maxWallTimeMs?: number
   streamIdleTimeoutMs?: number
-  toolStorm?: Partial<RcodeToolStormSettingsV1>
-  toolArgumentRepair?: Partial<RcodeToolArgumentRepairSettingsV1>
+  toolStorm?: Partial<JokerToolStormSettingsV1>
+  toolArgumentRepair?: Partial<JokerToolArgumentRepairSettingsV1>
 }
 
-export type RcodeTokenEconomySettingsPatchV1 = Partial<
-  Omit<RcodeTokenEconomySettingsV1, 'historyHygiene'>
+export type JokerTokenEconomySettingsPatchV1 = Partial<
+  Omit<JokerTokenEconomySettingsV1, 'historyHygiene'>
 > & {
-  historyHygiene?: Partial<RcodeHistoryHygieneSettingsV1>
+  historyHygiene?: Partial<JokerHistoryHygieneSettingsV1>
 }
 
-export type RcodeRuntimeSettingsPatchV1 = Partial<
+export type JokerRuntimeSettingsPatchV1 = Partial<
   Omit<
-    RcodeRuntimeSettingsV1,
+    JokerRuntimeSettingsV1,
     'mcpSearch' | 'projectConfig' | 'storage' | 'contextCompaction' | 'runtimeTuning' | 'tokenEconomy' | 'toolOutputLimits' | 'imageGeneration' | 'speechToText' | 'textToSpeech' | 'promptOptimization' | 'musicGeneration' | 'videoGeneration' | 'instructions' | 'computerUse' | 'quality' | 'modelProfiles' | 'subagents'
   >
 > & {
-  mcpSearch?: Partial<RcodeMcpSearchSettingsV1>
-  projectConfig?: Partial<RcodeProjectConfigSettingsV1>
-  tokenEconomy?: RcodeTokenEconomySettingsPatchV1
-  toolOutputLimits?: Partial<RcodeToolOutputLimitsSettingsV1>
-  storage?: Partial<RcodeStorageSettingsV1>
-  contextCompaction?: Partial<RcodeContextCompactionSettingsV1>
-  runtimeTuning?: RcodeRuntimeTuningSettingsPatchV1
-  imageGeneration?: Partial<RcodeImageGenerationSettingsV1>
-  speechToText?: Partial<RcodeSpeechToTextSettingsV1>
-  textToSpeech?: Partial<RcodeTextToSpeechSettingsV1>
-  promptOptimization?: Partial<RcodePromptOptimizationSettingsV1>
-  musicGeneration?: Partial<RcodeMusicGenerationSettingsV1>
-  videoGeneration?: Partial<RcodeVideoGenerationSettingsV1>
-  instructions?: Partial<RcodeInstructionSettingsV1>
-  computerUse?: Partial<RcodeComputerUseSettingsV1>
-  quality?: Partial<RcodeDesignQualitySettingsV1>
+  mcpSearch?: Partial<JokerMcpSearchSettingsV1>
+  projectConfig?: Partial<JokerProjectConfigSettingsV1>
+  tokenEconomy?: JokerTokenEconomySettingsPatchV1
+  toolOutputLimits?: Partial<JokerToolOutputLimitsSettingsV1>
+  storage?: Partial<JokerStorageSettingsV1>
+  contextCompaction?: Partial<JokerContextCompactionSettingsV1>
+  runtimeTuning?: JokerRuntimeTuningSettingsPatchV1
+  imageGeneration?: Partial<JokerImageGenerationSettingsV1>
+  speechToText?: Partial<JokerSpeechToTextSettingsV1>
+  textToSpeech?: Partial<JokerTextToSpeechSettingsV1>
+  promptOptimization?: Partial<JokerPromptOptimizationSettingsV1>
+  musicGeneration?: Partial<JokerMusicGenerationSettingsV1>
+  videoGeneration?: Partial<JokerVideoGenerationSettingsV1>
+  instructions?: Partial<JokerInstructionSettingsV1>
+  computerUse?: Partial<JokerComputerUseSettingsV1>
+  quality?: Partial<JokerDesignQualitySettingsV1>
   modelProfiles?: Record<string, ModelProviderModelProfilePatchV1 | null>
-  subagents?: RcodeSubagentsSettingsPatchV1
+  subagents?: JokerSubagentsSettingsPatchV1
 }
 
-export type RcodeSettingsEnvelopePatchV1 = {
-  Rcode?: RcodeRuntimeSettingsPatchV1
+export type JokerSettingsEnvelopePatchV1 = {
+  Joker?: JokerRuntimeSettingsPatchV1
 }
 
 export type LogConfigV1 = {
@@ -781,7 +781,7 @@ export type CheckpointCleanupConfigV1 = {
   /**
    * Optional override for the Git checkpoint storage directory (issue #651).
    * Lets users point checkpoints at another drive with more free space instead
-   * of filling the system drive under the Rcode data dir. Absent = default
+   * of filling the system drive under the Joker data dir. Absent = default
    * (`<dataDir>/git-checkpoints`).
    */
   directory?: string
@@ -874,7 +874,7 @@ export type ScheduleSettingsV1 = {
 //
 // A workflow is the multi-step generalization of a scheduled task: instead of a
 // single prompt it is a graph of nodes connected by edges. The "ai-agent" node
-// reuses the exact same Rcode-runtime execution path as a scheduled task.
+// reuses the exact same Joker-runtime execution path as a scheduled task.
 // ---------------------------------------------------------------------------
 
 export type WorkflowNodeKind =
@@ -1397,7 +1397,7 @@ export type WorkflowNodeRunResultV1 = {
   inputJson?: string
   /** Retry attempts spent before this result (0/absent = first try). */
   retries?: number
-  /** For ai-agent nodes: the Rcode thread it created. */
+  /** For ai-agent nodes: the Joker thread it created. */
   threadId: string
   error: string
 }
@@ -1441,7 +1441,7 @@ export type WorkflowV1 = {
   id: string
   name: string
   enabled: boolean
-  /** When true, the Rcode agent may invoke this workflow as a tool (list_workflows / run_workflow). */
+  /** When true, the Joker agent may invoke this workflow as a tool (list_workflows / run_workflow). */
   callableByAgent: boolean
   /** Workflow-scoped variables, exposed to node expressions as {{$env.key}}. */
   env: WorkflowEnvVarV1[]
@@ -1475,7 +1475,7 @@ export type WorkflowNodePresetV1 = {
   config: WorkflowNodeV1['config']
 }
 
-/** The Rcode agent hook phases a workflow can be bound to. Mirrors Rcode's HOOK_PHASES. */
+/** The Joker agent hook phases a workflow can be bound to. Mirrors Joker's HOOK_PHASES. */
 export const WORKFLOW_HOOK_PHASES = [
   'PreToolUse',
   'PostToolUse',
@@ -1490,7 +1490,7 @@ export type WorkflowHookPhase = (typeof WORKFLOW_HOOK_PHASES)[number]
 export const WORKFLOW_HOOK_MODES = ['observe', 'block', 'rewrite'] as const
 export type WorkflowHookMode = (typeof WORKFLOW_HOOK_MODES)[number]
 
-/** Binds a Create Loop workflow to a Rcode agent hook phase (reactive automation). */
+/** Binds a Create Loop workflow to a Joker agent hook phase (reactive automation). */
 export type WorkflowHookTriggerV1 = {
   id: string
   enabled: boolean
@@ -1504,28 +1504,28 @@ export type WorkflowHookTriggerV1 = {
    * rewrite = fold the workflow output into the tool result / injected context.
    */
   mode: WorkflowHookMode
-  /** Hook timeout in ms; 0 uses the Rcode default. */
+  /** Hook timeout in ms; 0 uses the Joker default. */
   timeoutMs: number
 }
 
 export type WorkflowSettingsV1 = {
   enabled: boolean
   defaultWorkspaceRoot: string
-  /** Default model provider for new AI nodes. Empty inherits the Rcode runtime provider. */
+  /** Default model provider for new AI nodes. Empty inherits the Joker runtime provider. */
   providerId?: string
   model: string
   mode: ScheduleRunMode
   keepAwake: boolean
   /** Local-only (127.0.0.1) port the webhook-trigger listener binds to. */
   webhookPort: number
-  /** Optional shared secret required on inbound webhook requests (x-Rcode-secret / Bearer). */
+  /** Optional shared secret required on inbound webhook requests (x-Joker-secret / Bearer). */
   webhookSecret: string
   workflows: WorkflowV1[]
   /** Reusable palette items the user saved from configured nodes. */
   presets: WorkflowNodePresetV1[]
   /** User-defined script-backed modules. */
   modules: WorkflowCustomModuleV1[]
-  /** Workflows bound to Rcode agent hook phases (reactive automation in code mode). */
+  /** Workflows bound to Joker agent hook phases (reactive automation in code mode). */
   hookTriggers: WorkflowHookTriggerV1[]
 }
 
@@ -1576,7 +1576,7 @@ export type ClawImSettingsV1 = {
   secret: string
   weixinBridgeUrl: string
   workspaceRoot: string
-  /** Default model provider for IM channels without their own provider. Empty inherits Rcode runtime provider. */
+  /** Default model provider for IM channels without their own provider. Empty inherits Joker runtime provider. */
   providerId?: string
   model: string
   mode: ClawRunMode
@@ -1585,7 +1585,7 @@ export type ClawImSettingsV1 = {
   /**
    * Optional tool permission policy for IM-initiated turns. When unset, IM
    * turns follow the global agent permission policy
-   * (`agents.Rcode.approvalPolicy`/`sandboxMode`) — the historical behavior.
+   * (`agents.Joker.approvalPolicy`/`sandboxMode`) — the historical behavior.
    */
   approvalPolicy?: ApprovalPolicy
   /** Optional sandbox mode paired with {@link approvalPolicy}. */
@@ -1633,7 +1633,7 @@ export type ClawImTelegramPlatformCredentialV1 = {
    * Empty string means "allow all private chats" (group chats are always rejected).
    */
   allowedChatIds: string
-  /** Bot username resolved via getMe, e.g. "my_Rcode_bot". Cosmetic only. */
+  /** Bot username resolved via getMe, e.g. "my_Joker_bot". Cosmetic only. */
   botUsername?: string
   createdAt: string
 }
@@ -1659,7 +1659,7 @@ export type ClawImConversationV1 = {
   latestMessageId: string
   senderId: string
   senderName: string
-  /** Rcode thread id this conversation maps to. */
+  /** Joker thread id this conversation maps to. */
   localThreadId: string
   workspaceRoot: string
   /** Model provider used by this IM conversation. Empty inherits channel/IM/global provider. */
@@ -1680,7 +1680,7 @@ export type ClawImChannelV1 = {
   /** Model provider used by this IM channel. Empty inherits the IM/global provider. */
   providerId?: string
   model: string
-  /** Rcode thread id this channel maps to. */
+  /** Joker thread id this channel maps to. */
   threadId: string
   workspaceRoot: string
   agentProfile: ClawImAgentProfileV1
@@ -1705,7 +1705,7 @@ export type RemoteAgentSettingsV1 = {
   /**
    * Tool permission policy for remote-agent-initiated turns. When unset,
    * remote agent turns follow the global agent permission policy
-   * (`agents.Rcode.approvalPolicy`/`sandboxMode`).
+   * (`agents.Joker.approvalPolicy`/`sandboxMode`).
    */
   approvalPolicy?: ApprovalPolicy
   /** Sandbox mode paired with {@link approvalPolicy}. */
@@ -1716,13 +1716,13 @@ export type WriteInlineCompletionSettingsV1 = {
   enabled: boolean
   retrievalEnabled: boolean
   longCompletionEnabled: boolean
-  /** When true, Write inherits Rcode's selected provider instead of using `providerId`. */
+  /** When true, Write inherits Joker's selected provider instead of using `providerId`. */
   inheritProvider: boolean
   /** Selected provider for Write inline completion when `inheritProvider` is false. */
   providerId: string
   apiKey: string
   baseUrl: string
-  /** When true, Write inherits Rcode's runtime model instead of using `model` as an override. */
+  /** When true, Write inherits Joker's runtime model instead of using `model` as an override. */
   inheritModel: boolean
   model: string
   debounceMs: number
@@ -2022,7 +2022,7 @@ export type TerminalSettingsPatchV1 = {
 }
 
 /**
- * Local OpenAI-compatible proxy. When enabled, the Rcode main process hosts a
+ * Local OpenAI-compatible proxy. When enabled, the Joker main process hosts a
  * `/v1/chat/completions` (and `/v1/models`) endpoint on 127.0.0.1 that proxies
  * to the configured Antigravity (Google Cloud Code Assist) subscription,
  * translating the OpenAI request/response shapes via cloudcode-openai-adapter.
@@ -2032,7 +2032,7 @@ export type OpenAiProxySettingsV1 = {
   /** Local-only (127.0.0.1) port the proxy listener binds to. */
   port: number
   /** Optional shared secret. When non-empty, inbound requests must carry the
-   * `X-Rcode-Proxy-Token` header matching this value. */
+   * `X-Joker-Proxy-Token` header matching this value. */
   token: string
   /** Provider id to proxy. Empty falls back to the Antigravity subscription. */
   providerId: string
@@ -2049,9 +2049,9 @@ export type AppSettingsV1 = {
   cursorSpotlight?: boolean
   cursorSpotlightColor?: string
   provider: ModelProviderSettingsV1
-  agents: RcodeSettingsEnvelopeV1
+  agents: JokerSettingsEnvelopeV1
   workspaceRoot: string
-  /** 对话会话的工作目录根(默认 ~/Documents/Rcode),不绑定项目文件夹。 */
+  /** 对话会话的工作目录根(默认 ~/Documents/Joker),不绑定项目文件夹。 */
   conversationWorkspaceRoot: string
   log: LogConfigV1
   checkpointCleanup: CheckpointCleanupConfigV1
@@ -2084,7 +2084,7 @@ export type AppSettingsPatch = Partial<
   Omit<AppSettingsV1, 'provider' | 'agents' | 'log' | 'checkpointCleanup' | 'notifications' | 'appBehavior' | 'keyboardShortcuts' | 'write' | 'claw' | 'schedule' | 'design' | 'workflow' | 'guiUpdate' | 'terminal'>
 > & {
   provider?: ModelProviderSettingsPatchV1
-  agents?: RcodeSettingsEnvelopePatchV1
+  agents?: JokerSettingsEnvelopePatchV1
   log?: Partial<LogConfigV1>
   checkpointCleanup?: Partial<CheckpointCleanupConfigV1>
   notifications?: Partial<NotificationConfigV1>

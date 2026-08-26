@@ -41,8 +41,8 @@ describe('design tool protocol', () => {
 
     expect(manifest).toMatchObject({
       version: 1,
-      kind: 'Rcode.design.tool-protocol',
-      source: 'Rcode-design-mode'
+      kind: 'Joker.design.tool-protocol',
+      source: 'Joker-design-mode'
     })
     expect(manifest.tools.map((tool) => tool.id)).toEqual([
       'design.plan',
@@ -433,7 +433,7 @@ describe('design tool protocol', () => {
 
     const template = executeDesignToolInvocation({
       toolId: 'design.system',
-      input: { action: 'template', name: 'Rcode Kit', seedColor: '#D4AF37', template: 'saas' }
+      input: { action: 'template', name: 'Joker Kit', seedColor: '#D4AF37', template: 'saas' }
     })
     expect(template).toMatchObject({ ok: true, status: 'applied' })
     expect((template.output as { after: { tokenCount: number; componentCount: number } }).after).toMatchObject({
@@ -638,7 +638,7 @@ describe('design tool protocol', () => {
     const output = result.output as { path: string; markdown: string }
 
     expect(result).toMatchObject({ ok: true, status: 'ready', affectedIds: [] })
-    expect(output.path).toBe('.Rcode-design/HANDOFF.md')
+    expect(output.path).toBe('.Joker-design/HANDOFF.md')
     expect(output.markdown).toContain('# DESIGN.md: Checkout redesign')
     expect(output.markdown).toContain('Improve checkout conversion.')
   })

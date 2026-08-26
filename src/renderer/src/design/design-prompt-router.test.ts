@@ -11,7 +11,7 @@ function artifact(id: string, kind: DesignArtifact['kind']): DesignArtifact {
     id,
     kind,
     title: id,
-    relativePath: `.Rcode-design/doc/${id}/${kind === 'html' ? 'v1.html' : 'canvas.json'}`,
+    relativePath: `.Joker-design/doc/${id}/${kind === 'html' ? 'v1.html' : 'canvas.json'}`,
     createdAt: now,
     updatedAt: now,
     versions: []

@@ -82,7 +82,7 @@ describe('RuntimeExtensionSettingsService', () => {
         })
       }))
     }
-    vi.stubGlobal('window', { RcodeGui: api })
+    vi.stubGlobal('window', { JokerGui: api })
     const service = new RuntimeExtensionSettingsService()
     const loaded = await service.load({
       contributionIds: ['extension:acme.one/general'],

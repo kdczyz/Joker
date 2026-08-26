@@ -359,7 +359,7 @@ function documentFrequencyFor(files: RepoMapFile[]): Map<string, number> {
 function importantPathBoost(relativePath: string): number {
   const name = basename(relativePath);
   if (IMPORTANT_FILE_NAMES.has(name)) return 2.5;
-  if (/^(src|app|packages|Rcode)\//.test(relativePath)) return 0.8;
+  if (/^(src|app|packages|Joker)\//.test(relativePath)) return 0.8;
   if (/(^|\/)(index|main|runtime|server|router|store|config)\.[^.]+$/.test(relativePath)) return 1.4;
   return 0;
 }

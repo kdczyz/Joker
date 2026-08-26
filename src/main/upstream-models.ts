@@ -10,11 +10,11 @@ import {
   modelProfileSupportsTextChat,
   modelProviderModelProfile,
   modelProviderPresetProfile,
-  resolveRcodeRuntimeSettings,
+  resolveJokerRuntimeSettings,
   type AppSettingsV1
 } from '../shared/app-settings'
 import { DEFAULT_COMPOSER_MODEL_IDS } from '../shared/default-composer-models'
-import type { ModelProviderModelGroup } from '../shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '../shared/Joker-gui-api'
 
 export type FetchUpstreamModelsResult =
   | { ok: true; modelIds: string[]; defaultModelId?: string; modelGroups?: ModelProviderModelGroup[] }
@@ -44,10 +44,10 @@ export async function fetchUpstreamModelIds(
   settings: AppSettingsV1,
   _apiKey?: string
 ): Promise<FetchUpstreamModelsResult> {
-  const configuredModelIds = await readConfiguredRcodeModelIds(settings)
+  const configuredModelIds = await readConfiguredJokerModelIds(settings)
   const configuredGroups = await readConfiguredModelGroups(settings)
   const nonTextModelIds = listNonTextModelIds(settings)
-  const runtime = resolveRcodeRuntimeSettings(settings)
+  const runtime = resolveJokerRuntimeSettings(settings)
   const runtimeModel = runtime.model.trim()
   const defaultModelId = isComposerChatModelId(runtimeModel, nonTextModelIds) ? runtimeModel : ''
   return modelListOrError(
@@ -58,8 +58,8 @@ export async function fetchUpstreamModelIds(
   )
 }
 
-export async function readConfiguredRcodeModelIds(settings: AppSettingsV1): Promise<string[]> {
-  const runtime = resolveRcodeRuntimeSettings(settings)
+export async function readConfiguredJokerModelIds(settings: AppSettingsV1): Promise<string[]> {
+  const runtime = resolveJokerRuntimeSettings(settings)
   const configPath = join(expandHome(runtime.dataDir), 'config.json')
   const nonTextModelIds = listNonTextModelIds(settings)
   const ids = [runtime.model, ...listModelProviderModelIds(settings)].filter((id) =>
@@ -87,7 +87,15 @@ function modelListOrError(
   defaultModelId: string,
   message: string
 ): FetchUpstreamModelsResult {
-  return hasCustomModelId(ids)
+  // A "custom" flat id is one signal that the user has a usable model, but it
+  // is NOT the only one: the built-in free models (DEFAULT_COMPOSER_MODEL_IDS,
+  // e.g. the OpenCode Zen free tier) are all treated as defaults, so a user
+  // relying solely on free models would trip `hasCustomModelId` and lose the
+  // whole picker. `groups` is already filtered down to usable text-chat
+  // models, so a non-empty group list is the authoritative signal.
+  const hasUsableModels =
+    hasCustomModelId(ids) || groups.some((group) => group.modelIds.length > 0)
+  return hasUsableModels
     ? { ok: true, modelIds: mergeModelIds(ids), defaultModelId, modelGroups: mergeModelGroups(groups) }
     : { ok: false, message }
 }
@@ -166,7 +174,13 @@ async function readConfiguredModelGroups(settings: AppSettingsV1): Promise<Model
       const modelProfiles = { ...(provider.modelProfiles ?? {}) }
       for (const id of modelIds) {
         if (!modelProfiles[id]) {
-          modelProfiles[id] = { contextWindowTokens: 131_072 }
+          modelProfiles[id] = {
+            contextWindowTokens: 131_072,
+            inputModalities: ['text'],
+            outputModalities: ['text'],
+            supportsToolCalling: true,
+            messageParts: ['text']
+          }
         }
       }
       groups.push({
@@ -205,7 +219,13 @@ async function readConfiguredModelGroups(settings: AppSettingsV1): Promise<Model
         const modelProfiles = { ...(zenProfile.modelProfiles ?? {}) }
         for (const id of modelIds) {
           if (!modelProfiles[id]) {
-            modelProfiles[id] = { contextWindowTokens: 131_072 }
+            modelProfiles[id] = {
+              contextWindowTokens: 131_072,
+              inputModalities: ['text'],
+              outputModalities: ['text'],
+              supportsToolCalling: true,
+              messageParts: ['text']
+            }
           }
         }
         groups.push({

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
-import type { CoreMemoryRecordJson } from '../agent/Rcode-contract'
+import type { CoreMemoryRecordJson } from '../agent/Joker-contract'
 import {
   MemorySettingsSection,
   attemptCloseMemoryDialog,
@@ -28,7 +28,7 @@ const labels: Record<string, string> = {
   memoryExport: 'Export',
   memoryExported: 'Memory exported',
   memoryExportUnavailable: 'Export unavailable',
-  memoryImportTitle: 'Import Memory into Rcode',
+  memoryImportTitle: 'Import Memory into Joker',
   memoryImportStepPrompt: 'Copy prompt',
   memoryImportCopy: 'Copy',
   memoryImportCopied: 'Copied',
@@ -96,8 +96,8 @@ const labels: Record<string, string> = {
 function baseCtx(overrides: Record<string, any> = {}): Record<string, any> {
   return {
     t: (key: string) => labels[key] ?? key,
-    Rcode: { memoryEnabled: true },
-    updateRcode: () => undefined,
+    Joker: { memoryEnabled: true },
+    updateJoker: () => undefined,
     memoryDiagnostics: {
       enabled: true,
       activeCount: 1,

@@ -5,7 +5,7 @@ import {
   type JsonValue,
   type ToolInvocationContext,
   type ToolResult
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import {
   PresentationParseError,
   parsePresentationOperations,
@@ -42,7 +42,7 @@ export async function activate(context: ExtensionContext): Promise<void> {
 }
 
 export async function deactivate(): Promise<void> {
-  // Rcode disposes command and tool registrations and cancels pending invocations.
+  // Joker disposes command and tool registrations and cancels pending invocations.
 }
 
 async function registerCommands(

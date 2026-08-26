@@ -2,7 +2,7 @@ import {
   ExtensionApiError,
   type JsonObject,
   type WorkspaceApi
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import {
   MAX_OPERATION_RECEIPTS,
   MAX_PRESENTATION_HTML_BYTES,
@@ -22,7 +22,7 @@ import {
 } from '../shared/presentation.js'
 
 const MAX_OPERATION_BATCH_BYTES = 256_000
-const PRESENTATION_PATH_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._ -]*\.Rcode-ppt\.html$/
+const PRESENTATION_PATH_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._ -]*\.Joker-ppt\.html$/
 
 export interface ServiceProgress {
   readonly message: string
@@ -366,7 +366,7 @@ export class PresentationProjectService {
     } catch (error) {
       if (error instanceof ExtensionApiError) throw error
       throw validationFailure(
-        `Presentation is not a valid .Rcode-ppt.html file: ${path}`,
+        `Presentation is not a valid .Joker-ppt.html file: ${path}`,
         issuesFrom(error, 'invalid_presentation', '$html', 'Presentation model could not be parsed')
       )
     }
@@ -555,7 +555,7 @@ export function validatePresentationPath(value: string): string {
     !PRESENTATION_PATH_PATTERN.test(value)
   ) {
     throw invalidArgument(
-      'Presentation path must be one root-level ASCII filename ending in .Rcode-ppt.html',
+      'Presentation path must be one root-level ASCII filename ending in .Joker-ppt.html',
       { path: typeof value === 'string' ? value.slice(0, 240) : '' }
     )
   }
@@ -627,7 +627,7 @@ function assertHtmlSize(path: string, bytes: number): void {
 }
 
 function titleFromPath(path: string): string {
-  return path.slice(0, -'.Rcode-ppt.html'.length).replaceAll(/[-_]+/g, ' ').trim() || 'Untitled presentation'
+  return path.slice(0, -'.Joker-ppt.html'.length).replaceAll(/[-_]+/g, ' ').trim() || 'Untitled presentation'
 }
 
 function byteLength(value: string): number {

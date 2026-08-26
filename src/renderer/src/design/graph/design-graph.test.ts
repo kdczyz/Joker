@@ -19,11 +19,11 @@ function htmlArtifact(id: string): DesignArtifact {
     id,
     kind: 'html',
     title: 'Checkout',
-    relativePath: `.Rcode-design/doc/${id}/v1.html`,
+    relativePath: `.Joker-design/doc/${id}/v1.html`,
     createdAt,
     updatedAt: createdAt,
-    versions: [{ id: `${id}-v1`, relativePath: `.Rcode-design/doc/${id}/v1.html`, createdAt, summary: '' }],
-    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
+    versions: [{ id: `${id}-v1`, relativePath: `.Joker-design/doc/${id}/v1.html`, createdAt, summary: '' }],
+    designMdPath: `.Joker-design/doc/${id}/DESIGN.md`,
     direction: { id: 'dir_checkout', name: 'Checkout direction', status: 'active', createdAt }
   }
 }
@@ -38,11 +38,11 @@ describe('design graph', () => {
       id: 'motion',
       kind: 'svg',
       title: 'Orbit loader',
-      relativePath: '.Rcode-design/doc/motion/v1.svg',
-      designMdPath: '.Rcode-design/doc/motion/DESIGN.md',
+      relativePath: '.Joker-design/doc/motion/v1.svg',
+      designMdPath: '.Joker-design/doc/motion/DESIGN.md',
       createdAt,
       updatedAt: createdAt,
-      versions: [{ id: 'motion-v1', relativePath: '.Rcode-design/doc/motion/v1.svg', createdAt, summary: '' }]
+      versions: [{ id: 'motion-v1', relativePath: '.Joker-design/doc/motion/v1.svg', createdAt, summary: '' }]
     }
 
     const graph = buildDesignGraphFromCanvasDocument(doc, {
@@ -59,8 +59,8 @@ describe('design graph', () => {
         artifactKind: 'svg'
       },
       metadata: {
-        artifactPath: '.Rcode-design/doc/motion/v1.svg',
-        artifactDesignMdPath: '.Rcode-design/doc/motion/DESIGN.md'
+        artifactPath: '.Joker-design/doc/motion/v1.svg',
+        artifactDesignMdPath: '.Joker-design/doc/motion/DESIGN.md'
       }
     })
     expect(graph.objects[frame.id]?.source?.htmlArtifactId).toBeUndefined()
@@ -200,7 +200,7 @@ describe('design graph', () => {
     const image = createDefaultShape('image', 32, 48)
     image.id = 'asset_logo'
     image.name = 'Logo asset'
-    image.imageUrl = '.Rcode-design/assets/logo.png'
+    image.imageUrl = '.Joker-design/assets/logo.png'
     doc.objects[image.id] = { ...image, parentId: doc.rootId }
     doc.objects[doc.rootId] = { ...doc.objects[doc.rootId], children: [image.id] }
 
@@ -214,13 +214,13 @@ describe('design graph', () => {
       name: 'Logo asset',
       source: {
         canvasShapeId: 'asset_logo',
-        assetPath: '.Rcode-design/assets/logo.png'
+        assetPath: '.Joker-design/assets/logo.png'
       },
       metadata: {
         asset: {
           id: 'asset_logo',
           kind: 'image',
-          path: '.Rcode-design/assets/logo.png',
+          path: '.Joker-design/assets/logo.png',
           sourceKind: 'workspace',
           modelReady: true
         }

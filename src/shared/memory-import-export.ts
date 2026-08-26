@@ -116,14 +116,14 @@ export function buildMemoryImportContent(entry: MemoryImportEntry): string {
 }
 
 export function defaultMemoryExportFileName(now = new Date()): string {
-  return `Rcode-memory-export-${now.toISOString().slice(0, 10)}.md`
+  return `Joker-memory-export-${now.toISOString().slice(0, 10)}.md`
 }
 
 export function buildMemoryMarkdownExport({ records, exportedAt = new Date().toISOString() }: MemoryMarkdownExportPayload): string {
   const activeRecords = records.filter((record) => !record.deletedAt)
   const grouped = groupRecordsByCategory(activeRecords)
   const lines = [
-    '# Rcode 记忆导出',
+    '# Joker 记忆导出',
     '',
     `导出时间: ${exportedAt}`,
     `记录数量: ${activeRecords.length}`,

@@ -129,9 +129,9 @@ async function connect(request: Request, env: Env): Promise<Response> {
     }
   } catch { device = undefined; }
   const headers = new Headers(request.headers);
-  headers.set("x-rcode-role", row.role);
-  headers.set("x-rcode-user-id", row.user_id);
-  if (row.role === "agent") headers.set("x-rcode-device", JSON.stringify(device));
+  headers.set("x-joker-role", row.role);
+  headers.set("x-joker-user-id", row.user_id);
+  if (row.role === "agent") headers.set("x-joker-device", JSON.stringify(device));
   const room = env.REMOTE_ROOMS.getByName(row.user_id);
   return room.fetch(new Request(request, { headers }));
 }
@@ -140,7 +140,7 @@ async function route(request: Request, env: Env): Promise<Response> {
   const url = new URL(request.url);
   if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: corsHeaders() });
   if (request.method === "GET" && (url.pathname === "/" || url.pathname === "/health")) {
-    return json({ service: "rcode-remote-server", status: "ok", version: "0.5.0" });
+    return json({ service: "joker-remote-server", status: "ok", version: "0.5.0" });
   }
   if (request.method === "POST" && url.pathname === "/v1/auth/register") return register(request, env);
   if (request.method === "POST" && url.pathname === "/v1/auth/login") return login(request, env);

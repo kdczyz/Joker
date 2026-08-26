@@ -53,7 +53,7 @@ export async function listUserRepos(token: string, perPage = 100): Promise<Githu
         headers: {
           Authorization: `Bearer ${token}`,
           Accept: 'application/vnd.github+json',
-          'User-Agent': 'Rcode'
+          'User-Agent': 'Joker'
         }
       }
     )
@@ -169,7 +169,7 @@ export async function createPullRequest(opts: {
         Authorization: `Bearer ${token}`,
         Accept: 'application/vnd.github+json',
         'Content-Type': 'application/json',
-        'User-Agent': 'Rcode'
+        'User-Agent': 'Joker'
       },
       body: JSON.stringify({ title, head, base, body: body ?? '' })
     }

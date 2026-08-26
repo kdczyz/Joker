@@ -134,10 +134,10 @@ describe('Extension API v1.1 media schemas', () => {
     expect(MediaResourceLeaseSchema.parse({
       leaseId: 'media_lease_000001',
       handleId,
-      url: 'Rcode-media://lease/media_lease_000001',
+      url: 'Joker-media://lease/media_lease_000001',
       mimeType: 'video/mp4',
       expiresAt: now
-    }).url).toMatch(/^Rcode-media:/)
+    }).url).toMatch(/^Joker-media:/)
   })
 
   it('defines bounded UTF-8 text reads without exposing a path', () => {
@@ -199,7 +199,7 @@ describe('Extension API v1.1 media schemas', () => {
         },
         {
           analysis: 'sync-features', available: true,
-          algorithm: 'Rcode.pcm-energy-envelope', algorithmVersion: '1.0.0',
+          algorithm: 'Joker.pcm-energy-envelope', algorithmVersion: '1.0.0',
           local: true, networkUsed: false
         }
       ]
@@ -235,11 +235,11 @@ describe('Extension API v1.1 media schemas', () => {
 
   it('defines verified path-opaque local visual model, frame, and query contracts', () => {
     const descriptor = {
-      adapterId: 'Rcode.local.visual-features',
+      adapterId: 'Joker.local.visual-features',
       adapterVersion: '1.0.0',
-      modelId: 'Rcode-visual-features',
+      modelId: 'Joker-visual-features',
       modelVersion: '1.0.0',
-      packageId: 'Rcode-bundled.visual-features-v1',
+      packageId: 'Joker-bundled.visual-features-v1',
       manifestSha256: 'a'.repeat(64),
       files: [{ name: 'visual-features-v1.json', sha256: 'b'.repeat(64), byteSize: 582 }],
       embeddingDimensions: 24,
@@ -251,7 +251,7 @@ describe('Extension API v1.1 media schemas', () => {
       state: 'installed',
       descriptor,
       receipt: {
-        broker: 'Rcode-model-broker',
+        broker: 'Joker-model-broker',
         packageSource: 'bundled',
         packageId: descriptor.packageId,
         modelId: descriptor.modelId,
@@ -303,7 +303,7 @@ describe('Extension API v1.1 media schemas', () => {
       adapter,
       embeddings: [{ sampleId: request.samples[0]!.sampleId, vector: new Array(24).fill(0.1) }],
       provenance: {
-        algorithm: 'Rcode.rgb-edge-features', algorithmVersion: '1.0.0',
+        algorithm: 'Joker.rgb-edge-features', algorithmVersion: '1.0.0',
         decodedFrameWidth: 32, decodedFrameHeight: 32, local: true, networkUsed: false
       }
     }).outcome).toBe('ready')
@@ -357,7 +357,7 @@ describe('Extension API v1.1 media schemas', () => {
       inputBytes: 2048, archiveBytes: 1024, sha256: 'a'.repeat(64),
       generatedMedia: {
         handleId: 'media_package_readable_001', mode: 'read', kind: 'data',
-        displayName: 'project.Rcode-project.zip', mimeType: 'application/zip', byteSize: 1024
+        displayName: 'project.Joker-project.zip', mimeType: 'application/zip', byteSize: 1024
       }
     })).toMatchObject({ entryCount: 2, generatedMedia: { kind: 'data' } })
     expect(isExtensionViewSafeMethod('media.startArchiveJob')).toBe(true)
@@ -397,7 +397,7 @@ describe('Extension API v1.1 media schemas', () => {
         fingerprint: 'b'.repeat(64)
       },
       provenance: {
-        algorithm: 'Rcode.pcm-energy-envelope', algorithmVersion: '1.0.0',
+        algorithm: 'Joker.pcm-energy-envelope', algorithmVersion: '1.0.0',
         local: true, networkUsed: false
       },
       seed: 42,
@@ -513,7 +513,7 @@ describe('Extension API v1.1 media schemas', () => {
       OTIO_SCHEMA: 'SerializableCollection.1',
       name: 'Cut',
       children: [],
-      metadata: { Rcode: { projectId: 'project-1' } }
+      metadata: { Joker: { projectId: 'project-1' } }
     }
     const request = {
       arguments: [],

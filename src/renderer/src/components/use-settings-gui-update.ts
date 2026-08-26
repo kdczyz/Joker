@@ -98,11 +98,11 @@ export function useSettingsGuiUpdate({
   }, [])
 
   const checkGuiUpdate = useCallback(async (): Promise<void> => {
-    if (typeof window.RcodeGui?.checkGuiUpdate !== 'function') return
+    if (typeof window.JokerGui?.checkGuiUpdate !== 'function') return
     setCheckingGuiUpdate(true)
     setGuiUpdateError(null)
     try {
-      const info = await window.RcodeGui.checkGuiUpdate(channel)
+      const info = await window.JokerGui.checkGuiUpdate(channel)
       setGuiUpdateInfo(info)
       if (!info.ok) {
         setGuiUpdateError(info.code === 'not_configured' ? null : guiUpdateFailureMessage(info, t))
@@ -115,12 +115,12 @@ export function useSettingsGuiUpdate({
   }, [channel, t])
 
   const downloadGuiUpdate = async (): Promise<void> => {
-    if (typeof window.RcodeGui?.downloadGuiUpdate !== 'function') return
+    if (typeof window.JokerGui?.downloadGuiUpdate !== 'function') return
     setDownloadingGuiUpdate(true)
     setGuiUpdateProgress(null)
     setGuiUpdateError(null)
     try {
-      const result = await window.RcodeGui.downloadGuiUpdate(form?.guiUpdate?.channel)
+      const result = await window.JokerGui.downloadGuiUpdate(form?.guiUpdate?.channel)
       if (!result.ok) {
         setGuiUpdateError(result.message)
         return
@@ -134,11 +134,11 @@ export function useSettingsGuiUpdate({
   }
 
   const installGuiUpdate = async (): Promise<void> => {
-    if (typeof window.RcodeGui?.installGuiUpdate !== 'function') return
+    if (typeof window.JokerGui?.installGuiUpdate !== 'function') return
     setInstallingGuiUpdate(true)
     setGuiUpdateError(null)
     try {
-      const result = await window.RcodeGui.installGuiUpdate()
+      const result = await window.JokerGui.installGuiUpdate()
       if (!result.ok) {
         setGuiUpdateError(result.message)
         setInstallingGuiUpdate(false)
@@ -150,10 +150,10 @@ export function useSettingsGuiUpdate({
   }
 
   useEffect(() => {
-    if (typeof window.RcodeGui?.onGuiUpdateState !== 'function') return
-    const unsubscribe = window.RcodeGui.onGuiUpdateState(applyGuiUpdateState)
-    if (typeof window.RcodeGui?.getGuiUpdateState === 'function') {
-      void window.RcodeGui.getGuiUpdateState().then(applyGuiUpdateState).catch(() => undefined)
+    if (typeof window.JokerGui?.onGuiUpdateState !== 'function') return
+    const unsubscribe = window.JokerGui.onGuiUpdateState(applyGuiUpdateState)
+    if (typeof window.JokerGui?.getGuiUpdateState === 'function') {
+      void window.JokerGui.getGuiUpdateState().then(applyGuiUpdateState).catch(() => undefined)
     }
     return unsubscribe
   }, [applyGuiUpdateState])

@@ -88,7 +88,7 @@ export function resolveSddMarkdownImagePath(
   const raw = markdownPath.trim().replaceAll('\\', '/')
   if (!raw || raw.startsWith('/')) return null
   const direct = normalizeSddRelativePath(raw)
-  if (direct.startsWith('.Rcodesdd/')) return normalizeRelativeParts(direct.split('/'))
+  if (direct.startsWith('.Jokersdd/')) return normalizeRelativeParts(direct.split('/'))
   return normalizeRelativeParts([...dirname(draftRelativePath).split('/'), ...raw.split('/')])
 }
 
@@ -118,7 +118,7 @@ export async function collectSddDraftImages(input: {
   readImage?: WorkspaceImageReader
   measureImage?: ImageMeasurer
 }): Promise<SddDraftImageCollection> {
-  const readImage = input.readImage ?? window.RcodeGui.readWorkspaceImage
+  const readImage = input.readImage ?? window.JokerGui.readWorkspaceImage
   const measureImage = input.measureImage ?? measureImageDataUrl
   const errors: string[] = []
   const images: SddDraftImageReference[] = []

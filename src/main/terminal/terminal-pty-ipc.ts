@@ -20,7 +20,7 @@ import type { IPty } from 'node-pty'
 import {
   resolveWindowsShellCandidates,
   type WindowsShellResolverOptions
-} from '../../../Rcode/src/adapters/tool/windows-shell-resolver.js'
+} from '../../../Joker/src/adapters/tool/windows-shell-resolver.js'
 import {
   TERMINAL_DEFAULT_COLS,
   TERMINAL_DEFAULT_ROWS,

@@ -9,11 +9,11 @@ function normalizedHomeDir(homeDir: string | undefined): string {
 }
 
 function currentPlatform(): string {
-  return typeof window !== 'undefined' ? window.RcodeGui?.platform ?? '' : ''
+  return typeof window !== 'undefined' ? window.JokerGui?.platform ?? '' : ''
 }
 
 function currentHomeDir(): string {
-  return typeof window !== 'undefined' ? window.RcodeGui?.homeDir ?? '' : ''
+  return typeof window !== 'undefined' ? window.JokerGui?.homeDir ?? '' : ''
 }
 
 export function compactHomePathForSettingsDisplay(
@@ -95,20 +95,20 @@ export function expandSettingsHomePathsForUse(
 ): AppSettingsV1 {
   const expand = (value: string): string => expandHomePathForSettingsUse(value, homeDir, platform)
   const expandList = (values: readonly string[]): string[] => expandHomePathListForSettingsUse(values, homeDir, platform)
-  const Rcode = settings.agents.Rcode
+  const Joker = settings.agents.Joker
   return {
     ...settings,
     workspaceRoot: expand(settings.workspaceRoot),
     conversationWorkspaceRoot: expand(settings.conversationWorkspaceRoot),
     agents: {
       ...settings.agents,
-      Rcode: {
-        ...Rcode,
-        binaryPath: expand(Rcode.binaryPath),
-        dataDir: expand(Rcode.dataDir),
+      Joker: {
+        ...Joker,
+        binaryPath: expand(Joker.binaryPath),
+        dataDir: expand(Joker.dataDir),
         storage: {
-          ...Rcode.storage,
-          sqlitePath: expand(Rcode.storage.sqlitePath)
+          ...Joker.storage,
+          sqlitePath: expand(Joker.storage.sqlitePath)
         }
       }
     },

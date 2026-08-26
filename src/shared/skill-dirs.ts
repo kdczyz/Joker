@@ -23,7 +23,7 @@ export const COMMON_WORKSPACE_SKILL_DIRS: readonly CommonSkillDir[] = [
   { id: 'workspace-agents', scope: 'project', relativePath: '.agents/skills', labelKey: 'pluginSkillRootWorkspaceAgents' },
   { id: 'workspace-claude', scope: 'project', relativePath: '.claude/skills', labelKey: 'pluginSkillRootWorkspaceClaude' },
   { id: 'workspace-codex', scope: 'project', relativePath: '.codex/skills', labelKey: 'pluginSkillRootWorkspaceCodex' },
-  { id: 'workspace-Rcode', scope: 'project', relativePath: '.Rcode/skills', labelKey: 'pluginSkillRootWorkspaceRcode' },
+  { id: 'workspace-Joker', scope: 'project', relativePath: '.Joker/skills', labelKey: 'pluginSkillRootWorkspaceJoker' },
   { id: 'workspace-skills', scope: 'project', relativePath: 'skills', labelKey: 'pluginSkillRootWorkspaceSkills' }
 ]
 
@@ -35,7 +35,7 @@ export const COMMON_GLOBAL_SKILL_DIRS: readonly CommonSkillDir[] = [
   { id: 'global-agents', scope: 'global', relativePath: '.agents/skills', labelKey: 'pluginSkillRootGlobalAgents' },
   { id: 'global-claude', scope: 'global', relativePath: '.claude/skills', labelKey: 'pluginSkillRootGlobalClaude' },
   { id: 'global-codex', scope: 'global', relativePath: '.codex/skills', labelKey: 'pluginSkillRootGlobalCodex' },
-  { id: 'global-deepseek', scope: 'global', relativePath: '.Rcode/skills', labelKey: 'pluginSkillRootGlobalDeepseek' }
+  { id: 'global-deepseek', scope: 'global', relativePath: '.Joker/skills', labelKey: 'pluginSkillRootGlobalDeepseek' }
 ]
 
 /**

@@ -15,7 +15,7 @@ export function shouldConfigureLinuxWaylandImeSwitches(
   env: LinuxImeEnv = process.env
 ): boolean {
   if (platform !== 'linux') return false
-  const explicit = env.RCODE_LINUX_WAYLAND_IME?.trim().toLowerCase()
+  const explicit = env.JOKER_LINUX_WAYLAND_IME?.trim().toLowerCase()
   if (explicit === '1' || explicit === 'true' || explicit === 'yes') return true
   if (explicit === '0' || explicit === 'false' || explicit === 'no') return false
 

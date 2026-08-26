@@ -130,7 +130,7 @@ export const CompatibilityReportSchema = z.strictObject({
   extensionVersion: SemverSchema,
   manifestVersion: z.number().int().positive(),
   api: ApiNegotiationResultSchema,
-  RcodeEngine: z.strictObject({ declared: SemverRangeSchema, running: SemverSchema, compatible: z.boolean() }),
+  JokerEngine: z.strictObject({ declared: SemverRangeSchema, running: SemverSchema, compatible: z.boolean() }),
   rpc: z.strictObject({ declared: z.number().int().positive(), negotiated: z.number().int().positive().optional(), compatible: z.boolean() }),
   stateSchemaVersion: z.number().int().nonnegative(),
   diagnostics: z.array(CompatibilityDiagnosticSchema)

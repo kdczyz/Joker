@@ -33,7 +33,7 @@ function loadRendererConfig(environment) {
 }
 
 test('development smoke environment assigns a cache beneath its unique temporary root', async (t) => {
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-renderer-cache-test-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-renderer-cache-test-'))
   t.after(() => rm(temporaryRoot, { recursive: true, force: true }))
 
   const environment = developmentRendererEnvironment(
@@ -42,18 +42,18 @@ test('development smoke environment assigns a cache beneath its unique temporary
   )
 
   assert.equal(environment.ELECTRON_RENDERER_URL, 'http://127.0.0.1:5174')
-  assert.equal(environment.RCODE_ELECTRON_VITE_PORT, '5174')
-  assert.equal(environment.RCODE_ELECTRON_VITE_CACHE_DIR, join(temporaryRoot, 'vite-cache'))
+  assert.equal(environment.JOKER_ELECTRON_VITE_PORT, '5174')
+  assert.equal(environment.JOKER_ELECTRON_VITE_CACHE_DIR, join(temporaryRoot, 'vite-cache'))
 })
 
 test('auxiliary Vite config uses the explicit isolated cache directory', async (t) => {
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-renderer-config-test-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-renderer-config-test-'))
   t.after(() => rm(temporaryRoot, { recursive: true, force: true }))
   const cacheDir = join(temporaryRoot, 'vite-cache')
   const result = loadRendererConfig({
     ...process.env,
-    RCODE_ELECTRON_VITE_PORT: '5174',
-    RCODE_ELECTRON_VITE_CACHE_DIR: cacheDir
+    JOKER_ELECTRON_VITE_PORT: '5174',
+    JOKER_ELECTRON_VITE_CACHE_DIR: cacheDir
   })
 
   assert.equal(result.status, 0, result.stderr)
@@ -63,12 +63,12 @@ test('auxiliary Vite config uses the explicit isolated cache directory', async (
 test('auxiliary Vite config fails closed when no isolated cache is provided', () => {
   const environment = {
     ...process.env,
-    RCODE_ELECTRON_VITE_PORT: '5174'
+    JOKER_ELECTRON_VITE_PORT: '5174'
   }
-  delete environment.RCODE_ELECTRON_VITE_CACHE_DIR
+  delete environment.JOKER_ELECTRON_VITE_CACHE_DIR
 
   const result = loadRendererConfig(environment)
 
   assert.notEqual(result.status, 0)
-  assert.match(result.stderr, /RCODE_ELECTRON_VITE_CACHE_DIR must select an absolute isolated Vite cache directory/)
+  assert.match(result.stderr, /JOKER_ELECTRON_VITE_CACHE_DIR must select an absolute isolated Vite cache directory/)
 })

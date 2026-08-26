@@ -11,11 +11,11 @@ const digest = 'a'.repeat(64)
 
 function manifest(name, overrides = {}) {
   return {
-    publisher: 'Rcode-examples',
+    publisher: 'Joker-examples',
     name,
     version: '0.1.0',
     apiVersion: '1.0.0',
-    engines: { Rcode: '>=0.1.0' },
+    engines: { Joker: '>=0.1.0' },
     permissions: ['ui.views', 'workspace.read', 'ui.views'],
     ...overrides
   }
@@ -25,9 +25,9 @@ test('declares every product-owned default extension', () => {
   assert.deepEqual(
     BUNDLED_EXTENSION_DEFINITIONS.map((entry) => entry.id),
     [
-      'Rcode-examples.Rcode-video-editor',
-      'Rcode-examples.presentation-studio',
-      'Rcode-examples.social-media-sidebar'
+      'Joker-examples.Joker-video-editor',
+      'Joker-examples.presentation-studio',
+      'Joker-examples.social-media-sidebar'
     ]
   )
 })
@@ -36,21 +36,21 @@ test('derives bounded catalog entries from canonical manifests', () => {
   const definition = BUNDLED_EXTENSION_DEFINITIONS[1]
   assert.equal(
     bundledArchiveName(manifest('presentation-studio'), definition.name),
-    'presentation-studio-0.1.0.Rcodex'
+    'presentation-studio-0.1.0.Jokerx'
   )
   assert.deepEqual(
     bundledCatalogEntry(
       definition,
       manifest('presentation-studio'),
-      'presentation-studio-0.1.0.Rcodex',
+      'presentation-studio-0.1.0.Jokerx',
       digest
     ),
     {
-      id: 'Rcode-examples.presentation-studio',
+      id: 'Joker-examples.presentation-studio',
       version: '0.1.0',
-      archive: 'presentation-studio-0.1.0.Rcodex',
+      archive: 'presentation-studio-0.1.0.Jokerx',
       sha256: digest,
-      enginesRcode: '>=0.1.0',
+      enginesJoker: '>=0.1.0',
       apiVersion: '1.0.0',
       permissions: ['ui.views', 'workspace.read']
     }
@@ -59,7 +59,7 @@ test('derives bounded catalog entries from canonical manifests', () => {
     () => bundledCatalogEntry(
       definition,
       manifest('other'),
-      'presentation-studio-0.1.0.Rcodex',
+      'presentation-studio-0.1.0.Jokerx',
       digest
     ),
     /Unexpected/
@@ -70,16 +70,16 @@ test('sorts catalog entries and rejects duplicate extension ids', () => {
   const entries = BUNDLED_EXTENSION_DEFINITIONS.map((definition) => bundledCatalogEntry(
     definition,
     manifest(definition.name),
-    `${definition.name}-0.1.0.Rcodex`,
+    `${definition.name}-0.1.0.Jokerx`,
     digest
   )).reverse()
   const catalog = bundledExtensionCatalog(entries)
   assert.deepEqual(
     catalog.extensions.map((entry) => entry.id),
     [
-      'Rcode-examples.Rcode-video-editor',
-      'Rcode-examples.presentation-studio',
-      'Rcode-examples.social-media-sidebar'
+      'Joker-examples.Joker-video-editor',
+      'Joker-examples.presentation-studio',
+      'Joker-examples.social-media-sidebar'
     ]
   )
   assert.throws(

@@ -16,7 +16,7 @@ import type { AgentMessage } from "../shared/types";
 /**
  * 需要从 user / system 文本中剥离的 system-tag 白名单。
  * 这些 tag 通常由 runtime 注入,不属于"用户真实意图"。
- * 与 grok-build 的 SYSTEM_TAGS 对齐,并按 Rcode 实际注入点补充。
+ * 与 grok-build 的 SYSTEM_TAGS 对齐,并按 Joker 实际注入点补充。
  */
 const SYSTEM_TAGS: readonly string[] = [
   "user_info",

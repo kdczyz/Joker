@@ -12,7 +12,7 @@ import type {
   UserFileReference,
   UserInputAnswer
 } from '../agent/types'
-import type { RcodeRuntimeStatusPayload } from '@shared/Rcode-gui-api'
+import type { JokerRuntimeStatusPayload } from '@shared/Joker-gui-api'
 import type {
   AppLocale,
   ClawImAgentProfileV1,
@@ -23,8 +23,8 @@ import type {
   ClawModel,
   ModelReasoningEffort
 } from '@shared/app-settings'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
-import type { ComposerContextAttachment } from '@Rcode/extension-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
+import type { ComposerContextAttachment } from '@joker-code/extension-api'
 import type { ExtensionComposerContextEvent } from '@shared/extension-ipc'
 
 export type QueuedUserMessage = {
@@ -45,7 +45,7 @@ export type QueuedUserMessage = {
   guiDesignMode?: boolean
   guiDesignArtifact?: { kind: 'svg'; artifactId: string; relativePath: string }
   /**
-   * Optional GUI plan context forwarded to Rcode. The renderer
+   * Optional GUI plan context forwarded to Joker. The renderer
    * attaches it for plan/refine turns so the runtime can advertise
    * the native `create_plan` tool and gate the write to the reserved
    * plan artifact.
@@ -62,7 +62,7 @@ export type QueuedUserMessage = {
 
 /**
  * GUI plan context attached to a send-message call. Mirrors the
- * Rcode `GuiPlanContextSchema` and is forwarded to the runtime
+ * Joker `GuiPlanContextSchema` and is forwarded to the runtime
  * request body so plan/refine turns are scoped to a reserved path.
  */
 export type GuiPlanMessageContext = {
@@ -159,10 +159,10 @@ export type ChatState = {
   initialSetupMode: InitialSetupMode
   workspaceRoot: string
   workspaceLabel: string
-  /** 对话会话的工作目录根(默认 ~/Documents/Rcode),供侧边栏对话区块和项目保护使用。 */
+  /** 对话会话的工作目录根(默认 ~/Documents/Joker),供侧边栏对话区块和项目保护使用。 */
   conversationWorkspaceRoot: string
   runtimeConnection: RuntimeConnectionStatus
-  runtimeStatus: RcodeRuntimeStatusPayload | null
+  runtimeStatus: JokerRuntimeStatusPayload | null
   codeWorkspaceRoots: string[]
   threads: NormalizedThread[]
   threadSearch: string

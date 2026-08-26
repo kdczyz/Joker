@@ -35,7 +35,7 @@ type DesignAssistantState = {
   markAiAffected: (ids: string[]) => void
 }
 
-const DESIGN_THREAD_KEY = 'Rcode.design-assistant.threadRegistry.v1'
+const DESIGN_THREAD_KEY = 'Joker.design-assistant.threadRegistry.v1'
 
 function readDesignAssistantThreadId(workspaceRoot: string): string | null {
   try {

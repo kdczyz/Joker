@@ -17,7 +17,7 @@ beforeEach(() => {
   useCanvasViewportStore.getState().setVbox({ x: -500, y: -300, width: 1000, height: 600 })
   useCanvasViewportStore.getState().setActiveTool('hand')
   vi.stubGlobal('window', {
-    RcodeGui: {
+    JokerGui: {
       pickWorkspaceImage: vi.fn()
     }
   })
@@ -59,7 +59,7 @@ describe('importWorkspaceImageToCanvas', () => {
       height: 800,
       createdAt: '2026-06-22T00:00:00.000Z'
     })
-    vi.stubGlobal('window', { RcodeGui: { pickWorkspaceImage } })
+    vi.stubGlobal('window', { JokerGui: { pickWorkspaceImage } })
 
     const result = await importWorkspaceImageToCanvas({
       workspaceRoot: '/workspace',
@@ -86,7 +86,7 @@ describe('importWorkspaceImageToCanvas', () => {
 
   it('does not mutate the canvas when the picker is canceled', async () => {
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         pickWorkspaceImage: vi.fn().mockResolvedValue({ ok: false, canceled: true })
       }
     })
@@ -114,7 +114,7 @@ describe('pasteClipboardImageToCanvas', () => {
       width: 800,
       height: 600
     })
-    vi.stubGlobal('window', { RcodeGui: { readClipboardImage } })
+    vi.stubGlobal('window', { JokerGui: { readClipboardImage } })
 
     const result = await pasteClipboardImageToCanvas({
       vbox: { x: -500, y: -300, width: 1000, height: 600 }
@@ -138,7 +138,7 @@ describe('pasteClipboardImageToCanvas', () => {
 
   it('returns failure when clipboard has no image', async () => {
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         readClipboardImage: vi.fn().mockResolvedValue({
           ok: false,
           message: 'Clipboard does not currently contain an image.'
@@ -172,7 +172,7 @@ describe('pasteClipboardImageToCanvas', () => {
       createdAt: '2026-06-23T00:00:00.000Z'
     })
     vi.stubGlobal('window', {
-      RcodeGui: { readClipboardImage, saveWorkspaceClipboardImage }
+      JokerGui: { readClipboardImage, saveWorkspaceClipboardImage }
     })
 
     const result = await pasteClipboardImageToCanvas({
@@ -214,7 +214,7 @@ describe('pasteClipboardImageToCanvas', () => {
       createdAt: '2026-06-23T00:00:00.000Z'
     })
     vi.stubGlobal('window', {
-      RcodeGui: { readClipboardImage, saveWorkspaceClipboardImage }
+      JokerGui: { readClipboardImage, saveWorkspaceClipboardImage }
     })
 
     const result = await pasteClipboardImageToCanvas({
@@ -240,7 +240,7 @@ describe('pasteClipboardImageToCanvas', () => {
       width: 800,
       height: 600
     })
-    vi.stubGlobal('window', { RcodeGui: { readClipboardImage } })
+    vi.stubGlobal('window', { JokerGui: { readClipboardImage } })
 
     const result = await pasteClipboardImageToCanvas({
       vbox: { x: 0, y: 0, width: 800, height: 600 }
@@ -254,7 +254,7 @@ describe('pasteClipboardImageToCanvas', () => {
 
   it('falls back to default name when clipboard image has no name', async () => {
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         readClipboardImage: vi.fn().mockResolvedValue({
           ok: true,
           name: '',

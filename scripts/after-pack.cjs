@@ -16,47 +16,47 @@ const {
 } = require('node:fs')
 const { join } = require('node:path')
 
-const RCODE_RUNTIME_REQUIRED_PATHS = [
-  'Rcode/dist/cli/serve-entry.js',
-  'Rcode/dist/cli/extension-cli.js',
-  'Rcode/dist/extensions/host-runner.js',
-  'Rcode/package.json',
-  'Rcode/package-lock.json',
-  'Rcode/node_modules/zod/package.json',
-  'Rcode/node_modules/diff/package.json',
-  'Rcode/node_modules/semver/package.json',
-  'Rcode/node_modules/yauzl/package.json',
-  'Rcode/node_modules/yazl/package.json',
-  'Rcode/node_modules/@modelcontextprotocol/sdk/package.json',
-  'Rcode/node_modules/@Rcode/extension-api/package.json',
-  'Rcode/node_modules/@Rcode/extension-api/dist/index.js',
-  'Rcode/node_modules/create-Rcode-extension/package.json',
-  'Rcode/node_modules/create-Rcode-extension/src/cli.mjs',
+const JOKER_RUNTIME_REQUIRED_PATHS = [
+  'Joker/dist/cli/serve-entry.js',
+  'Joker/dist/cli/extension-cli.js',
+  'Joker/dist/extensions/host-runner.js',
+  'Joker/package.json',
+  'Joker/package-lock.json',
+  'Joker/node_modules/zod/package.json',
+  'Joker/node_modules/diff/package.json',
+  'Joker/node_modules/semver/package.json',
+  'Joker/node_modules/yauzl/package.json',
+  'Joker/node_modules/yazl/package.json',
+  'Joker/node_modules/@modelcontextprotocol/sdk/package.json',
+  'Joker/node_modules/@joker-code/extension-api/package.json',
+  'Joker/node_modules/@joker-code/extension-api/dist/index.js',
+  'Joker/node_modules/create-Joker-extension/package.json',
+  'Joker/node_modules/create-Joker-extension/src/cli.mjs',
   'node_modules/better-sqlite3/package.json',
   'node_modules/bindings/package.json',
   'node_modules/file-uri-to-path/package.json',
   'packages/extension-api/dist/index.js',
-  'packages/extension-api/schema/Rcode-extension.schema.json',
+  'packages/extension-api/schema/Joker-extension.schema.json',
   'packages/extension-api/fixtures/api-major-negotiation.json',
   'packages/extension-api/fixtures/api-minor-negotiation.json',
-  'packages/create-Rcode-extension/src/cli.mjs',
-  'packages/create-Rcode-extension/src/scaffold.mjs',
-  'packages/create-Rcode-extension/templates/node/Rcode-extension.json',
-  'packages/create-Rcode-extension/templates/node/src/extension.ts',
-  'packages/create-Rcode-extension/templates/react/Rcode-extension.json',
-  'packages/create-Rcode-extension/templates/react/src/host/extension.ts',
-  'packages/create-Rcode-extension/templates/react/src/webview/main.tsx',
-  'packages/create-Rcode-extension/templates/webview/Rcode-extension.json',
-  'packages/create-Rcode-extension/templates/webview/src/webview/main.ts'
+  'packages/create-Joker-extension/src/cli.mjs',
+  'packages/create-Joker-extension/src/scaffold.mjs',
+  'packages/create-Joker-extension/templates/node/Joker-extension.json',
+  'packages/create-Joker-extension/templates/node/src/extension.ts',
+  'packages/create-Joker-extension/templates/react/Joker-extension.json',
+  'packages/create-Joker-extension/templates/react/src/host/extension.ts',
+  'packages/create-Joker-extension/templates/react/src/webview/main.tsx',
+  'packages/create-Joker-extension/templates/webview/Joker-extension.json',
+  'packages/create-Joker-extension/templates/webview/src/webview/main.ts'
 ]
 const LINUX_SANDBOX_LAUNCHER_FLAG = '--disable-setuid-sandbox'
 const LINUX_REAL_EXECUTABLE_SUFFIX = '.electron-bin'
 const BUNDLED_EXTENSIONS_DIR = 'bundled-extensions'
 const BUNDLED_EXTENSION_CATALOG_FILE = 'catalog.json'
 const REQUIRED_BUNDLED_EXTENSION_IDS = [
-  'rcode-examples.rcode-video-editor',
-  'rcode-examples.presentation-studio',
-  'rcode-examples.social-media-sidebar'
+  'joker-examples.joker-video-editor',
+  'joker-examples.presentation-studio',
+  'joker-examples.social-media-sidebar'
 ]
 
 function normalizePlatform(platform) {
@@ -94,17 +94,17 @@ function npmCommand(args, platform = process.platform) {
   return { command: 'npm', args }
 }
 
-function prunePackedRcodeDependencies(context) {
+function prunePackedJokerDependencies(context) {
   const root = unpackedAppRoot(context)
-  const RcodeDir = join(root, 'Rcode')
-  if (!existsSync(RcodeDir)) return
+  const JokerDir = join(root, 'Joker')
+  if (!existsSync(JokerDir)) return
 
-  assertExists(join(RcodeDir, 'package.json'), 'Rcode package manifest')
-  assertExists(join(RcodeDir, 'node_modules'), 'Rcode node_modules')
+  assertExists(join(JokerDir, 'package.json'), 'Joker package manifest')
+  assertExists(join(JokerDir, 'node_modules'), 'Joker node_modules')
 
   const prune = npmCommand(['prune', '--omit=dev', '--ignore-scripts'])
   execFileSync(prune.command, prune.args, {
-    cwd: RcodeDir,
+    cwd: JokerDir,
     env: {
       ...process.env,
       npm_config_audit: 'false',
@@ -119,14 +119,14 @@ function prunePackedRcodeDependencies(context) {
     join(root, 'node_modules', 'better-sqlite3', 'package.json'),
     'root better-sqlite3 dependency'
   )
-  rmSync(join(RcodeDir, 'node_modules', 'better-sqlite3'), { recursive: true, force: true })
+  rmSync(join(JokerDir, 'node_modules', 'better-sqlite3'), { recursive: true, force: true })
 }
 
 function materializePackedWorkspaceDependencies(context) {
   const root = unpackedAppRoot(context)
   for (const [sourceRelative, targetRelative] of [
-    ['packages/extension-api', 'Rcode/node_modules/@Rcode/extension-api'],
-    ['packages/create-Rcode-extension', 'Rcode/node_modules/create-Rcode-extension']
+    ['packages/extension-api', 'Joker/node_modules/@joker-code/extension-api'],
+    ['packages/create-Joker-extension', 'Joker/node_modules/create-Joker-extension']
   ]) {
     const source = join(root, sourceRelative)
     const target = join(root, targetRelative)
@@ -140,9 +140,9 @@ function materializePackedWorkspaceDependencies(context) {
   }
 }
 
-function validateBundledRcodeRuntime(context) {
+function validateBundledJokerRuntime(context) {
   const root = unpackedAppRoot(context)
-  for (const relativePath of RCODE_RUNTIME_REQUIRED_PATHS) {
+  for (const relativePath of JOKER_RUNTIME_REQUIRED_PATHS) {
     assertExists(join(root, relativePath), relativePath)
   }
   assertExists(
@@ -170,7 +170,7 @@ function validateBundledExtensionResources(context) {
       typeof entry?.id !== 'string' ||
       typeof entry?.version !== 'string' ||
       typeof entry?.archive !== 'string' ||
-      !/^[0-9A-Za-z][0-9A-Za-z._-]*\.Rcodex$/u.test(entry.archive) ||
+      !/^[0-9A-Za-z][0-9A-Za-z._-]*\.Jokerx$/u.test(entry.archive) ||
       typeof entry?.sha256 !== 'string' ||
       !/^[a-f0-9]{64}$/u.test(entry.sha256)
     ) {
@@ -365,9 +365,9 @@ function copyBundledWhisperModels(context) {
 }
 
 async function afterPack(context) {
-  prunePackedRcodeDependencies(context)
+  prunePackedJokerDependencies(context)
   materializePackedWorkspaceDependencies(context)
-  validateBundledRcodeRuntime(context)
+  validateBundledJokerRuntime(context)
   validateBundledExtensionResources(context)
   prunePackedWhisperResources(context)
   copyBundledWhisperModels(context)
@@ -376,7 +376,7 @@ async function afterPack(context) {
   maybeAdhocSignMacApp(context)
 }
 
-exports.RCODE_RUNTIME_REQUIRED_PATHS = RCODE_RUNTIME_REQUIRED_PATHS
+exports.JOKER_RUNTIME_REQUIRED_PATHS = JOKER_RUNTIME_REQUIRED_PATHS
 exports.REQUIRED_BUNDLED_EXTENSION_IDS = REQUIRED_BUNDLED_EXTENSION_IDS
 exports.LINUX_SANDBOX_LAUNCHER_FLAG = LINUX_SANDBOX_LAUNCHER_FLAG
 exports._internals = {
@@ -384,9 +384,9 @@ exports._internals = {
   packedResourcesDir,
   unpackedAppRoot,
   npmCommand,
-  prunePackedRcodeDependencies,
+  prunePackedJokerDependencies,
   materializePackedWorkspaceDependencies,
-  validateBundledRcodeRuntime,
+  validateBundledJokerRuntime,
   validateBundledExtensionResources,
   normalizeArch,
   prunePackedWhisperResources,

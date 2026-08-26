@@ -224,9 +224,9 @@ describe('data migration settings states', () => {
 
 describe('data migration estimate loading', () => {
   it('shows a failed automatic estimate once and waits for an explicit retry', async () => {
-    const estimateExport = vi.fn(async () => { throw new Error('Rcode thread inventory failed (400)') })
+    const estimateExport = vi.fn(async () => { throw new Error('Joker thread inventory failed (400)') })
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         dataMigration: {
           getStatus: async () => status(),
           onProgress: () => () => undefined,
@@ -254,7 +254,7 @@ describe('data migration estimate loading', () => {
     await act(async () => { await Promise.resolve() })
 
     expect(estimateExport).toHaveBeenCalledOnce()
-    expect(renderer.root.findByProps({ role: 'alert' }).children.join('')).toContain('Rcode thread inventory failed (400)')
+    expect(renderer.root.findByProps({ role: 'alert' }).children.join('')).toContain('Joker thread inventory failed (400)')
 
     const retryButton = renderer.root.findAllByType('button').find((button) =>
       button.children.includes('dataMigrationRefreshEstimate')

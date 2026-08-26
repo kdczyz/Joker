@@ -44,13 +44,13 @@ export const HTML_FRAME_DOM_SOURCE_GUEST_SRC = `(() => {
         rect: rectFor(element)
       };
       const id = element.getAttribute('id') || '';
-      const domId = attr(element, ['data-Rcode-source-id', 'data-dom-id']) || id;
+      const domId = attr(element, ['data-Joker-source-id', 'data-dom-id']) || id;
       const onlookId = attr(element, ['data-onlook-id']);
-      const sourceFile = attr(element, ['data-Rcode-source-file', 'data-source-file', 'data-onlook-source-file']);
-      const componentName = attr(element, ['data-Rcode-component', 'data-component', 'data-onlook-component']);
-      const exportName = attr(element, ['data-Rcode-export', 'data-export']);
-      const astPath = attr(element, ['data-Rcode-ast-path', 'data-ast-path']);
-      const routePath = attr(element, ['data-Rcode-route', 'data-route']);
+      const sourceFile = attr(element, ['data-Joker-source-file', 'data-source-file', 'data-onlook-source-file']);
+      const componentName = attr(element, ['data-Joker-component', 'data-component', 'data-onlook-component']);
+      const exportName = attr(element, ['data-Joker-export', 'data-export']);
+      const astPath = attr(element, ['data-Joker-ast-path', 'data-ast-path']);
+      const routePath = attr(element, ['data-Joker-route', 'data-route']);
       if (id) node.id = id;
       if (domId) node.domId = domId;
       if (onlookId) node.onlookId = onlookId;
@@ -68,9 +68,9 @@ export const HTML_FRAME_DOM_SOURCE_GUEST_SRC = `(() => {
       return node;
     };
     const root = document.body || document.documentElement;
-    const routePath = attr(root, ['data-Rcode-route', 'data-route']) ||
+    const routePath = attr(root, ['data-Joker-route', 'data-route']) ||
       ((location.protocol === 'http:' || location.protocol === 'https:') ? location.pathname : '');
-    const sourceFile = attr(root, ['data-Rcode-source-file', 'data-source-file', 'data-onlook-source-file']);
+    const sourceFile = attr(root, ['data-Joker-source-file', 'data-source-file', 'data-onlook-source-file']);
     return {
       capturedAt: new Date().toISOString(),
       routePath: routePath || undefined,

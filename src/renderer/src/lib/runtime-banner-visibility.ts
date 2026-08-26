@@ -1,7 +1,7 @@
-import type { RcodeRuntimeStatusPayload } from '@shared/Rcode-gui-api'
+import type { JokerRuntimeStatusPayload } from '@shared/Joker-gui-api'
 
 export function shouldSuppressRuntimeErrorBanner(
-  status: RcodeRuntimeStatusPayload | null | undefined
+  status: JokerRuntimeStatusPayload | null | undefined
 ): boolean {
   return status?.state === 'restarting' || status?.state === 'crashed'
 }

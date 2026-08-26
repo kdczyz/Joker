@@ -67,12 +67,12 @@ describe('chat-store Claw actions helpers', () => {
   })
 
   it('uses the channel threadId when the latest conversation has none', () => {
-    const item = channel({ threadId: 'Rcode-channel-thread' })
+    const item = channel({ threadId: 'Joker-channel-thread' })
     const conversation = { ...item.conversations[0], localThreadId: '' }
-    expect(clawThreadIdForProvider(item, conversation)).toBe('Rcode-channel-thread')
+    expect(clawThreadIdForProvider(item, conversation)).toBe('Joker-channel-thread')
   })
 
-  it('recovers an unmapped Claw managed Rcode session before creating a new empty one', () => {
+  it('recovers an unmapped Claw managed Joker session before creating a new empty one', () => {
     const item = channel()
     const recovered = findRecoverableClawThread(
       [
@@ -88,10 +88,10 @@ describe('chat-store Claw actions helpers', () => {
 
   it('writes recovered provider thread ids back to both channel and conversation', () => {
     const now = '2026-06-01T00:03:00.000Z'
-    const next = channelWithClawThreadMapping(channel(), 'Rcode-thread', now, 'conversation-1')
+    const next = channelWithClawThreadMapping(channel(), 'Joker-thread', now, 'conversation-1')
 
-    expect(next.threadId).toBe('Rcode-thread')
-    expect(next.conversations[0]?.localThreadId).toBe('Rcode-thread')
+    expect(next.threadId).toBe('Joker-thread')
+    expect(next.conversations[0]?.localThreadId).toBe('Joker-thread')
   })
 
   it('drops stale configured thread ids and falls back to a recovered thread', () => {
@@ -130,7 +130,7 @@ describe('chat-store Claw actions helpers', () => {
         channels: [channel({ threadId: 'thr_missing', conversations: [] })]
       }
     }
-    const RcodeGui = {
+    const JokerGui = {
       getSettings: vi.fn(async () => settings),
       setSettings: vi.fn(async (patch: { claw?: { channels?: ClawImChannelV1[] } }) => {
         settings = {
@@ -144,7 +144,7 @@ describe('chat-store Claw actions helpers', () => {
         return settings
       })
     }
-    vi.stubGlobal('window', { RcodeGui })
+    vi.stubGlobal('window', { JokerGui })
 
     const provider = {
       createThread: vi.fn(),
@@ -208,7 +208,7 @@ describe('chat-store Claw actions helpers', () => {
     expect(state.activeClawChannelId).toBe('channel-1')
     expect(state.activeThreadId).toBeNull()
     expect(state.error).toBeNull()
-    expect(RcodeGui.setSettings).toHaveBeenCalledWith({
+    expect(JokerGui.setSettings).toHaveBeenCalledWith({
       claw: {
         channels: [expect.objectContaining({ id: 'channel-1', threadId: '' })]
       }
@@ -235,7 +235,7 @@ describe('chat-store Claw actions helpers', () => {
         channels: [first, second]
       }
     }
-    vi.stubGlobal('window', { RcodeGui: { getSettings: vi.fn(async () => settings) } })
+    vi.stubGlobal('window', { JokerGui: { getSettings: vi.fn(async () => settings) } })
 
     let releaseFirstLookup: (() => void) | undefined
     const firstLookup = new Promise<void>((resolve) => { releaseFirstLookup = resolve })
@@ -303,7 +303,7 @@ describe('chat-store Claw actions helpers', () => {
         })]
       }
     }
-    const RcodeGui = {
+    const JokerGui = {
       getSettings: vi.fn(async () => settings),
       setSettings: vi.fn(async (patch: { claw?: { channels?: ClawImChannelV1[] } }) => {
         settings = {
@@ -317,7 +317,7 @@ describe('chat-store Claw actions helpers', () => {
         return settings
       })
     }
-    vi.stubGlobal('window', { RcodeGui })
+    vi.stubGlobal('window', { JokerGui })
     let state: Record<string, unknown> = {
       clawChannels: settings.claw.channels,
       error: null
@@ -344,7 +344,7 @@ describe('chat-store Claw actions helpers', () => {
 
     await actions.setClawChannelModel('channel-1', 'MiniMax-M3', 'minimax')
 
-    expect(RcodeGui.setSettings).toHaveBeenCalledWith({
+    expect(JokerGui.setSettings).toHaveBeenCalledWith({
       claw: {
         channels: [expect.objectContaining({
           id: 'channel-1',

@@ -24,7 +24,7 @@ import type { DesignArtifact } from './design-types'
 const now = '2026-06-29T00:00:00.000Z'
 
 function artifact(id: string, title: string, extra: Partial<DesignArtifact> = {}): DesignArtifact {
-  const relativePath = `.Rcode-design/doc/${id}/v1.html`
+  const relativePath = `.Joker-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',
@@ -112,7 +112,7 @@ function withInjectedPrototypeCapture<T>(
 
 describe("prototype-player scripted navigation capture", () => {
     it('captures page-title targets and resolves them to a prototype screen', () => {
-      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Joker-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const signup = artifact('signup', 'Signup')
       const links = resolvePrototypeLinks(home, [home, signup])
@@ -146,7 +146,7 @@ describe("prototype-player scripted navigation capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=Signup')
+          expect(fakeWindow.location.hash).toBe('Joker-proto-nav=Signup')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,
@@ -158,7 +158,7 @@ describe("prototype-player scripted navigation capture", () => {
       )
     })
     it('captures keyboard activation on non-native prototype cards', () => {
-      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Joker-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const details = artifact('details', 'Details')
       const links = resolvePrototypeLinks(home, [home, details])
@@ -193,7 +193,7 @@ describe("prototype-player scripted navigation capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=Details')
+          expect(fakeWindow.location.hash).toBe('Joker-proto-nav=Details')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,
@@ -205,7 +205,7 @@ describe("prototype-player scripted navigation capture", () => {
       )
     })
     it('captures space-key activation on non-native prototype cards', () => {
-      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Joker-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const details = artifact('details', 'Details')
       const links = resolvePrototypeLinks(home, [home, details])
@@ -240,7 +240,7 @@ describe("prototype-player scripted navigation capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=Details')
+          expect(fakeWindow.location.hash).toBe('Joker-proto-nav=Details')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,
@@ -252,7 +252,7 @@ describe("prototype-player scripted navigation capture", () => {
       )
     })
     it('captures window.open prototype navigation calls', () => {
-      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Joker-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const checkout = artifact('checkout', 'Checkout')
       const links = resolvePrototypeLinks(home, [home, checkout])
@@ -260,14 +260,14 @@ describe("prototype-player scripted navigation capture", () => {
         buildPrototypeNavigationCaptureScript(links),
         currentFileUrl,
         ({ fakeWindow }) => {
-          const originalOpen = (fakeWindow as { __RcodePrototypeOriginalOpen?: ReturnType<typeof vi.fn> }).__RcodePrototypeOriginalOpen
+          const originalOpen = (fakeWindow as { __JokerPrototypeOriginalOpen?: ReturnType<typeof vi.fn> }).__JokerPrototypeOriginalOpen
           const open = fakeWindow.open as unknown as (url?: string, target?: string, features?: string) => unknown
           const result = open('Checkout', '_blank')
   
           expect(result).toBeNull()
           expect(originalOpen).toBeDefined()
           expect(originalOpen).not.toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=Checkout')
+          expect(fakeWindow.location.hash).toBe('Joker-proto-nav=Checkout')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,
@@ -279,7 +279,7 @@ describe("prototype-player scripted navigation capture", () => {
       )
     })
     it('captures inline location.href prototype navigation handlers', () => {
-      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Joker-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const checkout = artifact('checkout', 'Checkout')
       const links = resolvePrototypeLinks(home, [home, checkout])
@@ -313,7 +313,7 @@ describe("prototype-player scripted navigation capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=Checkout')
+          expect(fakeWindow.location.hash).toBe('Joker-proto-nav=Checkout')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,
@@ -327,7 +327,7 @@ describe("prototype-player scripted navigation capture", () => {
     it('captures inline history.back prototype navigation handlers', () => {
       withInjectedPrototypeCapture(
         buildPrototypeNavigationCaptureScript([]),
-        'file:///workspace/.Rcode-design/doc/settings/v1.html',
+        'file:///workspace/.Joker-design/doc/settings/v1.html',
         ({ fakeWindow, listeners }) => {
           const button = {
             nodeType: 1,
@@ -355,14 +355,14 @@ describe("prototype-player scripted navigation capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toMatch(/^Rcode-proto-back=/)
+          expect(fakeWindow.location.hash).toMatch(/^Joker-proto-back=/)
         }
       )
     })
     it('captures inline history.go(-2) prototype navigation handlers with steps', () => {
       withInjectedPrototypeCapture(
         buildPrototypeNavigationCaptureScript([]),
-        'file:///workspace/.Rcode-design/doc/settings/v1.html',
+        'file:///workspace/.Joker-design/doc/settings/v1.html',
         ({ fakeWindow, listeners }) => {
           const button = {
             nodeType: 1,
@@ -390,12 +390,12 @@ describe("prototype-player scripted navigation capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toMatch(/^Rcode-proto-back=steps%3D2%26t%3D/)
+          expect(fakeWindow.location.hash).toMatch(/^Joker-proto-back=steps%3D2%26t%3D/)
         }
       )
     })
     it('captures inline location.hash prototype navigation handlers', () => {
-      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Joker-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const checkout = artifact('checkout', 'Checkout')
       const links = resolvePrototypeLinks(home, [home, checkout])
@@ -429,7 +429,7 @@ describe("prototype-player scripted navigation capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=%2Fcheckout')
+          expect(fakeWindow.location.hash).toBe('Joker-proto-nav=%2Fcheckout')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,
@@ -441,7 +441,7 @@ describe("prototype-player scripted navigation capture", () => {
       )
     })
     it('captures form submits and resolves them to a prototype screen', () => {
-      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Joker-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const checkout = artifact('checkout', 'Checkout')
       const links = resolvePrototypeLinks(home, [home, checkout])
@@ -470,7 +470,7 @@ describe("prototype-player scripted navigation capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=Checkout')
+          expect(fakeWindow.location.hash).toBe('Joker-proto-nav=Checkout')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,
@@ -482,7 +482,7 @@ describe("prototype-player scripted navigation capture", () => {
       )
     })
     it('captures form onsubmit prototype navigation handlers', () => {
-      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Joker-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const checkout = artifact('checkout', 'Checkout')
       const links = resolvePrototypeLinks(home, [home, checkout])
@@ -511,7 +511,7 @@ describe("prototype-player scripted navigation capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=Checkout')
+          expect(fakeWindow.location.hash).toBe('Joker-proto-nav=Checkout')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,

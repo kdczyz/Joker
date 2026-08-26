@@ -42,7 +42,7 @@ describe('runtime image attachment renderer bridge', () => {
       compression: { sourceBytes: 20, outputBytes: 3, fallbackBytes: 3, wasCompressed: true }
     }
     const upload = vi.fn(async () => success)
-    vi.stubGlobal('window', { RcodeGui: { uploadRuntimeImageAttachment: upload } })
+    vi.stubGlobal('window', { JokerGui: { uploadRuntimeImageAttachment: upload } })
 
     const result = await uploadRuntimeImageAttachment({
       source: { kind: 'clipboard' },

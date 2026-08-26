@@ -150,11 +150,11 @@ export function useExtensionContributionBootstrap(
     }
     void load()
     const onChanged = (): void => void load()
-    window.addEventListener('Rcode:extensions-changed', onChanged)
+    window.addEventListener('Joker:extensions-changed', onChanged)
     return () => {
       cancelled = true
       controller.abort()
-      window.removeEventListener('Rcode:extensions-changed', onChanged)
+      window.removeEventListener('Joker:extensions-changed', onChanged)
     }
   }, [locale, refreshKey, workspaceRoot])
 

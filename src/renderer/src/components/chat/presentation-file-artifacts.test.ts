@@ -17,8 +17,8 @@ describe('presentation file artifacts', () => {
       kind: 'powerpoint',
       extension: 'PPTX'
     })
-    expect(presentationArtifactKindForPath('brief.Rcode-ppt.HTML')).toEqual({
-      kind: 'Rcode-html',
+    expect(presentationArtifactKindForPath('brief.Joker-ppt.HTML')).toEqual({
+      kind: 'Joker-html',
       extension: 'HTML'
     })
     expect(presentationArtifactKindForPath('slides/brief.ppt')).toEqual({
@@ -56,7 +56,7 @@ describe('presentation file artifacts', () => {
         summary: 'presentation-apply',
         status: 'success',
         toolKind: 'file_change',
-        filePath: 'brief.Rcode-ppt.html',
+        filePath: 'brief.Joker-ppt.html',
         meta: {
           presentationArtifactProducer: PRESENTATION_STUDIO_ARTIFACT_PRODUCER,
           presentationArtifactSha256: HTML_SHA256
@@ -90,9 +90,9 @@ describe('presentation file artifacts', () => {
         byteSize: 4096
       },
       {
-        path: 'brief.Rcode-ppt.html',
-        name: 'brief.Rcode-ppt.html',
-        kind: 'Rcode-html',
+        path: 'brief.Joker-ppt.html',
+        name: 'brief.Joker-ppt.html',
+        kind: 'Joker-html',
         extension: 'HTML',
         contentSha256: HTML_SHA256
       }
@@ -178,15 +178,15 @@ describe('presentation file artifacts', () => {
       summary: 'write',
       status: 'success',
       toolKind: 'file_change',
-      filePath: 'evil.Rcode-ppt.html',
+      filePath: 'evil.Joker-ppt.html',
       meta: {
-        generatedFiles: [{ relativePath: 'also-evil.Rcode-ppt.html' }]
+        generatedFiles: [{ relativePath: 'also-evil.Joker-ppt.html' }]
       }
     }
     const trusted: ChatBlock = {
       ...untrusted,
       id: 'presentation-studio',
-      filePath: 'deck.Rcode-ppt.html',
+      filePath: 'deck.Joker-ppt.html',
       meta: {
         presentationArtifactProducer: PRESENTATION_STUDIO_ARTIFACT_PRODUCER,
         presentationArtifactSha256: HTML_SHA256
@@ -195,8 +195,8 @@ describe('presentation file artifacts', () => {
 
     expect(derivePresentationFileArtifacts([untrusted, trusted], '/workspace')).toEqual([
       expect.objectContaining({
-        path: 'deck.Rcode-ppt.html',
-        kind: 'Rcode-html',
+        path: 'deck.Joker-ppt.html',
+        kind: 'Joker-html',
         contentSha256: HTML_SHA256
       })
     ])
@@ -209,7 +209,7 @@ describe('presentation file artifacts', () => {
       summary: 'presentation-create',
       status: 'success',
       toolKind: 'file_change',
-      filePath: 'deck.Rcode-ppt.html',
+      filePath: 'deck.Joker-ppt.html',
       meta: { presentationArtifactProducer: PRESENTATION_STUDIO_ARTIFACT_PRODUCER }
     }
 

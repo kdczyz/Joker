@@ -24,7 +24,7 @@ import {
   cloudCodeSseToOpenAiSse,
   createCloudCodeStreamContext,
   openAiChatToCloudCodeBody
-} from '../../Rcode/src/adapters/model/cloudcode-openai-adapter.js'
+} from '../../Joker/src/adapters/model/cloudcode-openai-adapter.js'
 
 export type OpenAiProxyDeps = {
   store: JsonSettingsStore
@@ -106,7 +106,7 @@ export class OpenAiProxyServer {
   ): Promise<void> {
     // CORS + preflight (handy if a browser-based client calls the proxy).
     res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Rcode-Proxy-Token')
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Joker-Proxy-Token')
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS')
     if (req.method === 'OPTIONS') {
       res.writeHead(204).end()
@@ -123,7 +123,7 @@ export class OpenAiProxyServer {
       return
     }
     if (pathname === '/' || pathname === '/health') {
-      writeJson(res, 200, { ok: true, service: 'rcode-openai-proxy' })
+      writeJson(res, 200, { ok: true, service: 'joker-openai-proxy' })
       return
     }
     writeJson(res, 404, { error: { message: `Not found: ${req.method} ${pathname}` } })
@@ -141,7 +141,7 @@ export class OpenAiProxyServer {
 
   private requireAuth(req: IncomingMessage, proxy: OpenAiProxySettingsV1): boolean {
     if (!proxy.token) return true
-    const header = req.headers['x-Rcode-proxy-token']
+    const header = req.headers['x-Joker-proxy-token']
     const token = Array.isArray(header) ? header[0] : header
     return token === proxy.token
   }
@@ -169,7 +169,7 @@ export class OpenAiProxyServer {
     proxy: OpenAiProxySettingsV1
   ): Promise<void> {
     if (!this.requireAuth(req, proxy)) {
-      writeJson(res, 401, { error: { message: 'Missing or invalid X-Rcode-Proxy-Token' } })
+      writeJson(res, 401, { error: { message: 'Missing or invalid X-Joker-Proxy-Token' } })
       return
     }
 

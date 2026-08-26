@@ -2,9 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 test("long-term memories deduplicate, rank by query, expire, and reject credentials", async () => {
-  process.env.LOCAL_DATABASE_PATH = `/tmp/rcode-memory-db-${process.pid}-${Date.now()}.sqlite`;
+  process.env.LOCAL_DATABASE_PATH = `/tmp/joker-memory-db-${process.pid}-${Date.now()}.sqlite`;
   const { listMemories, saveMemory, searchMemories } = await import("./database");
-  const projectPath = `/tmp/rcode-memory-project-${process.pid}-${Date.now()}`;
+  const projectPath = `/tmp/joker-memory-project-${process.pid}-${Date.now()}`;
 
   const preferenceId = saveMemory(projectPath, "preference", "Use pnpm for this project", 4, { source: "skill" });
   const duplicateId = saveMemory(projectPath, "preference", "Use pnpm for this project", 2, { source: "manual" });

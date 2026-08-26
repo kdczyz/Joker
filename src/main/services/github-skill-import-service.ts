@@ -1,6 +1,6 @@
 import { importSkillsFromGitHub } from '../../shared/github-skill-import'
 import { saveGuiSkillPackage } from './skill-save-service'
-import type { SkillGithubImportResult } from '../../shared/Rcode-gui-api'
+import type { SkillGithubImportResult } from '../../shared/Joker-gui-api'
 
 export async function importGithubSkillsToRoot(input: {
   rootPath: string

@@ -10,7 +10,7 @@ type GitCheckpointAvailabilityCacheOptions = {
 /**
  * Temporarily suppresses checkpoint attempts after the host reports that Git
  * is unavailable. Entries expire so installing/fixing Git can recover without
- * restarting Rcode, and the LRU bound prevents workspace churn from growing a
+ * restarting Joker, and the LRU bound prevents workspace churn from growing a
  * renderer-process singleton forever.
  */
 export class GitCheckpointAvailabilityCache {

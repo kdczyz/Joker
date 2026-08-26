@@ -5,9 +5,9 @@ import {
   workspaceRootScopeKey
 } from '../../lib/workspace-path'
 
-export const SIDEBAR_ORDER_STORAGE_KEY = 'Rcode.sidebarOrder.v1'
-export const SIDEBAR_THREAD_DRAG_DATA_KEY = 'application/x-Rcode-thread-id'
-export const SIDEBAR_WORKSPACE_DRAG_DATA_KEY = 'application/x-Rcode-workspace-path'
+export const SIDEBAR_ORDER_STORAGE_KEY = 'Joker.sidebarOrder.v1'
+export const SIDEBAR_THREAD_DRAG_DATA_KEY = 'application/x-Joker-thread-id'
+export const SIDEBAR_WORKSPACE_DRAG_DATA_KEY = 'application/x-Joker-workspace-path'
 
 export type SidebarDropPosition = 'before' | 'after'
 

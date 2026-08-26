@@ -36,7 +36,7 @@ type QueueScreenDraftWriteOptions = {
 
 function currentDraftWriteApi(api?: DraftWriteApi): DraftWriteApi | undefined {
   if (api) return api
-  if (typeof window === 'undefined' || !window.RcodeGui) return undefined
+  if (typeof window === 'undefined' || !window.JokerGui) return undefined
   return { writeWorkspaceFile: (payload) => writeDesignWorkspaceFile(payload) }
 }
 

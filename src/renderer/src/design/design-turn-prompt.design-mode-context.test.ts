@@ -7,7 +7,7 @@ describe('design turn prompt design mode context', () => {
       target: 'canvas',
       mode: 'text',
       text: '做一套完整 CRM，包括登录、工作台、客户详情和设置',
-      artifactRelativePath: '.Rcode-design/doc/board.canvas.json',
+      artifactRelativePath: '.Joker-design/doc/board.canvas.json',
       workspaceRoot: '/workspace'
     })
 
@@ -18,7 +18,7 @@ describe('design turn prompt design mode context', () => {
     expect(prompt).toContain('normally call `design_system` with `operation: "create"` before `design_create_screen`')
     expect(prompt).toContain('This is a preferred sequence, not a hard gate')
     expect(prompt).toContain('DESIGN-SYSTEM CLAIMS MUST BE FACTUAL')
-    expect(prompt).toContain('Per-screen `.Rcode-design/.../DESIGN.md` notes')
+    expect(prompt).toContain('Per-screen `.Joker-design/.../DESIGN.md` notes')
     expect(prompt).toContain('ask one concise question with `user_input`')
     expect(prompt).toContain('prefer the fewest calls')
     expect(prompt).not.toContain('Design mode workflow contract:')
@@ -33,7 +33,7 @@ describe('design turn prompt design mode context', () => {
       target: 'canvas',
       mode: 'text',
       text: 'Sketch an API flow',
-      artifactRelativePath: '.Rcode-design/doc/board.canvas.json',
+      artifactRelativePath: '.Joker-design/doc/board.canvas.json',
       workspaceRoot: '/workspace',
       canvasSurface: 'code'
     })
@@ -50,7 +50,7 @@ describe('design turn prompt design mode context', () => {
       target: 'canvas' as const,
       mode: 'text' as const,
       text: 'Design a settings screen',
-      artifactRelativePath: '.Rcode-design/doc/board.canvas.json',
+      artifactRelativePath: '.Joker-design/doc/board.canvas.json',
       workspaceRoot: '/workspace',
       canvasDesignSystem: {
         tokens: {

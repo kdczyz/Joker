@@ -10,7 +10,7 @@ import { operationsFrom } from './extension.js'
 
 test('runtime declarations exactly match the Manifest', async () => {
   const manifest = JSON.parse(
-    await readFile(new URL('../../../Rcode-extension.json', import.meta.url), 'utf8')
+    await readFile(new URL('../../../Joker-extension.json', import.meta.url), 'utf8')
   ) as {
     main: string
     permissions: string[]
@@ -101,7 +101,7 @@ test('all tool schemas are strict, bounded, and side-effect classified', () => {
 
 test('every contributed command and tool schema passes the runtime compiler', async () => {
   const validatorUrl = new URL(
-    '../../../../../../Rcode/dist/extensions/json-schema-validator.js',
+    '../../../../../../Joker/dist/extensions/json-schema-validator.js',
     import.meta.url
   )
   const runtime = await import(validatorUrl.href) as {
@@ -156,7 +156,7 @@ test('main Agent apply calls may omit operationId and slide background defaults'
   const declaration = presentationToolDeclarations.find(({ id }) => id === 'presentation-apply')
   assert.ok(declaration)
   const validatorUrl = new URL(
-    '../../../../../../Rcode/dist/extensions/json-schema-validator.js',
+    '../../../../../../Joker/dist/extensions/json-schema-validator.js',
     import.meta.url
   )
   const runtime = await import(validatorUrl.href) as {
@@ -166,7 +166,7 @@ test('main Agent apply calls may omit operationId and slide background defaults'
     ): { assert(value: unknown, subject: string): void }
   }
   const input = {
-    path: 'learning-theme.Rcode-ppt.html',
+    path: 'learning-theme.Joker-ppt.html',
     expectedRevision: 1,
     operations: [{
       kind: 'slide.insert',
@@ -212,7 +212,7 @@ test('main Agent may apply bounded safe CSS to one presentation element', async 
   const declaration = presentationToolDeclarations.find(({ id }) => id === 'presentation-apply')
   assert.ok(declaration)
   const validatorUrl = new URL(
-    '../../../../../../Rcode/dist/extensions/json-schema-validator.js',
+    '../../../../../../Joker/dist/extensions/json-schema-validator.js',
     import.meta.url
   )
   const runtime = await import(validatorUrl.href) as {
@@ -222,7 +222,7 @@ test('main Agent may apply bounded safe CSS to one presentation element', async 
     ): { assert(value: unknown, subject: string): void }
   }
   const input = {
-    path: 'learning-theme.Rcode-ppt.html',
+    path: 'learning-theme.Joker-ppt.html',
     expectedRevision: 3,
     operations: [{
       kind: 'element.style',

@@ -43,7 +43,7 @@ export function ModuleManager({ modules, onChange, onClose }: Props): ReactEleme
     }
     let cancelled = false
     const handle = setTimeout(() => {
-      window.RcodeGui
+      window.JokerGui
         .checkWorkflowCode(selected.language, selected.code)
         .then((result) => {
           if (!cancelled) setCodeCheck(result)

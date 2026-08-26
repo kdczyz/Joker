@@ -3,7 +3,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultModelProviderProfile,
   defaultScheduleSettings,
@@ -13,7 +13,7 @@ import {
   type AppSettingsV1,
   type ModelProviderProfileV1
 } from '../shared/app-settings'
-import { RcodeRuntimeConfigChanged, runtimeSettingsApplyMode } from './runtime-settings-apply-mode'
+import { JokerRuntimeConfigChanged, runtimeSettingsApplyMode } from './runtime-settings-apply-mode'
 
 function settings(): AppSettingsV1 {
   return {
@@ -24,10 +24,10 @@ function settings(): AppSettingsV1 {
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      Rcode: defaultRcodeRuntimeSettings()
+      Joker: defaultJokerRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -76,8 +76,8 @@ function multiProviderSettings(): AppSettingsV1 {
       providers: [deepseek, codex, minimax]
     },
     agents: {
-      Rcode: {
-        ...base.agents.Rcode,
+      Joker: {
+        ...base.agents.Joker,
         providerId: codex.id,
         model: codex.models[0]!
       }
@@ -113,7 +113,7 @@ describe('runtimeSettingsApplyMode', () => {
     const prev = settings()
     const withModel = {
       ...prev,
-      agents: { Rcode: { ...prev.agents.Rcode, model: 'deepseek-reasoner' } }
+      agents: { Joker: { ...prev.agents.Joker, model: 'deepseek-reasoner' } }
     }
     const withProviderKey = {
       ...prev,
@@ -121,15 +121,15 @@ describe('runtimeSettingsApplyMode', () => {
     }
     const withApproval = {
       ...prev,
-      agents: { Rcode: { ...prev.agents.Rcode, approvalPolicy: 'never' as const, sandboxMode: 'read-only' as const } }
+      agents: { Joker: { ...prev.agents.Joker, approvalPolicy: 'never' as const, sandboxMode: 'read-only' as const } }
     }
     const withMedia = {
       ...prev,
       agents: {
-        Rcode: {
-          ...prev.agents.Rcode,
+        Joker: {
+          ...prev.agents.Joker,
           imageGeneration: {
-            ...prev.agents.Rcode.imageGeneration,
+            ...prev.agents.Joker.imageGeneration,
             enabled: true,
             providerId: 'deepseek',
             model: 'image-model'
@@ -140,10 +140,10 @@ describe('runtimeSettingsApplyMode', () => {
     const withImageResolution = {
       ...prev,
       agents: {
-        Rcode: {
-          ...prev.agents.Rcode,
+        Joker: {
+          ...prev.agents.Joker,
           imageGeneration: {
-            ...prev.agents.Rcode.imageGeneration,
+            ...prev.agents.Joker.imageGeneration,
             defaultResolution: '2K' as const
           }
         }
@@ -159,8 +159,8 @@ describe('runtimeSettingsApplyMode', () => {
     const withProjectGrant = {
       ...prev,
       agents: {
-        Rcode: {
-          ...prev.agents.Rcode,
+        Joker: {
+          ...prev.agents.Joker,
           projectConfig: {
             grants: [{ workspaceRoot: '/workspace/project', configDigest: 'a'.repeat(64) }]
           }
@@ -169,13 +169,13 @@ describe('runtimeSettingsApplyMode', () => {
     }
     const withMemory = {
       ...prev,
-      agents: { Rcode: { ...prev.agents.Rcode, memoryEnabled: true } }
+      agents: { Joker: { ...prev.agents.Joker, memoryEnabled: true } }
     }
     const withSubagents = {
       ...prev,
       agents: {
-        Rcode: {
-          ...prev.agents.Rcode,
+        Joker: {
+          ...prev.agents.Joker,
           subagents: {
             enabled: true,
             maxParallel: 5,
@@ -208,7 +208,7 @@ describe('runtimeSettingsApplyMode', () => {
     const next = updateProvider(prev, 'deepseek', { apiKey: 'sk-deepseek-new' })
     next.provider.apiKey = 'sk-deepseek-new'
 
-    expect(RcodeRuntimeConfigChanged(prev, next)).toBe(false)
+    expect(JokerRuntimeConfigChanged(prev, next)).toBe(false)
     expect(runtimeSettingsApplyMode(prev, next)).toBe('hot')
   })
 
@@ -280,22 +280,22 @@ describe('runtimeSettingsApplyMode', () => {
 
     expect(runtimeSettingsApplyMode(prev, {
       ...prev,
-      agents: { Rcode: { ...prev.agents.Rcode, port: prev.agents.Rcode.port + 1 } }
+      agents: { Joker: { ...prev.agents.Joker, port: prev.agents.Joker.port + 1 } }
     })).toBe('restart')
     expect(runtimeSettingsApplyMode(prev, {
       ...prev,
-      agents: { Rcode: { ...prev.agents.Rcode, dataDir: '/tmp/Rcode-next' } }
+      agents: { Joker: { ...prev.agents.Joker, dataDir: '/tmp/Joker-next' } }
     })).toBe('restart')
     expect(runtimeSettingsApplyMode(prev, {
       ...prev,
-      agents: { Rcode: { ...prev.agents.Rcode, runtimeToken: 'tok-next' } }
+      agents: { Joker: { ...prev.agents.Joker, runtimeToken: 'tok-next' } }
     })).toBe('restart')
     expect(runtimeSettingsApplyMode(prev, {
       ...prev,
       agents: {
-        Rcode: {
-          ...prev.agents.Rcode,
-          storage: { ...prev.agents.Rcode.storage, backend: 'file' as const }
+        Joker: {
+          ...prev.agents.Joker,
+          storage: { ...prev.agents.Joker.storage, backend: 'file' as const }
         }
       }
     })).toBe('restart')

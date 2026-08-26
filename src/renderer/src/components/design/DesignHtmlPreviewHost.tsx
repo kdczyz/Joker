@@ -178,13 +178,13 @@ export function useDesignHtmlPreview({
 
     const path = relativePath?.trim()
     if (!enabled || !workspaceRoot || !path) return
-    if (typeof window.RcodeGui?.authorizeWritePrototype !== 'function') {
+    if (typeof window.JokerGui?.authorizeWritePrototype !== 'function') {
       reportError('Prototype preview is unavailable.')
       return
     }
 
     const tryAuthorize = (): void => {
-      void window.RcodeGui
+      void window.JokerGui
         .authorizeWritePrototype({ path, workspaceRoot })
         .then((res) => {
           if (cancelled) return

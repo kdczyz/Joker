@@ -42,7 +42,7 @@ test("task graph: rejects cycles and duplicate ids", () => {
 
 test("task_graph tool: add → next → start → complete roundtrip with persistence", async () => {
   resetTaskGraphs();
-  const workspace = await mkdtemp(path.join(os.tmpdir(), "rcode-taskgraph-"));
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "joker-taskgraph-"));
   try {
     const context = { conversationId: "thread-1", workspaceRoot: workspace };
 
@@ -195,7 +195,7 @@ Explicit skill content for load_skill tests.
 }
 
 test("load_skill loads an explicit skill and lists valid ids on miss", async () => {
-  const projectPath = await mkdtemp(path.join(os.tmpdir(), "rcode-loadskill-"));
+  const projectPath = await mkdtemp(path.join(os.tmpdir(), "joker-loadskill-"));
   try {
     await writeTestSkill(projectPath);
     const loaded = await runLoadSkillTool({ skill_id: "load-me" }, projectPath);
@@ -217,7 +217,7 @@ test("load_skill loads an explicit skill and lists valid ids on miss", async () 
 });
 
 test("skill catalog prompt is sorted and lists descriptions", async () => {
-  const projectPath = await mkdtemp(path.join(os.tmpdir(), "rcode-catalog-"));
+  const projectPath = await mkdtemp(path.join(os.tmpdir(), "joker-catalog-"));
   try {
     await writeTestSkill(projectPath);
     const second = path.join(projectPath, ".agent", "skills", "aaa-second");
@@ -247,7 +247,7 @@ body
 // --- repo_map ---
 
 test("repo_map ranks files and reports totals on a small tree", async () => {
-  const workspace = await mkdtemp(path.join(os.tmpdir(), "rcode-repomap-"));
+  const workspace = await mkdtemp(path.join(os.tmpdir(), "joker-repomap-"));
   try {
     await mkdir(path.join(workspace, "src"), { recursive: true });
     await writeFile(path.join(workspace, "package.json"), JSON.stringify({ name: "demo" }));

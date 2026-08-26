@@ -11,16 +11,16 @@ const {
 } = require('./smoke-packaged-ocr.cjs')
 
 test('resolves a relative packaged resources override to an absolute path', async (t) => {
-  const root = await mkdtemp(join(tmpdir(), 'Rcode-packaged-ocr-'))
+  const root = await mkdtemp(join(tmpdir(), 'Joker-packaged-ocr-'))
   t.after(() => rm(root, { recursive: true, force: true }))
 
-  const resourcesDir = join(root, 'dist', 'mac-arm64', 'Rcode.app', 'Contents', 'Resources')
+  const resourcesDir = join(root, 'dist', 'mac-arm64', 'Joker.app', 'Contents', 'Resources')
   await mkdir(resourcesDir, { recursive: true })
 
   assert.equal(
     resolveResourcesDir({
       root,
-      environment: { RCODE_PACKAGED_RESOURCES_DIR: 'dist/mac-arm64/Rcode.app/Contents/Resources' }
+      environment: { JOKER_PACKAGED_RESOURCES_DIR: 'dist/mac-arm64/Joker.app/Contents/Resources' }
     }),
     resourcesDir
   )
@@ -28,24 +28,24 @@ test('resolves a relative packaged resources override to an absolute path', asyn
 
 test('reexecutes OCR loading through the packaged Electron ASAR runtime', () => {
   const invocation = createPackagedReexecInvocation({
-    runtimeExecutable: 'dist/mac-arm64/Rcode.app/Contents/MacOS/Rcode',
-    resourcesDir: 'dist/mac-arm64/Rcode.app/Contents/Resources',
+    runtimeExecutable: 'dist/mac-arm64/Joker.app/Contents/MacOS/Joker',
+    resourcesDir: 'dist/mac-arm64/Joker.app/Contents/Resources',
     scriptPath: 'scripts/smoke-packaged-ocr.cjs',
     environment: { HOME: '/isolated' }
   })
 
-  assert.equal(invocation.command, resolve('dist/mac-arm64/Rcode.app/Contents/MacOS/Rcode'))
+  assert.equal(invocation.command, resolve('dist/mac-arm64/Joker.app/Contents/MacOS/Joker'))
   assert.deepEqual(invocation.args, [resolve('scripts/smoke-packaged-ocr.cjs')])
   assert.equal(invocation.options.shell, false)
   assert.equal(invocation.options.env.ELECTRON_RUN_AS_NODE, '1')
-  assert.equal(invocation.options.env.RCODE_DISABLE_OS_CREDENTIAL_STORE, '1')
-  assert.equal(invocation.options.env.RCODE_PACKAGED_OCR_SMOKE_REEXEC, '1')
+  assert.equal(invocation.options.env.JOKER_DISABLE_OS_CREDENTIAL_STORE, '1')
+  assert.equal(invocation.options.env.JOKER_PACKAGED_OCR_SMOKE_REEXEC, '1')
   assert.equal(
-    invocation.options.env.RCODE_PACKAGED_RESOURCES_DIR,
-    resolve('dist/mac-arm64/Rcode.app/Contents/Resources')
+    invocation.options.env.JOKER_PACKAGED_RESOURCES_DIR,
+    resolve('dist/mac-arm64/Joker.app/Contents/Resources')
   )
   assert.equal(
-    packagedNodeModulesPath(invocation.options.env.RCODE_PACKAGED_RESOURCES_DIR),
-    resolve('dist/mac-arm64/Rcode.app/Contents/Resources/app.asar/node_modules')
+    packagedNodeModulesPath(invocation.options.env.JOKER_PACKAGED_RESOURCES_DIR),
+    resolve('dist/mac-arm64/Joker.app/Contents/Resources/app.asar/node_modules')
   )
 })

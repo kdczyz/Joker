@@ -1,11 +1,11 @@
 ---
 name: auto-learning
-description: Capture verified, reusable lessons from completed Rcode tasks. Use when explicitly reviewing project learnings or immediately saving a confirmed user preference, project constraint, reliable fix, reusable pattern, or repeatable workflow. 自动学习并沉淀经过验证的可复用经验。
+description: Capture verified, reusable lessons from completed Joker tasks. Use when explicitly reviewing project learnings or immediately saving a confirmed user preference, project constraint, reliable fix, reusable pattern, or repeatable workflow. 自动学习并沉淀经过验证的可复用经验。
 ---
 
 # Auto Learning
 
-Save concise lessons that improve later work in the same project. Rcode also runs an independent verifier after eligible completed tasks, so do not force a record merely because this skill is loaded.
+Save concise lessons that improve later work in the same project. Joker also runs an independent verifier after eligible completed tasks, so do not force a record merely because this skill is loaded.
 
 ## Learning Workflow
 

@@ -7,7 +7,7 @@ const AUDIO_BASE64 = Buffer.from('fake-wav-bytes').toString('base64')
 function settingsWithSpeech(overrides: Record<string, unknown> = {}): AppSettingsV1 {
   return {
     agents: {
-      Rcode: {
+      Joker: {
         speechToText: {
           enabled: true,
           providerId: '',

@@ -23,7 +23,7 @@ import {
   type LocalWhisperModelProgress,
   type LocalWhisperModelStatus
 } from '../../shared/local-whisper'
-import type { RcodeSpeechToTextSettingsV1 } from '../../shared/app-settings'
+import type { JokerSpeechToTextSettingsV1 } from '../../shared/app-settings'
 import type { SpeechTranscriptionRequest } from '../../shared/speech-to-text'
 
 const WHISPER_OUTPUT_EMPTY_MESSAGE = 'local whisper transcription result is empty'
@@ -193,7 +193,7 @@ export async function deleteLocalWhisperModel(
 
 export async function transcribeViaLocalWhisper(
   request: SpeechTranscriptionRequest,
-  speechToText: RcodeSpeechToTextSettingsV1
+  speechToText: JokerSpeechToTextSettingsV1
 ): Promise<string> {
   if (whisperShuttingDown) throw new Error('local Whisper service is shutting down')
   const modelId = normalizeModelId(speechToText.model)
@@ -202,7 +202,7 @@ export async function transcribeViaLocalWhisper(
     throw new Error('local Whisper model is not downloaded')
   }
   const runner = await resolveWhisperRunner()
-  const tempBase = join(tmpdir(), `Rcode-whisper-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`)
+  const tempBase = join(tmpdir(), `Joker-whisper-${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}`)
   const inputPath = `${tempBase}.wav`
   const outputBase = `${tempBase}-out`
   const outputPath = `${outputBase}.txt`
@@ -424,7 +424,7 @@ function localWhisperDownloadUserAgent(): string {
   } catch {
     version = 'dev'
   }
-  return `Rcode/${version} local-whisper`
+  return `Joker/${version} local-whisper`
 }
 
 function baseStatus(
@@ -489,7 +489,7 @@ function localWhisperModelMetadataPath(modelId: LocalWhisperModelId): string {
 }
 
 async function resolveWhisperRunner(): Promise<RunnerCommand> {
-  const explicit = process.env.RCODE_WHISPER_CLI?.trim()
+  const explicit = process.env.JOKER_WHISPER_CLI?.trim()
   if (explicit) return { command: explicit, argsPrefix: [] }
   const executable = process.platform === 'win32' ? 'whisper-cli.exe' : 'whisper-cli'
   const platformDir = `${process.platform}-${process.arch}`

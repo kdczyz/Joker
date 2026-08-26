@@ -48,12 +48,12 @@ async function main() {
   })
 
   const unpackedRoot = join(resourcesDir, 'app.asar.unpacked')
-  const runtimeEntry = join(unpackedRoot, 'Rcode', 'dist', 'cli', 'serve-entry.js')
+  const runtimeEntry = join(unpackedRoot, 'Joker', 'dist', 'cli', 'serve-entry.js')
   validatePackagedResources(resourcesDir, unpackedRoot)
 
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-packaged-extension-desktop-smoke-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-packaged-extension-desktop-smoke-'))
   const home = join(temporaryRoot, 'home')
-  const profile = join(home, '.Rcode', 'data')
+  const profile = join(home, '.Joker', 'data')
   const workspaceParent = desktopSmokeWorkspaceParent()
   await mkdir(workspaceParent, { recursive: true })
   const workspaceRoot = await mkdtemp(join(workspaceParent, 'workspace-'))
@@ -83,7 +83,7 @@ async function main() {
     explicitUserData: userData
   }).map(async (directory) => {
     await mkdir(directory, { recursive: true })
-    await writeFile(join(directory, 'Rcode-settings.json'), desktopSettings)
+    await writeFile(join(directory, 'Joker-settings.json'), desktopSettings)
   }))
 
   const isolatedEnvironment = createIsolatedEnvironment(process.env, {
@@ -106,7 +106,7 @@ async function main() {
       temporaryRoot,
       profile,
       webviewConnectUrls: [networkCanary.url],
-      runCli: (args) => runPackagedRcode(
+      runCli: (args) => runPackagedJoker(
         desktopLaunchSelection.cliExecutable,
         runtimeEntry,
         args,
@@ -127,7 +127,7 @@ async function main() {
       'index.html'
     )
     const installedWebviewBody = await readFile(installedWebview, 'utf8')
-    if (!installedWebviewBody.includes('data-Rcode-packaged-webview-smoke="ready"')) {
+    if (!installedWebviewBody.includes('data-Joker-packaged-webview-smoke="ready"')) {
       throw new Error('Installed desktop smoke fixture is missing its Webview body marker')
     }
     if (!installedWebviewBody.includes(`connect-src ${networkCanary.origin}`)) {
@@ -186,7 +186,7 @@ async function main() {
     const workbenchTarget = await waitForTarget(
       cdp,
       isWorkbenchTarget,
-      'packaged Rcode workbench',
+      'packaged Joker workbench',
       timeoutMs,
       () => processState(desktopProcess)
     )
@@ -213,7 +213,7 @@ async function main() {
     const guestTarget = await waitForTarget(
       cdp,
       isExtensionGuestTarget,
-      `Rcode-extension guest target for ${EXTENSION_ID}`,
+      `Joker-extension guest target for ${EXTENSION_ID}`,
       timeoutMs,
       () => processState(desktopProcess)
     )
@@ -251,9 +251,9 @@ async function main() {
           ? 'explicit host Electron with packaged app.asar'
           : 'normal packaged Electron launch'}, ` +
       `CDP contribution click, ${guestTarget.type} guest, body marker, ` +
-      'narrow RcodeExtension bridge, Theme and View-state round-trips, sender-bound Rcode-media playback/seek and image load, ' +
+      'narrow JokerExtension bridge, Theme and View-state round-trips, sender-bound Joker-media playback/seek and image load, ' +
       'copied URL, arbitrary file URL, post-release, and stale View Session denial, ' +
-      'hidden RcodeGui/require/process, ' +
+      'hidden JokerGui/require/process, ' +
       'Host-blocked loopback fetch, and user-gesture popup denial without a new target.\n'
     )
   } catch (error) {
@@ -274,7 +274,7 @@ async function main() {
       await waitForPortsClosed([networkCanary.port], 2_000)
         .catch((error) => cleanupErrors.push(error))
     }
-    if (process.env.RCODE_KEEP_PACKAGED_EXTENSION_DESKTOP_SMOKE === '1') {
+    if (process.env.JOKER_KEEP_PACKAGED_EXTENSION_DESKTOP_SMOKE === '1') {
       process.stderr.write(`Preserved packaged desktop smoke profile: ${temporaryRoot}\n`)
       process.stderr.write(`Preserved packaged desktop smoke workspace: ${workspaceRoot}\n`)
     } else {
@@ -301,7 +301,7 @@ async function main() {
 }
 
 function desktopSmokeWorkspaceParent(sourceRoot = resolve(__dirname, '..')) {
-  return join(sourceRoot, 'dist', '.Rcode-desktop-smoke')
+  return join(sourceRoot, 'dist', '.Joker-desktop-smoke')
 }
 
 function desktopSmokeSettings(runtimePort, workspaceRoot, dataDir) {
@@ -312,7 +312,7 @@ function desktopSmokeSettings(runtimePort, workspaceRoot, dataDir) {
     version: 1,
     workspaceRoot,
     agents: {
-      Rcode: {
+      Joker: {
         apiKey: 'packaged-desktop-smoke-placeholder',
         baseUrl: 'https://invalid.example',
         providerId: 'deepseek',
@@ -325,7 +325,7 @@ function desktopSmokeSettings(runtimePort, workspaceRoot, dataDir) {
 }
 
 async function grantSmokeWorkspaceTrust(unpackedRoot, profile, workspaceRoot) {
-  const modulePath = join(unpackedRoot, 'Rcode', 'dist', 'extensions', 'index.js')
+  const modulePath = join(unpackedRoot, 'Joker', 'dist', 'extensions', 'index.js')
   const extensionModule = await import(
     `${pathToFileURL(modulePath).href}?desktop-smoke=${Date.now()}-${Math.random()}`
   )
@@ -493,8 +493,8 @@ function resolveDesktopLaunchSelection({
 
 function desktopResourceCandidates(platform = process.platform, arch = process.arch) {
   if (platform === 'darwin') {
-    if (arch === 'arm64') return ['dist/mac-arm64/Rcode.app/Contents/Resources']
-    if (arch === 'x64') return ['dist/mac/Rcode.app/Contents/Resources']
+    if (arch === 'arm64') return ['dist/mac-arm64/Joker.app/Contents/Resources']
+    if (arch === 'x64') return ['dist/mac/Joker.app/Contents/Resources']
     return []
   }
   if (platform === 'win32') return ['dist/win-unpacked/resources']
@@ -511,9 +511,9 @@ function resolvedDesktopResourceCandidates(
 }
 
 function desktopUserDataCandidates({ platform, home, appData, explicitUserData }) {
-  const candidates = new Set([explicitUserData, join(appData, 'Rcode')])
-  if (platform === 'darwin') candidates.add(join(home, 'Library', 'Application Support', 'Rcode'))
-  if (platform === 'linux') candidates.add(join(home, '.config', 'Rcode'))
+  const candidates = new Set([explicitUserData, join(appData, 'Joker')])
+  if (platform === 'darwin') candidates.add(join(home, 'Library', 'Application Support', 'Joker'))
+  if (platform === 'linux') candidates.add(join(home, '.config', 'Joker'))
   return [...candidates]
 }
 
@@ -546,8 +546,8 @@ function createIsolatedEnvironment(environment, paths) {
     TMPDIR: paths.temporaryDirectory,
     TMP: paths.temporaryDirectory,
     TEMP: paths.temporaryDirectory,
-    RCODE_PACKAGED_EXTENSION_DESKTOP_SMOKE: '1',
-    RCODE_DISABLE_OS_CREDENTIAL_STORE: '1',
+    JOKER_PACKAGED_EXTENSION_DESKTOP_SMOKE: '1',
+    JOKER_DISABLE_OS_CREDENTIAL_STORE: '1',
     NO_AT_BRIDGE: '1',
     ELECTRON_ENABLE_LOGGING: '1',
     NODE_ENV: 'production'
@@ -560,7 +560,7 @@ function scrubDesktopEnvironment(environment) {
   const exactOverrides = new Set([
     'ELECTRON_RENDERER_URL',
     'ELECTRON_RUN_AS_NODE',
-    'RCODE_PACKAGED_EXTENSION_SMOKE_REEXEC',
+    'JOKER_PACKAGED_EXTENSION_SMOKE_REEXEC',
     'NODE_OPTIONS',
     'NODE_PATH',
     'VITE_DEV_SERVER_URL',
@@ -569,9 +569,9 @@ function scrubDesktopEnvironment(environment) {
   for (const key of Object.keys(result)) {
     if (
       exactOverrides.has(key) ||
-      (key.startsWith('RCODE_') &&
-        key !== 'RCODE_PACKAGED_EXTENSION_DESKTOP_SMOKE' &&
-        key !== 'RCODE_DISABLE_OS_CREDENTIAL_STORE') ||
+      (key.startsWith('JOKER_') &&
+        key !== 'JOKER_PACKAGED_EXTENSION_DESKTOP_SMOKE' &&
+        key !== 'JOKER_DISABLE_OS_CREDENTIAL_STORE') ||
       key.startsWith('DEEPSEEK_')
     ) {
       delete result[key]
@@ -606,7 +606,7 @@ function platformDesktopArguments(platform = process.platform) {
   return ['--disable-gpu', '--disable-dev-shm-usage']
 }
 
-function runPackagedRcode(executable, runtimeEntry, args, environment, timeoutMs = DEFAULT_TIMEOUT_MS) {
+function runPackagedJoker(executable, runtimeEntry, args, environment, timeoutMs = DEFAULT_TIMEOUT_MS) {
   const result = spawnSync(executable, [runtimeEntry, ...args], {
     cwd: process.cwd(),
     env: { ...environment, ELECTRON_RUN_AS_NODE: '1' },
@@ -617,13 +617,13 @@ function runPackagedRcode(executable, runtimeEntry, args, environment, timeoutMs
     windowsHide: true
   })
   if (result.error?.code === 'ETIMEDOUT') {
-    throw new Error(`Packaged Rcode command timed out after ${timeoutMs} ms: ${args.join(' ')}`)
+    throw new Error(`Packaged Joker command timed out after ${timeoutMs} ms: ${args.join(' ')}`)
   }
   if (result.error) throw result.error
   if (result.status !== 0) {
     const exitReason = result.signal ?? result.status ?? 'unknown exit'
     throw new Error([
-      `Packaged Rcode command failed (${exitReason}): ${args.join(' ')}`,
+      `Packaged Joker command failed (${exitReason}): ${args.join(' ')}`,
       result.stdout,
       result.stderr
     ].filter(Boolean).join('\n'))
@@ -809,12 +809,12 @@ function isExtensionGuestTarget(target) {
     const url = new URL(target.url)
     const queryKeys = [...url.searchParams.keys()]
     return (
-      url.protocol === 'Rcode-extension:' &&
+      url.protocol === 'Joker-extension:' &&
       url.hostname === EXTENSION_ID &&
       url.pathname === '/dist/webview/index.html' &&
       queryKeys.length === 1 &&
-      queryKeys[0] === 'RcodeViewSession' &&
-      Boolean(url.searchParams.get('RcodeViewSession')) &&
+      queryKeys[0] === 'JokerViewSession' &&
+      Boolean(url.searchParams.get('JokerViewSession')) &&
       url.hash === ''
     )
   } catch {
@@ -944,7 +944,7 @@ async function synchronizeWorkbenchContributionDiscovery({
         params: {
           expression: `(async () => {
             const root = document.getElementById('root')
-            const bridge = globalThis.RcodeGui
+            const bridge = globalThis.JokerGui
             if (!root?.hasChildNodes() || !bridge || typeof bridge.extensionGetWorkbench !== 'function') {
               return null
             }
@@ -980,7 +980,7 @@ async function synchronizeWorkbenchContributionDiscovery({
     params: {
       expression: `(() => {
         for (const delayMs of ${JSON.stringify(WORKBENCH_DISCOVERY_RETRY_DELAYS_MS)}) {
-          window.setTimeout(() => window.dispatchEvent(new Event('Rcode:extensions-changed')), delayMs)
+          window.setTimeout(() => window.dispatchEvent(new Event('Joker:extensions-changed')), delayMs)
         }
         return true
       })()`,
@@ -1184,27 +1184,27 @@ async function inspectGuestSecurity({
   )
 
   await sendGuest('Page.enable', {}, 'enabling the Extension guest page domain')
-  // Prove sender-bound Rcode-media loading and seeking under the production CSP
+  // Prove sender-bound Joker-media loading and seeking under the production CSP
   // before the separate Host network-filter test intentionally bypasses CSP.
   const mediaPlaybackResult = await waitForSuccessfulGuestInspection({
     inspect: () => inspectGuestMediaPlayback(
       cdp,
       session.sessionId,
-      (method, params) => sendGuest(method, params, 'loading sender-bound Rcode-media playback')
+      (method, params) => sendGuest(method, params, 'loading sender-bound Joker-media playback')
     ),
     isSuccessful: (result) => result?.mediaPlaybackMode === 'ok',
     timeoutMs,
-    description: 'sender-bound Rcode-media playback readiness'
+    description: 'sender-bound Joker-media playback readiness'
   })
   const imagePlaybackResult = await waitForSuccessfulGuestInspection({
     inspect: () => inspectGuestImagePlayback(
       cdp,
       session.sessionId,
-      (method, params) => sendGuest(method, params, 'loading a sender-bound Rcode-media image')
+      (method, params) => sendGuest(method, params, 'loading a sender-bound Joker-media image')
     ),
     isSuccessful: (result) => result?.imagePlaybackMode === 'ok',
     timeoutMs,
-    description: 'sender-bound Rcode-media image readiness'
+    description: 'sender-bound Joker-media image readiness'
   })
 
   // The protocol response carries the production `connect-src 'none'` baseline in
@@ -1237,11 +1237,11 @@ async function inspectGuestSecurity({
       cdp,
       workbenchSession.sessionId,
       mediaPlaybackResult.mediaLeaseUrl,
-      'checking a copied Rcode-media URL from the workbench sender',
+      'checking a copied Joker-media URL from the workbench sender',
       (method, params) => sendWorkbench(
         method,
         params,
-        'checking a copied Rcode-media URL from the workbench sender'
+        'checking a copied Joker-media URL from the workbench sender'
       )
     )
     const arbitraryLocalPathMode = await inspectMediaUrlFetch(
@@ -1265,11 +1265,11 @@ async function inspectGuestSecurity({
       cdp,
       session.sessionId,
       mediaPlaybackResult.mediaLeaseUrl,
-      'checking a released Rcode-media URL from its original guest',
+      'checking a released Joker-media URL from its original guest',
       (method, params) => sendGuest(
         method,
         params,
-        'checking a released Rcode-media URL from its original guest'
+        'checking a released Joker-media URL from its original guest'
       )
     )
     mediaIsolationResult = {
@@ -1299,9 +1299,9 @@ async function inspectGuestSecurity({
     const evaluated = await sendGuest('Runtime.evaluate', {
       expression: `(async () => {
         const bridgeMethods = ['request', 'notify', 'onNotification', 'registerHandler', 'dispose']
-          .filter((name) => typeof globalThis.RcodeExtension?.[name] === 'function')
-        const bridgeOwnKeys = globalThis.RcodeExtension && typeof globalThis.RcodeExtension === 'object'
-          ? Reflect.ownKeys(globalThis.RcodeExtension)
+          .filter((name) => typeof globalThis.JokerExtension?.[name] === 'function')
+        const bridgeOwnKeys = globalThis.JokerExtension && typeof globalThis.JokerExtension === 'object'
+          ? Reflect.ownKeys(globalThis.JokerExtension)
               .map((key) => typeof key === 'symbol'
                 ? { kind: 'symbol', name: String(key.description ?? '') }
                 : { kind: 'string', name: key })
@@ -1326,9 +1326,9 @@ async function inspectGuestSecurity({
         let theme = null
         let viewStateRoundTripMode = 'unavailable'
         let viewState = null
-        if (typeof globalThis.RcodeExtension?.request === 'function') {
+        if (typeof globalThis.JokerExtension?.request === 'function') {
           const themeOutcome = await bounded(
-            globalThis.RcodeExtension.request('ui.getTheme', {}, { timeoutMs: 5_000 })
+            globalThis.JokerExtension.request('ui.getTheme', {}, { timeoutMs: 5_000 })
           )
           bridgeRequestMode = themeOutcome.mode === 'ok' && themeOutcome.result && typeof themeOutcome.result === 'object'
             ? 'ok'
@@ -1341,12 +1341,12 @@ async function inspectGuestSecurity({
             nested: { count: 1, enabled: true }
           }
           const viewStateOutcome = await bounded((async () => {
-            await globalThis.RcodeExtension.request(
+            await globalThis.JokerExtension.request(
               'ui.setViewState',
               { value: expectedViewState },
               { timeoutMs: 5_000 }
             )
-            return globalThis.RcodeExtension.request('ui.getViewState', {}, { timeoutMs: 5_000 })
+            return globalThis.JokerExtension.request('ui.getViewState', {}, { timeoutMs: 5_000 })
           })())
           viewStateRoundTripMode = viewStateOutcome.mode
           if (viewStateOutcome.mode === 'ok') viewState = viewStateOutcome.result
@@ -1378,14 +1378,14 @@ async function inspectGuestSecurity({
 
         return {
           href: globalThis.location.href,
-          marker: document.querySelector('[data-Rcode-packaged-webview-smoke="ready"]')?.textContent?.trim() ?? null,
+          marker: document.querySelector('[data-Joker-packaged-webview-smoke="ready"]')?.textContent?.trim() ?? null,
           bridgeMethods,
           bridgeOwnKeys,
           bridgeRequestMode,
           theme,
           viewStateRoundTripMode,
           viewState,
-          hasRcodeGui: 'RcodeGui' in globalThis,
+          hasJokerGui: 'JokerGui' in globalThis,
           hasElectron: 'electron' in globalThis,
           hasIpcRenderer: 'ipcRenderer' in globalThis,
           hasBuffer: 'Buffer' in globalThis,
@@ -1455,7 +1455,7 @@ async function runGuestAsyncInspection({
   description
 }) {
   guestAsyncInspectionSequence += 1
-  const resultKey = `__RcodePackagedGuestInspection${guestAsyncInspectionSequence}`
+  const resultKey = `__JokerPackagedGuestInspection${guestAsyncInspectionSequence}`
   const serializedKey = JSON.stringify(resultKey)
   const send = (method, params) => sendCommand
     ? sendCommand(method, params)
@@ -1511,13 +1511,13 @@ async function runGuestAsyncInspection({
 async function inspectGuestImagePlayback(cdp, sessionId, sendCommand) {
   const params = {
     expression: `(async () => {
-      if (typeof globalThis.RcodeExtension?.request !== 'function') {
+      if (typeof globalThis.JokerExtension?.request !== 'function') {
         return { imagePlaybackMode: 'unavailable', imagePlayback: null }
       }
       let image = null
       let lease = null
       try {
-        lease = await globalThis.RcodeExtension.request(
+        lease = await globalThis.JokerExtension.request(
           'media.openViewResource',
           { handleId: ${JSON.stringify(MEDIA_IMAGE_HANDLE_ID)} },
           { timeoutMs: 5_000 }
@@ -1538,7 +1538,7 @@ async function inspectGuestImagePlayback(cdp, sessionId, sendCommand) {
         })
         let imageReleaseMode = 'ok'
         try {
-          await globalThis.RcodeExtension.request(
+          await globalThis.JokerExtension.request(
             'media.release',
             { resource: 'lease', leaseId: lease.leaseId },
             { timeoutMs: 5_000 }
@@ -1558,7 +1558,7 @@ async function inspectGuestImagePlayback(cdp, sessionId, sendCommand) {
         }
       } catch (error) {
         if (lease?.leaseId) {
-          await globalThis.RcodeExtension.request(
+          await globalThis.JokerExtension.request(
             'media.release',
             { resource: 'lease', leaseId: lease.leaseId },
             { timeoutMs: 5_000 }
@@ -1585,21 +1585,21 @@ async function inspectGuestImagePlayback(cdp, sessionId, sendCommand) {
     expression: params.expression,
     userGesture: true,
     timeoutMs: GUEST_MEDIA_READY_TIMEOUT_MS,
-    description: 'loading a sender-bound Rcode-media image under production CSP'
+    description: 'loading a sender-bound Joker-media image under production CSP'
   })
 }
 
 async function inspectGuestMediaPlayback(cdp, sessionId, sendCommand) {
   const params = {
     expression: `(async () => {
-      if (typeof globalThis.RcodeExtension?.request !== 'function') {
+      if (typeof globalThis.JokerExtension?.request !== 'function') {
         return { mediaPlaybackMode: 'unavailable', mediaPlayback: null }
       }
       let audio = null
       let lease = null
       let stage = 'open-lease'
       try {
-        lease = await globalThis.RcodeExtension.request(
+        lease = await globalThis.JokerExtension.request(
           'media.openViewResource',
           { handleId: ${JSON.stringify(MEDIA_PLAYBACK_HANDLE_ID)} },
           { timeoutMs: 5_000 }
@@ -1661,7 +1661,7 @@ async function inspectGuestMediaPlayback(cdp, sessionId, sendCommand) {
           }
         }
         if (lease?.leaseId) {
-          await globalThis.RcodeExtension.request(
+          await globalThis.JokerExtension.request(
             'media.release',
             { resource: 'lease', leaseId: lease.leaseId },
             { timeoutMs: 5_000 }
@@ -1685,7 +1685,7 @@ async function inspectGuestMediaPlayback(cdp, sessionId, sendCommand) {
     expression: params.expression,
     userGesture: true,
     timeoutMs: GUEST_MEDIA_READY_TIMEOUT_MS,
-    description: 'loading sender-bound Rcode-media playback under production CSP'
+    description: 'loading sender-bound Joker-media playback under production CSP'
   })
 }
 
@@ -1700,8 +1700,8 @@ async function waitForGuestReady(cdp, sessionId, timeoutMs, readProcessState, se
           location: location.href,
           title: document.title,
           body: document.body?.innerText?.slice(0, 1_024) ?? '',
-          marker: document.querySelector('[data-Rcode-packaged-webview-smoke="ready"]')?.textContent?.trim() ?? null,
-          bridge: typeof globalThis.RcodeExtension === 'object'
+          marker: document.querySelector('[data-Joker-packaged-webview-smoke="ready"]')?.textContent?.trim() ?? null,
+          bridge: typeof globalThis.JokerExtension === 'object'
         }))()`,
         returnByValue: true
       }
@@ -1711,7 +1711,7 @@ async function waitForGuestReady(cdp, sessionId, timeoutMs, readProcessState, se
       const value = evaluationValue(evaluated, 'waiting for the extension guest')
       lastGuestState = value
       return value?.readyState === 'complete' && value.marker === WEBVIEW_MARKER && value.bridge
-    }, { timeoutMs, description: 'loaded Rcode-extension guest bridge and body marker' })
+    }, { timeoutMs, description: 'loaded Joker-extension guest bridge and body marker' })
   } catch (error) {
     throw new Error(
       `${error instanceof Error ? error.message : String(error)}; ` +
@@ -1753,7 +1753,7 @@ async function releaseGuestMediaLease(cdp, sessionId, leaseId, sendCommand) {
   const params = {
     expression: `(async () => {
       try {
-        await globalThis.RcodeExtension.request(
+        await globalThis.JokerExtension.request(
           'media.release',
           { resource: 'lease', leaseId: ${JSON.stringify(leaseId)} },
           { timeoutMs: 5_000 }
@@ -1774,7 +1774,7 @@ async function releaseGuestMediaLease(cdp, sessionId, leaseId, sendCommand) {
 
 async function createGuestMediaLease(cdp, sessionId, sendCommand) {
   const params = {
-    expression: `(async () => globalThis.RcodeExtension.request(
+    expression: `(async () => globalThis.JokerExtension.request(
       'media.openViewResource',
       { handleId: ${JSON.stringify(MEDIA_PLAYBACK_HANDLE_ID)} },
       { timeoutMs: 5_000 }
@@ -1851,7 +1851,7 @@ async function assertStaleViewSessionMediaBlocked({
   const replacementTarget = await waitForTarget(
     cdp,
     (target) => isExtensionGuestTarget(target) && target.targetId !== closedGuestTargetId,
-    'replacement Rcode-extension guest for stale View Session validation',
+    'replacement Joker-extension guest for stale View Session validation',
     timeoutMs,
     readProcessState
   )
@@ -1902,7 +1902,7 @@ async function assertStaleViewSessionMediaBlocked({
   )
   if (staleViewSessionMode !== 'blocked') {
     throw new Error(
-      `Stale View Session reused a Rcode-media URL: ${String(staleViewSessionMode)}`
+      `Stale View Session reused a Joker-media URL: ${String(staleViewSessionMode)}`
     )
   }
 }
@@ -1940,16 +1940,16 @@ function assertGuestSecurityResult(result, networkCanaryRequests = 0) {
   }
   const expectedMethods = ['request', 'notify', 'onNotification', 'registerHandler', 'dispose']
   if (JSON.stringify(result.bridgeMethods) !== JSON.stringify(expectedMethods)) {
-    throw new Error(`RcodeExtension bridge is missing methods: ${JSON.stringify(result.bridgeMethods)}`)
+    throw new Error(`JokerExtension bridge is missing methods: ${JSON.stringify(result.bridgeMethods)}`)
   }
   const expectedOwnKeys = [...expectedMethods]
     .sort()
     .map((name) => ({ kind: 'string', name }))
   if (JSON.stringify(result.bridgeOwnKeys) !== JSON.stringify(expectedOwnKeys)) {
-    throw new Error(`RcodeExtension bridge exposes unexpected own keys: ${JSON.stringify(result.bridgeOwnKeys)}`)
+    throw new Error(`JokerExtension bridge exposes unexpected own keys: ${JSON.stringify(result.bridgeOwnKeys)}`)
   }
   if (result.bridgeRequestMode !== 'ok') {
-    throw new Error(`RcodeExtension bridge request round-trip failed: ${String(result.bridgeRequestMode)}`)
+    throw new Error(`JokerExtension bridge request round-trip failed: ${String(result.bridgeRequestMode)}`)
   }
   assertTheme(result.theme)
   const expectedViewState = {
@@ -1965,13 +1965,13 @@ function assertGuestSecurityResult(result, networkCanaryRequests = 0) {
     JSON.stringify(result.viewState) !== JSON.stringify(expectedViewState)
   ) {
     throw new Error(
-      `RcodeExtension runtime View-state round-trip failed: ` +
+      `JokerExtension runtime View-state round-trip failed: ` +
       `${String(result.viewStateRoundTripMode)} ${JSON.stringify(result.viewState)}`
     )
   }
   if (
     result.mediaPlaybackMode !== 'ok' ||
-    result.mediaPlayback?.scheme !== 'Rcode-media:' ||
+    result.mediaPlayback?.scheme !== 'Joker-media:' ||
     !Number.isFinite(result.mediaPlayback?.duration) ||
     result.mediaPlayback.duration <= 0 ||
     result.mediaPlayback.currentTime < 0.4 ||
@@ -1979,20 +1979,20 @@ function assertGuestSecurityResult(result, networkCanaryRequests = 0) {
     typeof result.mediaPlayback.leaseId !== 'string'
   ) {
     throw new Error(
-      `Rcode-media desktop playback/seek failed: ` +
+      `Joker-media desktop playback/seek failed: ` +
       `${String(result.mediaPlaybackMode)} ${JSON.stringify(result.mediaPlayback)} ` +
       `${JSON.stringify(result.mediaPlaybackError ?? null)}`
     )
   }
   if (
     result.imagePlaybackMode !== 'ok' ||
-    result.imagePlayback?.scheme !== 'Rcode-media:' ||
+    result.imagePlayback?.scheme !== 'Joker-media:' ||
     result.imagePlayback?.naturalWidth !== 1 ||
     result.imagePlayback?.naturalHeight !== 1 ||
     typeof result.imagePlayback?.leaseId !== 'string'
   ) {
     throw new Error(
-      `Rcode-media desktop image playback failed: ` +
+      `Joker-media desktop image playback failed: ` +
       `${String(result.imagePlaybackMode)} ${JSON.stringify(result.imagePlayback)} ` +
       `${JSON.stringify(result.imagePlaybackError ?? null)}`
     )
@@ -2012,7 +2012,7 @@ function assertGuestSecurityResult(result, networkCanaryRequests = 0) {
   if (result.releaseMode !== 'ok') {
     throw new Error(`Extension guest media lease release failed: ${String(result.releaseMode)}`)
   }
-  if (result.hasRcodeGui) throw new Error('Extension guest can see the privileged window.RcodeGui bridge')
+  if (result.hasJokerGui) throw new Error('Extension guest can see the privileged window.JokerGui bridge')
   if (result.hasElectron) throw new Error('Extension guest can see an Electron bridge')
   if (result.hasIpcRenderer) throw new Error('Extension guest can see ipcRenderer')
   if (result.hasBuffer) throw new Error('Extension guest can see Node Buffer')
@@ -2037,28 +2037,28 @@ function assertGuestSecurityResult(result, networkCanaryRequests = 0) {
 
 function assertTheme(theme) {
   if (!theme || typeof theme !== 'object' || Array.isArray(theme)) {
-    throw new Error(`RcodeExtension Theme is not an object: ${JSON.stringify(theme)}`)
+    throw new Error(`JokerExtension Theme is not an object: ${JSON.stringify(theme)}`)
   }
   const expectedKeys = ['kind', 'reducedMotion', 'tokens', 'zoomFactor']
   if (JSON.stringify(Object.keys(theme).sort()) !== JSON.stringify(expectedKeys)) {
-    throw new Error(`RcodeExtension Theme has unexpected fields: ${JSON.stringify(theme)}`)
+    throw new Error(`JokerExtension Theme has unexpected fields: ${JSON.stringify(theme)}`)
   }
   if (!['light', 'dark', 'high-contrast'].includes(theme.kind)) {
-    throw new Error(`RcodeExtension Theme has an invalid kind: ${String(theme.kind)}`)
+    throw new Error(`JokerExtension Theme has an invalid kind: ${String(theme.kind)}`)
   }
   if (!theme.tokens || typeof theme.tokens !== 'object' || Array.isArray(theme.tokens)) {
-    throw new Error(`RcodeExtension Theme has invalid tokens: ${JSON.stringify(theme.tokens)}`)
+    throw new Error(`JokerExtension Theme has invalid tokens: ${JSON.stringify(theme.tokens)}`)
   }
   for (const [key, value] of Object.entries(theme.tokens)) {
     if (!key || typeof value !== 'string') {
-      throw new Error(`RcodeExtension Theme has an invalid token: ${JSON.stringify([key, value])}`)
+      throw new Error(`JokerExtension Theme has an invalid token: ${JSON.stringify([key, value])}`)
     }
   }
   if (!Number.isFinite(theme.zoomFactor) || theme.zoomFactor <= 0) {
-    throw new Error(`RcodeExtension Theme has an invalid zoomFactor: ${String(theme.zoomFactor)}`)
+    throw new Error(`JokerExtension Theme has an invalid zoomFactor: ${String(theme.zoomFactor)}`)
   }
   if (typeof theme.reducedMotion !== 'boolean') {
-    throw new Error(`RcodeExtension Theme has invalid reducedMotion: ${String(theme.reducedMotion)}`)
+    throw new Error(`JokerExtension Theme has invalid reducedMotion: ${String(theme.reducedMotion)}`)
   }
 }
 
@@ -2068,12 +2068,12 @@ function isExactExtensionGuestUrl(rawUrl) {
     const url = new URL(rawUrl)
     const queryKeys = [...url.searchParams.keys()]
     return (
-      url.protocol === 'Rcode-extension:' &&
+      url.protocol === 'Joker-extension:' &&
       url.hostname === EXTENSION_ID &&
       url.pathname === '/dist/webview/index.html' &&
       queryKeys.length === 1 &&
-      queryKeys[0] === 'RcodeViewSession' &&
-      Boolean(url.searchParams.get('RcodeViewSession')) &&
+      queryKeys[0] === 'JokerViewSession' &&
+      Boolean(url.searchParams.get('JokerViewSession')) &&
       url.hash === ''
     )
   } catch {
@@ -2340,7 +2340,7 @@ module.exports = {
   isWorkbenchTarget,
   platformDesktopArguments,
   resolveDesktopLaunchSelection,
-  runPackagedRcode,
+  runPackagedJoker,
   terminateProcessTree,
   waitForPortsClosed
 }

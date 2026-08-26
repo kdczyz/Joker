@@ -7,7 +7,7 @@ import path from "node:path";
 import { requestHttpMcp, setMcpRuntimeBearerToken, StdioMcpSession } from "./mcpClient";
 
 test("stdio MCP session preserves initialization across requests", async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), "rcode-mcp-"));
+  const root = await mkdtemp(path.join(os.tmpdir(), "joker-mcp-"));
   const serverPath = path.join(root, "mock-mcp.cjs");
   await writeFile(serverPath, `
     const readline = require("node:readline");

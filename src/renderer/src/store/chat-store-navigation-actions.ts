@@ -174,9 +174,9 @@ export function createNavigationActions(
     const prev = get().runtimeConnection
     if (mode === 'user') set({ runtimeConnection: 'checking' })
     try {
-      if (typeof window.RcodeGui === 'undefined') {
+      if (typeof window.JokerGui === 'undefined') {
         throw new Error(
-          'Preload bridge missing (window.RcodeGui). Restart the app or check BrowserWindow preload path.'
+          'Preload bridge missing (window.JokerGui). Restart the app or check BrowserWindow preload path.'
         )
       }
       const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
@@ -226,13 +226,13 @@ export function createNavigationActions(
     if (bootPromise) return bootPromise
     bootPromise = (async () => {
       try {
-        if (typeof window.RcodeGui === 'undefined') {
+        if (typeof window.JokerGui === 'undefined') {
           set({
             error: formatRuntimeError(
-              'Preload bridge missing (window.RcodeGui). Restart the app or check BrowserWindow preload path.'
+              'Preload bridge missing (window.JokerGui). Restart the app or check BrowserWindow preload path.'
             ),
             runtimeConnection: 'offline',
-            runtimeErrorDetail: 'Preload bridge missing (window.RcodeGui). Restart the app or check BrowserWindow preload path.',
+            runtimeErrorDetail: 'Preload bridge missing (window.JokerGui). Restart the app or check BrowserWindow preload path.',
             initialSetupOpen: false,
             initialSetupMode: 'required'
           })
@@ -253,8 +253,8 @@ export function createNavigationActions(
         applyCursorSpotlight(settings.cursorSpotlight !== false)
         applyCursorSpotlightColor(settings.cursorSpotlightColor)
         await get().applyI18nFromSettings(settings.locale)
-        if (!runtimeStatusUnsubscribe && typeof window.RcodeGui.onRuntimeStatus === 'function') {
-          runtimeStatusUnsubscribe = window.RcodeGui.onRuntimeStatus((status) => {
+        if (!runtimeStatusUnsubscribe && typeof window.JokerGui.onRuntimeStatus === 'function') {
+          runtimeStatusUnsubscribe = window.JokerGui.onRuntimeStatus((status) => {
             set({ runtimeStatus: status })
             if (status.state === 'restarting' || status.state === 'crashed') {
               set({ error: null, runtimeErrorDetail: null })
@@ -276,8 +276,8 @@ export function createNavigationActions(
             }
           })
         }
-        if (!trayActionUnsubscribe && typeof window.RcodeGui.onTrayAction === 'function') {
-          trayActionUnsubscribe = window.RcodeGui.onTrayAction((action) => {
+        if (!trayActionUnsubscribe && typeof window.JokerGui.onTrayAction === 'function') {
+          trayActionUnsubscribe = window.JokerGui.onTrayAction((action) => {
             set({ route: 'chat' })
             if (action.type === 'open-thread') {
               void get().selectThread(action.threadId)
@@ -286,11 +286,11 @@ export function createNavigationActions(
             }
           })
         }
-        if (!clawChannelActivityUnsubscribe && typeof window.RcodeGui.onClawChannelActivity === 'function') {
-          clawChannelActivityUnsubscribe = window.RcodeGui.onClawChannelActivity(({ channelId, threadId }) => {
+        if (!clawChannelActivityUnsubscribe && typeof window.JokerGui.onClawChannelActivity === 'function') {
+          clawChannelActivityUnsubscribe = window.JokerGui.onClawChannelActivity(({ channelId, threadId }) => {
             void (async () => {
               const state = get()
-              if (typeof window.RcodeGui === 'undefined') return
+              if (typeof window.JokerGui === 'undefined') return
               const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
               const channels = settings.claw.channels
               const activeChannelId = channels.some(
@@ -360,10 +360,10 @@ export function createNavigationActions(
 
   chooseWorkspace: async ({ createThreadAfter = false, selectThreadAfter = true } = {}) => {
     try {
-      if (typeof window.RcodeGui === 'undefined' || typeof window.RcodeGui.pickWorkspaceDirectory !== 'function') {
+      if (typeof window.JokerGui === 'undefined' || typeof window.JokerGui.pickWorkspaceDirectory !== 'function') {
         throw new Error(i18n.t('common:workspacePickerUnavailable'))
       }
-      const picked = await window.RcodeGui.pickWorkspaceDirectory(get().workspaceRoot || undefined)
+      const picked = await window.JokerGui.pickWorkspaceDirectory(get().workspaceRoot || undefined)
       if (picked.canceled || !picked.path) {
         if (createThreadAfter) {
           set({ error: i18n.t('common:workspaceRequiredToCreateThread') })
@@ -459,7 +459,7 @@ export function createNavigationActions(
 
   clearWorkspace: async () => {
     try {
-      if (typeof window.RcodeGui === 'undefined' || typeof window.RcodeGui.setSettings !== 'function') {
+      if (typeof window.JokerGui === 'undefined' || typeof window.JokerGui.setSettings !== 'function') {
         return
       }
       const next = await rendererRuntimeClient.setSettings({ workspaceRoot: '' })
@@ -521,7 +521,7 @@ export function createNavigationActions(
       // If the deleted workspace is the current workspaceRoot, clear it.
       if (normalizeWorkspaceRoot(get().workspaceRoot) === normalizedPath) {
         try {
-          if (typeof window.RcodeGui?.setSettings === 'function') {
+          if (typeof window.JokerGui?.setSettings === 'function') {
             const next = await rendererRuntimeClient.setSettings({ workspaceRoot: '' })
             set({
               workspaceRoot: normalizeWorkspaceRoot(next.workspaceRoot),
@@ -565,7 +565,7 @@ export function createNavigationActions(
       const forkRegistry = hydrateThreadForkRegistry(sidebarThreads, readThreadForkRegistry())
       saveThreadForkRegistry(forkRegistry)
       const enrichedThreads = enrichThreadsWithForkInfo(sidebarThreads, forkRegistry)
-      // Preserve the active Rcode thread when it is not in the listing yet.
+      // Preserve the active Joker thread when it is not in the listing yet.
       // A brand-new thread can be absent from `listThreads` until the first
       // message is written. Without this, the optimistic thread would be wiped
       // from the sidebar and its live turn aborted by the selection clearing

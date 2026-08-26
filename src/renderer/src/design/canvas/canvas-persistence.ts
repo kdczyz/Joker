@@ -12,7 +12,7 @@ import {
 
 export { parseCanvasMotionDocument } from './canvas-motion-persistence'
 
-const DESIGN_DIR = '.Rcode-design'
+const DESIGN_DIR = '.Joker-design'
 export const MAX_CANVAS_DOCUMENT_OBJECTS = 10_000
 export const MAX_CANVAS_CHILDREN_PER_SHAPE = 4_096
 export const MAX_CANVAS_GRAPH_DEPTH = 512
@@ -488,9 +488,9 @@ export async function loadCanvasDocument(
   artifactId: string,
   baseDir?: string
 ): Promise<CanvasDocument | null> {
-  if (!workspaceRoot || typeof window.RcodeGui?.readWorkspaceFile !== 'function') return null
+  if (!workspaceRoot || typeof window.JokerGui?.readWorkspaceFile !== 'function') return null
   try {
-    const result = await window.RcodeGui.readWorkspaceFile({
+    const result = await window.JokerGui.readWorkspaceFile({
       path: canvasDocPath(artifactId, baseDir),
       workspaceRoot
     })

@@ -7,7 +7,7 @@ import {
 
 function binding(overrides: Partial<ExtensionConsentBinding> = {}): ExtensionConsentBinding {
   return {
-    extensionId: 'Rcode-examples.video-editor',
+    extensionId: 'Joker-examples.video-editor',
     extensionVersion: '0.3.0',
     operationKind: 'extension.permissions',
     parameters: {},
@@ -45,7 +45,7 @@ describe('protected extension prompt localization', () => {
 
     expect(prompt).toMatchObject({
       title: '审核扩展权限',
-      message: '请审核 Rcode-examples.video-editor 0.3.0 申请的权限。',
+      message: '请审核 Joker-examples.video-editor 0.3.0 申请的权限。',
       approveLabel: '继续',
       cancelLabel: '取消',
       extensionLabel: '扩展',
@@ -97,7 +97,7 @@ describe('protected extension prompt localization', () => {
 
     expect(prompt).toMatchObject({
       title: '更改扩展权限',
-      message: '要更改 Rcode-examples.video-editor 0.3.0 的权限吗？',
+      message: '要更改 Joker-examples.video-editor 0.3.0 的权限吗？',
       approveLabel: '同意更改',
       cancelLabel: '取消'
     })
@@ -112,14 +112,14 @@ describe('protected extension prompt localization', () => {
       title: 'Review permissions and enable extension',
       message: 'Review permissions and enable?',
       detail: [
-        'After approval, Rcode will apply these permissions to the selected workspace and enable the extension globally.',
+        'After approval, Joker will apply these permissions to the selected workspace and enable the extension globally.',
         'Resulting broker permissions:\n• ui.views'
       ].join('\n\n')
     }, 'zh')
 
     expect(prompt).toMatchObject({
       title: '审核权限并启用扩展',
-      message: '请审核 Rcode-examples.video-editor 0.3.0 的权限，确认后将立即启用。',
+      message: '请审核 Joker-examples.video-editor 0.3.0 的权限，确认后将立即启用。',
       approveLabel: '应用并启用'
     })
     expect(prompt.detail).toContain('应用到当前工作区，并在全局启用此扩展')
@@ -135,18 +135,18 @@ describe('protected extension prompt localization', () => {
       message: 'Install extension?',
       detail: [
         'Extensions with Node entrypoints execute with your operating-system user privileges. Broker permissions are not an OS sandbox.',
-        'Source: Local .Rcodex archive\n/tmp/video.Rcodex',
+        'Source: Local .Jokerx archive\n/tmp/video.Jokerx',
         'Package SHA-256: abc123',
         'Signature: unsigned.',
         'Host-authored risk summary:\n• Runs Node code with your operating-system user privileges.',
         'Requested broker permissions:\n• media.read',
-        'Rcode will revalidate package integrity, compatibility, and declared resources before activation.'
+        'Joker will revalidate package integrity, compatibility, and declared resources before activation.'
       ].join('\n\n')
     }, 'zh')
 
     expect(prompt.title).toBe('安装扩展')
-    expect(prompt.message).toBe('要安装 Rcode-examples.video-editor 0.3.0 吗？')
-    expect(prompt.detail).toContain('本地 .Rcodex 归档包')
+    expect(prompt.message).toBe('要安装 Joker-examples.video-editor 0.3.0 吗？')
+    expect(prompt.detail).toContain('本地 .Jokerx 归档包')
     expect(prompt.detail).toContain('扩展包 SHA-256： abc123')
     expect(prompt.detail).toContain('签名：未签名。')
     expect(prompt.detail).toContain('Node 代码使用当前操作系统用户的权限运行。')
@@ -174,7 +174,7 @@ describe('protected extension prompt localization', () => {
       operationKind: 'provider.bind'
     }), {
       title: 'Use extension model provider',
-      message: 'Allow Example Provider to handle Rcode model requests?',
+      message: 'Allow Example Provider to handle Joker model requests?',
       detail: [
         'Provider: Example (provider.example)',
         'Model: example-model',
@@ -184,11 +184,11 @@ describe('protected extension prompt localization', () => {
         '• system and mode instructions',
         '• attachments when present (text, image)',
         '• advertised tool names, descriptions, and input schemas',
-        'Rcode stores only the provider, opaque account reference, model, extension version, and acknowledgement. Credential material is not copied into this binding. Requests will fail explicitly if this exact provider/account/model becomes unavailable.'
+        'Joker stores only the provider, opaque account reference, model, extension version, and acknowledgement. Credential material is not copied into this binding. Requests will fail explicitly if this exact provider/account/model becomes unavailable.'
       ].join('\n')
     }, 'zh')
 
-    expect(prompt.message).toBe('要允许 Example Provider 处理 Rcode 的模型请求吗？')
+    expect(prompt.message).toBe('要允许 Example Provider 处理 Joker 的模型请求吗？')
     expect(prompt.detail).toContain('提供商： Example (provider.example)')
     expect(prompt.detail).toContain('模型： example-model')
     expect(prompt.detail).toContain('账户引用： account-1')

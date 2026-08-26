@@ -35,9 +35,9 @@ afterEach(() => {
 
 describe('design-chat-transcript', () => {
   it('uses a chat directory inside the owning design document', () => {
-    expect(designChatMetaPath('doc_123')).toBe('.Rcode-design/doc_123/chat/meta.json')
+    expect(designChatMetaPath('doc_123')).toBe('.Joker-design/doc_123/chat/meta.json')
     expect(designChatTranscriptRelativePath('doc_123', 'thr.design-1'))
-      .toBe('.Rcode-design/doc_123/chat/thr.design-1.md')
+      .toBe('.Joker-design/doc_123/chat/thr.design-1.md')
     expect(designChatTranscriptRelativePath('../doc', 'thr_1')).toBeNull()
     expect(designChatTranscriptRelativePath('doc', '../thr')).toBeNull()
   })
@@ -74,7 +74,7 @@ describe('design-chat-transcript', () => {
     const writes: Array<{ path: string; content: string }> = []
     vi.stubGlobal('window', {
       localStorage: storage,
-      RcodeGui: {
+      JokerGui: {
         readWorkspaceFile: vi.fn(async () => ({ ok: false as const, error: 'missing' })),
         writeWorkspaceFile: vi.fn(async (payload: { path: string; content: string }) => {
           writes.push(payload)
@@ -92,7 +92,7 @@ describe('design-chat-transcript', () => {
     ).resolves.toBe(true)
 
     expect(writes).toHaveLength(1)
-    expect(writes[0].path).toBe('.Rcode-design/doc/chat/meta.json')
+    expect(writes[0].path).toBe('.Joker-design/doc/chat/meta.json')
     expect(parseDesignChatMeta(writes[0].content)).toMatchObject({
       version: 1,
       activeThreadId: 'thr_1',
@@ -104,10 +104,10 @@ describe('design-chat-transcript', () => {
     const storage = new MemoryStorage()
     vi.stubGlobal('window', {
       localStorage: storage,
-      RcodeGui: {
+      JokerGui: {
         readWorkspaceFile: vi.fn(async () => ({
           ok: true as const,
-          path: '.Rcode-design/doc/chat/meta.json',
+          path: '.Joker-design/doc/chat/meta.json',
           content: JSON.stringify({
             version: 1,
             activeThreadId: 'thr_new',
@@ -140,7 +140,7 @@ describe('design-chat-transcript', () => {
     const writes: Array<{ path: string; content: string }> = []
     vi.stubGlobal('window', {
       localStorage: storage,
-      RcodeGui: {
+      JokerGui: {
         readWorkspaceFile: vi.fn(async () => ({ ok: false as const, error: 'missing' })),
         writeWorkspaceFile: vi.fn(async (payload: { path: string; content: string }) => {
           writes.push(payload)
@@ -159,8 +159,8 @@ describe('design-chat-transcript', () => {
     ).resolves.toBe(true)
 
     expect(writes.map((entry) => entry.path)).toEqual([
-      '.Rcode-design/doc/chat/thr_1.md',
-      '.Rcode-design/doc/chat/meta.json'
+      '.Joker-design/doc/chat/thr_1.md',
+      '.Joker-design/doc/chat/meta.json'
     ])
     expect(writes[0].content).toContain('完成首页。')
   })

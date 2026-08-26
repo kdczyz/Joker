@@ -460,7 +460,7 @@ async function bufferFromDocxResult(result: ArrayBuffer | Blob | Buffer | Uint8A
 }
 
 async function renderHtmlDocument(html: string, format: 'pdf' | 'png'): Promise<Buffer> {
-  const tempDir = await mkdtemp(join(tmpdir(), 'Rcode-export-'))
+  const tempDir = await mkdtemp(join(tmpdir(), 'Joker-export-'))
   const tempHtmlPath = join(tempDir, 'document.html')
   await writeFile(tempHtmlPath, html, 'utf8')
 
@@ -559,7 +559,7 @@ export async function exportWriteDocument(
       }
       sourcePath = resolved.path
     } else {
-      const title = payload.title?.trim() || 'Rcode answer'
+      const title = payload.title?.trim() || 'Joker answer'
       const safeTitle = Array.from(title, (character) => {
         const code = character.charCodeAt(0)
         return code <= 31 || '<>:"/\\|?*'.includes(character) ? '-' : character
@@ -589,7 +589,7 @@ export async function exportWriteDocument(
     } else if (payload.format === 'docx') {
       const docx = await htmlToDocx(html, null, {
         title,
-        creator: 'Rcode',
+        creator: 'Joker',
         keywords: ['markdown', 'export'],
         description: `Exported from ${basename(sourcePath)}`,
         font: 'Arial',

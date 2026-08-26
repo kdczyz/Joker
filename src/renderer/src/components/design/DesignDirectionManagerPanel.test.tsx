@@ -9,7 +9,7 @@ import { DesignDirectionManagerPanel } from './DesignDirectionManagerPanel'
 const now = '2026-07-02T00:00:00.000Z'
 
 function artifact(id: string, patch: Partial<DesignArtifact> = {}): DesignArtifact {
-  const relativePath = `.Rcode-design/doc/${id}/v1.html`
+  const relativePath = `.Joker-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',

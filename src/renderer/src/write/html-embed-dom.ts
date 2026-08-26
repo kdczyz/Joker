@@ -67,7 +67,7 @@ function mountWebview(elements: EmbedElements, fileUrl: string): void {
   webview.setAttribute('src', fileUrl)
   // Non-persistent partition keeps prototype guests away from the dev
   // browser and the default session.
-  webview.setAttribute('partition', 'Rcode-proto')
+  webview.setAttribute('partition', 'Joker-proto')
   webview.setAttribute('webpreferences', 'contextIsolation=yes,nodeIntegration=no,sandbox=yes')
   webview.className = 'write-html-embed-webview'
   webview.addEventListener('did-fail-load', (event) => {
@@ -136,12 +136,12 @@ export function createHtmlEmbedElement(context: HtmlEmbedContext): HTMLElement {
   }
 
   const activate = (): void => {
-    if (typeof window.RcodeGui?.authorizeWritePrototype !== 'function') {
+    if (typeof window.JokerGui?.authorizeWritePrototype !== 'function') {
       setStatus(elements, i18n.t('common:writeHtmlEmbedLoadFailed'), 'error')
       return
     }
     setStatus(elements, '', 'idle')
-    void window.RcodeGui
+    void window.JokerGui
       .authorizeWritePrototype({ path: absolutePath, workspaceRoot })
       .then((result) => {
         if (!root.isConnected) return
@@ -160,8 +160,8 @@ export function createHtmlEmbedElement(context: HtmlEmbedContext): HTMLElement {
   openButton.addEventListener('click', (event) => {
     event.preventDefault()
     event.stopPropagation()
-    if (typeof window.RcodeGui?.openWritePrototype !== 'function') return
-    void window.RcodeGui
+    if (typeof window.JokerGui?.openWritePrototype !== 'function') return
+    void window.JokerGui
       .openWritePrototype({ path: absolutePath, workspaceRoot })
       .then((result) => {
         if (!root.isConnected) return

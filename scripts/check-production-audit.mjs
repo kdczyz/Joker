@@ -19,7 +19,7 @@ const allowedModeratePackages = new Set([
 ])
 const allowedAdvisory = 'https://github.com/advisories/GHSA-5v7r-6r5c-r473'
 
-// nut-js still pins Jimp 0.22 and has no compatible upstream update. Rcode only
+// nut-js still pins Jimp 0.22 and has no compatible upstream update. Joker only
 // uses nut-js for native screen pixels/input and converts captures through its
 // separate Jimp 1.6 dependency; it never sends untrusted files through the old
 // Jimp/file-type loader. Keep this exact advisory visible while failing closed
@@ -27,7 +27,7 @@ const allowedAdvisory = 'https://github.com/advisories/GHSA-5v7r-6r5c-r473'
 
 for (const target of [
   { name: 'root', cwd: repositoryRoot },
-  { name: 'Rcode', cwd: join(repositoryRoot, 'Rcode') }
+  { name: 'Joker', cwd: join(repositoryRoot, 'Joker') }
 ]) {
   const report = audit(target)
   assertNoUnacceptedVulnerabilities(target.name, report)

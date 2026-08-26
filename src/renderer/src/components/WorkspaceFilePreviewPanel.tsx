@@ -74,8 +74,8 @@ type Props = {
 }
 
 const COPY_RESET_MS = 1400
-const MARKDOWN_DEFAULT_ORIGIN = 'https://Rcode.local'
-export const PREVIEW_SCROLL_POSITIONS_KEY = 'Rcode.issue781.previewScrollPositions'
+const MARKDOWN_DEFAULT_ORIGIN = 'https://Joker.local'
+export const PREVIEW_SCROLL_POSITIONS_KEY = 'Joker.issue781.previewScrollPositions'
 const MAX_PREVIEW_SCROLL_POSITIONS = 200
 const markdownRehypePlugins = [
   rehypeRaw,
@@ -191,7 +191,7 @@ export function parsePreviewScrollPositions(raw: string | null, platform = ''): 
 }
 
 function readPreviewScrollPositions(): Record<string, number> {
-  const platform = typeof window !== 'undefined' ? window.RcodeGui?.platform ?? '' : ''
+  const platform = typeof window !== 'undefined' ? window.JokerGui?.platform ?? '' : ''
   return parsePreviewScrollPositions(readBrowserStorageItem(PREVIEW_SCROLL_POSITIONS_KEY), platform)
 }
 
@@ -346,7 +346,7 @@ export function WorkspaceFilePreviewPanel({
     }
 
     if (isWorkspaceRasterImagePreviewPath(target.path)) {
-      void window.RcodeGui
+      void window.JokerGui
         .readWorkspaceImage(readTarget)
         .then((next) => {
           if (!cancelled) setImageResult(next)
@@ -377,7 +377,7 @@ export function WorkspaceFilePreviewPanel({
       return
     }
 
-    void window.RcodeGui
+    void window.JokerGui
       .readWorkspaceFile(readTarget)
       .then((next) => {
         if (!cancelled) setResult(next)
@@ -595,7 +595,7 @@ export function WorkspaceFilePreviewPanel({
       targetToOpen?.workspaceRoot ?? workspaceRoot
     ).then((next) => {
       if (!next.ok) {
-        void window.RcodeGui?.logError?.('editor-open', 'Failed to open previewed file', {
+        void window.JokerGui?.logError?.('editor-open', 'Failed to open previewed file', {
           message: next.message,
           target: targetToOpen
         })?.catch(() => undefined)
@@ -627,7 +627,7 @@ export function WorkspaceFilePreviewPanel({
         onClick={() => setReadingMode(false)}
       />
       <aside
-        data-Rcode-workspace-root={(target?.workspaceRoot ?? workspaceRoot).replaceAll('\\', '/')}
+        data-Joker-workspace-root={(target?.workspaceRoot ?? workspaceRoot).replaceAll('\\', '/')}
         data-reading-mode={readingMode ? 'true' : 'false'}
         className={`ds-no-drag ds-code-sidebar flex min-h-0 flex-col border-l border-ds-border-muted ${readingMode ? 'is-reading' : ''} ${className ?? ''}`}
       >
@@ -649,7 +649,7 @@ export function WorkspaceFilePreviewPanel({
             return (
               <div
                 key={targetKey(item)}
-                data-Rcode-preview-key={targetKey(item)}
+                data-Joker-preview-key={targetKey(item)}
                 role="presentation"
                 className={`ds-code-sidebar-tab ${active ? 'is-active' : ''}`}
               >
@@ -906,7 +906,7 @@ export function WorkspaceFilePreviewPanel({
                           onClick={(event) => {
                             if (!href) return
                             event.preventDefault()
-                            void window.RcodeGui?.openExternal?.(href)?.catch(() => undefined)
+                            void window.JokerGui?.openExternal?.(href)?.catch(() => undefined)
                           }}
                         >
                           {children}

@@ -170,10 +170,10 @@ describe('CanvasViewport surface behavior', () => {
   })
 
   it('allows code canvases to override the design-system persistence directory', () => {
-    expect(resolveCanvasDesignSystemBaseDir('.Rcode-canvas', '.Rcode-canvas/code-thread-1')).toBe(
-      '.Rcode-canvas/code-thread-1'
+    expect(resolveCanvasDesignSystemBaseDir('.Joker-canvas', '.Joker-canvas/code-thread-1')).toBe(
+      '.Joker-canvas/code-thread-1'
     )
-    expect(resolveCanvasDesignSystemBaseDir('.Rcode-design/doc-1', undefined)).toBe('.Rcode-design/doc-1')
+    expect(resolveCanvasDesignSystemBaseDir('.Joker-design/doc-1', undefined)).toBe('.Joker-design/doc-1')
   })
 
   it('keeps design canvas keyboard shortcuts global', () => {

@@ -12,8 +12,8 @@ export function buildPrototypeNavigationCaptureScript(links: readonly PrototypeP
   return `
 (() => {
   try {
-  const key = '__RcodePrototypeNavCaptureInstalled';
-  const titleKey = '__RcodePrototypeNavCaptureTitles';
+  const key = '__JokerPrototypeNavCaptureInstalled';
+  const titleKey = '__JokerPrototypeNavCaptureTitles';
   const hrefs = ${JSON.stringify(hrefs)};
   const targetTitles = ${JSON.stringify(targetTitles)};
   const normalize = (value) => {
@@ -197,15 +197,15 @@ export function buildPrototypeNavigationCaptureScript(links: readonly PrototypeP
     signalBack(steps);
     return true;
   };
-  if (!window.__RcodePrototypeNavListenerInstalled) {
-    window.__RcodePrototypeNavListenerInstalled = true;
-    window.__RcodePrototypeOriginalOpen = window.__RcodePrototypeOriginalOpen || window.open;
-    if (!window.__RcodePrototypeWindowOpenPatched && typeof window.__RcodePrototypeOriginalOpen === 'function') {
-      window.__RcodePrototypeWindowOpenPatched = true;
+  if (!window.__JokerPrototypeNavListenerInstalled) {
+    window.__JokerPrototypeNavListenerInstalled = true;
+    window.__JokerPrototypeOriginalOpen = window.__JokerPrototypeOriginalOpen || window.open;
+    if (!window.__JokerPrototypeWindowOpenPatched && typeof window.__JokerPrototypeOriginalOpen === 'function') {
+      window.__JokerPrototypeWindowOpenPatched = true;
       window.open = function(url, target, features) {
         const raw = String(url || '').trim();
         if (raw && navigate(raw, { preventDefault() {}, stopPropagation() {} })) return null;
-        return window.__RcodePrototypeOriginalOpen.call(window, url, target, features);
+        return window.__JokerPrototypeOriginalOpen.call(window, url, target, features);
       };
     }
     const patchHistoryMethod = (methodName, originalKey, patchedKey) => {
@@ -218,12 +218,12 @@ export function buildPrototypeNavigationCaptureScript(links: readonly PrototypeP
         return window[originalKey].apply(window.history, arguments);
       };
     };
-    patchHistoryMethod('pushState', '__RcodePrototypeOriginalPushState', '__RcodePrototypePushStatePatched');
-    patchHistoryMethod('replaceState', '__RcodePrototypeOriginalReplaceState', '__RcodePrototypeReplaceStatePatched');
-    if (window.history && !window.__RcodePrototypeBackPatched) {
-      window.__RcodePrototypeBackPatched = true;
-      window.__RcodePrototypeOriginalBack = window.__RcodePrototypeOriginalBack || window.history.back;
-      window.__RcodePrototypeOriginalGo = window.__RcodePrototypeOriginalGo || window.history.go;
+    patchHistoryMethod('pushState', '__JokerPrototypeOriginalPushState', '__JokerPrototypePushStatePatched');
+    patchHistoryMethod('replaceState', '__JokerPrototypeOriginalReplaceState', '__JokerPrototypeReplaceStatePatched');
+    if (window.history && !window.__JokerPrototypeBackPatched) {
+      window.__JokerPrototypeBackPatched = true;
+      window.__JokerPrototypeOriginalBack = window.__JokerPrototypeOriginalBack || window.history.back;
+      window.__JokerPrototypeOriginalGo = window.__JokerPrototypeOriginalGo || window.history.go;
       if (typeof window.history.back === 'function') {
         window.history.back = function() {
           return signalBack(1);
@@ -233,7 +233,7 @@ export function buildPrototypeNavigationCaptureScript(links: readonly PrototypeP
         window.history.go = function(delta) {
           const steps = Number(delta);
           if (Number.isFinite(steps) && steps < 0) return signalBack(Math.abs(steps));
-          return window.__RcodePrototypeOriginalGo.apply(window.history, arguments);
+          return window.__JokerPrototypeOriginalGo.apply(window.history, arguments);
         };
       }
     }

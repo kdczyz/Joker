@@ -28,7 +28,7 @@ import {
 } from '../../sdd/pm-skill-frameworks'
 import type { AttachmentReference, ChatBlock, RuntimeConnectionStatus } from '../../agent/types'
 import type { QueuedUserMessage } from '../../store/chat-store-types'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 import type { SddDraft } from '../../sdd/sdd-draft-store'
 import { LazyMessageTimeline } from '../chat/LazyMessageTimeline'
 import { FloatingComposer } from '../chat/FloatingComposer'

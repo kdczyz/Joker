@@ -3,7 +3,7 @@ import type { AppSettingsV1 } from '@shared/app-settings'
 import { getModelProviderSettings } from '@shared/app-settings'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { emitRendererSettingsChanged, SETTINGS_CHANGED_EVENT } from '../../lib/keyboard-shortcut-settings'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 
 export interface ComposerImageModelSelection {
   /** Image-model groups grouped by the provider that exposes them. */
@@ -20,7 +20,7 @@ export interface ComposerImageModelSelection {
  * Image models live under each provider's `image` capability (not in the chat
  * `models` list), so they never appear in the normal composer picker. This
  * hook collects them into selectable groups and writes the chosen model back
- * into `Rcode.imageGeneration` so the runtime `generate_image` tool uses it.
+ * into `Joker.imageGeneration` so the runtime `generate_image` tool uses it.
  */
 export function useComposerImageModelSelection(): ComposerImageModelSelection {
   const [settings, setSettings] = useState<AppSettingsV1 | null>(null)
@@ -54,12 +54,12 @@ export function useComposerImageModelSelection(): ComposerImageModelSelection {
       }))
   }, [settings])
 
-  const currentModel = settings?.agents?.Rcode?.imageGeneration?.model?.trim() ?? ''
+  const currentModel = settings?.agents?.Joker?.imageGeneration?.model?.trim() ?? ''
 
   const select = useCallback((modelId: string, providerId: string) => {
-    const current = settings?.agents?.Rcode?.imageGeneration ?? {}
+    const current = settings?.agents?.Joker?.imageGeneration ?? {}
     void rendererRuntimeClient.setSettings({
-      agents: { Rcode: { imageGeneration: { ...current, providerId, model: modelId } } }
+      agents: { Joker: { imageGeneration: { ...current, providerId, model: modelId } } }
     }).then((saved) => {
       emitRendererSettingsChanged(saved)
     })

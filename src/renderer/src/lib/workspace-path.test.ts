@@ -21,19 +21,19 @@ describe('defaultConversationWorkspaceRoot', () => {
     vi.unstubAllGlobals()
   })
 
-  it('uses ~/Documents/Rcode on macOS', () => {
-    vi.stubGlobal('window', { RcodeGui: { platform: 'darwin' } })
-    expect(defaultConversationWorkspaceRoot()).toBe('~/Documents/Rcode')
+  it('uses ~/Documents/Joker on macOS', () => {
+    vi.stubGlobal('window', { JokerGui: { platform: 'darwin' } })
+    expect(defaultConversationWorkspaceRoot()).toBe('~/Documents/Joker')
   })
 
-  it('uses ~/.local/share/Rcode/conversations on Linux', () => {
-    vi.stubGlobal('window', { RcodeGui: { platform: 'linux' } })
-    expect(defaultConversationWorkspaceRoot()).toBe('~/.local/share/Rcode/conversations')
+  it('uses ~/.local/share/Joker/conversations on Linux', () => {
+    vi.stubGlobal('window', { JokerGui: { platform: 'linux' } })
+    expect(defaultConversationWorkspaceRoot()).toBe('~/.local/share/Joker/conversations')
   })
 
-  it('falls back to ~/Documents/Rcode when platform is unknown', () => {
-    vi.stubGlobal('window', { RcodeGui: { platform: '' } })
-    expect(defaultConversationWorkspaceRoot()).toBe('~/Documents/Rcode')
+  it('falls back to ~/Documents/Joker when platform is unknown', () => {
+    vi.stubGlobal('window', { JokerGui: { platform: '' } })
+    expect(defaultConversationWorkspaceRoot()).toBe('~/Documents/Joker')
   })
 
   it('DEFAULT_CONVERSATION_WORKSPACE_ROOT resolves at import time from the platform', () => {
@@ -44,9 +44,9 @@ describe('defaultConversationWorkspaceRoot', () => {
 
 describe('isInternalDeepSeekGuiWorkspace', () => {
   it('treats write and design workspaces as internal GUI workspaces', () => {
-    expect(isInternalDeepSeekGuiWorkspace('/Users/alice/.Rcode/write_workspace')).toBe(true)
-    expect(isInternalDeepSeekGuiWorkspace('/Users/alice/.Rcode/design-workspace')).toBe(true)
-    expect(isInternalDeepSeekGuiWorkspace('~/.Rcode/design-workspace')).toBe(true)
+    expect(isInternalDeepSeekGuiWorkspace('/Users/alice/.Joker/write_workspace')).toBe(true)
+    expect(isInternalDeepSeekGuiWorkspace('/Users/alice/.Joker/design-workspace')).toBe(true)
+    expect(isInternalDeepSeekGuiWorkspace('~/.Joker/design-workspace')).toBe(true)
     expect(isInternalDeepSeekGuiWorkspace('/Users/alice/projects/design-workspace')).toBe(false)
   })
 })
@@ -57,46 +57,46 @@ describe('isConversationWorkspacePath', () => {
   })
 
   it('matches a path directly under the conversation root', () => {
-    vi.stubGlobal('window', { RcodeGui: { platform: 'darwin', homeDir: '/Users/alice' } })
-    expect(isConversationWorkspacePath('/Users/alice/Documents/Rcode/20260626-153012', '~/Documents/Rcode')).toBe(true)
+    vi.stubGlobal('window', { JokerGui: { platform: 'darwin', homeDir: '/Users/alice' } })
+    expect(isConversationWorkspacePath('/Users/alice/Documents/Joker/20260626-153012', '~/Documents/Joker')).toBe(true)
   })
 
   it('matches the conversation root itself', () => {
-    vi.stubGlobal('window', { RcodeGui: { platform: 'darwin', homeDir: '/Users/alice' } })
-    expect(isConversationWorkspacePath('/Users/alice/Documents/Rcode', '~/Documents/Rcode')).toBe(true)
+    vi.stubGlobal('window', { JokerGui: { platform: 'darwin', homeDir: '/Users/alice' } })
+    expect(isConversationWorkspacePath('/Users/alice/Documents/Joker', '~/Documents/Joker')).toBe(true)
   })
 
   it('expands ~ in the candidate path', () => {
-    vi.stubGlobal('window', { RcodeGui: { platform: 'darwin', homeDir: '/Users/alice' } })
-    expect(isConversationWorkspacePath('~/Documents/Rcode/sub', '~/Documents/Rcode')).toBe(true)
+    vi.stubGlobal('window', { JokerGui: { platform: 'darwin', homeDir: '/Users/alice' } })
+    expect(isConversationWorkspacePath('~/Documents/Joker/sub', '~/Documents/Joker')).toBe(true)
   })
 
   it('does not match a sibling that merely shares a prefix segment', () => {
-    // /Users/alice/Documents/Rcode-other 必须不被当成对话目录,否则会误伤真实项目。
-    vi.stubGlobal('window', { RcodeGui: { platform: 'darwin', homeDir: '/Users/alice' } })
-    expect(isConversationWorkspacePath('/Users/alice/Documents/Rcode-other', '~/Documents/Rcode')).toBe(false)
+    // /Users/alice/Documents/Joker-other 必须不被当成对话目录,否则会误伤真实项目。
+    vi.stubGlobal('window', { JokerGui: { platform: 'darwin', homeDir: '/Users/alice' } })
+    expect(isConversationWorkspacePath('/Users/alice/Documents/Joker-other', '~/Documents/Joker')).toBe(false)
   })
 
   it('does not match a path outside the conversation root', () => {
-    vi.stubGlobal('window', { RcodeGui: { platform: 'darwin', homeDir: '/Users/alice' } })
-    expect(isConversationWorkspacePath('/Users/alice/projects/app', '~/Documents/Rcode')).toBe(false)
+    vi.stubGlobal('window', { JokerGui: { platform: 'darwin', homeDir: '/Users/alice' } })
+    expect(isConversationWorkspacePath('/Users/alice/projects/app', '~/Documents/Joker')).toBe(false)
   })
 
   it('handles backslash separators (Windows)', () => {
-    vi.stubGlobal('window', { RcodeGui: { platform: 'win32', homeDir: 'C:\\Users\\alice' } })
-    expect(isConversationWorkspacePath('C:\\Users\\alice\\Documents\\Rcode\\20260626-153012', '~/Documents/Rcode')).toBe(true)
-    expect(isConversationWorkspacePath('C:\\Users\\alice\\Documents\\Rcode-other', '~/Documents/Rcode')).toBe(false)
+    vi.stubGlobal('window', { JokerGui: { platform: 'win32', homeDir: 'C:\\Users\\alice' } })
+    expect(isConversationWorkspacePath('C:\\Users\\alice\\Documents\\Joker\\20260626-153012', '~/Documents/Joker')).toBe(true)
+    expect(isConversationWorkspacePath('C:\\Users\\alice\\Documents\\Joker-other', '~/Documents/Joker')).toBe(false)
   })
 
   it('returns false for empty input', () => {
-    vi.stubGlobal('window', { RcodeGui: { platform: 'darwin', homeDir: '/Users/alice' } })
-    expect(isConversationWorkspacePath('', '~/Documents/Rcode')).toBe(false)
+    vi.stubGlobal('window', { JokerGui: { platform: 'darwin', homeDir: '/Users/alice' } })
+    expect(isConversationWorkspacePath('', '~/Documents/Joker')).toBe(false)
   })
 
   it('falls back to the platform default when no root is given', () => {
-    vi.stubGlobal('window', { RcodeGui: { platform: 'linux', homeDir: '/home/alice' } })
+    vi.stubGlobal('window', { JokerGui: { platform: 'linux', homeDir: '/home/alice' } })
     expect(
-      isConversationWorkspacePath('/home/alice/.local/share/Rcode/conversations/20260626-153012')
+      isConversationWorkspacePath('/home/alice/.local/share/Joker/conversations/20260626-153012')
     ).toBe(true)
   })
 })

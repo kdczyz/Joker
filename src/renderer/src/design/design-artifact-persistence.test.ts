@@ -15,7 +15,7 @@ describe('design artifact persistence', () => {
         id: 'draft',
         kind: 'html',
         title: 'Draft',
-        relativePath: '.Rcode-design/draft/v1.html',
+        relativePath: '.Joker-design/draft/v1.html',
         createdAt: '2026-06-20T00:00:00.000Z',
         updatedAt: '2026-06-20T00:00:00.000Z',
         versions: []
@@ -24,7 +24,7 @@ describe('design artifact persistence', () => {
     )
 
     expect(artifact?.id).toBe('draft')
-    expect(artifact?.designMdPath).toBe('.Rcode-design/draft/DESIGN.md')
+    expect(artifact?.designMdPath).toBe('.Joker-design/draft/DESIGN.md')
     expect(artifact?.node).toBeUndefined()
   })
 
@@ -34,11 +34,11 @@ describe('design artifact persistence', () => {
       id: 'draft',
       kind: 'html',
       title: 'Draft',
-      relativePath: '.Rcode-design/draft/v1.html',
+      relativePath: '.Joker-design/draft/v1.html',
       createdAt,
       updatedAt: createdAt,
-      versions: [{ id: 'draft-v1', relativePath: '.Rcode-design/draft/v1.html', createdAt, summary: '' }],
-      designMdPath: '.Rcode-design/draft/DESIGN.md',
+      versions: [{ id: 'draft-v1', relativePath: '.Joker-design/draft/v1.html', createdAt, summary: '' }],
+      designMdPath: '.Joker-design/draft/DESIGN.md',
       previewStatus: 'ready',
       node: {
         x: 120,
@@ -71,7 +71,7 @@ describe('design artifact persistence', () => {
     expect(parsed?.node).toEqual(artifact.node)
     expect(parsed?.prototypeLinks).toEqual(artifact.prototypeLinks)
     expect(parsed?.direction).toEqual(artifact.direction)
-    expect(parsed?.designMdPath).toBe('.Rcode-design/draft/DESIGN.md')
+    expect(parsed?.designMdPath).toBe('.Joker-design/draft/DESIGN.md')
     expect(parsed?.previewStatus).toBe('ready')
   })
 
@@ -82,19 +82,19 @@ describe('design artifact persistence', () => {
         id: 'draft',
         kind: 'html',
         title: 'Draft',
-        relativePath: '.Rcode-design/draft/v1.html',
+        relativePath: '.Joker-design/draft/v1.html',
         createdAt,
         updatedAt: createdAt,
         versions: [
           {
             id: 'draft-v2',
-            relativePath: '.Rcode-design/draft/v2.html',
+            relativePath: '.Joker-design/draft/v2.html',
             createdAt: '2026-06-20T01:00:00.000Z',
             summary: 'Newer experiment'
           },
           {
             id: 'draft-v1',
-            relativePath: '.Rcode-design/draft/v1.html',
+            relativePath: '.Joker-design/draft/v1.html',
             createdAt,
             summary: 'Selected stable version'
           }
@@ -114,13 +114,13 @@ describe('design artifact persistence', () => {
         id: 'draft',
         kind: 'html',
         title: 'Draft',
-        relativePath: '.Rcode-design/draft/v3.html',
+        relativePath: '.Joker-design/draft/v3.html',
         createdAt,
         updatedAt: createdAt,
         versions: [
           {
             id: 'draft-v2',
-            relativePath: '.Rcode-design/draft/v2.html',
+            relativePath: '.Joker-design/draft/v2.html',
             createdAt,
             summary: 'Old version'
           }
@@ -131,7 +131,7 @@ describe('design artifact persistence', () => {
 
     expect(parsed?.versions[0]).toMatchObject({
       id: 'draft-v3',
-      relativePath: '.Rcode-design/draft/v3.html',
+      relativePath: '.Joker-design/draft/v3.html',
       summary: ''
     })
     expect(parsed?.versions[1]?.id).toBe('draft-v2')
@@ -139,12 +139,12 @@ describe('design artifact persistence', () => {
 
   it('adds a default node when reconstructing legacy artifact folders', () => {
     const artifact = reconstructArtifact('legacy', [
-      { name: 'v1.html', path: '.Rcode-design/legacy/v1.html', type: 'file', ext: '.html' },
-      { name: 'meta.json', path: '.Rcode-design/legacy/meta.json', type: 'file', ext: '.json' }
+      { name: 'v1.html', path: '.Joker-design/legacy/v1.html', type: 'file', ext: '.html' },
+      { name: 'meta.json', path: '.Joker-design/legacy/meta.json', type: 'file', ext: '.json' }
     ])
 
     expect(artifact?.node).toEqual(defaultDesignArtifactNode(0))
-    expect(artifact?.designMdPath).toBe('.Rcode-design/legacy/DESIGN.md')
+    expect(artifact?.designMdPath).toBe('.Joker-design/legacy/DESIGN.md')
   })
 
   it('round-trips SVG metadata and reconstructs the newest version from disk', () => {
@@ -153,45 +153,45 @@ describe('design artifact persistence', () => {
       id: 'motion',
       kind: 'svg',
       title: 'Orbit loader',
-      relativePath: '.Rcode-design/doc/motion/v2.svg',
+      relativePath: '.Joker-design/doc/motion/v2.svg',
       createdAt,
       updatedAt: createdAt,
       versions: [
-        { id: 'motion-v1', relativePath: '.Rcode-design/doc/motion/v1.svg', createdAt, summary: 'First pass' },
-        { id: 'motion-v2', relativePath: '.Rcode-design/doc/motion/v2.svg', createdAt, summary: 'Refined loop' }
+        { id: 'motion-v1', relativePath: '.Joker-design/doc/motion/v1.svg', createdAt, summary: 'First pass' },
+        { id: 'motion-v2', relativePath: '.Joker-design/doc/motion/v2.svg', createdAt, summary: 'Refined loop' }
       ],
-      designMdPath: '.Rcode-design/doc/motion/DESIGN.md',
+      designMdPath: '.Joker-design/doc/motion/DESIGN.md',
       previewStatus: 'ready',
       node: { x: 40, y: 80, width: 64, height: 64, sizeMode: 'manual', viewMode: 'preview' }
     }
 
     expect(parseArtifactMeta(serializeArtifactMeta(motion), 'motion')).toMatchObject({
       kind: 'svg',
-      relativePath: '.Rcode-design/doc/motion/v2.svg',
-      designMdPath: '.Rcode-design/doc/motion/DESIGN.md',
+      relativePath: '.Joker-design/doc/motion/v2.svg',
+      designMdPath: '.Joker-design/doc/motion/DESIGN.md',
       node: { width: 64, height: 64 }
     })
     expect(reconstructArtifact('doc/motion', [
-      { name: 'v1.svg', path: '.Rcode-design/doc/motion/v1.svg', type: 'file', ext: '.svg' },
-      { name: 'v3.svg', path: '.Rcode-design/doc/motion/v3.svg', type: 'file', ext: '.svg' }
+      { name: 'v1.svg', path: '.Joker-design/doc/motion/v1.svg', type: 'file', ext: '.svg' },
+      { name: 'v3.svg', path: '.Joker-design/doc/motion/v3.svg', type: 'file', ext: '.svg' }
     ], {
       svgSource: '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 96"><title>Motion</title><desc>Mark</desc></svg>'
     })).toMatchObject({
       id: 'motion',
       kind: 'svg',
-      relativePath: '.Rcode-design/doc/motion/v3.svg',
+      relativePath: '.Joker-design/doc/motion/v3.svg',
       versions: [
-        { id: 'motion-v3', relativePath: '.Rcode-design/doc/motion/v3.svg' },
-        { id: 'motion-v1', relativePath: '.Rcode-design/doc/motion/v1.svg' }
+        { id: 'motion-v3', relativePath: '.Joker-design/doc/motion/v3.svg' },
+        { id: 'motion-v1', relativePath: '.Joker-design/doc/motion/v1.svg' }
       ],
-      designMdPath: '.Rcode-design/doc/motion/DESIGN.md',
+      designMdPath: '.Joker-design/doc/motion/DESIGN.md',
       node: { width: 64, height: 96, sizeMode: 'manual', viewMode: 'preview' }
     })
   })
 
   it('uses explicit SVG dimensions while preserving the viewBox aspect ratio when one side is omitted', () => {
     expect(reconstructArtifact('doc/logo', [
-      { name: 'v1.svg', path: '.Rcode-design/doc/logo/v1.svg', type: 'file', ext: '.svg' }
+      { name: 'v1.svg', path: '.Joker-design/doc/logo/v1.svg', type: 'file', ext: '.svg' }
     ], {
       svgSource: '<svg xmlns="http://www.w3.org/2000/svg" width="200" viewBox="0 0 100 50"></svg>'
     })?.node).toMatchObject({ width: 200, height: 100, sizeMode: 'manual' })
@@ -199,7 +199,7 @@ describe('design artifact persistence', () => {
 
   it('does not mistake similarly suffixed SVG attributes for width or height', () => {
     expect(reconstructArtifact('doc/logo', [
-      { name: 'v1.svg', path: '.Rcode-design/doc/logo/v1.svg', type: 'file', ext: '.svg' }
+      { name: 'v1.svg', path: '.Joker-design/doc/logo/v1.svg', type: 'file', ext: '.svg' }
     ], {
       svgSource: '<svg xmlns="http://www.w3.org/2000/svg" stroke-width="2" viewBox="0 0 300 150"></svg>'
     })?.node).toMatchObject({ width: 300, height: 150, sizeMode: 'manual' })
@@ -212,38 +212,38 @@ describe('design artifact persistence', () => {
       title: 'Bad',
       relativePath: 'src/index.ts',
       versions: [{ id: 'bad-v1', relativePath: '../../src/index.ts' }]
-    }), 'bad', '.Rcode-design/doc/bad')).toBeNull()
+    }), 'bad', '.Joker-design/doc/bad')).toBeNull()
 
     expect(parseArtifactMeta(JSON.stringify({
       id: 'spoofed',
       kind: 'svg',
       title: 'Safe',
-      relativePath: '.Rcode-design/doc/bad/v1.svg',
+      relativePath: '.Joker-design/doc/bad/v1.svg',
       versions: [
-        { id: 'spoofed-v1', relativePath: '.Rcode-design/doc/bad/v1.svg' },
+        { id: 'spoofed-v1', relativePath: '.Joker-design/doc/bad/v1.svg' },
         { id: 'escape-v2', relativePath: 'src/index.ts' }
       ],
       designMdPath: 'src/DESIGN.md'
-    }), 'bad', '.Rcode-design/doc/bad')).toMatchObject({
+    }), 'bad', '.Joker-design/doc/bad')).toMatchObject({
       id: 'bad',
-      relativePath: '.Rcode-design/doc/bad/v1.svg',
-      versions: [{ id: 'bad-v1', relativePath: '.Rcode-design/doc/bad/v1.svg' }],
-      designMdPath: '.Rcode-design/doc/bad/DESIGN.md'
+      relativePath: '.Joker-design/doc/bad/v1.svg',
+      versions: [{ id: 'bad-v1', relativePath: '.Joker-design/doc/bad/v1.svg' }],
+      designMdPath: '.Joker-design/doc/bad/DESIGN.md'
     })
   })
 
   it('refuses to delete directories derived from untrusted artifact paths', async () => {
     const deleteWorkspaceEntry = vi.fn(async () => ({ ok: true as const }))
-    vi.stubGlobal('window', { RcodeGui: { deleteWorkspaceEntry } })
+    vi.stubGlobal('window', { JokerGui: { deleteWorkspaceEntry } })
 
     deleteArtifactDir('/workspace', 'src/index.ts')
-    deleteArtifactDir('/workspace', '.Rcode-design/doc/bad/../../src/index.ts')
+    deleteArtifactDir('/workspace', '.Joker-design/doc/bad/../../src/index.ts')
     await Promise.resolve()
     expect(deleteWorkspaceEntry).not.toHaveBeenCalled()
 
-    deleteArtifactDir('/workspace', '.Rcode-design/doc/good/v1.svg')
+    deleteArtifactDir('/workspace', '.Joker-design/doc/good/v1.svg')
     await vi.waitFor(() => expect(deleteWorkspaceEntry).toHaveBeenCalledWith({
-      path: '.Rcode-design/doc/good',
+      path: '.Joker-design/doc/good',
       workspaceRoot: '/workspace'
     }))
   })

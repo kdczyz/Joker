@@ -1,12 +1,12 @@
 import { join } from 'node:path'
 import { homedir } from 'node:os'
-import { createSecretEncryptor, defaultSecretCommandRunner } from '../../Rcode/src/security/secret-store.js'
-import { ExtensionCredentialStore } from '../../Rcode/src/services/extension-credential-store.js'
-import { LegacyProviderCredentialMigrationService } from '../../Rcode/src/services/legacy-provider-credential-migration.js'
-import { ExtensionProviderAccountStore } from '../../Rcode/src/services/extension-provider-account-store.js'
+import { createSecretEncryptor, defaultSecretCommandRunner } from '../../Joker/src/security/secret-store.js'
+import { ExtensionCredentialStore } from '../../Joker/src/services/extension-credential-store.js'
+import { LegacyProviderCredentialMigrationService } from '../../Joker/src/services/legacy-provider-credential-migration.js'
+import { ExtensionProviderAccountStore } from '../../Joker/src/services/extension-provider-account-store.js'
 import {
   DEFAULT_MODEL_PROVIDER_ID,
-  getRcodeRuntimeSettings,
+  getJokerRuntimeSettings,
   getModelProviderSettings,
   type AppSettingsV1,
   type ModelProviderProfileV1
@@ -31,7 +31,7 @@ type MigrationRuntime = {
 }
 
 /**
- * Bridges the GUI's legacy settings shape to Rcode's protected account store.
+ * Bridges the GUI's legacy settings shape to Joker's protected account store.
  * It intentionally leaves existing synchronous settings consumers on an
  * ephemeral compatibility projection for one release cycle; disk writes use
  * only the secret-free projection and durable account-reference bindings.
@@ -62,7 +62,7 @@ export class LegacyProviderSettingsMigrationCoordinator {
         if (!isRecognizedSettingsSource(binding.sourceId)) continue
         if (activeSourceIds.has(binding.sourceId)) continue
         await service.deleteBinding(binding.sourceId).catch((error) => {
-          console.warn('[Rcode-gui] Failed to delete orphaned legacy credential.', {
+          console.warn('[Joker-gui] Failed to delete orphaned legacy credential.', {
             sourceId: binding.sourceId,
             message: error instanceof Error ? error.message : String(error)
           })
@@ -104,7 +104,7 @@ export function legacyProviderCredentialSourceId(providerId: string): string {
 
 function collectLegacyCredentialSources(settings: AppSettingsV1) {
   const providerSettings = getModelProviderSettings(settings)
-  const runtime = getRcodeRuntimeSettings(settings)
+  const runtime = getJokerRuntimeSettings(settings)
   const sources = providerSettings.providers
     .filter((provider) => provider.apiKey.trim())
     .map((provider) => ({
@@ -125,7 +125,7 @@ function collectLegacyCredentialSources(settings: AppSettingsV1) {
       sourceId: LEGACY_RUNTIME_OVERRIDE_SOURCE_ID,
       providerId,
       providerName: provider?.name ?? providerId,
-      label: 'Rcode legacy runtime override',
+      label: 'Joker legacy runtime override',
       apiKey: runtime.apiKey,
       ...(runtime.model.trim() ? { modelId: runtime.model.trim() } : {})
     })
@@ -142,7 +142,7 @@ function stripMigratedPlaintext(
     ? { ...entry, apiKey: '' }
     : entry)
   const defaultProvider = providers.find((entry) => entry.id === DEFAULT_MODEL_PROVIDER_ID) ?? providers[0]
-  const runtime = getRcodeRuntimeSettings(settings)
+  const runtime = getJokerRuntimeSettings(settings)
   return {
     ...settings,
     provider: {
@@ -154,7 +154,7 @@ function stripMigratedPlaintext(
     },
     agents: {
       ...settings.agents,
-      Rcode: migratedSourceIds.has(LEGACY_RUNTIME_OVERRIDE_SOURCE_ID)
+      Joker: migratedSourceIds.has(LEGACY_RUNTIME_OVERRIDE_SOURCE_ID)
         ? { ...runtime, apiKey: '' }
         : runtime
     }
@@ -175,7 +175,7 @@ async function hydrateSettingsFromBindings(
     providers.push(resolved ? { ...entry, apiKey: resolved.apiKey } : entry)
   }
   const defaultProvider = providers.find((entry) => entry.id === DEFAULT_MODEL_PROVIDER_ID) ?? providers[0]
-  const runtime = getRcodeRuntimeSettings(settings)
+  const runtime = getJokerRuntimeSettings(settings)
   const runtimeOverride = await resolveLegacyApiKey(service, LEGACY_RUNTIME_OVERRIDE_SOURCE_ID)
   return {
     ...settings,
@@ -186,7 +186,7 @@ async function hydrateSettingsFromBindings(
     },
     agents: {
       ...settings.agents,
-      Rcode: runtimeOverride ? { ...runtime, apiKey: runtimeOverride.apiKey } : runtime
+      Joker: runtimeOverride ? { ...runtime, apiKey: runtimeOverride.apiKey } : runtime
     }
   }
 }
@@ -202,7 +202,7 @@ async function resolveLegacyApiKey(
     // keychain reset, profile restore, or copied data directory. One unreadable
     // legacy record must not make settings:set fail for a different provider:
     // keep that profile unhydrated so the user can replace its key explicitly.
-    console.warn('[Rcode-gui] Legacy provider credential could not be restored; the saved profile will require a new key.', {
+    console.warn('[Joker-gui] Legacy provider credential could not be restored; the saved profile will require a new key.', {
       sourceId,
       message: error instanceof Error ? error.message : String(error)
     })
@@ -221,7 +221,7 @@ function isRecognizedSettingsSource(sourceId: string): boolean {
 }
 
 function resolveSettingsDataDir(settings: AppSettingsV1): string {
-  const value = getRcodeRuntimeSettings(settings).dataDir.trim()
+  const value = getJokerRuntimeSettings(settings).dataDir.trim()
   if (value === '~') return homedir()
   if (value.startsWith('~/') || value.startsWith('~\\')) {
     return join(homedir(), value.slice(2).replace(/\\/g, '/'))

@@ -17,7 +17,7 @@ import {
   type SettingsContribution,
   type ViewContainerContribution,
   type ViewContribution
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import { z } from 'zod'
 import { BUILTIN_RIGHT_PANEL_IDS } from './contribution-ids'
 import {
@@ -464,7 +464,7 @@ export class ContributionRegistry {
         if (!extension.compatible) {
           diagnostics.push({
             code: 'CONTRIBUTION_INCOMPATIBLE',
-            message: `${id} is incompatible with the running Rcode version`,
+            message: `${id} is incompatible with the running Joker version`,
             extensionId: extension.id,
             extensionVersion: extension.version,
             contributionId: id,
@@ -704,11 +704,11 @@ export const workbenchContributionRegistry = new ContributionRegistry()
 export function extensionResourceUrl(extensionId: string, relativePath: string): string {
   const safeId = ExtensionIdSchema.parse(extensionId)
   const segments = relativePath.split('/').map((segment) => encodeURIComponent(segment))
-  return `Rcode-extension://${safeId}/${segments.join('/')}`
+  return `Joker-extension://${safeId}/${segments.join('/')}`
 }
 
 export function extensionHostIconUrl(extensionId: string, relativePath: string): string {
-  return `${extensionResourceUrl(extensionId, relativePath)}?RcodeHostResource=icon`
+  return `${extensionResourceUrl(extensionId, relativePath)}?JokerHostResource=icon`
 }
 
 export function resolveContributionCommand(

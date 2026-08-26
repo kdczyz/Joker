@@ -104,8 +104,8 @@ describe('useHtmlFrameAutoSize measurement write policy', () => {
     const epoch: HtmlFrameMeasurementEpoch = {
       shapeId: 'shape-1',
       artifactId: 'screen',
-      artifactRelativePath: '.Rcode-design/doc/screen/v1.html',
-      previewWebviewUrl: 'file:///workspace/.Rcode-design/doc/screen/v1.html',
+      artifactRelativePath: '.Joker-design/doc/screen/v1.html',
+      previewWebviewUrl: 'file:///workspace/.Joker-design/doc/screen/v1.html',
       previewRevision: 1,
       webviewMountNonce: 10
     }
@@ -113,8 +113,8 @@ describe('useHtmlFrameAutoSize measurement write policy', () => {
     expect(htmlFrameMeasurementEpochMatches(epoch, { ...epoch })).toBe(true)
     expect(htmlFrameMeasurementEpochMatches(epoch, {
       ...epoch,
-      artifactRelativePath: '.Rcode-design/doc/screen/v2.html',
-      previewWebviewUrl: 'file:///workspace/.Rcode-design/doc/screen/v2.html'
+      artifactRelativePath: '.Joker-design/doc/screen/v2.html',
+      previewWebviewUrl: 'file:///workspace/.Joker-design/doc/screen/v2.html'
     })).toBe(false)
     expect(htmlFrameMeasurementEpochMatches(epoch, { ...epoch, previewRevision: 2 })).toBe(false)
     expect(htmlFrameMeasurementEpochMatches(epoch, { ...epoch, webviewMountNonce: 11 })).toBe(false)
@@ -125,8 +125,8 @@ describe('useHtmlFrameAutoSize measurement write policy', () => {
     const epoch: HtmlFrameMeasurementEpoch = {
       shapeId: 'shape-1',
       artifactId: 'screen',
-      artifactRelativePath: '.Rcode-design/doc/screen/v1.html',
-      previewWebviewUrl: 'file:///workspace/.Rcode-design/doc/screen/v1.html',
+      artifactRelativePath: '.Joker-design/doc/screen/v1.html',
+      previewWebviewUrl: 'file:///workspace/.Joker-design/doc/screen/v1.html',
       previewRevision: 1,
       webviewMountNonce: 10
     }
@@ -134,7 +134,7 @@ describe('useHtmlFrameAutoSize measurement write policy', () => {
       id: 'screen',
       kind: 'html',
       title: 'Screen',
-      relativePath: '.Rcode-design/doc/screen/v1.html',
+      relativePath: '.Joker-design/doc/screen/v1.html',
       createdAt: '2026-06-20T00:00:00.000Z',
       updatedAt: '2026-06-20T00:00:00.000Z',
       versions: []
@@ -143,7 +143,7 @@ describe('useHtmlFrameAutoSize measurement write policy', () => {
     expect(htmlFrameMeasurementArtifactMatchesEpoch(epoch, artifact)).toBe(true)
     expect(htmlFrameMeasurementArtifactMatchesEpoch(epoch, {
       ...artifact,
-      relativePath: '.Rcode-design/doc/screen/v2.html'
+      relativePath: '.Joker-design/doc/screen/v2.html'
     })).toBe(false)
     expect(htmlFrameMeasurementArtifactMatchesEpoch(epoch, {
       ...artifact,

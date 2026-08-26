@@ -73,7 +73,7 @@ export function DesignInteropPanel({ workspaceRoot, document }: Props): ReactEle
 
   const exportPenpotPackage = async (): Promise<void> => {
     if (exportDisabled) return
-    if (typeof window.RcodeGui?.writeWorkspaceFile !== 'function') {
+    if (typeof window.JokerGui?.writeWorkspaceFile !== 'function') {
       setExportState({ status: 'error', message: t('designInteropUnavailable') })
       return
     }
@@ -101,7 +101,7 @@ export function DesignInteropPanel({ workspaceRoot, document }: Props): ReactEle
 
   const exportDesignResources = async (): Promise<void> => {
     if (exportDisabled) return
-    if (typeof window.RcodeGui?.writeWorkspaceFile !== 'function') {
+    if (typeof window.JokerGui?.writeWorkspaceFile !== 'function') {
       setExportState({ status: 'error', message: t('designInteropUnavailable') })
       return
     }
@@ -130,8 +130,8 @@ export function DesignInteropPanel({ workspaceRoot, document }: Props): ReactEle
   const exportOpenUiReport = async (): Promise<void> => {
     if (exportDisabled) return
     if (
-      typeof window.RcodeGui?.readWorkspaceFile !== 'function' ||
-      typeof window.RcodeGui?.writeWorkspaceFile !== 'function'
+      typeof window.JokerGui?.readWorkspaceFile !== 'function' ||
+      typeof window.JokerGui?.writeWorkspaceFile !== 'function'
     ) {
       setExportState({ status: 'error', message: t('designInteropUnavailable') })
       return
@@ -141,7 +141,7 @@ export function DesignInteropPanel({ workspaceRoot, document }: Props): ReactEle
       const htmlArtifacts = (document?.artifacts ?? []).filter((artifact) => artifact.kind === 'html')
       const items = []
       for (const artifact of htmlArtifacts) {
-        const result = await window.RcodeGui.readWorkspaceFile({ path: artifact.relativePath, workspaceRoot })
+        const result = await window.JokerGui.readWorkspaceFile({ path: artifact.relativePath, workspaceRoot })
         if (result?.ok) items.push({ artifact, html: result.content })
       }
       const report = buildOpenUiNormalizationReport({ items })

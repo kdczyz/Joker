@@ -53,7 +53,7 @@ export function DesignCanvas({
   const activeThreadId = useChatStore((s) => s.activeThreadId)
   const threads = useChatStore((s) => s.threads)
   const boardArtifact = findDesignBoardArtifact(artifacts)
-  const baseDir = activeDocumentId ? `.Rcode-design/${activeDocumentId}` : undefined
+  const baseDir = activeDocumentId ? `.Joker-design/${activeDocumentId}` : undefined
   const activeThreadBelongsToDoc = designThreadBelongsToDocument({
     threads,
     workspaceRoot,

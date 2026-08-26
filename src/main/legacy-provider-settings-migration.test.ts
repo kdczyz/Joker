@@ -4,19 +4,19 @@ import { join } from 'node:path'
 import { describe, expect, it, vi } from 'vitest'
 import {
   MODEL_PROVIDER_PRESETS,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   modelProviderPresetProfile,
-  resolveRcodeRuntimeSettings
+  resolveJokerRuntimeSettings
 } from '../shared/app-settings'
 import { LegacyProviderSettingsMigrationCoordinator } from './legacy-provider-settings-migration'
-import { providersConfigForRuntime } from './runtime/Rcode-runtime-model-config'
-import { syncGuiManagedRcodeConfig } from './runtime/Rcode-runtime-config-service'
+import { providersConfigForRuntime } from './runtime/Joker-runtime-model-config'
+import { syncGuiManagedJokerConfig } from './runtime/Joker-runtime-config-service'
 import { JsonSettingsStore } from './settings-store'
 
 describe('LegacyProviderSettingsMigrationCoordinator', () => {
   it('backs up and removes plaintext while keeping secure bindings readable across restarts', async () => {
-    const userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-settings-credential-migration-'))
+    const userDataDir = await mkdtemp(join(tmpdir(), 'Joker-settings-credential-migration-'))
     const dataDir = join(userDataDir, 'runtime-data')
     const plainStore = new JsonSettingsStore(userDataDir)
     const defaults = await plainStore.load()
@@ -40,8 +40,8 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
         }]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           dataDir,
           providerId: 'custom-provider',
           model: 'custom-model',
@@ -55,14 +55,14 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
     const loaded = await store.load()
     expect(loaded.provider.providers.find((provider) => provider.id === 'custom-provider')?.apiKey)
       .toBe('custom-provider-secret')
-    expect(loaded.agents.Rcode.apiKey).toBe('distinct-runtime-secret')
+    expect(loaded.agents.Joker.apiKey).toBe('distinct-runtime-secret')
 
-    const persisted = await readFile(join(userDataDir, 'Rcode-settings.json'), 'utf8')
+    const persisted = await readFile(join(userDataDir, 'Joker-settings.json'), 'utf8')
     expect(persisted).not.toContain('default-provider-secret')
     expect(persisted).not.toContain('custom-provider-secret')
     expect(persisted).not.toContain('distinct-runtime-secret')
     const backup = await readFile(
-      join(userDataDir, 'Rcode-settings.pre-extension-credential-migration.json'),
+      join(userDataDir, 'Joker-settings.pre-extension-credential-migration.json'),
       'utf8'
     )
     expect(backup).toContain('custom-provider-secret')
@@ -98,7 +98,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
     }).load()
     expect(reloaded.provider.providers.find((provider) => provider.id === 'custom-provider')?.apiKey)
       .toBe('custom-provider-secret')
-    expect(reloaded.agents.Rcode.apiKey).toBe('distinct-runtime-secret')
+    expect(reloaded.agents.Joker.apiKey).toBe('distinct-runtime-secret')
 
     const runtimeProviders = providersConfigForRuntime(reloaded)
     expect(runtimeProviders['custom-provider']).toEqual(expect.objectContaining({
@@ -107,7 +107,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
     }))
     expect(JSON.stringify(runtimeProviders)).not.toContain('custom-provider-secret')
 
-    await syncGuiManagedRcodeConfig(dataDir, resolveRcodeRuntimeSettings(reloaded), {
+    await syncGuiManagedJokerConfig(dataDir, resolveJokerRuntimeSettings(reloaded), {
       scheduleMcp: {
         settings: reloaded,
         launch: { appPath: userDataDir, execPath: process.execPath, isPackaged: false }
@@ -123,7 +123,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
   })
 
   it('keeps the account reference stable when a user explicitly updates a migrated key', async () => {
-    const userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-settings-credential-update-'))
+    const userDataDir = await mkdtemp(join(tmpdir(), 'Joker-settings-credential-update-'))
     const dataDir = join(userDataDir, 'runtime-data')
     const plainStore = new JsonSettingsStore(userDataDir)
     const defaults = await plainStore.load()
@@ -133,7 +133,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
         ...defaultModelProviderSettings(),
         apiKey: 'old-secret'
       },
-      agents: { Rcode: { ...defaultRcodeRuntimeSettings(), dataDir } }
+      agents: { Joker: { ...defaultJokerRuntimeSettings(), dataDir } }
     })
     const store = new JsonSettingsStore(userDataDir, {
       credentialMigration: new LegacyProviderSettingsMigrationCoordinator()
@@ -152,11 +152,11 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
     })
     expect(updated.provider.apiKey).toBe('new-secret')
     expect(await bindingAccountId(dataDir, 'settings:provider:deepseek')).toBe(before)
-    expect(await readFile(join(userDataDir, 'Rcode-settings.json'), 'utf8')).not.toContain('new-secret')
+    expect(await readFile(join(userDataDir, 'Joker-settings.json'), 'utf8')).not.toContain('new-secret')
   })
 
   it('saves a new provider key when an unrelated legacy credential can no longer be decrypted', async () => {
-    const userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-settings-stale-credential-'))
+    const userDataDir = await mkdtemp(join(tmpdir(), 'Joker-settings-stale-credential-'))
     const dataDir = join(userDataDir, 'runtime-data')
     const plainStore = new JsonSettingsStore(userDataDir)
     const defaults = await plainStore.load()
@@ -166,7 +166,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
         ...defaultModelProviderSettings(),
         apiKey: 'stale-deepseek-secret'
       },
-      agents: { Rcode: { ...defaultRcodeRuntimeSettings(), dataDir } }
+      agents: { Joker: { ...defaultJokerRuntimeSettings(), dataDir } }
     })
 
     const initialStore = new JsonSettingsStore(userDataDir, {
@@ -193,7 +193,7 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
         providers: [{ ...minimax, apiKey: 'fresh-minimax-secret' }]
       },
       agents: {
-        Rcode: {
+        Joker: {
           providerId: 'minimax',
           model: minimax.models[0]
         }
@@ -203,14 +203,14 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
     expect(updated.provider.providers.find((provider) => provider.id === 'deepseek')?.apiKey).toBe('')
     expect(updated.provider.providers.find((provider) => provider.id === 'minimax')?.apiKey)
       .toBe('fresh-minimax-secret')
-    expect(updated.agents.Rcode.providerId).toBe('minimax')
-    expect(await readFile(join(userDataDir, 'Rcode-settings.json'), 'utf8'))
+    expect(updated.agents.Joker.providerId).toBe('minimax')
+    expect(await readFile(join(userDataDir, 'Joker-settings.json'), 'utf8'))
       .not.toContain('fresh-minimax-secret')
     expect(loaded.provider.apiKey).toBe('')
   })
 
   it('rolls back a secure pending migration when the ordinary settings commit fails', async () => {
-    const userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-settings-credential-failure-'))
+    const userDataDir = await mkdtemp(join(tmpdir(), 'Joker-settings-credential-failure-'))
     const rollback = vi.fn(async () => undefined)
     const store = new JsonSettingsStore(userDataDir, {
       credentialMigration: {
@@ -225,21 +225,21 @@ describe('LegacyProviderSettingsMigrationCoordinator', () => {
       }
     })
     const settings = await store.load()
-    await mkdir(join(userDataDir, 'Rcode-settings.json'))
+    await mkdir(join(userDataDir, 'Joker-settings.json'))
 
     await expect(store.save(settings)).rejects.toBeDefined()
     expect(rollback).toHaveBeenCalledOnce()
   })
 
   it('does not migrate when an existing backup path is not a protected regular file', async () => {
-    const userDataDir = await mkdtemp(join(tmpdir(), 'Rcode-settings-credential-backup-'))
+    const userDataDir = await mkdtemp(join(tmpdir(), 'Joker-settings-credential-backup-'))
     const plainStore = new JsonSettingsStore(userDataDir)
     const settings = await plainStore.load()
     await plainStore.save({
       ...settings,
       provider: { ...settings.provider, apiKey: 'plaintext-must-remain-authoritative' }
     })
-    await mkdir(join(userDataDir, 'Rcode-settings.pre-extension-credential-migration.json'))
+    await mkdir(join(userDataDir, 'Joker-settings.pre-extension-credential-migration.json'))
     const prepare = vi.fn()
 
     const loaded = await new JsonSettingsStore(userDataDir, {

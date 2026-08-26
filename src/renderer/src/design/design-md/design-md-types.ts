@@ -4,7 +4,7 @@ export type DesignMdDiagnostic = {
   severity: DesignMdDiagnosticSeverity
   message: string
   path?: string
-  source: 'google' | 'Rcode'
+  source: 'google' | 'Joker'
 }
 
 export type DesignMdColor = {

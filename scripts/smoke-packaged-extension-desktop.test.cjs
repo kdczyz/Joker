@@ -42,7 +42,7 @@ const {
   platformDesktopArguments,
   resolvedDesktopResourceCandidates,
   resolveDesktopLaunchSelection,
-  runPackagedRcode,
+  runPackagedJoker,
   terminateProcessTree,
   waitForPortsClosed
 } = require('./smoke-packaged-extension-desktop.cjs')
@@ -62,12 +62,12 @@ const linuxUserNamespaceSetup = [
 test('forces headless packaged runtime smokes onto the encrypted file-key fallback', () => {
   const environment = createPackagedExtensionSmokeReexecEnvironment({
     PATH: '/usr/bin',
-    RCODE_DISABLE_OS_CREDENTIAL_STORE: '0'
+    JOKER_DISABLE_OS_CREDENTIAL_STORE: '0'
   })
   assert.equal(environment.PATH, '/usr/bin')
   assert.equal(environment.ELECTRON_RUN_AS_NODE, '1')
-  assert.equal(environment.RCODE_DISABLE_OS_CREDENTIAL_STORE, '1')
-  assert.equal(environment.RCODE_PACKAGED_EXTENSION_SMOKE_REEXEC, '1')
+  assert.equal(environment.JOKER_DISABLE_OS_CREDENTIAL_STORE, '1')
+  assert.equal(environment.JOKER_PACKAGED_EXTENSION_SMOKE_REEXEC, '1')
 })
 
 test('selects host-native packaged resources and never launches desktop Electron as Node', () => {
@@ -78,16 +78,16 @@ test('selects host-native packaged resources and never launches desktop Electron
   assert.equal(platformDesktopArguments('linux').includes('--disable-setuid-sandbox'), false)
   assert.equal(platformDesktopArguments('linux').includes('--no-sandbox'), false)
   assert.deepEqual(platformDesktopArguments('darwin'), [])
-  assert.deepEqual(desktopResourceCandidates('darwin', 'arm64'), ['dist/mac-arm64/Rcode.app/Contents/Resources'])
-  assert.deepEqual(desktopResourceCandidates('darwin', 'x64'), ['dist/mac/Rcode.app/Contents/Resources'])
+  assert.deepEqual(desktopResourceCandidates('darwin', 'arm64'), ['dist/mac-arm64/Joker.app/Contents/Resources'])
+  assert.deepEqual(desktopResourceCandidates('darwin', 'x64'), ['dist/mac/Joker.app/Contents/Resources'])
   assert.deepEqual(desktopResourceCandidates('win32', 'x64'), ['dist/win-unpacked/resources'])
   assert.deepEqual(desktopResourceCandidates('linux', 'x64'), ['dist/linux-unpacked/resources'])
-  assert.deepEqual(packagedResourceCandidates('darwin', 'arm64'), ['dist/mac-arm64/Rcode.app/Contents/Resources'])
-  assert.deepEqual(packagedResourceCandidates('darwin', 'x64'), ['dist/mac/Rcode.app/Contents/Resources'])
+  assert.deepEqual(packagedResourceCandidates('darwin', 'arm64'), ['dist/mac-arm64/Joker.app/Contents/Resources'])
+  assert.deepEqual(packagedResourceCandidates('darwin', 'x64'), ['dist/mac/Joker.app/Contents/Resources'])
   const workspaceRoot = resolve('/workspace')
   const macArm64Resources = resolve(
     workspaceRoot,
-    'dist/mac-arm64/Rcode.app/Contents/Resources'
+    'dist/mac-arm64/Joker.app/Contents/Resources'
   )
   assert.deepEqual(resolvedPackagedResourceCandidates('darwin', 'arm64', workspaceRoot), [
     macArm64Resources
@@ -95,25 +95,25 @@ test('selects host-native packaged resources and never launches desktop Electron
   assert.deepEqual(resolvedDesktopResourceCandidates('darwin', 'arm64', workspaceRoot), [
     macArm64Resources
   ])
-  assert.equal(desktopApplicationEntry('/packaged/Resources', '/packaged/Rcode', '/packaged/Rcode'), undefined)
+  assert.equal(desktopApplicationEntry('/packaged/Resources', '/packaged/Joker', '/packaged/Joker'), undefined)
   assert.equal(
-    desktopApplicationEntry('/packaged/Resources', '/host/Electron', '/packaged/Rcode'),
+    desktopApplicationEntry('/packaged/Resources', '/host/Electron', '/packaged/Joker'),
     join('/packaged/Resources', 'app.asar')
   )
   const smokeSettings = desktopSmokeSettings(
     43123,
-    '/isolated-home/.Rcode/default_workspace',
-    '/isolated-home/.Rcode/data'
+    '/isolated-home/.Joker/default_workspace',
+    '/isolated-home/.Joker/data'
   )
-  assert.equal(smokeSettings.workspaceRoot, '/isolated-home/.Rcode/default_workspace')
-  assert.equal(smokeSettings.agents.Rcode.dataDir, '/isolated-home/.Rcode/data')
+  assert.equal(smokeSettings.workspaceRoot, '/isolated-home/.Joker/default_workspace')
+  assert.equal(smokeSettings.agents.Joker.dataDir, '/isolated-home/.Joker/data')
   assert.throws(
-    () => desktopSmokeSettings(43123, '/workspace', '~/.Rcode/data'),
+    () => desktopSmokeSettings(43123, '/workspace', '~/.Joker/data'),
     /dataDir must be absolute/
   )
   assert.equal(
     desktopSmokeWorkspaceParent('/source-checkout'),
-    join('/source-checkout', 'dist', '.Rcode-desktop-smoke')
+    join('/source-checkout', 'dist', '.Joker-desktop-smoke')
   )
   assert.deepEqual(
     desktopUserDataCandidates({
@@ -124,39 +124,39 @@ test('selects host-native packaged resources and never launches desktop Electron
     }),
     [
       '/isolated-user-data',
-      join('/isolated-app-data', 'Rcode'),
-      join('/isolated-home', '.config', 'Rcode')
+      join('/isolated-app-data', 'Joker'),
+      join('/isolated-home', '.config', 'Joker')
     ]
   )
 
   const native = createDesktopLaunchPlan({
-    executable: '/packaged/Rcode',
+    executable: '/packaged/Joker',
     applicationArguments: ['--remote-debugging-port=12345'],
     environment: { ELECTRON_RUN_AS_NODE: '1', HOME: '/isolated' },
     platform: 'darwin',
     hasDisplay: false
   })
-  assert.equal(native.command, '/packaged/Rcode')
+  assert.equal(native.command, '/packaged/Joker')
   assert.deepEqual(native.args, ['--remote-debugging-port=12345'])
   assert.equal(native.args.includes('--no-sandbox'), false)
   assert.equal(native.env.ELECTRON_RUN_AS_NODE, undefined)
   assert.equal(native.wrappedByXvfb, false)
 
   const linux = createDesktopLaunchPlan({
-    executable: '/packaged/Rcode',
+    executable: '/packaged/Joker',
     applicationArguments: ['--remote-debugging-port=12345'],
     environment: {
       ELECTRON_RUN_AS_NODE: '1',
-      RCODE_DISABLE_OS_CREDENTIAL_STORE: '1'
+      JOKER_DISABLE_OS_CREDENTIAL_STORE: '1'
     },
     platform: 'linux',
     hasDisplay: false,
     xvfbExecutable: '/usr/bin/xvfb-run'
   })
   assert.equal(linux.command, '/usr/bin/xvfb-run')
-  assert.deepEqual(linux.args, ['-a', '-s', '-screen 0 1280x900x24', '/packaged/Rcode', '--remote-debugging-port=12345'])
+  assert.deepEqual(linux.args, ['-a', '-s', '-screen 0 1280x900x24', '/packaged/Joker', '--remote-debugging-port=12345'])
   assert.equal(linux.env.ELECTRON_RUN_AS_NODE, undefined)
-  assert.equal(linux.env.RCODE_DISABLE_OS_CREDENTIAL_STORE, '1')
+  assert.equal(linux.env.JOKER_DISABLE_OS_CREDENTIAL_STORE, '1')
   assert.equal(linux.wrappedByXvfb, true)
 
   const isolated = createIsolatedEnvironment(
@@ -165,10 +165,10 @@ test('selects host-native packaged resources and never launches desktop Electron
       ELECTRON_RENDERER_URL: 'http://localhost:5173',
       ELECTRON_RUN_AS_NODE: '1',
       NODE_OPTIONS: '--require=/tmp/inject.cjs',
-      RCODE_RUNTIME_TOKEN: 'inherited-token',
-      RCODE_RUNTIME_PROVIDER_KIND: 'agent-sdk',
-      RCODE_CLAUDE_BINARY: '/tmp/claude',
-      RCODE_DISABLE_OS_CREDENTIAL_STORE: '0',
+      JOKER_RUNTIME_TOKEN: 'inherited-token',
+      JOKER_RUNTIME_PROVIDER_KIND: 'agent-sdk',
+      JOKER_CLAUDE_BINARY: '/tmp/claude',
+      JOKER_DISABLE_OS_CREDENTIAL_STORE: '0',
       DEEPSEEK_API_KEY: 'inherited-secret',
       DEEPSEEK_GUI_STARTUP_TRACE: '1'
     },
@@ -182,16 +182,16 @@ test('selects host-native packaged resources and never launches desktop Electron
   assert.equal(isolated.PATH, '/system/bin')
   assert.equal(isolated.HOME, '/isolated-home')
   assert.equal(isolated.NODE_ENV, 'production')
-  assert.equal(isolated.RCODE_PACKAGED_EXTENSION_DESKTOP_SMOKE, '1')
-  assert.equal(isolated.RCODE_DISABLE_OS_CREDENTIAL_STORE, '1')
+  assert.equal(isolated.JOKER_PACKAGED_EXTENSION_DESKTOP_SMOKE, '1')
+  assert.equal(isolated.JOKER_DISABLE_OS_CREDENTIAL_STORE, '1')
   assert.equal(isolated.NO_AT_BRIDGE, '1')
   for (const key of [
     'ELECTRON_RENDERER_URL',
     'ELECTRON_RUN_AS_NODE',
     'NODE_OPTIONS',
-    'RCODE_RUNTIME_TOKEN',
-    'RCODE_RUNTIME_PROVIDER_KIND',
-    'RCODE_CLAUDE_BINARY',
+    'JOKER_RUNTIME_TOKEN',
+    'JOKER_RUNTIME_PROVIDER_KIND',
+    'JOKER_CLAUDE_BINARY',
     'DEEPSEEK_API_KEY',
     'DEEPSEEK_GUI_STARTUP_TRACE'
   ]) {
@@ -200,12 +200,12 @@ test('selects host-native packaged resources and never launches desktop Electron
 })
 
 test('selects an explicit self-contained desktop executable without replacing the CLI runtime', async (t) => {
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-desktop-executable-selection-test-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-desktop-executable-selection-test-'))
   t.after(() => rmSync(temporaryRoot, { recursive: true, force: true }))
   const resourcesDir = join(temporaryRoot, 'resources')
   const runtimeExecutable = join(temporaryRoot, 'host-electron')
-  const packagedRuntimeExecutable = join(temporaryRoot, 'packaged-Rcode')
-  const appImage = join(temporaryRoot, 'Rcode.AppImage')
+  const packagedRuntimeExecutable = join(temporaryRoot, 'packaged-Joker')
+  const appImage = join(temporaryRoot, 'Joker.AppImage')
   writeFileSync(appImage, 'self-contained AppImage fixture\n')
 
   assert.deepEqual(resolveDesktopLaunchSelection({
@@ -222,12 +222,12 @@ test('selects an explicit self-contained desktop executable without replacing th
 })
 
 test('rejects missing and non-file desktop executable overrides', async (t) => {
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-desktop-executable-validation-test-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-desktop-executable-validation-test-'))
   t.after(() => rmSync(temporaryRoot, { recursive: true, force: true }))
   const input = {
     resourcesDir: join(temporaryRoot, 'resources'),
     runtimeExecutable: join(temporaryRoot, 'host-electron'),
-    packagedRuntimeExecutable: join(temporaryRoot, 'packaged-Rcode')
+    packagedRuntimeExecutable: join(temporaryRoot, 'packaged-Joker')
   }
 
   assert.throws(
@@ -247,14 +247,14 @@ test('rejects missing and non-file desktop executable overrides', async (t) => {
 })
 
 test('launches an AppImage override through Xvfb without an external app.asar or inherited overrides', async (t) => {
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-appimage-launch-plan-test-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-appimage-launch-plan-test-'))
   t.after(() => rmSync(temporaryRoot, { recursive: true, force: true }))
-  const appImage = join(temporaryRoot, 'Rcode.AppImage')
+  const appImage = join(temporaryRoot, 'Joker.AppImage')
   writeFileSync(appImage, 'self-contained AppImage fixture\n')
   const selection = resolveDesktopLaunchSelection({
     resourcesDir: join(temporaryRoot, 'resources'),
     runtimeExecutable: join(temporaryRoot, 'host-electron'),
-    packagedRuntimeExecutable: join(temporaryRoot, 'packaged-Rcode'),
+    packagedRuntimeExecutable: join(temporaryRoot, 'packaged-Joker'),
     desktopExecutable: appImage
   })
   const launch = createDesktopLaunchPlan({
@@ -294,7 +294,7 @@ test('launches an AppImage override through Xvfb without an external app.asar or
 test('preserves default explicit-host Electron launch with the packaged app.asar', () => {
   const resourcesDir = join(tmpdir(), 'packaged', 'resources')
   const runtimeExecutable = join(tmpdir(), 'host', 'Electron')
-  const packagedRuntimeExecutable = join(tmpdir(), 'packaged', 'Rcode')
+  const packagedRuntimeExecutable = join(tmpdir(), 'packaged', 'Joker')
 
   assert.deepEqual(resolveDesktopLaunchSelection({
     resourcesDir,
@@ -339,8 +339,8 @@ test('requires proof that the packaged runtime child completed the full smoke', 
   )
 })
 
-test('exports and installs the shared .Rcodex smoke fixture with a Chromium body marker', async (t) => {
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-desktop-smoke-fixture-test-'))
+test('exports and installs the shared .Jokerx smoke fixture with a Chromium body marker', async (t) => {
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-desktop-smoke-fixture-test-'))
   t.after(() => rmSync(temporaryRoot, { recursive: true, force: true }))
   const profile = join(temporaryRoot, 'profile')
   const calls = []
@@ -354,7 +354,7 @@ test('exports and installs the shared .Rcodex smoke fixture with a Chromium body
       calls.push(args)
       if (args[1] !== 'install') return
       mkdirSync(join(installedRoot, 'dist', 'webview'), { recursive: true })
-      writeFileSync(join(installedRoot, 'Rcode-extension.json'), '{}\n')
+      writeFileSync(join(installedRoot, 'Joker-extension.json'), '{}\n')
       writeFileSync(join(installedRoot, 'dist', 'webview', 'index.html'), '<main>installed</main>\n')
     }
   })
@@ -365,22 +365,22 @@ test('exports and installs the shared .Rcodex smoke fixture with a Chromium body
     ['validate', 'pack', 'install']
   )
   const sourceWebview = await readFile(join(fixture.source, 'dist', 'webview', 'index.html'), 'utf8')
-  assert.match(sourceWebview, /data-Rcode-packaged-webview-smoke="ready"/)
+  assert.match(sourceWebview, /data-Joker-packaged-webview-smoke="ready"/)
   assert.match(sourceWebview, new RegExp(WEBVIEW_MARKER))
   assert.match(sourceWebview, /connect-src http:\/\/127\.0\.0\.1:43123/)
   assert.equal(
     smokeWebviewCsp(),
-    "default-src 'none'; style-src 'self'; img-src 'self' data: Rcode-media:; media-src 'self' Rcode-media:; connect-src 'none'"
+    "default-src 'none'; style-src 'self'; img-src 'self' data: Joker-media:; media-src 'self' Joker-media:; connect-src 'none'"
   )
   assert.throws(() => smokeWebviewCsp(['https://example.com']), /explicit loopback origin/)
 })
 
-test('recognizes the workbench and Rcode-extension guest CDP targets', () => {
-  assert.equal(CONTRIBUTION_ID, 'extension:Rcode-smoke.packaged/smoke')
+test('recognizes the workbench and Joker-extension guest CDP targets', () => {
+  assert.equal(CONTRIBUTION_ID, 'extension:Joker-smoke.packaged/smoke')
   assert.equal(
     isWorkbenchTarget({
       type: 'page',
-      url: 'file:///Applications/Rcode.app/Contents/Resources/app.asar/out/renderer/index.html'
+      url: 'file:///Applications/Joker.app/Contents/Resources/app.asar/out/renderer/index.html'
     }),
     true
   )
@@ -396,7 +396,7 @@ test('recognizes the workbench and Rcode-extension guest CDP targets', () => {
   assert.equal(
     isWorkbenchTarget({
       type: 'webview',
-      url: `Rcode-extension://${EXTENSION_ID}/index.html`
+      url: `Joker-extension://${EXTENSION_ID}/index.html`
     }),
     false
   )
@@ -404,7 +404,7 @@ test('recognizes the workbench and Rcode-extension guest CDP targets', () => {
     isExtensionGuestTarget({
       targetId: 'guest-1',
       type: 'webview',
-      url: `Rcode-extension://${EXTENSION_ID}/dist/webview/index.html?RcodeViewSession=123`
+      url: `Joker-extension://${EXTENSION_ID}/dist/webview/index.html?JokerViewSession=123`
     }),
     true
   )
@@ -412,7 +412,7 @@ test('recognizes the workbench and Rcode-extension guest CDP targets', () => {
     isExtensionGuestTarget({
       targetId: 'guest-2',
       type: 'webview',
-      url: 'Rcode-extension://other.example/index.html'
+      url: 'Joker-extension://other.example/index.html'
     }),
     false
   )
@@ -420,7 +420,7 @@ test('recognizes the workbench and Rcode-extension guest CDP targets', () => {
     isExtensionGuestTarget({
       targetId: 'guest-3',
       type: 'page',
-      url: `Rcode-extension://${EXTENSION_ID}/dist/webview/index.html?RcodeViewSession=123`
+      url: `Joker-extension://${EXTENSION_ID}/dist/webview/index.html?JokerViewSession=123`
     }),
     false
   )
@@ -428,7 +428,7 @@ test('recognizes the workbench and Rcode-extension guest CDP targets', () => {
     isExtensionGuestTarget({
       targetId: 'guest-4',
       type: 'webview',
-      url: `Rcode-extension://${EXTENSION_ID}/dist/webview/index.html`
+      url: `Joker-extension://${EXTENSION_ID}/dist/webview/index.html`
     }),
     false
   )
@@ -436,7 +436,7 @@ test('recognizes the workbench and Rcode-extension guest CDP targets', () => {
     isExtensionGuestTarget({
       targetId: 'guest-5',
       type: 'webview',
-      url: `Rcode-extension://${EXTENSION_ID}/dist/webview/index.html?RcodeViewSession=123&extra=1`
+      url: `Joker-extension://${EXTENSION_ID}/dist/webview/index.html?JokerViewSession=123&extra=1`
     }),
     false
   )
@@ -521,7 +521,7 @@ test('reattaches renderer discovery when the packaged workbench CDP session is r
             targetInfos: [{
               targetId: 'replacement-target',
               type: 'page',
-              url: 'file:///opt/Rcode/resources/app.asar/out/renderer/index.html'
+              url: 'file:///opt/Joker/resources/app.asar/out/renderer/index.html'
             }]
           }
         }
@@ -575,7 +575,7 @@ test('retries renderer discovery when the initial packaged workbench target is r
             targetInfos: [{
               targetId: targetLookupCount === 1 ? 'initial-target' : 'replacement-target',
               type: 'page',
-              url: 'file:///opt/Rcode/resources/app.asar/out/renderer/index.html'
+              url: 'file:///opt/Joker/resources/app.asar/out/renderer/index.html'
             }]
           }
         }
@@ -632,7 +632,7 @@ test('reattaches a replaced packaged Extension guest before replaying its CDP co
             targetInfos: [{
               targetId: 'replacement-guest',
               type: 'webview',
-              url: `Rcode-extension://${EXTENSION_ID}/dist/webview/index.html?RcodeViewSession=replacement`
+              url: `Joker-extension://${EXTENSION_ID}/dist/webview/index.html?JokerViewSession=replacement`
             }]
           }
         }
@@ -673,7 +673,7 @@ test('reattaches and replays a guest Runtime evaluation after a silent CDP timeo
             targetInfos: [{
               targetId: 'guest-target',
               type: 'webview',
-              url: `Rcode-extension://${EXTENSION_ID}/dist/webview/index.html?RcodeViewSession=current`
+              url: `Joker-extension://${EXTENSION_ID}/dist/webview/index.html?JokerViewSession=current`
             }]
           }
         }
@@ -704,7 +704,7 @@ test('runs long guest inspections as a started task with short result polls', as
       expressions.push(params.expression)
       if (params.expression.includes('Promise.resolve')) {
         starts += 1
-        return { result: { value: '__RcodePackagedGuestInspectionTest' } }
+        return { result: { value: '__JokerPackagedGuestInspectionTest' } }
       }
       if (params.expression.startsWith('delete ')) return { result: { value: true } }
       polls += 1
@@ -843,7 +843,7 @@ test('detects a user-gesture popup target even when it changes URL after creatio
 
 test('fails closed unless the guest exposes only the narrow bridge and blocked browser egress', () => {
   const secure = {
-    href: `Rcode-extension://${EXTENSION_ID}/dist/webview/index.html?RcodeViewSession=view-123`,
+    href: `Joker-extension://${EXTENSION_ID}/dist/webview/index.html?JokerViewSession=view-123`,
     marker: WEBVIEW_MARKER,
     bridgeMethods: ['request', 'notify', 'onNotification', 'registerHandler', 'dispose'],
     bridgeOwnKeys: ['dispose', 'notify', 'onNotification', 'registerHandler', 'request'].map((name) => ({
@@ -868,7 +868,7 @@ test('fails closed unless the guest exposes only the narrow bridge and blocked b
     },
     mediaPlaybackMode: 'ok',
     mediaPlayback: {
-      scheme: 'Rcode-media:',
+      scheme: 'Joker-media:',
       duration: 2,
       currentTime: 0.5,
       readyState: 4,
@@ -876,7 +876,7 @@ test('fails closed unless the guest exposes only the narrow bridge and blocked b
     },
     imagePlaybackMode: 'ok',
     imagePlayback: {
-      scheme: 'Rcode-media:',
+      scheme: 'Joker-media:',
       naturalWidth: 1,
       naturalHeight: 1,
       leaseId: 'image_lease_packaged_test'
@@ -886,7 +886,7 @@ test('fails closed unless the guest exposes only the narrow bridge and blocked b
     arbitraryLocalPathMode: 'blocked',
     releaseMode: 'ok',
     postReleaseMediaUrlMode: 'blocked',
-    hasRcodeGui: false,
+    hasJokerGui: false,
     hasElectron: false,
     hasIpcRenderer: false,
     hasBuffer: false,
@@ -897,7 +897,7 @@ test('fails closed unless the guest exposes only the narrow bridge and blocked b
     popupTargets: []
   }
   assert.doesNotThrow(() => assertGuestSecurityResult(secure))
-  assert.throws(() => assertGuestSecurityResult({ ...secure, hasRcodeGui: true }), /privileged window\.RcodeGui/)
+  assert.throws(() => assertGuestSecurityResult({ ...secure, hasJokerGui: true }), /privileged window\.JokerGui/)
   assert.throws(
     () =>
       assertGuestSecurityResult({
@@ -929,14 +929,14 @@ test('fails closed unless the guest exposes only the narrow bridge and blocked b
   )
   assert.throws(
     () => assertGuestSecurityResult({ ...secure, mediaPlayback: { ...secure.mediaPlayback, scheme: 'file:' } }),
-    /Rcode-media desktop playback\/seek failed/
+    /Joker-media desktop playback\/seek failed/
   )
   assert.throws(
     () => assertGuestSecurityResult({
       ...secure,
       imagePlayback: { ...secure.imagePlayback, naturalWidth: 0 }
     }),
-    /Rcode-media desktop image playback failed/
+    /Joker-media desktop image playback failed/
   )
   assert.throws(
     () => assertGuestSecurityResult({
@@ -945,7 +945,7 @@ test('fails closed unless the guest exposes only the narrow bridge and blocked b
       mediaPlayback: null,
       copiedMediaUrlMode: 'invalid-url'
     }),
-    /Rcode-media desktop playback\/seek failed: rejected null/
+    /Joker-media desktop playback\/seek failed: rejected null/
   )
   assert.throws(
     () => assertGuestSecurityResult({ ...secure, fetchMode: 'allowed' }),
@@ -981,7 +981,7 @@ test('fails closed unless the guest exposes only the narrow bridge and blocked b
 
 test('bounds synchronous packaged CLI subprocesses', () => {
   assert.throws(
-    () => runPackagedRcode(process.execPath, '-e', ['setInterval(() => {}, 1_000)'], process.env, 50),
+    () => runPackagedJoker(process.execPath, '-e', ['setInterval(() => {}, 1_000)'], process.env, 50),
     /timed out after 50 ms/
   )
 })
@@ -1060,21 +1060,21 @@ test('every automated and local release path gates uploads behind packaged Exten
   const nativeEvidenceCommand = 'npm run evidence:extension-native'
   const packagedOcrCommand = 'node scripts/smoke-packaged-ocr.cjs'
   const verifyMacX64Command =
-    'npm run verify:packaged-macos-native -- --resources dist/mac-x64-verified/Rcode.app/Contents/Resources --arch x64'
+    'npm run verify:packaged-macos-native -- --resources dist/mac-x64-verified/Joker.app/Contents/Resources --arch x64'
   const smokeMacX64ExtensionsCommand =
-    'npm run smoke:packaged-extensions -- --resources dist/mac-x64-verified/Rcode.app/Contents/Resources'
+    'npm run smoke:packaged-extensions -- --resources dist/mac-x64-verified/Joker.app/Contents/Resources'
   const smokeMacX64DesktopCommand =
-    'npm run smoke:packaged-extension-desktop -- --resources dist/mac-x64-verified/Rcode.app/Contents/Resources'
+    'npm run smoke:packaged-extension-desktop -- --resources dist/mac-x64-verified/Joker.app/Contents/Resources'
 
   assertPublishDependencies(release, 'stable release')
   assertPublishDependencies(daily, 'daily prerelease')
 
   assertOrderedCommands(release.jobs['build-macos'], [
-    'npm run verify:packaged-macos-native -- --resources dist/mac/Rcode.app/Contents/Resources --arch x64',
-    'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Rcode.app/Contents/Resources --arch arm64',
+    'npm run verify:packaged-macos-native -- --resources dist/mac/Joker.app/Contents/Resources --arch x64',
+    'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Joker.app/Contents/Resources --arch arm64',
     packagedOcrCommand,
-    'npm run smoke:packaged-extensions -- --resources dist/mac/Rcode.app/Contents/Resources',
-    'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Rcode.app/Contents/Resources',
+    'npm run smoke:packaged-extensions -- --resources dist/mac/Joker.app/Contents/Resources',
+    'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Joker.app/Contents/Resources',
     desktopCommand,
     nativeEvidenceCommand
   ])
@@ -1110,11 +1110,11 @@ test('every automated and local release path gates uploads behind packaged Exten
   assertOrderedCommands(pr.jobs['package-macos'], [
     'npm run check:extension-release-gate',
     'npm run dist:mac',
-    'npm run verify:packaged-macos-native -- --resources dist/mac/Rcode.app/Contents/Resources --arch x64',
-    'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Rcode.app/Contents/Resources --arch arm64',
+    'npm run verify:packaged-macos-native -- --resources dist/mac/Joker.app/Contents/Resources --arch x64',
+    'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Joker.app/Contents/Resources --arch arm64',
     packagedOcrCommand,
-    'npm run smoke:packaged-extensions -- --resources dist/mac/Rcode.app/Contents/Resources',
-    'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Rcode.app/Contents/Resources',
+    'npm run smoke:packaged-extensions -- --resources dist/mac/Joker.app/Contents/Resources',
+    'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Joker.app/Contents/Resources',
     desktopCommand,
     nativeEvidenceCommand
   ])
@@ -1136,11 +1136,11 @@ test('every automated and local release path gates uploads behind packaged Exten
   assertOrderedCommands(daily.jobs['build-macos'], [
     'npm run check:extension-release-gate',
     'npm run dist:mac',
-    'npm run verify:packaged-macos-native -- --resources dist/mac/Rcode.app/Contents/Resources --arch x64',
-    'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Rcode.app/Contents/Resources --arch arm64',
+    'npm run verify:packaged-macos-native -- --resources dist/mac/Joker.app/Contents/Resources --arch x64',
+    'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Joker.app/Contents/Resources --arch arm64',
     packagedOcrCommand,
-    'npm run smoke:packaged-extensions -- --resources dist/mac/Rcode.app/Contents/Resources',
-    'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Rcode.app/Contents/Resources',
+    'npm run smoke:packaged-extensions -- --resources dist/mac/Joker.app/Contents/Resources',
+    'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Joker.app/Contents/Resources',
     desktopCommand,
     nativeEvidenceCommand
   ])
@@ -1280,7 +1280,7 @@ test('every automated and local release path gates uploads behind packaged Exten
     '|| die "macOS x64 packaged Extension Node runtime smoke failed"',
     'npm run smoke:packaged-extensions -- --resources "${arm64_resources}"',
     '|| die "macOS arm64 packaged Extension Node runtime smoke failed"',
-    'RCODE_PACKAGED_RESOURCES_DIR="${host_resources}" node scripts/smoke-packaged-ocr.cjs',
+    'JOKER_PACKAGED_RESOURCES_DIR="${host_resources}" node scripts/smoke-packaged-ocr.cjs',
     'npm run smoke:packaged-extension-desktop -- --resources "${host_resources}"',
     '|| die "macOS packaged Extension desktop Chromium smoke failed"'
   ])
@@ -1351,10 +1351,10 @@ test('every automated and local release path gates uploads behind packaged Exten
   assert.match(desktopSource, /Reflect\.ownKeys/)
   assert.match(desktopSource, /userGesture: true/)
   assert.match(desktopSource, /ui\.setViewState/)
-  assert.match(desktopSource, /copied Rcode-media URL from the workbench sender/)
+  assert.match(desktopSource, /copied Joker-media URL from the workbench sender/)
   assert.match(desktopSource, /arbitrary file URL from the extension guest/)
-  assert.match(desktopSource, /released Rcode-media URL from its original guest/)
-  assert.match(desktopSource, /replacement Rcode-extension guest for stale View Session validation/)
+  assert.match(desktopSource, /released Joker-media URL from its original guest/)
+  assert.match(desktopSource, /replacement Joker-extension guest for stale View Session validation/)
   assert.match(desktopSource, /Page\.setBypassCSP/)
   assert.match(desktopSource, /waitForPortsClosed/)
 

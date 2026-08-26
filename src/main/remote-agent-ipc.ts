@@ -3,7 +3,7 @@ import type { JsonSettingsStore } from './settings-store'
 import type { AppSettingsV1, ScheduleReasoningEffort, ScheduleRunMode } from '../shared/app-settings'
 import { DEFAULT_SCHEDULE_REASONING_EFFORT } from '../shared/app-settings'
 import { runPromptViaRuntime, resolveScheduleModelConfig, type RuntimeRequestFn } from './schedule-runtime-helpers'
-import { runtimeRequestViaHost } from './runtime/Rcode-adapter'
+import { runtimeRequestViaHost } from './runtime/Joker-adapter'
 import { RemoteAgent, type RemoteAgentExecuteOptions, type RemoteAgentState, type RemoteCommand, type RemoteCommandEvent } from './remote-agent'
 
 export interface RemoteAgentIpcDeps {
@@ -40,7 +40,7 @@ export function registerRemoteAgentIpc(deps: RemoteAgentIpcDeps): void {
     return null
   }
 
-  /** Execute an agent prompt headlessly via Rcode runtime. */
+  /** Execute an agent prompt headlessly via Joker runtime. */
   async function executeAgent(
     prompt: string,
     mode: ScheduleRunMode,
@@ -50,13 +50,13 @@ export function registerRemoteAgentIpc(deps: RemoteAgentIpcDeps): void {
     try {
       const settings = await store.load()
       // Remote commands run with the desktop's CURRENT selected model
-      // (settings.agents.Rcode.model, which is kept in sync with the composer
+      // (settings.agents.Joker.model, which is kept in sync with the composer
       // model picker via saveSettingsSilent). We intentionally ignore the model
       // the phone controller sends — otherwise a phone that never changed its
       // picker would keep falling back to its own default provider model. The
       // phone's thinking mode is still honored.
-      const desktopModel = settings.agents?.Rcode?.model?.trim() || ''
-      const desktopProviderId = settings.agents?.Rcode?.providerId?.trim() || ''
+      const desktopModel = settings.agents?.Joker?.model?.trim() || ''
+      const desktopProviderId = settings.agents?.Joker?.providerId?.trim() || ''
       const requestedModel = desktopModel || options?.model || null
       const modelConfig = resolveScheduleModelConfig(settings, {
         providerId: desktopProviderId || null,
@@ -67,9 +67,9 @@ export function registerRemoteAgentIpc(deps: RemoteAgentIpcDeps): void {
       // when the user hasn't explicitly configured a mode for mobile sessions.
       const remoteAgentSettings = settings.remoteAgent
       const approvalPolicy =
-        remoteAgentSettings?.approvalPolicy ?? settings.agents.Rcode.approvalPolicy
+        remoteAgentSettings?.approvalPolicy ?? settings.agents.Joker.approvalPolicy
       const sandboxMode =
-        remoteAgentSettings?.sandboxMode ?? settings.agents.Rcode.sandboxMode
+        remoteAgentSettings?.sandboxMode ?? settings.agents.Joker.sandboxMode
       const result = await runPromptViaRuntime(
         { runtimeRequest },
         settings,

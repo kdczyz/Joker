@@ -1,9 +1,9 @@
 import type { AgentProvider, AgentProviderId } from './types'
-import { RcodeRuntimeProvider } from './Rcode-runtime'
+import { JokerRuntimeProvider } from './Joker-runtime'
 import { GrokBuildProvider } from './grok-build-provider'
 
 let cachedProvider: AgentProvider | null = null
-let activeProviderId: AgentProviderId = 'Rcode'
+let activeProviderId: AgentProviderId = 'Joker'
 
 export function getProvider(): AgentProvider {
   if (cachedProvider) return cachedProvider
@@ -25,13 +25,13 @@ function createProvider(id: AgentProviderId): AgentProvider {
   switch (id) {
     case 'grok-build':
       return new GrokBuildProvider()
-    case 'Rcode':
+    case 'Joker':
     default:
-      return new RcodeRuntimeProvider()
+      return new JokerRuntimeProvider()
   }
 }
 
 export function resetProviderCacheForTests(): void {
   cachedProvider = null
-  activeProviderId = 'Rcode'
+  activeProviderId = 'Joker'
 }

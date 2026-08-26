@@ -43,7 +43,7 @@ describe('first-class SVG artifact lifecycle', () => {
     readWorkspaceFile.mockClear()
     listWorkspaceDirectory.mockClear()
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         writeWorkspaceFile,
         createWorkspaceFile,
         readWorkspaceFile,
@@ -84,8 +84,8 @@ describe('first-class SVG artifact lifecycle', () => {
     expect(motion).toMatchObject({
       kind: 'svg',
       title: 'Orbit loader',
-      relativePath: expect.stringMatching(/^\.Rcode-design\/doc\/.+\/v1\.svg$/),
-      designMdPath: expect.stringMatching(/^\.Rcode-design\/doc\/.+\/DESIGN\.md$/),
+      relativePath: expect.stringMatching(/^\.Joker-design\/doc\/.+\/v1\.svg$/),
+      designMdPath: expect.stringMatching(/^\.Joker-design\/doc\/.+\/DESIGN\.md$/),
       node: { width: 320, height: 240, sizeMode: 'manual', viewMode: 'preview' }
     })
     expect(frame && isSvgFrame(frame)).toBe(true)
@@ -216,8 +216,8 @@ describe('first-class SVG artifact lifecycle', () => {
         installDesignDocument([otherBoard], otherBoard.id)
         return {
           artifactId: 'svg-context-guard',
-          relativePath: '.Rcode-design/doc/svg-context-guard/v1.svg',
-          designMdPath: '.Rcode-design/doc/svg-context-guard/DESIGN.md',
+          relativePath: '.Joker-design/doc/svg-context-guard/v1.svg',
+          designMdPath: '.Joker-design/doc/svg-context-guard/DESIGN.md',
           newlyCreated: true,
           versionCreated: true
         }

@@ -276,7 +276,7 @@ export function SidebarProjectsSection({
       return group ? [group] : []
     }).filter(([workspacePath]) =>
       // default_workspace 是应用的内置默认工作区,不作为可管理项目展示在侧边栏。
-      workspaceRootIdentityKey(workspacePath) !== '~/.Rcode/default_workspace'
+      workspaceRootIdentityKey(workspacePath) !== '~/.Joker/default_workspace'
     )
   }, [sidebarOrder.workspacePaths, unorderedDisplayGroups])
 
@@ -296,8 +296,8 @@ export function SidebarProjectsSection({
   useEffect(() => {
     if (
       typeof window === 'undefined' ||
-      typeof window.RcodeGui?.listWorkspaceDirectory !== 'function' ||
-      typeof window.RcodeGui?.readWorkspaceFile !== 'function'
+      typeof window.JokerGui?.listWorkspaceDirectory !== 'function' ||
+      typeof window.JokerGui?.readWorkspaceFile !== 'function'
     ) {
       setDraftHistoryByWorkspace({})
       return
@@ -312,8 +312,8 @@ export function SidebarProjectsSection({
       workspacePaths.map(async (path) => {
         const history = await listSddDraftHistory({
           workspaceRoot: path,
-          listWorkspaceDirectory: window.RcodeGui.listWorkspaceDirectory,
-          readWorkspaceFile: window.RcodeGui.readWorkspaceFile,
+          listWorkspaceDirectory: window.JokerGui.listWorkspaceDirectory,
+          readWorkspaceFile: window.JokerGui.readWorkspaceFile,
           limit: SDD_DRAFT_HISTORY_LOAD_LIMIT
         }).catch(() => [])
         return [path, history] as const
@@ -890,8 +890,8 @@ export function SidebarProjectsSection({
   const closeThreadPreview = (): void => {}
 
   const openWorkspaceInSystem = async (workspacePath: string): Promise<void> => {
-    if (typeof window === 'undefined' || typeof window.RcodeGui?.openEditorPath !== 'function') return
-    await window.RcodeGui.openEditorPath({
+    if (typeof window === 'undefined' || typeof window.JokerGui?.openEditorPath !== 'function') return
+    await window.JokerGui.openEditorPath({
       path: workspacePath,
       workspaceRoot: workspacePath,
       editorId: 'system'
@@ -900,7 +900,7 @@ export function SidebarProjectsSection({
 
   const handleRemoveWorkspace = async (workspacePath: string): Promise<void> => {
     // default_workspace 是应用内置默认工作区,禁止移除。
-    if (workspaceRootIdentityKey(workspacePath) === '~/.Rcode/default_workspace') return
+    if (workspaceRootIdentityKey(workspacePath) === '~/.Joker/default_workspace') return
     openActionDialog({
       title: t('sidebarWorkspaceRemoveDialogTitle', { name: workspaceLabelFromPath(workspacePath) }),
       description: t('sidebarWorkspaceRemoveDialogDescription'),
@@ -1281,7 +1281,7 @@ export function SidebarProjectsSection({
           onArchiveThreads={() => void handleArchiveWorkspaceThreads(workspaceContextMenu.workspacePath)}
           onRemove={() => void handleRemoveWorkspace(workspaceContextMenu.workspacePath)}
           archiveDisabled={archivableWorkspaceThreads(workspaceContextMenu.workspacePath).length === 0}
-          removeDisabled={workspaceRootIdentityKey(workspaceContextMenu.workspacePath) === '~/.Rcode/default_workspace'}
+          removeDisabled={workspaceRootIdentityKey(workspaceContextMenu.workspacePath) === '~/.Joker/default_workspace'}
           t={t}
         />
       ) : null}

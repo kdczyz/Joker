@@ -47,11 +47,11 @@ describe('gui-plan path validation', () => {
   })
 
   it('produces a stable plan id from workspace and path', () => {
-    expect(buildGuiPlanId('/tmp/ws', '.Rcodesdd/plan/login.md')).toBe(
-      '/tmp/ws:.Rcodesdd/plan/login.md'
+    expect(buildGuiPlanId('/tmp/ws', '.jokersdd/plan/login.md')).toBe(
+      '/tmp/ws:.jokersdd/plan/login.md'
     )
-    expect(buildGuiPlanId('/tmp/ws', '.Rcodesdd/plan/Login.md')).toBe(
-      buildGuiPlanId('/tmp/ws', '.Rcodesdd/plan/login.md')
+    expect(buildGuiPlanId('/tmp/ws', '.jokersdd/plan/Login.md')).toBe(
+      buildGuiPlanId('/tmp/ws', '.jokersdd/plan/login.md')
     )
     expect(buildGuiPlanId('/tmp/ws', '.deepseekgui/plan/Login.md')).toBe(
       buildGuiPlanId('/tmp/ws', '.deepseekgui/plan/login.md')

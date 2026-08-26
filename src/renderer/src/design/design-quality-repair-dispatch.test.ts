@@ -19,7 +19,7 @@ const finding: DesignHtmlQualityFinding = {
 
 const payload: DesignRuntimeQualityPayload = {
   artifactId: 'screen_home',
-  artifactRelativePath: '.Rcode-design/doc/screen_home/v1.html',
+  artifactRelativePath: '.Joker-design/doc/screen_home/v1.html',
   shapeId: 'frame_home',
   findings: [finding]
 }
@@ -28,7 +28,7 @@ const boardArtifact: DesignArtifact = {
   id: 'board',
   kind: 'canvas',
   title: 'Board',
-  relativePath: '.Rcode-design/doc/board/canvas.json',
+  relativePath: '.Joker-design/doc/board/canvas.json',
   createdAt: '2026-07-02T00:00:00.000Z',
   updatedAt: '2026-07-02T00:00:00.000Z',
   versions: []
@@ -59,8 +59,8 @@ describe('design quality repair dispatch', () => {
     expect(designAutoRepairPayloadKey({
       ...payload,
       artifactId: '',
-      artifactRelativePath: ' .Rcode-design/page.html '
-    })).toBe('path:.Rcode-design/page.html')
+      artifactRelativePath: ' .Joker-design/page.html '
+    })).toBe('path:.Joker-design/page.html')
     expect(designAutoRepairPayloadKey({
       ...payload,
       artifactId: '',

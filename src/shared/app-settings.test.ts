@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import {
   APP_LOCALES,
-  applyRcodeRuntimePatch,
-  RcodeSettingsEnvelope,
-  RcodeSettingsPatch,
-  DEFAULT_RCODE_DATA_DIR,
-  DEFAULT_RCODE_MODEL,
+  applyJokerRuntimePatch,
+  JokerSettingsEnvelope,
+  JokerSettingsPatch,
+  DEFAULT_JOKER_DATA_DIR,
+  DEFAULT_JOKER_MODEL,
   DEFAULT_LOG_RETENTION_DAYS,
   DEFAULT_CURSOR_SPOTLIGHT_COLOR,
   DEFAULT_GIT_BRANCH_PREFIX,
@@ -19,9 +19,9 @@ import {
   defaultClawSettings,
   defaultModelProviderSettings,
   defaultModelProviderProfile,
-  mergeRcodeRuntimeSettings,
+  mergeJokerRuntimeSettings,
   mergeScheduleSettings,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
   defaultTerminalSettings,
@@ -35,7 +35,7 @@ import {
   mergeWriteSettings,
   normalizeWriteSettings,
   normalizeWriteAgentPresets,
-  isRcodeRuntimeInsecure,
+  isJokerRuntimeInsecure,
   migrateLegacyAppSettings,
   normalizeAppSettings,
   normalizeChatContentMaxWidth,
@@ -43,10 +43,10 @@ import {
   applyGitBranchPrefix,
   parseClawUserPromptForDisplay,
   inferModelEndpointFormatFromUrl,
-  RcodeToolPermissionModeFromSettings,
-  RcodeToolPermissionModeSettings,
+  JokerToolPermissionModeFromSettings,
+  JokerToolPermissionModeSettings,
   normalizeScheduleSettings,
-  resolveRcodeRuntimeSettings,
+  resolveJokerRuntimeSettings,
   resolveWriteInlineCompletionApiKey,
   resolveWriteInlineCompletionBaseUrl,
   resolveWriteInlineCompletionModel,
@@ -64,10 +64,10 @@ function settings(): AppSettingsV1 {
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      Rcode: defaultRcodeRuntimeSettings()
+      Joker: defaultJokerRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -162,72 +162,72 @@ function clawChannel(provider: ClawImProvider, label: string, name = label): Cla
   }
 }
 
-describe('Rcode defaults', () => {
+describe('Joker defaults', () => {
   it('keeps a single shared default data directory source', () => {
-    expect(defaultRcodeRuntimeSettings().dataDir).toBe(DEFAULT_RCODE_DATA_DIR)
+    expect(defaultJokerRuntimeSettings().dataDir).toBe(DEFAULT_JOKER_DATA_DIR)
   })
 
   it('defaults the assistant model to v4 pro', () => {
-    expect(defaultRcodeRuntimeSettings().model).toBe(DEFAULT_RCODE_MODEL)
+    expect(defaultJokerRuntimeSettings().model).toBe(DEFAULT_JOKER_MODEL)
   })
 
   it('defaults approval policy to request confirmation for non-read tools', () => {
-    expect(defaultRcodeRuntimeSettings().approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
-    expect(defaultRcodeRuntimeSettings().approvalPolicy).toBe('on-request')
+    expect(defaultJokerRuntimeSettings().approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
+    expect(defaultJokerRuntimeSettings().approvalPolicy).toBe('on-request')
   })
 
   it('defaults sandbox mode to workspace write access', () => {
-    expect(defaultRcodeRuntimeSettings().sandboxMode).toBe(DEFAULT_SANDBOX_MODE)
-    expect(defaultRcodeRuntimeSettings().sandboxMode).toBe('workspace-write')
+    expect(defaultJokerRuntimeSettings().sandboxMode).toBe(DEFAULT_SANDBOX_MODE)
+    expect(defaultJokerRuntimeSettings().sandboxMode).toBe('workspace-write')
   })
 
   it('maps unified tool permission modes to approval and sandbox settings', () => {
-    expect(RcodeToolPermissionModeSettings('always-ask')).toEqual({
+    expect(JokerToolPermissionModeSettings('always-ask')).toEqual({
       approvalPolicy: 'always',
       sandboxMode: 'danger-full-access'
     })
-    expect(RcodeToolPermissionModeSettings('read-only')).toEqual({
+    expect(JokerToolPermissionModeSettings('read-only')).toEqual({
       approvalPolicy: 'on-request',
       sandboxMode: 'danger-full-access'
     })
-    expect(RcodeToolPermissionModeSettings('sensitive-ask')).toEqual({
+    expect(JokerToolPermissionModeSettings('sensitive-ask')).toEqual({
       approvalPolicy: 'untrusted',
       sandboxMode: 'danger-full-access'
     })
-    expect(RcodeToolPermissionModeSettings('workspace-write')).toEqual({
+    expect(JokerToolPermissionModeSettings('workspace-write')).toEqual({
       approvalPolicy: 'on-request',
       sandboxMode: 'workspace-write'
     })
-    expect(RcodeToolPermissionModeSettings('trusted-workspace')).toEqual({
+    expect(JokerToolPermissionModeSettings('trusted-workspace')).toEqual({
       approvalPolicy: 'auto',
       sandboxMode: 'workspace-write'
     })
-    expect(RcodeToolPermissionModeSettings('bypass')).toEqual({
+    expect(JokerToolPermissionModeSettings('bypass')).toEqual({
       approvalPolicy: 'auto',
       sandboxMode: 'danger-full-access'
     })
-    expect(RcodeToolPermissionModeFromSettings(defaultRcodeRuntimeSettings())).toBe('workspace-write')
-    expect(RcodeToolPermissionModeFromSettings({
+    expect(JokerToolPermissionModeFromSettings(defaultJokerRuntimeSettings())).toBe('workspace-write')
+    expect(JokerToolPermissionModeFromSettings({
       approvalPolicy: 'always',
       sandboxMode: 'danger-full-access'
     })).toBe('always-ask')
-    expect(RcodeToolPermissionModeFromSettings({
+    expect(JokerToolPermissionModeFromSettings({
       approvalPolicy: 'untrusted',
       sandboxMode: 'danger-full-access'
     })).toBe('sensitive-ask')
-    expect(RcodeToolPermissionModeFromSettings({
+    expect(JokerToolPermissionModeFromSettings({
       approvalPolicy: 'on-request',
       sandboxMode: 'workspace-write'
     })).toBe('workspace-write')
-    expect(RcodeToolPermissionModeFromSettings({
+    expect(JokerToolPermissionModeFromSettings({
       approvalPolicy: 'auto',
       sandboxMode: 'workspace-write'
     })).toBe('trusted-workspace')
   })
 
   it('defaults token economy mode to off', () => {
-    expect(defaultRcodeRuntimeSettings().tokenEconomyMode).toBe(false)
-    expect(defaultRcodeRuntimeSettings().tokenEconomy).toMatchObject({
+    expect(defaultJokerRuntimeSettings().tokenEconomyMode).toBe(false)
+    expect(defaultJokerRuntimeSettings().tokenEconomy).toMatchObject({
       enabled: false,
       compressToolDescriptions: true,
       compressToolResults: true,
@@ -244,16 +244,16 @@ describe('Rcode defaults', () => {
   })
 
   it('defaults tool output limits to 500kb and 20000 lines', () => {
-    expect(defaultRcodeRuntimeSettings().toolOutputLimits).toEqual({
+    expect(defaultJokerRuntimeSettings().toolOutputLimits).toEqual({
       maxLines: DEFAULT_TOOL_OUTPUT_MAX_LINES,
       maxBytes: DEFAULT_TOOL_OUTPUT_MAX_BYTES
     })
-    expect(defaultRcodeRuntimeSettings().toolOutputLimits.maxLines).toBe(20_000)
-    expect(defaultRcodeRuntimeSettings().toolOutputLimits.maxBytes).toBe(500 * 1024)
+    expect(defaultJokerRuntimeSettings().toolOutputLimits.maxLines).toBe(20_000)
+    expect(defaultJokerRuntimeSettings().toolOutputLimits.maxBytes).toBe(500 * 1024)
   })
 
   it('defaults MCP search discovery to off', () => {
-    expect(defaultRcodeRuntimeSettings().mcpSearch).toMatchObject({
+    expect(defaultJokerRuntimeSettings().mcpSearch).toMatchObject({
       enabled: false,
       mode: 'auto',
       autoThresholdToolCount: 24,
@@ -263,7 +263,7 @@ describe('Rcode defaults', () => {
   })
 
   it('defaults image generation to off with empty provider fields', () => {
-    expect(defaultRcodeRuntimeSettings().imageGeneration).toEqual({
+    expect(defaultJokerRuntimeSettings().imageGeneration).toEqual({
       enabled: false,
       providerId: '',
       protocol: 'openai-images',
@@ -278,7 +278,7 @@ describe('Rcode defaults', () => {
   })
 
   it('defaults media generation to off with empty provider fields', () => {
-    expect(defaultRcodeRuntimeSettings().textToSpeech).toEqual({
+    expect(defaultJokerRuntimeSettings().textToSpeech).toEqual({
       enabled: false,
       providerId: '',
       protocol: 'openai-speech',
@@ -289,7 +289,7 @@ describe('Rcode defaults', () => {
       format: 'mp3',
       timeoutMs: 120000
     })
-    expect(defaultRcodeRuntimeSettings().musicGeneration).toEqual({
+    expect(defaultJokerRuntimeSettings().musicGeneration).toEqual({
       enabled: false,
       providerId: '',
       protocol: 'minimax-music',
@@ -299,7 +299,7 @@ describe('Rcode defaults', () => {
       format: 'mp3',
       timeoutMs: 300000
     })
-    expect(defaultRcodeRuntimeSettings().videoGeneration).toEqual({
+    expect(defaultJokerRuntimeSettings().videoGeneration).toEqual({
       enabled: false,
       providerId: '',
       protocol: 'minimax-video',
@@ -313,8 +313,8 @@ describe('Rcode defaults', () => {
     })
   })
 
-  it('defaults advanced Rcode runtime tuning to conservative values', () => {
-    expect(defaultRcodeRuntimeSettings()).toMatchObject({
+  it('defaults advanced Joker runtime tuning to conservative values', () => {
+    expect(defaultJokerRuntimeSettings()).toMatchObject({
       storage: {
         backend: 'hybrid',
         sqlitePath: ''
@@ -362,13 +362,13 @@ describe('runtime model provider selection', () => {
     const codex = codexPreset ? modelProviderPresetProfile(codexPreset) : null
     expect(codex).not.toBeNull()
     raw.provider.providers = [deepseek, codex!]
-    raw.agents.Rcode.providerId = 'deepseek'
-    raw.agents.Rcode.model = 'gpt-5.3-codex-spark'
+    raw.agents.Joker.providerId = 'deepseek'
+    raw.agents.Joker.model = 'gpt-5.3-codex-spark'
 
     const normalized = normalizeAppSettings(raw)
 
-    expect(normalized.agents.Rcode.providerId).toBe('codex')
-    expect(normalized.agents.Rcode.model).toBe('gpt-5.3-codex-spark')
+    expect(normalized.agents.Joker.providerId).toBe('codex')
+    expect(normalized.agents.Joker.model).toBe('gpt-5.3-codex-spark')
   })
 
   it('falls back to the selected provider model instead of retaining an ambiguous mismatch', () => {
@@ -381,13 +381,13 @@ describe('runtime model provider selection', () => {
       name: 'Codex Mirror'
     }
     raw.provider.providers = [deepseek, codex, duplicate]
-    raw.agents.Rcode.providerId = 'deepseek'
-    raw.agents.Rcode.model = 'gpt-5.3-codex-spark'
+    raw.agents.Joker.providerId = 'deepseek'
+    raw.agents.Joker.model = 'gpt-5.3-codex-spark'
 
     const normalized = normalizeAppSettings(raw)
 
-    expect(normalized.agents.Rcode.providerId).toBe('deepseek')
-    expect(normalized.agents.Rcode.model).toBe('deepseek-v4-flash')
+    expect(normalized.agents.Joker.providerId).toBe('deepseek')
+    expect(normalized.agents.Joker.model).toBe('deepseek-v4-flash')
   })
 
   it('repairs partial subagent profile selections into complete pairs', () => {
@@ -395,7 +395,7 @@ describe('runtime model provider selection', () => {
     const deepseek = defaultModelProviderProfile('', '')
     const codex = modelProviderPresetProfile(getModelProviderPreset('codex')!)
     raw.provider.providers = [deepseek, codex]
-    raw.agents.Rcode.subagents = {
+    raw.agents.Joker.subagents = {
       enabled: true,
       profiles: [
         {
@@ -411,7 +411,7 @@ describe('runtime model provider selection', () => {
 
     const normalized = normalizeAppSettings(raw)
 
-    expect(normalized.agents.Rcode.subagents?.profiles).toEqual(expect.arrayContaining([
+    expect(normalized.agents.Joker.subagents?.profiles).toEqual(expect.arrayContaining([
       expect.objectContaining({
         id: 'model-only',
         model: 'gpt-5.3-codex-spark',
@@ -636,11 +636,11 @@ describe('claw settings', () => {
   })
 })
 
-describe('isRcodeRuntimeInsecure', () => {
+describe('isJokerRuntimeInsecure', () => {
   it('keeps auth enabled even when the runtime token is empty', () => {
     expect(
-      isRcodeRuntimeInsecure({
-        ...defaultRcodeRuntimeSettings(),
+      isJokerRuntimeInsecure({
+        ...defaultJokerRuntimeSettings(),
         insecure: false,
         runtimeToken: ''
       })
@@ -649,8 +649,8 @@ describe('isRcodeRuntimeInsecure', () => {
 
   it('keeps auth enabled when a token exists and insecure is false', () => {
     expect(
-      isRcodeRuntimeInsecure({
-        ...defaultRcodeRuntimeSettings(),
+      isJokerRuntimeInsecure({
+        ...defaultJokerRuntimeSettings(),
         insecure: false,
         runtimeToken: 'tok-1'
       })
@@ -659,8 +659,8 @@ describe('isRcodeRuntimeInsecure', () => {
 
   it('honors explicit insecure mode', () => {
     expect(
-      isRcodeRuntimeInsecure({
-        ...defaultRcodeRuntimeSettings(),
+      isJokerRuntimeInsecure({
+        ...defaultJokerRuntimeSettings(),
         insecure: true,
         runtimeToken: 'tok-1'
       })
@@ -668,11 +668,11 @@ describe('isRcodeRuntimeInsecure', () => {
   })
 })
 
-describe('mergeRcodeRuntimeSettings', () => {
+describe('mergeJokerRuntimeSettings', () => {
   it('normalizes bounded digest-bound project config grants and replaces the grant roster', () => {
     const digestA = 'a'.repeat(64)
     const digestB = 'B'.repeat(64)
-    const current = mergeRcodeRuntimeSettings(defaultRcodeRuntimeSettings(), {
+    const current = mergeJokerRuntimeSettings(defaultJokerRuntimeSettings(), {
       projectConfig: {
         grants: [
           { workspaceRoot: ' /workspace/a ', configDigest: digestA },
@@ -685,7 +685,7 @@ describe('mergeRcodeRuntimeSettings', () => {
       { workspaceRoot: '/workspace/a', configDigest: digestA }
     ])
 
-    const next = mergeRcodeRuntimeSettings(current, {
+    const next = mergeJokerRuntimeSettings(current, {
       projectConfig: {
         grants: [{ workspaceRoot: '/workspace/b', configDigest: digestB }]
       }
@@ -698,16 +698,16 @@ describe('mergeRcodeRuntimeSettings', () => {
 
   it('adds an empty project config grant list to legacy settings', () => {
     const raw = settings() as AppSettingsV1 & {
-      agents: { Rcode: Omit<AppSettingsV1['agents']['Rcode'], 'projectConfig'> }
+      agents: { Joker: Omit<AppSettingsV1['agents']['Joker'], 'projectConfig'> }
     }
-    delete (raw.agents.Rcode as Partial<AppSettingsV1['agents']['Rcode']>).projectConfig
+    delete (raw.agents.Joker as Partial<AppSettingsV1['agents']['Joker']>).projectConfig
 
-    expect(normalizeAppSettings(raw as AppSettingsV1).agents.Rcode.projectConfig).toEqual({ grants: [] })
+    expect(normalizeAppSettings(raw as AppSettingsV1).agents.Joker.projectConfig).toEqual({ grants: [] })
   })
 
-  it('merges a direct Rcode patch without the envelope wrapper', () => {
-    const current = defaultRcodeRuntimeSettings()
-    const next = mergeRcodeRuntimeSettings(current, {
+  it('merges a direct Joker patch without the envelope wrapper', () => {
+    const current = defaultJokerRuntimeSettings()
+    const next = mergeJokerRuntimeSettings(current, {
       model: 'deepseek-reasoner',
       port: 19000,
       tokenEconomyMode: true
@@ -721,7 +721,7 @@ describe('mergeRcodeRuntimeSettings', () => {
 
   it('deep-merges subagent settings while replacing an explicit profiles roster', () => {
     const current = {
-      ...defaultRcodeRuntimeSettings(),
+      ...defaultJokerRuntimeSettings(),
       subagents: {
         enabled: true,
         maxParallel: 3,
@@ -738,7 +738,7 @@ describe('mergeRcodeRuntimeSettings', () => {
       }
     }
 
-    const limitsChanged = mergeRcodeRuntimeSettings(current, {
+    const limitsChanged = mergeJokerRuntimeSettings(current, {
       subagents: { maxParallel: 5 }
     })
     expect(limitsChanged.subagents).toEqual({
@@ -746,7 +746,7 @@ describe('mergeRcodeRuntimeSettings', () => {
       maxParallel: 5
     })
 
-    const rosterCleared = mergeRcodeRuntimeSettings(limitsChanged, {
+    const rosterCleared = mergeJokerRuntimeSettings(limitsChanged, {
       subagents: { profiles: [] }
     })
     expect(rosterCleared.subagents).toEqual({
@@ -757,20 +757,20 @@ describe('mergeRcodeRuntimeSettings', () => {
   })
 
   it('completes a partial first subagent patch with safe defaults', () => {
-    const next = mergeRcodeRuntimeSettings(defaultRcodeRuntimeSettings(), {
+    const next = mergeJokerRuntimeSettings(defaultJokerRuntimeSettings(), {
       subagents: { enabled: false }
     })
 
     expect(next.subagents).toEqual({ enabled: false, profiles: [] })
     expect(normalizeAppSettings({
       ...settings(),
-      agents: { Rcode: next }
-    }).agents.Rcode.subagents).toEqual({ enabled: false, profiles: [] })
+      agents: { Joker: next }
+    }).agents.Joker.subagents).toEqual({ enabled: false, profiles: [] })
   })
 
   it('deep-merges token economy settings and keeps the legacy switch synced', () => {
-    const current = defaultRcodeRuntimeSettings()
-    const next = mergeRcodeRuntimeSettings(current, {
+    const current = defaultJokerRuntimeSettings()
+    const next = mergeJokerRuntimeSettings(current, {
       tokenEconomy: {
         enabled: true,
         compressToolResults: false,
@@ -789,14 +789,14 @@ describe('mergeRcodeRuntimeSettings', () => {
       current.tokenEconomy.historyHygiene.maxToolResultBytes
     )
 
-    const legacySwitch = mergeRcodeRuntimeSettings(next, { tokenEconomyMode: false })
+    const legacySwitch = mergeJokerRuntimeSettings(next, { tokenEconomyMode: false })
     expect(legacySwitch.tokenEconomyMode).toBe(false)
     expect(legacySwitch.tokenEconomy.enabled).toBe(false)
   })
 
   it('deep-merges tool output limits and normalizes out-of-range values', () => {
-    const current = defaultRcodeRuntimeSettings()
-    const next = mergeRcodeRuntimeSettings(current, {
+    const current = defaultJokerRuntimeSettings()
+    const next = mergeJokerRuntimeSettings(current, {
       toolOutputLimits: {
         maxBytes: 2 * 1024 * 1024
       }
@@ -805,7 +805,7 @@ describe('mergeRcodeRuntimeSettings', () => {
     expect(next.toolOutputLimits.maxLines).toBe(current.toolOutputLimits.maxLines)
     expect(next.toolOutputLimits.maxBytes).toBe(2 * 1024 * 1024)
 
-    const clamped = mergeRcodeRuntimeSettings(next, {
+    const clamped = mergeJokerRuntimeSettings(next, {
       toolOutputLimits: {
         maxLines: 9_999_999,
         maxBytes: 999 * 1024 * 1024
@@ -816,8 +816,8 @@ describe('mergeRcodeRuntimeSettings', () => {
   })
 
   it('deep-merges MCP search settings', () => {
-    const current = defaultRcodeRuntimeSettings()
-    const next = mergeRcodeRuntimeSettings(current, {
+    const current = defaultJokerRuntimeSettings()
+    const next = mergeJokerRuntimeSettings(current, {
       mcpSearch: {
         enabled: true,
         mode: 'search',
@@ -832,54 +832,54 @@ describe('mergeRcodeRuntimeSettings', () => {
   })
 
   it('preserves workspace-write when normalizing unified tool permission settings', () => {
-    const current = defaultRcodeRuntimeSettings()
-    const next = mergeRcodeRuntimeSettings(current, {
+    const current = defaultJokerRuntimeSettings()
+    const next = mergeJokerRuntimeSettings(current, {
       approvalPolicy: 'on-request',
       sandboxMode: 'workspace-write'
     })
 
     expect(next.approvalPolicy).toBe('on-request')
     expect(next.sandboxMode).toBe('workspace-write')
-    expect(RcodeToolPermissionModeFromSettings(next)).toBe('workspace-write')
+    expect(JokerToolPermissionModeFromSettings(next)).toBe('workspace-write')
   })
 
   it('preserves trusted workspace when normalizing unified tool permission settings', () => {
-    const current = defaultRcodeRuntimeSettings()
-    const next = mergeRcodeRuntimeSettings(current, {
+    const current = defaultJokerRuntimeSettings()
+    const next = mergeJokerRuntimeSettings(current, {
       approvalPolicy: 'auto',
       sandboxMode: 'workspace-write'
     })
 
     expect(next.approvalPolicy).toBe('auto')
     expect(next.sandboxMode).toBe('workspace-write')
-    expect(RcodeToolPermissionModeFromSettings(next)).toBe('trusted-workspace')
+    expect(JokerToolPermissionModeFromSettings(next)).toBe('trusted-workspace')
   })
 
   it('preserves non-UI approval/sandbox combinations instead of canonicalizing them', () => {
     // The unified 6-mode selector cannot represent every approvalPolicy/sandboxMode
-    // combination. mergeRcodeRuntimeSettings must NOT snap these to a canonical mode,
+    // combination. mergeJokerRuntimeSettings must NOT snap these to a canonical mode,
     // otherwise it would silently weaken a user's saved security posture.
-    const current = defaultRcodeRuntimeSettings()
+    const current = defaultJokerRuntimeSettings()
 
-    const neverReadOnly = mergeRcodeRuntimeSettings(current, {
+    const neverReadOnly = mergeJokerRuntimeSettings(current, {
       approvalPolicy: 'never',
       sandboxMode: 'read-only'
     })
     expect(neverReadOnly.approvalPolicy).toBe('never')
     expect(neverReadOnly.sandboxMode).toBe('read-only')
 
-    const suggest = mergeRcodeRuntimeSettings(current, { approvalPolicy: 'suggest' })
+    const suggest = mergeJokerRuntimeSettings(current, { approvalPolicy: 'suggest' })
     expect(suggest.approvalPolicy).toBe('suggest')
 
-    const externalSandbox = mergeRcodeRuntimeSettings(current, { sandboxMode: 'external-sandbox' })
+    const externalSandbox = mergeJokerRuntimeSettings(current, { sandboxMode: 'external-sandbox' })
     expect(externalSandbox.sandboxMode).toBe('external-sandbox')
   })
 
-  it('deep-merges advanced Rcode settings', () => {
-    const current = defaultRcodeRuntimeSettings()
-    const next = mergeRcodeRuntimeSettings(current, {
+  it('deep-merges advanced Joker settings', () => {
+    const current = defaultJokerRuntimeSettings()
+    const next = mergeJokerRuntimeSettings(current, {
       storage: {
-        sqlitePath: ' /tmp/Rcode.sqlite3 '
+        sqlitePath: ' /tmp/Joker.sqlite3 '
       },
       contextCompaction: {
         defaultSoftThreshold: 64000
@@ -892,7 +892,7 @@ describe('mergeRcodeRuntimeSettings', () => {
     })
 
     expect(next.storage.backend).toBe('hybrid')
-    expect(next.storage.sqlitePath).toBe('/tmp/Rcode.sqlite3')
+    expect(next.storage.sqlitePath).toBe('/tmp/Joker.sqlite3')
     expect(next.contextCompaction.defaultSoftThreshold).toBe(64000)
     expect(next.contextCompaction.defaultHardThreshold).toBe(64000)
     expect(next.contextCompaction.summaryMode).toBe('model')
@@ -905,30 +905,30 @@ describe('mergeRcodeRuntimeSettings', () => {
   })
 
   it('normalizes the maximum turn duration', () => {
-    const current = defaultRcodeRuntimeSettings()
+    const current = defaultJokerRuntimeSettings()
     expect(current.runtimeTuning.maxWallTimeMs).toBe(86_400_000)
 
-    const set = mergeRcodeRuntimeSettings(current, {
+    const set = mergeJokerRuntimeSettings(current, {
       runtimeTuning: { maxWallTimeMs: 7_200_000 }
     })
     expect(set.runtimeTuning.maxWallTimeMs).toBe(7_200_000)
     expect(set.runtimeTuning.toolStorm).toEqual(current.runtimeTuning.toolStorm)
 
     expect(
-      mergeRcodeRuntimeSettings(current, { runtimeTuning: { maxWallTimeMs: 0 } })
+      mergeJokerRuntimeSettings(current, { runtimeTuning: { maxWallTimeMs: 0 } })
         .runtimeTuning.maxWallTimeMs
     ).toBe(86_400_000)
     expect(
-      mergeRcodeRuntimeSettings(current, { runtimeTuning: { maxWallTimeMs: 999_999_999 } })
+      mergeJokerRuntimeSettings(current, { runtimeTuning: { maxWallTimeMs: 999_999_999 } })
         .runtimeTuning.maxWallTimeMs
     ).toBe(86_400_000)
   })
 
   it('normalizes the stream idle timeout (0 disables, out-of-range clamps)', () => {
-    const current = defaultRcodeRuntimeSettings()
+    const current = defaultJokerRuntimeSettings()
     expect(current.runtimeTuning.streamIdleTimeoutMs).toBe(450000)
 
-    const set = mergeRcodeRuntimeSettings(current, {
+    const set = mergeJokerRuntimeSettings(current, {
       runtimeTuning: { streamIdleTimeoutMs: 300000 }
     })
     expect(set.runtimeTuning.streamIdleTimeoutMs).toBe(300000)
@@ -937,24 +937,24 @@ describe('mergeRcodeRuntimeSettings', () => {
 
     // 0 means "disabled" and is preserved rather than coerced to the default.
     expect(
-      mergeRcodeRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: 0 } })
+      mergeJokerRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: 0 } })
         .runtimeTuning.streamIdleTimeoutMs
     ).toBe(0)
 
     // Negative falls back to the default; absurdly large clamps to the cap.
     expect(
-      mergeRcodeRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: -5 } })
+      mergeJokerRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: -5 } })
         .runtimeTuning.streamIdleTimeoutMs
     ).toBe(450000)
     expect(
-      mergeRcodeRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: 999_999_999 } })
+      mergeJokerRuntimeSettings(current, { runtimeTuning: { streamIdleTimeoutMs: 999_999_999 } })
         .runtimeTuning.streamIdleTimeoutMs
     ).toBe(3_600_000)
   })
 
   it('deep-merges image generation settings and normalizes invalid values', () => {
-    const current = defaultRcodeRuntimeSettings()
-    const next = mergeRcodeRuntimeSettings(current, {
+    const current = defaultJokerRuntimeSettings()
+    const next = mergeJokerRuntimeSettings(current, {
       imageGeneration: {
         enabled: true,
         baseUrl: ' https://api.siliconflow.cn/v1 ',
@@ -976,7 +976,7 @@ describe('mergeRcodeRuntimeSettings', () => {
       timeoutMs: 180000
     })
 
-    const sized = mergeRcodeRuntimeSettings(next, {
+    const sized = mergeJokerRuntimeSettings(next, {
       imageGeneration: {
         defaultResolution: '2K',
         defaultSize: '1536x1024',
@@ -990,7 +990,7 @@ describe('mergeRcodeRuntimeSettings', () => {
     expect(sized.imageGeneration.timeoutMs).toBe(240000)
     expect(sized.imageGeneration.apiKey).toBe('sk-image')
 
-    const invalidSize = mergeRcodeRuntimeSettings(sized, {
+    const invalidSize = mergeJokerRuntimeSettings(sized, {
       imageGeneration: {
         defaultResolution: '4K' as never,
         defaultSize: 'huge',
@@ -1005,8 +1005,8 @@ describe('mergeRcodeRuntimeSettings', () => {
   })
 
   it('deep-merges media generation settings and normalizes invalid values', () => {
-    const current = defaultRcodeRuntimeSettings()
-    const next = mergeRcodeRuntimeSettings(current, {
+    const current = defaultJokerRuntimeSettings()
+    const next = mergeJokerRuntimeSettings(current, {
       textToSpeech: {
         enabled: true,
         protocol: 'minimax-t2a',
@@ -1060,7 +1060,7 @@ describe('mergeRcodeRuntimeSettings', () => {
       pollIntervalMs: 20000
     })
 
-    const invalid = mergeRcodeRuntimeSettings(next, {
+    const invalid = mergeJokerRuntimeSettings(next, {
       textToSpeech: { format: 'aac', timeoutMs: -1 },
       videoGeneration: { defaultDuration: -1, pollIntervalMs: -1 }
     })
@@ -1078,8 +1078,8 @@ describe('mergeRcodeRuntimeSettings', () => {
       textToSpeech: _textToSpeech,
       musicGeneration: _musicGeneration,
       videoGeneration: _videoGeneration,
-      ...legacyRcode
-    } = defaultRcodeRuntimeSettings()
+      ...legacyJoker
+    } = defaultJokerRuntimeSettings()
     void _textToSpeech
     void _musicGeneration
     void _videoGeneration
@@ -1092,23 +1092,23 @@ describe('mergeRcodeRuntimeSettings', () => {
           minimaxProfile
         ]
       },
-      agents: { Rcode: legacyRcode as AppSettingsV1['agents']['Rcode'] }
+      agents: { Joker: legacyJoker as AppSettingsV1['agents']['Joker'] }
     })
-    const resolved = resolveRcodeRuntimeSettings(normalized)
+    const resolved = resolveJokerRuntimeSettings(normalized)
 
-    expect(normalized.agents.Rcode.textToSpeech).toEqual(expect.objectContaining({
+    expect(normalized.agents.Joker.textToSpeech).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-t2a',
       model: 'speech-2.8-hd'
     }))
-    expect(normalized.agents.Rcode.musicGeneration).toEqual(expect.objectContaining({
+    expect(normalized.agents.Joker.musicGeneration).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-music',
       model: 'music-2.6'
     }))
-    expect(normalized.agents.Rcode.videoGeneration).toEqual(expect.objectContaining({
+    expect(normalized.agents.Joker.videoGeneration).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-video',
@@ -1120,25 +1120,25 @@ describe('mergeRcodeRuntimeSettings', () => {
   })
 })
 
-describe('Rcode envelope helpers', () => {
+describe('Joker envelope helpers', () => {
   it('wraps runtime settings and patches into the compatibility shell', () => {
-    const runtime = defaultRcodeRuntimeSettings()
-    expect(RcodeSettingsEnvelope(runtime)).toEqual({ Rcode: runtime })
-    expect(RcodeSettingsPatch({ model: 'deepseek-reasoner' })).toEqual({
-      Rcode: { model: 'deepseek-reasoner' }
+    const runtime = defaultJokerRuntimeSettings()
+    expect(JokerSettingsEnvelope(runtime)).toEqual({ Joker: runtime })
+    expect(JokerSettingsPatch({ model: 'deepseek-reasoner' })).toEqual({
+      Joker: { model: 'deepseek-reasoner' }
     })
   })
 
-  it('applies a Rcode patch onto full app settings', () => {
+  it('applies a Joker patch onto full app settings', () => {
     const current = settings()
-    const next = applyRcodeRuntimePatch(current, { model: 'deepseek-reasoner' })
-    expect(next.agents.Rcode.model).toBe('deepseek-reasoner')
+    const next = applyJokerRuntimePatch(current, { model: 'deepseek-reasoner' })
+    expect(next.agents.Joker.model).toBe('deepseek-reasoner')
     expect(next.write).toEqual(current.write)
   })
 })
 
-describe('legacy Rcode defaults migration', () => {
-  it('normalizes old master settings without an agents.Rcode envelope', () => {
+describe('legacy Joker defaults migration', () => {
+  it('normalizes old master settings without an agents.Joker envelope', () => {
     const normalized = normalizeAppSettings({
       version: 1,
       locale: 'zh',
@@ -1163,7 +1163,7 @@ describe('legacy Rcode defaults migration', () => {
       claw: defaultClawSettings()
     } as unknown as AppSettingsV1)
 
-    expect(normalized.agents.Rcode).toEqual(expect.objectContaining({
+    expect(normalized.agents.Joker).toEqual(expect.objectContaining({
       binaryPath: '',
       port: 18787,
       autoStart: false,
@@ -1179,7 +1179,7 @@ describe('legacy Rcode defaults migration', () => {
     expect('deepseek' in normalized).toBe(false)
   })
 
-  it('keeps legacy workspace-write permissions during Rcode migration', () => {
+  it('keeps legacy workspace-write permissions during Joker migration', () => {
     const normalized = normalizeAppSettings({
       version: 1,
       locale: 'zh',
@@ -1204,7 +1204,7 @@ describe('legacy Rcode defaults migration', () => {
       claw: defaultClawSettings()
     } as unknown as AppSettingsV1)
 
-    expect(normalized.agents.Rcode).toEqual(expect.objectContaining({
+    expect(normalized.agents.Joker).toEqual(expect.objectContaining({
       approvalPolicy: 'on-request',
       sandboxMode: 'workspace-write'
     }))
@@ -1219,23 +1219,23 @@ describe('legacy Rcode defaults migration', () => {
     expect('instructions' in normalized).toBe(false)
   })
 
-  it('moves the legacy local HTTP default port to the Rcode default port', () => {
+  it('moves the legacy local HTTP default port to the Joker default port', () => {
     const migrated = migrateLegacyAppSettings({
       version: 1,
       agentProvider: 'deepseek-runtime',
       deepseek: {
-        // 这里必须保留旧版真实写入值, 用于升级到当前 Rcode 默认端口。
+        // 这里必须保留旧版真实写入值, 用于升级到当前 Joker 默认端口。
         port: 7878
       }
     } as unknown as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.Rcode?.port).toBe(18899)
+    expect(migrated.agents?.Joker?.port).toBe(18899)
   })
 
-  it('moves previous Rcode local default ports out of the low range', () => {
+  it('moves previous Joker local default ports out of the low range', () => {
     const normalized = normalizeAppSettings({
       ...settings(),
-      agents: { Rcode: { ...defaultRcodeRuntimeSettings(), port: 8899 } },
+      agents: { Joker: { ...defaultJokerRuntimeSettings(), port: 8899 } },
       claw: {
         ...defaultClawSettings(),
         im: { ...defaultClawSettings().im, port: 8787 }
@@ -1250,7 +1250,7 @@ describe('legacy Rcode defaults migration', () => {
       }
     })
 
-    expect(normalized.agents.Rcode.port).toBe(18899)
+    expect(normalized.agents.Joker.port).toBe(18899)
     expect(normalized.claw.im.port).toBe(18787)
     expect(normalized.schedule.internal.port).toBe(18788)
     expect(normalized.workflow.webhookPort).toBe(18799)
@@ -1263,7 +1263,7 @@ describe('legacy Rcode defaults migration', () => {
       deepseek: {}
     } as unknown as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.Rcode?.imageGeneration).toEqual({
+    expect(migrated.agents?.Joker?.imageGeneration).toEqual({
       enabled: false,
       providerId: '',
       protocol: 'openai-images',
@@ -1281,10 +1281,10 @@ describe('legacy Rcode defaults migration', () => {
     const normalized = normalizeAppSettings({
       ...settings(),
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           imageGeneration: {
-            ...defaultRcodeRuntimeSettings().imageGeneration,
+            ...defaultJokerRuntimeSettings().imageGeneration,
             enabled: true,
             providerId: 'custom',
             protocol: 'codex-responses-image',
@@ -1296,7 +1296,7 @@ describe('legacy Rcode defaults migration', () => {
       }
     })
 
-    expect(normalized.agents.Rcode.imageGeneration).toMatchObject({
+    expect(normalized.agents.Joker.imageGeneration).toMatchObject({
       protocol: 'codex-responses-image',
       baseUrl: 'https://chatgpt.com/backend-api/codex',
       apiKey: 'codex-access',
@@ -1311,39 +1311,39 @@ describe('legacy Rcode defaults migration', () => {
       deepseek: {}
     } as unknown as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.Rcode?.approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
+    expect(migrated.agents?.Joker?.approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
   })
 
-  it('upgrades old persisted Rcode defaults to the current defaults', () => {
+  it('upgrades old persisted Joker defaults to the current defaults', () => {
     const migrated = migrateLegacyAppSettings({
       version: 1,
       agents: {
-        Rcode: {
+        Joker: {
           dataDir: '~/.deepseekgui/coreagent',
           model: 'deepseek-chat'
         }
       }
     } as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.Rcode).toEqual(expect.objectContaining({
-      dataDir: DEFAULT_RCODE_DATA_DIR,
-      model: DEFAULT_RCODE_MODEL
+    expect(migrated.agents?.Joker).toEqual(expect.objectContaining({
+      dataDir: DEFAULT_JOKER_DATA_DIR,
+      model: DEFAULT_JOKER_MODEL
     }))
   })
 
-  it('preserves a non-legacy Rcode model override', () => {
+  it('preserves a non-legacy Joker model override', () => {
     const migrated = migrateLegacyAppSettings({
       version: 1,
       agents: {
-        Rcode: {
-          dataDir: '/tmp/custom-Rcode',
+        Joker: {
+          dataDir: '/tmp/custom-Joker',
           model: 'deepseek-v4-flash'
         }
       }
     } as Parameters<typeof migrateLegacyAppSettings>[0])
 
-    expect(migrated.agents?.Rcode).toEqual(expect.objectContaining({
-      dataDir: '/tmp/custom-Rcode',
+    expect(migrated.agents?.Joker).toEqual(expect.objectContaining({
+      dataDir: '/tmp/custom-Joker',
       model: 'deepseek-v4-flash'
     }))
   })
@@ -1372,8 +1372,8 @@ describe('legacy Rcode defaults migration', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           providerId: 'custom-provider-2',
           model: 'custom-model'
         }
@@ -1392,12 +1392,12 @@ describe('legacy Rcode defaults migration', () => {
         })
       ])
     )
-    expect(migrated.agents.Rcode.providerId).toBe('custom-provider-2')
+    expect(migrated.agents.Joker.providerId).toBe('custom-provider-2')
     expect(migrated.provider.proxy).toEqual({
       enabled: true,
       url: 'http://127.0.0.1:7890'
     })
-    expect(resolveRcodeRuntimeSettings(migrated)).toEqual(
+    expect(resolveJokerRuntimeSettings(migrated)).toEqual(
       expect.objectContaining({
         apiKey: 'sk-custom',
         baseUrl: 'https://custom.example/v1',
@@ -1478,14 +1478,14 @@ describe('claw runtime prompts', () => {
     state.claw.channels = [{
       id: 'channel-1',
       provider: 'feishu',
-      label: 'Rcode',
+      label: 'Joker',
       enabled: true,
       model: 'auto',
       threadId: '',
       workspaceRoot: '',
       conversations: [],
       agentProfile: {
-        name: 'Rcode',
+        name: 'Joker',
         description: '',
         identity: '',
         personality: '',
@@ -1499,14 +1499,14 @@ describe('claw runtime prompts', () => {
     const prompt = buildClawRuntimePrompt(state, 'hi', { channel: state.claw.channels[0] })
 
     expect(prompt).toContain('[Claw managed instructions]')
-    expect(prompt).toContain('[Agent name]\nRcode')
+    expect(prompt).toContain('[Agent name]\nJoker')
     expect(prompt).not.toContain('gui_schedule')
     expect(prompt).not.toContain('scheduled-task tools')
   })
 
   it('tells Claw agents to use the image tool when image generation is configured', () => {
     const state = settings()
-    state.agents.Rcode.imageGeneration = {
+    state.agents.Joker.imageGeneration = {
       enabled: true,
       providerId: '',
       protocol: 'openai-images',
@@ -1527,7 +1527,7 @@ describe('claw runtime prompts', () => {
 
   it('tells Claw agents to use media tools when media generation is configured', () => {
     const state = settings()
-    state.agents.Rcode.textToSpeech = {
+    state.agents.Joker.textToSpeech = {
       enabled: true,
       providerId: '',
       protocol: 'minimax-t2a',
@@ -1538,7 +1538,7 @@ describe('claw runtime prompts', () => {
       format: 'mp3',
       timeoutMs: 120000
     }
-    state.agents.Rcode.musicGeneration = {
+    state.agents.Joker.musicGeneration = {
       enabled: true,
       providerId: '',
       protocol: 'minimax-music',
@@ -1548,7 +1548,7 @@ describe('claw runtime prompts', () => {
       format: 'mp3',
       timeoutMs: 300000
     }
-    state.agents.Rcode.videoGeneration = {
+    state.agents.Joker.videoGeneration = {
       enabled: true,
       providerId: '',
       protocol: 'minimax-video',
@@ -1578,7 +1578,7 @@ describe('claw runtime prompts', () => {
       '[Claw IM agent instructions]',
       '',
       '[Agent name]',
-      'Rcode',
+      'Joker',
       '',
       '---',
       '[Current user request]',
@@ -1613,15 +1613,15 @@ describe('write inline completion runtime config', () => {
     expect(resolveWriteInlineCompletionBaseUrl(state)).toBe('https://write-only.example/v1')
   })
 
-  it('falls back to the Rcode model when write keeps the default inline model', () => {
+  it('falls back to the Joker model when write keeps the default inline model', () => {
     const state = settings()
-    state.agents.Rcode.model = 'deepseek-chat'
+    state.agents.Joker.model = 'deepseek-chat'
     expect(resolveWriteInlineCompletionModel(state)).toBe('deepseek-chat')
   })
 
   it('keeps an explicit flash override when write disables inheritance', () => {
     const state = settings()
-    state.agents.Rcode.model = 'deepseek-chat'
+    state.agents.Joker.model = 'deepseek-chat'
     state.write.inlineCompletion.inheritModel = false
     state.write.inlineCompletion.model = 'deepseek-v4-flash'
 
@@ -1630,7 +1630,7 @@ describe('write inline completion runtime config', () => {
 
   it('preserves an explicit request model before any fallback', () => {
     const state = settings()
-    state.agents.Rcode.model = 'deepseek-chat'
+    state.agents.Joker.model = 'deepseek-chat'
     expect(resolveWriteInlineCompletionModel(state, 'deepseek-v4-pro')).toBe('deepseek-v4-pro')
   })
 
@@ -1638,7 +1638,7 @@ describe('write inline completion runtime config', () => {
     const state = settings()
     state.provider.apiKey = 'general-key'
     state.provider.baseUrl = 'https://general.example/v1'
-    state.agents.Rcode.model = 'deepseek-chat'
+    state.agents.Joker.model = 'deepseek-chat'
     const legacyInlineCompletion = { ...state.write.inlineCompletion } as Partial<AppSettingsV1['write']['inlineCompletion']>
     delete legacyInlineCompletion.apiKey
     delete legacyInlineCompletion.baseUrl
@@ -1653,7 +1653,7 @@ describe('write inline completion runtime config', () => {
 
   it('treats legacy flash defaults without an inherit flag as inherited', () => {
     const state = settings()
-    state.agents.Rcode.model = 'deepseek-chat'
+    state.agents.Joker.model = 'deepseek-chat'
     const legacyInlineCompletion = {
       ...state.write.inlineCompletion,
       model: 'deepseek-v4-flash'

@@ -78,7 +78,7 @@ function buildHarness(overrides?: {
     applyI18nFromSettings,
     busy: false,
     clawChannels: [],
-    codeWorkspaceRoots: ['~/.Rcode/default_workspace'],
+    codeWorkspaceRoots: ['~/.Joker/default_workspace'],
     composerPickList: [],
     createThread,
     currentTurnId: null,
@@ -97,13 +97,13 @@ function buildHarness(overrides?: {
       thread({
         id: 'thr_default',
         title: 'Only default thread',
-        workspace: '~/.Rcode/default_workspace'
+        workspace: '~/.Joker/default_workspace'
       })
     ],
     unreadThreadIds: {},
     watchTurnCompletion: {},
     workspaceLabel: 'default_workspace',
-    workspaceRoot: '~/.Rcode/default_workspace'
+    workspaceRoot: '~/.Joker/default_workspace'
   } as unknown as ChatState
 
   const set: ChatStoreSet = (partial) => {
@@ -152,7 +152,7 @@ describe('chat-store navigation workspace selection', () => {
       workspaceRoot: '/Users/zxy/new-project'
     }))
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         pickWorkspaceDirectory,
         setSettings
       }
@@ -161,18 +161,18 @@ describe('chat-store navigation workspace selection', () => {
 
     await expect(harness.actions.chooseWorkspace()).resolves.toBe('/Users/zxy/new-project')
 
-    expect(pickWorkspaceDirectory).toHaveBeenCalledWith('~/.Rcode/default_workspace')
+    expect(pickWorkspaceDirectory).toHaveBeenCalledWith('~/.Joker/default_workspace')
     expect(setSettings).toHaveBeenCalledWith({ workspaceRoot: '/Users/zxy/new-project' })
     expect(provider.updateThreadWorkspace).not.toHaveBeenCalled()
     expect(harness.state.threads.find((item) => item.id === 'thr_default')?.workspace)
-      .toBe('~/.Rcode/default_workspace')
+      .toBe('~/.Joker/default_workspace')
     expect(harness.createThread).toHaveBeenCalledWith({ workspaceRoot: '/Users/zxy/new-project' })
     expect(harness.selectThread).not.toHaveBeenCalled()
   })
 
   it('selectWorkspaceRoot persists the directory and lands on a clean new conversation', async () => {
     const setSettings = vi.fn(async () => ({ workspaceRoot: '/Users/zxy/new-project' }))
-    vi.stubGlobal('window', { RcodeGui: { setSettings } })
+    vi.stubGlobal('window', { JokerGui: { setSettings } })
     const harness = buildHarness()
 
     await expect(harness.actions.selectWorkspaceRoot('/Users/zxy/new-project'))
@@ -193,7 +193,7 @@ describe('chat-store navigation workspace selection', () => {
 
   it('selectWorkspaceRoot ignores an empty path', async () => {
     const setSettings = vi.fn(async () => ({ workspaceRoot: '' }))
-    vi.stubGlobal('window', { RcodeGui: { setSettings } })
+    vi.stubGlobal('window', { JokerGui: { setSettings } })
     const harness = buildHarness()
 
     await expect(harness.actions.selectWorkspaceRoot('   ')).resolves.toBeNull()
@@ -206,7 +206,7 @@ describe('chat-store navigation workspace selection', () => {
     const alertDialog = vi.fn(async () => undefined)
     const workspaceDirectoryExists = vi.fn(async () => false)
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         setSettings,
         workspaceDirectoryExists,
         alertDialog
@@ -228,12 +228,12 @@ describe('chat-store navigation workspace selection', () => {
     const workspaceDirectoryExists = vi.fn(async () => false)
     const setSettings = vi.fn()
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         getSettings: vi.fn(async () => ({
           workspaceRoot: 'E:\\missing-project',
           write: {
-            defaultWorkspaceRoot: '~/.Rcode/write_workspace',
-            activeWorkspaceRoot: '~/.Rcode/write_workspace',
+            defaultWorkspaceRoot: '~/.Joker/write_workspace',
+            activeWorkspaceRoot: '~/.Joker/write_workspace',
             workspaces: []
           },
           claw: { channels: [] },
@@ -241,7 +241,7 @@ describe('chat-store navigation workspace selection', () => {
           uiFontScale: 1,
           chatContentMaxWidthPx: 896,
           locale: 'en',
-          agents: { Rcode: { apiKey: 'test-key', model: 'deepseek-v4-pro', baseUrl: '' } },
+          agents: { Joker: { apiKey: 'test-key', model: 'deepseek-v4-pro', baseUrl: '' } },
           disabledSkillIds: []
         })),
         setSettings,
@@ -294,7 +294,7 @@ describe('onClawChannelActivity routes through subscribeThreadEventsLive (not se
     const selectThread = vi.fn(async () => undefined)
     const recoverActiveTurn = vi.fn(async () => true)
 
-    // Capture the callback registered via window.RcodeGui.onClawChannelActivity
+    // Capture the callback registered via window.JokerGui.onClawChannelActivity
     let capturedClawActivityCallback: ((payload: { channelId: string; threadId: string }) => void) | null = null
     const onClawChannelActivity = vi.fn((cb: (payload: { channelId: string; threadId: string }) => void) => {
       capturedClawActivityCallback = cb
@@ -307,10 +307,10 @@ describe('onClawChannelActivity routes through subscribeThreadEventsLive (not se
       return () => {}
     })
     const getSettings = vi.fn(async () => ({
-      workspaceRoot: '~/.Rcode/default_workspace',
+      workspaceRoot: '~/.Joker/default_workspace',
       write: {
-        defaultWorkspaceRoot: '~/.Rcode/default_workspace',
-        activeWorkspaceRoot: '~/.Rcode/default_workspace',
+        defaultWorkspaceRoot: '~/.Joker/default_workspace',
+        activeWorkspaceRoot: '~/.Joker/default_workspace',
         workspaces: []
       },
       claw: {
@@ -322,11 +322,11 @@ describe('onClawChannelActivity routes through subscribeThreadEventsLive (not se
       uiFontScale: 1,
     chatContentMaxWidthPx: 896,
       locale: 'en',
-      agents: { Rcode: { apiKey: 'test-key', model: 'deepseek-v4-pro', baseUrl: '' } },
+      agents: { Joker: { apiKey: 'test-key', model: 'deepseek-v4-pro', baseUrl: '' } },
       disabledSkillIds: []
     }))
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         getSettings,
         onClawChannelActivity,
         onTrayAction,

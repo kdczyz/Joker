@@ -25,7 +25,7 @@ export type ThreadWorktreeRegistry = {
 
 export const MAX_THREAD_WORKTREE_REGISTRY_ENTRIES = 500
 
-const THREAD_WORKTREE_REGISTRY_KEY = 'Rcode.threadWorktrees.v1'
+const THREAD_WORKTREE_REGISTRY_KEY = 'Joker.threadWorktrees.v1'
 
 export function emptyThreadWorktreeRegistry(): ThreadWorktreeRegistry {
   return { version: 1, worktrees: {} }
@@ -66,7 +66,7 @@ export function normalizeThreadWorktreeRegistry(raw: unknown): ThreadWorktreeReg
     const poolIndex = normalizeOptionalNumber(record.poolIndex)
     const worktreePath = normalizeThreadId(record.worktreePath)
     if (!threadId || !projectPath || !worktreePath) continue
-    const branch = normalizeThreadId(record.branch) || (poolIndex === undefined ? 'worktree' : `Rcode-pool-${poolIndex}`)
+    const branch = normalizeThreadId(record.branch) || (poolIndex === undefined ? 'worktree' : `Joker-pool-${poolIndex}`)
     const createdAt = normalizeOptionalString(record.createdAt)
     delete worktrees[threadId]
     worktrees[threadId] = {

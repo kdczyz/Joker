@@ -4,7 +4,7 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { normalizeAppSettings, type AppSettingsV1 } from '../../shared/app-settings'
 import { JsonSettingsStore } from '../settings-store'
-import { DataMigrationExportOrchestrator, type RcodeMigrationSnapshotClient } from './export-orchestrator'
+import { DataMigrationExportOrchestrator, type JokerMigrationSnapshotClient } from './export-orchestrator'
 import { DataMigrationImportOrchestrator, type RendererMigrationStateAdapter } from './import-orchestrator'
 import { DataMigrationImportTransactionCoordinator } from './import-transaction'
 import { MigrationReportStore } from './migration-reports'
@@ -30,7 +30,7 @@ function settings(workspaceRoot: string, locale: 'en' | 'zh', theme: 'system' | 
   })
 }
 
-function noRuntimeExport(): RcodeMigrationSnapshotClient {
+function noRuntimeExport(): JokerMigrationSnapshotClient {
   return {
     create: vi.fn(async () => { throw new Error('runtime export should not run') }),
     download: vi.fn(async () => { throw new Error('runtime export should not run') }),
@@ -48,11 +48,11 @@ function emptyRendererState(): RestoredRendererState {
 
 describe('data migration import orchestration', () => {
   it('inspects, plans, stages, commits, verifies, and restores portable state end to end', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-import-orchestrator-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-import-orchestrator-'))
     roots.push(root)
     const sourceRoot = join(root, 'source-project')
     const destinationBaseRoot = join(root, 'destination')
-    const packagePath = join(root, 'transfer.Rcodepack')
+    const packagePath = join(root, 'transfer.Jokerpack')
     await mkdir(sourceRoot, { recursive: true })
     await mkdir(destinationBaseRoot, { recursive: true })
     await writeFile(join(sourceRoot, 'README.md'), '# Migrated\n')
@@ -125,10 +125,10 @@ describe('data migration import orchestration', () => {
   })
 
   it('rejects an inspected package that tries to smuggle credential or trust fields through semantic catalogs', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-import-orchestrator-deny-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-import-orchestrator-deny-'))
     roots.push(root)
     const sourceRoot = join(root, 'source-project')
-    const packagePath = join(root, 'unsafe.Rcodepack')
+    const packagePath = join(root, 'unsafe.Jokerpack')
     await mkdir(sourceRoot, { recursive: true })
     await writeFile(join(sourceRoot, 'README.md'), 'unsafe')
     const sourceSettings = settings(sourceRoot, 'en', 'light')

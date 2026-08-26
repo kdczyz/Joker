@@ -63,7 +63,7 @@ describe('ExtensionWorkbenchClient', () => {
         body: JSON.stringify({ schemaVersion: 1, extensions: [] })
       }))
     }
-    vi.stubGlobal('window', { RcodeGui: api })
+    vi.stubGlobal('window', { JokerGui: api })
     const client = new ExtensionWorkbenchClient()
 
     await expect(client.loadContributions('/workspace', 'zh-CN')).resolves.toMatchObject({ revision: 4 })
@@ -99,15 +99,15 @@ describe('ExtensionWorkbenchClient', () => {
       status: 202,
       body: JSON.stringify({ schemaVersion: 1, accepted: true })
     }))
-    vi.stubGlobal('window', { RcodeGui: { extensionPostViewMessage: post } })
+    vi.stubGlobal('window', { JokerGui: { extensionPostViewMessage: post } })
     const client = new ExtensionWorkbenchClient()
     await client.postViewMessage('view_session_1', {
-      channel: 'Rcode.resultPreview.open',
+      channel: 'Joker.resultPreview.open',
       payload: { schemaVersion: 1, result: { mimeType: 'application/json' } }
     })
     expect(post).toHaveBeenCalledWith({
       sessionId: 'view_session_1',
-      channel: 'Rcode.resultPreview.open',
+      channel: 'Joker.resultPreview.open',
       payload: { schemaVersion: 1, result: { mimeType: 'application/json' } }
     })
   })
@@ -119,10 +119,10 @@ describe('ExtensionWorkbenchClient', () => {
       extensionId: 'acme.sample',
       extensionVersion: '1.0.0',
       contributionId: request.contributionId,
-      src: 'Rcode-extension://acme.sample/index.html',
+      src: 'Joker-extension://acme.sample/index.html',
       partition: 'temporary:view_session_123456'
     }))
-    vi.stubGlobal('window', { RcodeGui: { extensionCreateViewSession: create } })
+    vi.stubGlobal('window', { JokerGui: { extensionCreateViewSession: create } })
     const client = new ExtensionWorkbenchClient(workbenchTransport())
 
     await client.createViewSession('extension:acme.sample/issues', '   ')
@@ -159,12 +159,12 @@ describe('ExtensionWorkbenchClient', () => {
       extensionInvokeCommand: vi.fn(async () => ({ invoked: true }))
     }
     vi.stubGlobal('window', {
-      RcodeGui: api,
+      JokerGui: api,
       dispatchEvent: vi.fn()
     })
     const client = new ExtensionWorkbenchClient(transport)
 
-    await client.install({ source: 'archive', path: '/tmp/sample.Rcodex' })
+    await client.install({ source: 'archive', path: '/tmp/sample.Jokerx' })
     await client.setEnabled('acme.sample', true, '/workspace')
     await client.setEnabled('acme.sample', false, '/workspace')
     await client.rollback('acme.sample')
@@ -184,7 +184,7 @@ describe('ExtensionWorkbenchClient', () => {
       '/workspace'
     )).resolves.toEqual({ invoked: true })
 
-    expect(api.extensionInstall).toHaveBeenCalledWith({ source: 'archive', path: '/tmp/sample.Rcodex' })
+    expect(api.extensionInstall).toHaveBeenCalledWith({ source: 'archive', path: '/tmp/sample.Jokerx' })
     expect(api.extensionEnable).toHaveBeenCalledWith({ extensionId: 'acme.sample', workspaceRoot: '/workspace' })
     expect(api.extensionDisable).toHaveBeenCalledWith({ extensionId: 'acme.sample', workspaceRoot: '/workspace' })
     expect(api.extensionRollback).toHaveBeenCalledWith({ extensionId: 'acme.sample' })
@@ -276,7 +276,7 @@ describe('ExtensionWorkbenchClient', () => {
         body: JSON.stringify({ schemaVersion: 1, deleted: true })
       }))
     }
-    vi.stubGlobal('window', { RcodeGui: api, dispatchEvent: vi.fn() })
+    vi.stubGlobal('window', { JokerGui: api, dispatchEvent: vi.fn() })
     const client = new ExtensionWorkbenchClient(transport)
 
     await expect(client.listAccounts('acme.sample', 'acme-models')).resolves.toMatchObject({

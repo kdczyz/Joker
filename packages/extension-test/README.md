@@ -1,6 +1,6 @@
-# @Rcode/extension-test
+# @joker-code/extension-test
 
-Deterministic, credential-free test utilities for Rcode extensions. The harness
+Deterministic, credential-free test utilities for Joker extensions. The harness
 provides a fake Host transport plus workspace, Agent, tool, provider, account,
 storage, network, permission, clock, Webview, protected media, durable job, and
 generated-artifact services. Media and job fakes use a controllable clock and
@@ -10,8 +10,8 @@ Repository development uses the root npm workspace. A standalone project must
 first verify that the public artifact exists, then install it by package name:
 
 ```sh
-npm view @Rcode/extension-test@1.2.0 version
-npm install --save-dev @Rcode/extension-test@^1.2.0
+npm view @joker-code/extension-test@1.2.0 version
+npm install --save-dev @joker-code/extension-test@^1.2.0
 ```
 
 An `E404` is a registry-publication failure, not a reason to add a

@@ -16,7 +16,7 @@ import {
   type ClawSettingsPatchV1,
   type DesignSettingsPatchV1,
   type GuiUpdateConfigV1,
-  type RcodeRuntimeSettingsV1,
+  type JokerRuntimeSettingsV1,
   type ModelProviderProfileV1,
   type NotificationConfigV1,
   type RemoteAgentSettingsV1,
@@ -30,14 +30,14 @@ import {
 import { isAppLocale } from './app-locales'
 import { normalizeKeyboardShortcuts, type KeyboardShortcutsConfigV1 } from './keyboard-shortcuts'
 import {
-  defaultRcodeRuntimeSettings,
-  getRcodeRuntimeSettings,
-  RcodeSettingsEnvelope,
-  mergeRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
+  getJokerRuntimeSettings,
+  JokerSettingsEnvelope,
+  mergeJokerRuntimeSettings,
   migrateLegacyAppSettings
-} from './app-settings-Rcode'
+} from './app-settings-Joker'
 import {
-  defaultMiniMaxMediaGenerationRcodePatch,
+  defaultMiniMaxMediaGenerationJokerPatch,
   normalizeModelProviderSettings
 } from './app-settings-provider'
 import { normalizeModelProviderBaseUrl } from './app-settings-normalizers'
@@ -71,21 +71,21 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     openaiProxy?: OpenAiProxySettingsPatchV1
   }
   const providerSettings = normalizeModelProviderSettings(maybeSettings.provider)
-  const rawRcode = maybeSettings.agents?.Rcode
+  const rawJoker = maybeSettings.agents?.Joker
   const runtime = normalizeRuntimeModelProviderSelection(
-    getRcodeRuntimeSettings(maybeSettings),
+    getJokerRuntimeSettings(maybeSettings),
     providerSettings.providers,
-    typeof rawRcode?.model === 'string' && Boolean(rawRcode.model.trim())
+    typeof rawJoker?.model === 'string' && Boolean(rawJoker.model.trim())
   )
-  const rawMediaPatch: Parameters<typeof defaultMiniMaxMediaGenerationRcodePatch>[0]['RcodePatch'] = {
-    ...(rawRcode?.textToSpeech !== undefined ? { textToSpeech: rawRcode.textToSpeech } : {}),
-    ...(rawRcode?.musicGeneration !== undefined ? { musicGeneration: rawRcode.musicGeneration } : {}),
-    ...(rawRcode?.videoGeneration !== undefined ? { videoGeneration: rawRcode.videoGeneration } : {})
+  const rawMediaPatch: Parameters<typeof defaultMiniMaxMediaGenerationJokerPatch>[0]['JokerPatch'] = {
+    ...(rawJoker?.textToSpeech !== undefined ? { textToSpeech: rawJoker.textToSpeech } : {}),
+    ...(rawJoker?.musicGeneration !== undefined ? { musicGeneration: rawJoker.musicGeneration } : {}),
+    ...(rawJoker?.videoGeneration !== undefined ? { videoGeneration: rawJoker.videoGeneration } : {})
   }
-  const miniMaxMediaDefaults = defaultMiniMaxMediaGenerationRcodePatch({
+  const miniMaxMediaDefaults = defaultMiniMaxMediaGenerationJokerPatch({
     providers: providerSettings.providers,
-    currentRcode: runtime,
-    RcodePatch: rawMediaPatch
+    currentJoker: runtime,
+    JokerPatch: rawMediaPatch
   })
   return {
     version: 1,
@@ -99,7 +99,7 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
     cursorSpotlight: maybeSettings.cursorSpotlight !== false,
     cursorSpotlightColor: normalizeCursorSpotlightColor(maybeSettings.cursorSpotlightColor),
     provider: providerSettings,
-    agents: RcodeSettingsEnvelope(mergeRcodeRuntimeSettings(defaultRcodeRuntimeSettings(), {
+    agents: JokerSettingsEnvelope(mergeJokerRuntimeSettings(defaultJokerRuntimeSettings(), {
       ...runtime,
       baseUrl: runtime.baseUrl.trim() ? normalizeModelProviderBaseUrl(runtime.baseUrl) : '',
       ...(miniMaxMediaDefaults ?? {})
@@ -141,10 +141,10 @@ export function normalizeAppSettings(settings: AppSettingsV1): AppSettingsV1 {
 }
 
 function normalizeRuntimeModelProviderSelection(
-  runtime: RcodeRuntimeSettingsV1,
+  runtime: JokerRuntimeSettingsV1,
   providers: readonly ModelProviderProfileV1[],
   preferModelOwner: boolean
-): RcodeRuntimeSettingsV1 {
+): JokerRuntimeSettingsV1 {
   if (providers.length === 0) return runtime
   const main = normalizeModelProviderPair(runtime.providerId, runtime.model, providers, preferModelOwner)
   const profiles = runtime.subagents?.profiles.map((profile) => {
@@ -312,16 +312,16 @@ function shouldMigrateLegacySettings(settings: AppSettingsV1): boolean {
     agentProvider?: unknown
     deepseek?: unknown
     agents?: {
-      Rcode?: Partial<ReturnType<typeof defaultRcodeRuntimeSettings>>
+      Joker?: Partial<ReturnType<typeof defaultJokerRuntimeSettings>>
       codewhale?: unknown
       reasonix?: unknown
     }
   }
-  if (!raw.agents?.Rcode) return true
+  if (!raw.agents?.Joker) return true
   if ('agentProvider' in raw || 'deepseek' in raw) return true
   if (raw.agents.codewhale || raw.agents.reasonix) return true
-  const dataDir = typeof raw.agents.Rcode.dataDir === 'string'
-    ? raw.agents.Rcode.dataDir.replace(/\\/g, '/').toLowerCase()
+  const dataDir = typeof raw.agents.Joker.dataDir === 'string'
+    ? raw.agents.Joker.dataDir.replace(/\\/g, '/').toLowerCase()
     : ''
   return dataDir === '~/.deepseekgui/coreagent' || dataDir.endsWith('/.deepseekgui/coreagent')
 }

@@ -77,11 +77,11 @@ export async function validateFileReference(
   if (cached !== undefined) return cached instanceof Promise ? cached : cached
 
   const task = (async (): Promise<SettledValidation> => {
-    if (typeof window === 'undefined' || typeof window.RcodeGui?.resolveWorkspaceFile !== 'function') {
+    if (typeof window === 'undefined' || typeof window.JokerGui?.resolveWorkspaceFile !== 'function') {
       return { status: 'invalid' }
     }
 
-    const result = await window.RcodeGui.resolveWorkspaceFile({
+    const result = await window.JokerGui.resolveWorkspaceFile({
       path: normalizedTarget.path,
       line: normalizedTarget.line,
       column: normalizedTarget.column,

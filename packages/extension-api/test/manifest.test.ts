@@ -21,7 +21,7 @@ const manifest = {
   publisher: 'acme',
   version: '1.2.3',
   icon: 'assets/issue-assistant.svg',
-  engines: { Rcode: '^0.1.0' },
+  engines: { Joker: '^0.1.0' },
   main: 'dist/main.js',
   browser: 'dist/webview/index.html',
   activationEvents: ['onView:issues', 'onTool:create-issue'],
@@ -318,7 +318,7 @@ describe('ExtensionManifestSchema', () => {
 
   it('has a checked-in JSON Schema generated from the canonical source', async () => {
     const checkedIn = JSON.parse(
-      await readFile(new URL('../schema/Rcode-extension.schema.json', import.meta.url), 'utf8')
+      await readFile(new URL('../schema/Joker-extension.schema.json', import.meta.url), 'utf8')
     )
     const generated = toJSONSchema(ExtensionManifestSchema, {
       io: 'input',
@@ -391,7 +391,7 @@ describe('API v1.2 minor compatibility fixtures', () => {
 
 describe('result preview context contract', () => {
   it('accepts bounded workspace-relative metadata and rejects absolute paths', () => {
-    expect(RESULT_PREVIEW_OPEN_CHANNEL).toBe('Rcode.resultPreview.open')
+    expect(RESULT_PREVIEW_OPEN_CHANNEL).toBe('Joker.resultPreview.open')
     const input = {
       schemaVersion: 1,
       threadId: 'thread_1',

@@ -30,7 +30,7 @@ describe('conversation-export-service', () => {
 
   beforeEach(async () => {
     if (tempDir) await rm(tempDir, { recursive: true, force: true })
-    tempDir = await mkdtemp(join(tmpdir(), 'Rcode-conversation-export-'))
+    tempDir = await mkdtemp(join(tmpdir(), 'Joker-conversation-export-'))
     vi.mocked(dialog.showSaveDialog).mockReset()
     vi.mocked(renderMarkdownDocumentToPdf).mockReset()
   })

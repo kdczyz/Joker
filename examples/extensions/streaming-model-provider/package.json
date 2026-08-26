@@ -1,5 +1,5 @@
 {
-  "name": "@Rcode-examples/streaming-model-provider",
+  "name": "@Joker-examples/streaming-model-provider",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
@@ -8,11 +8,11 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "npm run build && node --test dist/extension.test.js",
-    "validate": "node ../run-repository-Rcode-cli.mjs extension validate .",
-    "pack": "npm run build && node ../run-repository-Rcode-cli.mjs extension pack ."
+    "validate": "node ../run-repository-Joker-cli.mjs extension validate .",
+    "pack": "npm run build && node ../run-repository-Joker-cli.mjs extension pack ."
   },
   "dependencies": {
-    "@Rcode/extension-api": "^1.0.0"
+    "@joker-code/extension-api": "^1.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

@@ -74,11 +74,11 @@ export async function pasteClipboardImageToCanvas(options: {
   workspaceRoot?: string
   imageDirectory?: string
 }): Promise<CanvasImageImportResult> {
-  if (typeof window.RcodeGui?.readClipboardImage !== 'function') {
+  if (typeof window.JokerGui?.readClipboardImage !== 'function') {
     return { ok: false, message: 'Clipboard image reading is unavailable.' }
   }
 
-  const image = await window.RcodeGui.readClipboardImage()
+  const image = await window.JokerGui.readClipboardImage()
   if (!image.ok) {
     return { ok: false, message: image.message }
   }
@@ -89,7 +89,7 @@ export async function pasteClipboardImageToCanvas(options: {
   // bomb the model or be passed verbatim into reference_image_paths.
   let persistedRelativePath: string | null = null
   const workspaceRoot = options.workspaceRoot?.trim()
-  if (workspaceRoot && typeof window.RcodeGui?.saveWorkspaceClipboardImage === 'function') {
+  if (workspaceRoot && typeof window.JokerGui?.saveWorkspaceClipboardImage === 'function') {
     try {
       // saveWorkspaceClipboardImage needs a currentFilePath to anchor its
       // markdownPath. We pass workspaceRoot itself; dirname(workspaceRoot) is
@@ -98,7 +98,7 @@ export async function pasteClipboardImageToCanvas(options: {
       // saved.path — if that fails, leave persistedRelativePath null so we
       // fall back to the data: URL (the snapshot safety-net drops it before
       // it reaches the AI).
-      const saved = await window.RcodeGui.saveWorkspaceClipboardImage({
+      const saved = await window.JokerGui.saveWorkspaceClipboardImage({
         workspaceRoot,
         currentFilePath: workspaceRoot,
         ...(options.imageDirectory ? { imageDirectory: options.imageDirectory } : {})
@@ -145,11 +145,11 @@ export async function importWorkspaceImageToCanvas(options: {
   if (!workspaceRoot) {
     return { ok: false, message: 'Workspace root is required.' }
   }
-  if (typeof window.RcodeGui?.pickWorkspaceImage !== 'function') {
+  if (typeof window.JokerGui?.pickWorkspaceImage !== 'function') {
     return { ok: false, message: 'Image picker is unavailable.' }
   }
 
-  const picked = await window.RcodeGui
+  const picked = await window.JokerGui
     .pickWorkspaceImage({
       workspaceRoot,
       ...(options.imageDirectory ? { imageDirectory: options.imageDirectory } : {})

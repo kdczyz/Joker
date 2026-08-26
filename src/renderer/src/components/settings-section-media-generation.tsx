@@ -75,21 +75,21 @@ export function MediaGenerationSettingsSection({ ctx }: { ctx: Record<string, an
   const {
     t,
     provider,
-    Rcode,
+    Joker,
     selectControlClass,
-    updateRcode
+    updateJoker
   } = ctx
   const textToSpeech = {
     ...DEFAULT_TEXT_TO_SPEECH,
-    ...(Rcode.textToSpeech ?? {})
+    ...(Joker.textToSpeech ?? {})
   }
   const musicGeneration = {
     ...DEFAULT_MUSIC_GENERATION,
-    ...(Rcode.musicGeneration ?? {})
+    ...(Joker.musicGeneration ?? {})
   }
   const videoGeneration = {
     ...DEFAULT_VIDEO_GENERATION,
-    ...(Rcode.videoGeneration ?? {})
+    ...(Joker.videoGeneration ?? {})
   }
   const providers = (provider?.providers ?? []) as ProviderProfile[]
   const textToSpeechProviders = providers.filter((item) => Boolean(item.textToSpeech))
@@ -100,7 +100,7 @@ export function MediaGenerationSettingsSection({ ctx }: { ctx: Record<string, an
   const [showVideoApiKey, setShowVideoApiKey] = useState(false)
 
   const updateTextToSpeech = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       textToSpeech: {
         ...textToSpeech,
         ...patch
@@ -108,7 +108,7 @@ export function MediaGenerationSettingsSection({ ctx }: { ctx: Record<string, an
     })
   }
   const updateMusicGeneration = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       musicGeneration: {
         ...musicGeneration,
         ...patch
@@ -116,7 +116,7 @@ export function MediaGenerationSettingsSection({ ctx }: { ctx: Record<string, an
     })
   }
   const updateVideoGeneration = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       videoGeneration: {
         ...videoGeneration,
         ...patch

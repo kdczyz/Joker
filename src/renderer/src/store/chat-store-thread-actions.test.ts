@@ -115,7 +115,7 @@ describe('chat-store-thread-actions queued messages', () => {
     const guiPlan: GuiPlanMessageContext = {
       operation: 'draft',
       workspaceRoot: '/workspace/deepseek-gui',
-      relativePath: '.Rcodesdd/plan/feature.md',
+      relativePath: '.Jokersdd/plan/feature.md',
       planId: 'plan-1',
       sourceRequest: 'feature'
     }
@@ -145,7 +145,7 @@ describe('chat-store-thread-actions queued messages', () => {
         guiPlan: {
           operation: 'draft',
           workspaceRoot: '/workspace/deepseek-gui',
-          relativePath: '.Rcodesdd/plan/one.md',
+          relativePath: '.Jokersdd/plan/one.md',
           planId: 'plan-1'
         }
       },
@@ -254,14 +254,14 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     const setSettings = vi.fn(async () => ({
-      agents: { Rcode: { providerId: 'xiaomi-token-plan', model: 'mimo-v2.5' } },
+      agents: { Joker: { providerId: 'xiaomi-token-plan', model: 'mimo-v2.5' } },
       codePromptPrefix: ''
     }))
     const restartRuntime = vi.fn(async () => undefined)
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         getSettings: vi.fn(async () => ({
-          agents: { Rcode: { providerId: 'minimax-token-plan', model: 'MiniMax-M2' } },
+          agents: { Joker: { providerId: 'minimax-token-plan', model: 'MiniMax-M2' } },
           codePromptPrefix: ''
         })),
         setSettings,
@@ -298,9 +298,9 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         getSettings: vi.fn(async () => ({
-          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Joker: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -335,9 +335,9 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         getSettings: vi.fn(async () => ({
-          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Joker: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -369,9 +369,9 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         getSettings: vi.fn(async () => ({
-          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Joker: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -391,7 +391,7 @@ describe('chat-store-thread-actions queued messages', () => {
         generation: 2,
         attachmentId: `extension-context:${'a'.repeat(64)}`,
         provenance: {
-          extensionId: 'Rcode-examples.Rcode-video-editor',
+          extensionId: 'Joker-examples.Joker-video-editor',
           extensionVersion: '0.3.0',
           viewContributionId: 'editor',
           workspaceId: 'b'.repeat(64)
@@ -423,9 +423,9 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         getSettings: vi.fn(async () => ({
-          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Joker: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -442,9 +442,9 @@ describe('chat-store-thread-actions queued messages', () => {
       generation: 2,
       attachmentId: `extension-context:${'a'.repeat(64)}`,
       provenance: {
-        extensionId: 'Rcode-examples.Rcode-video-editor',
+        extensionId: 'Joker-examples.Joker-video-editor',
         extensionVersion: '0.3.0',
-        viewContributionId: 'extension:Rcode-examples.Rcode-video-editor/editor',
+        viewContributionId: 'extension:Joker-examples.Joker-video-editor/editor',
         workspaceId: 'b'.repeat(64)
       }
     }
@@ -491,10 +491,10 @@ describe('chat-store-thread-actions queued messages', () => {
     }
     registryMock.getProvider.mockReturnValue(provider)
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         getSettings: vi.fn(async () => ({
           workspaceRoot: '/workspace/deepseek-gui',
-          agents: { Rcode: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          agents: { Joker: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
           codePromptPrefix: ''
         })),
         logError: vi.fn(async () => undefined)
@@ -796,10 +796,10 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
     const alertDialog = vi.fn(async () => undefined)
     registryMock.getProvider.mockReturnValue({ createThread: createThreadProvider })
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         getSettings: vi.fn(async () => ({
           workspaceRoot: 'E:\\missing-project',
-          agents: { Rcode: { subagents: { profiles: [] } } }
+          agents: { Joker: { subagents: { profiles: [] } } }
         })),
         workspaceDirectoryExists: vi.fn(async () => false),
         alertDialog
@@ -822,7 +822,7 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
     const alertDialog = vi.fn(async () => undefined)
     registryMock.getProvider.mockReturnValue({})
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         getSettings: vi.fn(async () => ({ workspaceRoot: 'E:\\missing-project' })),
         workspaceDirectoryExists: vi.fn(async () => false),
         alertDialog
@@ -841,7 +841,7 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
   })
 
   it('creates a conversation thread bound to the auto-created timestamped workspace', async () => {
-    const createdPath = '/home/alice/.local/share/Rcode/conversations/20260626-153012'
+    const createdPath = '/home/alice/.local/share/Joker/conversations/20260626-153012'
     const selectThread = vi.fn(async () => undefined)
     const refreshThreads = vi.fn(async () => undefined)
     const createThreadProvider = vi.fn(async () => ({
@@ -856,7 +856,7 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
     registryMock.getProvider.mockReturnValue({ createThread: createThreadProvider })
 
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         platform: 'linux',
         getSettings: vi.fn(async () => ({
           version: 1,
@@ -865,9 +865,9 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
           uiFontScale: 0.82,
     chatContentMaxWidthPx: 896,
           provider: { providers: [], apiKey: '', baseUrl: '', proxy: { enabled: false } },
-          agents: { Rcode: { model: 'deepseek-v4-pro', apiKey: 'k', baseUrl: '' } },
+          agents: { Joker: { model: 'deepseek-v4-pro', apiKey: 'k', baseUrl: '' } },
           workspaceRoot: '/tmp/workspace',
-          conversationWorkspaceRoot: '~/.local/share/Rcode/conversations',
+          conversationWorkspaceRoot: '~/.local/share/Joker/conversations',
           log: { enabled: false, retentionDays: 7 },
           checkpointCleanup: { enabled: false, intervalDays: 3 },
           notifications: { turnComplete: true },
@@ -892,7 +892,7 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
 
     await actions.createThread({ conversation: true })
 
-    expect(window.RcodeGui.createConversationWorkspace).toHaveBeenCalled()
+    expect(window.JokerGui.createConversationWorkspace).toHaveBeenCalled()
     expect(createThreadProvider).toHaveBeenCalledWith(expect.objectContaining({ workspace: createdPath }))
     expect(state.activeThreadId).toBe('thr_new')
     expect(selectThread).toHaveBeenCalledWith('thr_new')

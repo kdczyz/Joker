@@ -1,6 +1,6 @@
 import i18n from '../i18n'
 
-const DEFAULT_WORKSPACE_LABEL = 'Rcode'
+const DEFAULT_WORKSPACE_LABEL = 'Joker'
 
 function normalizePathForMatch(path: string): string {
   return path.replace(/\\/g, '/').replace(/\/+$/, '').toLowerCase()
@@ -11,8 +11,8 @@ function normalizePathForMatch(path: string): string {
 function isDefaultWorkspacePath(path: string): boolean {
   const normalized = normalizePathForMatch(path)
   return (
-    normalized === '~/.Rcode/default_workspace'
-    || normalized.endsWith('/.Rcode/default_workspace')
+    normalized === '~/.Joker/default_workspace'
+    || normalized.endsWith('/.Joker/default_workspace')
     || normalized === '~/.deepseekgui/default_workspace'
     || normalized.endsWith('/.deepseekgui/default_workspace')
   )

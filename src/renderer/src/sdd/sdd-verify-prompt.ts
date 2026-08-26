@@ -1,7 +1,7 @@
 import { composeFrameworkGuidance } from './pm-skill-frameworks'
 
 export const SDD_VERIFY_INTRO =
-  'Rcode is asking you to verify an implemented SDD requirement draft against its acceptance criteria.'
+  'Joker is asking you to verify an implemented SDD requirement draft against its acceptance criteria.'
 
 /**
  * Acceptance-verification turn: the agent checks every requirement block's

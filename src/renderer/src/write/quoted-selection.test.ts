@@ -287,7 +287,7 @@ describe('write markdown preview resources', () => {
     }))
 
     expect(html).toContain('src="file:///tmp/write_workspace/img/infographic.png"')
-    expect(html).not.toContain('https://Rcode.local/img/infographic.png')
+    expect(html).not.toContain('https://Joker.local/img/infographic.png')
   })
 
   it('keeps explicit external URLs unchanged', () => {

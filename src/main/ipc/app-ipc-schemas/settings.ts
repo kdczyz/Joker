@@ -12,7 +12,7 @@ import {
   MODEL_REASONING_REQUEST_PROTOCOLS,
   MAX_WRITE_AUTOSAVE_DELAY_MS,
   MIN_WRITE_AUTOSAVE_DELAY_MS,
-  MIN_RCODE_LOCAL_PORT,
+  MIN_JOKER_LOCAL_PORT,
   SCHEDULE_MODEL_IDS,
   SCHEDULE_REASONING_EFFORT_IDS,
   SPEECH_TO_TEXT_PROTOCOLS,
@@ -50,8 +50,8 @@ const hexColorSchema = z.string().trim().regex(/^#[0-9a-fA-F]{6}$/)
 const approvalPolicySchema = z.enum(['always', 'on-request', 'untrusted', 'never', 'auto', 'suggest'])
 const sandboxModeSchema = z.enum(['read-only', 'workspace-write', 'danger-full-access', 'external-sandbox'])
 const mcpSearchModeSchema = z.enum(['direct', 'search', 'auto'])
-const RcodeStorageBackendSchema = z.enum(['hybrid', 'file'])
-const RcodeCompactionSummaryModeSchema = z.enum(['heuristic', 'model'])
+const JokerStorageBackendSchema = z.enum(['hybrid', 'file'])
+const JokerCompactionSummaryModeSchema = z.enum(['heuristic', 'model'])
 export const clawRunModeSchema = z.enum(['agent', 'plan'])
 export const clawImProviderSchema = z.enum(['feishu', 'weixin', 'telegram'])
 const clawScheduleKindSchema = z.enum(['manual', 'interval', 'daily', 'at'])
@@ -205,9 +205,9 @@ const subagentsPatchSchema = z
   })
   .passthrough()
 
-const RcodeRuntimePatchSchema = z.object({
+const JokerRuntimePatchSchema = z.object({
   binaryPath: defaultPathSchema,
-  port: z.number().int().min(MIN_RCODE_LOCAL_PORT).max(65_535).optional(),
+  port: z.number().int().min(MIN_JOKER_LOCAL_PORT).max(65_535).optional(),
   autoStart: z.boolean().optional(),
   apiKey: z.string().max(MAX_BODY_BYTES).optional(),
   baseUrl: z.string().trim().max(MAX_URL_LENGTH).optional(),
@@ -258,13 +258,13 @@ const RcodeRuntimePatchSchema = z.object({
     }).strict()).max(64).optional()
   }).strict().optional(),
   storage: z.object({
-    backend: RcodeStorageBackendSchema.optional(),
+    backend: JokerStorageBackendSchema.optional(),
     sqlitePath: defaultPathSchema
   }).strict().optional(),
   contextCompaction: z.object({
     defaultSoftThreshold: z.number().int().positive().optional(),
     defaultHardThreshold: z.number().int().positive().optional(),
-    summaryMode: RcodeCompactionSummaryModeSchema.optional(),
+    summaryMode: JokerCompactionSummaryModeSchema.optional(),
     summaryTimeoutMs: z.number().int().positive().max(120_000).optional(),
     summaryMaxTokens: z.number().int().positive().max(16_000).optional(),
     summaryInputMaxBytes: z.number().int().positive().max(8 * 1024 * 1024).optional(),
@@ -369,7 +369,7 @@ const RcodeRuntimePatchSchema = z.object({
   instructions: z.object({
     enabled: z.boolean().optional()
   }).strict().optional(),
-  // Global small-model slot + per-role internal-LLM model overrides (agents.Rcode.*).
+  // Global small-model slot + per-role internal-LLM model overrides (agents.Joker.*).
   // Title & Summary default to smallModel, then the main conversation model.
   smallModel: optionalModelIdSchema,
   smallModelProviderId: z.string().trim().max(64).optional(),
@@ -540,7 +540,7 @@ const clawSkillPatchSchema = z.object({
 const clawImPatchSchema = z.object({
   enabled: z.boolean().optional(),
   provider: clawImProviderSchema.optional(),
-  port: z.number().int().min(MIN_RCODE_LOCAL_PORT).max(65_535).optional(),
+  port: z.number().int().min(MIN_JOKER_LOCAL_PORT).max(65_535).optional(),
   path: trimmedString(MAX_PATH_LENGTH).optional(),
   secret: z.string().max(MAX_BODY_BYTES).optional(),
   weixinBridgeUrl: z.string().trim().max(MAX_URL_LENGTH).optional(),
@@ -673,7 +673,7 @@ const scheduleSkillPatchSchema = z.object({
 }).strict()
 
 const scheduleInternalPatchSchema = z.object({
-  port: z.number().int().min(MIN_RCODE_LOCAL_PORT).max(65_535).optional(),
+  port: z.number().int().min(MIN_JOKER_LOCAL_PORT).max(65_535).optional(),
   secret: z.string().max(MAX_BODY_BYTES).optional()
 }).strict()
 
@@ -1165,7 +1165,7 @@ const workflowSettingsPatchSchema = z
     model: optionalModelIdSchema,
     mode: clawRunModeSchema.optional(),
     keepAwake: z.boolean().optional(),
-    webhookPort: z.number().int().min(MIN_RCODE_LOCAL_PORT).max(65_535).optional(),
+    webhookPort: z.number().int().min(MIN_JOKER_LOCAL_PORT).max(65_535).optional(),
     webhookSecret: z.string().max(MAX_BODY_BYTES).optional(),
     workflows: z.array(workflowPatchSchema).max(200).optional(),
     presets: z.array(workflowNodePresetSchema).max(100).optional(),
@@ -1277,7 +1277,7 @@ const settingsPatchObjectSchema = z.object({
   cursorSpotlightColor: hexColorSchema.optional(),
   provider: modelProviderPatchSchema.optional(),
   agents: z.object({
-    Rcode: RcodeRuntimePatchSchema.optional()
+    Joker: JokerRuntimePatchSchema.optional()
   }).strict().optional(),
   workspaceRoot: defaultPathSchema,
   conversationWorkspaceRoot: defaultPathSchema,

@@ -81,12 +81,12 @@ describe('design.plan strategy output', () => {
       id: 'artifact_ready',
       kind: 'html',
       title: 'Ready screen',
-      relativePath: '.Rcode-design/doc/artifact_ready/v1.html',
+      relativePath: '.Joker-design/doc/artifact_ready/v1.html',
       createdAt: '2026-07-02T00:00:00.000Z',
       updatedAt: '2026-07-02T00:00:00.000Z',
       versions: [{
         id: 'artifact_ready-v1',
-        relativePath: '.Rcode-design/doc/artifact_ready/v1.html',
+        relativePath: '.Joker-design/doc/artifact_ready/v1.html',
         createdAt: '2026-07-02T00:00:00.000Z',
         summary: ''
       }],
@@ -96,12 +96,12 @@ describe('design.plan strategy output', () => {
       id: 'artifact_review',
       kind: 'html',
       title: 'Review screen',
-      relativePath: '.Rcode-design/doc/artifact_review/v1.html',
+      relativePath: '.Joker-design/doc/artifact_review/v1.html',
       createdAt: '2026-07-02T00:00:00.000Z',
       updatedAt: '2026-07-02T00:00:00.000Z',
       versions: [{
         id: 'artifact_review-v1',
-        relativePath: '.Rcode-design/doc/artifact_review/v1.html',
+        relativePath: '.Joker-design/doc/artifact_review/v1.html',
         createdAt: '2026-07-02T00:00:00.000Z',
         summary: ''
       }],

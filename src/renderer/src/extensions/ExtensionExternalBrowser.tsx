@@ -15,7 +15,7 @@ import {
 import { useCallback, useEffect, useRef, useState, type ReactElement } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
-import type { ExternalBrowserSite } from '@Rcode/extension-api'
+import type { ExternalBrowserSite } from '@joker-code/extension-api'
 import type {
   ExtensionExternalBrowserBounds,
   ExtensionExternalBrowserPresentation,
@@ -99,7 +99,7 @@ export function ExtensionExternalBrowser({
     }
   }, [attempt, contractKey, contribution.id, normalizedWorkspaceRoot])
 
-  useEffect(() => window.RcodeGui.onExtensionExternalBrowserState((state) => {
+  useEffect(() => window.JokerGui.onExtensionExternalBrowserState((state) => {
     if (state.sessionId !== session?.sessionId) return
     setBrowserState(state)
     setActiveSiteId(state.siteId)
@@ -122,10 +122,10 @@ export function ExtensionExternalBrowser({
   }, [fullscreen])
 
   const sendControl = useCallback(async (
-    request: Parameters<typeof window.RcodeGui.extensionExternalBrowserControl>[0]
+    request: Parameters<typeof window.JokerGui.extensionExternalBrowserControl>[0]
   ): Promise<void> => {
     try {
-      const state = await window.RcodeGui.extensionExternalBrowserControl(request)
+      const state = await window.JokerGui.extensionExternalBrowserControl(request)
       setBrowserState(state)
     } catch (error) {
       setFailure(errorMessage(error))
@@ -486,7 +486,7 @@ function errorMessage(error: unknown): string {
 }
 
 function presentationPreferenceKey(contributionId: string): string {
-  return `Rcode.external-browser.presentation.${contributionId}`
+  return `Joker.external-browser.presentation.${contributionId}`
 }
 
 function readPresentationPreferences(

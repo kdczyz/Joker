@@ -3,7 +3,7 @@ import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import {
   DEFAULT_MODEL_PROVIDER_ID,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   getModelProviderPreset,
   modelProviderPresetProfile,
@@ -20,9 +20,9 @@ const labels: Record<string, string> = {
   agents: 'Agents',
   providers: 'Providers',
   providersDesc: 'Providers description',
-  RcodeProvider: 'Provider',
-  RcodeProviderDesc: 'Provider description',
-  RcodeProviderSelectDesc: 'Provider select description',
+  JokerProvider: 'Provider',
+  JokerProviderDesc: 'Provider description',
+  JokerProviderSelectDesc: 'Provider select description',
   modelProviderAdd: 'Add provider',
   modelProviderAddMenuCustom: 'Custom provider…',
   modelProviderSectionBasics: 'Provider basics',
@@ -68,128 +68,128 @@ const labels: Record<string, string> = {
   imageGenModel: 'Image model',
   imageGenBaseUrlPlaceholder: 'https://api.example.com/v1',
   baseUrlPlaceholder: 'https://api.example.com/v1',
-  RcodeApiKey: 'Rcode API key',
-  RcodeApiKeyDesc: 'Rcode API key description',
-  RcodeApiKeyPlaceholder: 'Inherit API key',
-  RcodeApiKeyInherited: 'Inherited API key',
-  RcodeApiKeyMissing: 'Missing API key',
-  RcodeApiKeyOverride: 'Override API key',
-  RcodeBaseUrl: 'Rcode base URL',
-  RcodeBaseUrlDesc: 'Rcode base URL description',
-  RcodeBaseUrlPlaceholder: 'Inherit base URL',
-  RcodeBaseUrlOfficial: 'Official base URL',
-  RcodeBaseUrlInherited: 'Inherited base URL',
-  RcodeBaseUrlOverride: 'Override base URL',
-  RcodeAssistantAdvanced: 'Assistant advanced settings',
-  RcodeAssistantAdvancedDesc: 'Assistant advanced settings description',
+  JokerApiKey: 'Joker API key',
+  JokerApiKeyDesc: 'Joker API key description',
+  JokerApiKeyPlaceholder: 'Inherit API key',
+  JokerApiKeyInherited: 'Inherited API key',
+  JokerApiKeyMissing: 'Missing API key',
+  JokerApiKeyOverride: 'Override API key',
+  JokerBaseUrl: 'Joker base URL',
+  JokerBaseUrlDesc: 'Joker base URL description',
+  JokerBaseUrlPlaceholder: 'Inherit base URL',
+  JokerBaseUrlOfficial: 'Official base URL',
+  JokerBaseUrlInherited: 'Inherited base URL',
+  JokerBaseUrlOverride: 'Override base URL',
+  JokerAssistantAdvanced: 'Assistant advanced settings',
+  JokerAssistantAdvancedDesc: 'Assistant advanced settings description',
   autoStart: 'Auto start',
   autoStartDesc: 'Auto start description',
   port: 'Port',
   portDesc: 'Port description',
-  RcodeBinary: 'Rcode binary',
-  RcodeBinaryDesc: 'Rcode binary description',
-  RcodeBinaryPlaceholder: 'Bundled Rcode',
-  RcodeDataDir: 'Data dir',
-  RcodeDataDirDesc: 'Data dir description',
-  RcodeModel: 'Model',
-  RcodeModelDesc: 'Model description',
-  RcodeTokenEconomy: 'Token-saving mode',
-  RcodeTokenEconomyDesc: 'Token-saving mode description',
-  RcodeTokenEconomySavings: 'Saved {{tokens}} tokens',
-  RcodeTokenEconomySavingsLoading: 'Loading savings',
-  RcodeTokenEconomySavingsEmpty: 'Savings empty',
-  RcodeTokenEconomyAdvanced: 'Token-saving advanced settings',
-  RcodeTokenEconomyAdvancedDesc: 'Token-saving advanced settings description',
-  RcodeTokenEconomyOptions: 'Token-saving options',
-  RcodeTokenEconomyOptionsDesc: 'Token-saving options description',
-  RcodeCompressToolDescriptions: 'Compress tool descriptions',
-  RcodeCompressToolResults: 'Compress tool results',
-  RcodeConciseResponses: 'Concise responses',
-  RcodeHistoryHygiene: 'History guard',
-  RcodeHistoryHygieneDesc: 'History guard description',
-  RcodeHistoryMaxResultLines: 'Max result lines',
-  RcodeHistoryMaxResultBytes: 'Max result bytes',
-  RcodeHistoryMaxResultTokens: 'Max result tokens',
-  RcodeHistoryMaxArgumentBytes: 'Max argument bytes',
-  RcodeHistoryMaxArgumentTokens: 'Max argument tokens',
-  RcodeHistoryMaxArrayItems: 'Max array items',
+  JokerBinary: 'Joker binary',
+  JokerBinaryDesc: 'Joker binary description',
+  JokerBinaryPlaceholder: 'Bundled Joker',
+  JokerDataDir: 'Data dir',
+  JokerDataDirDesc: 'Data dir description',
+  JokerModel: 'Model',
+  JokerModelDesc: 'Model description',
+  JokerTokenEconomy: 'Token-saving mode',
+  JokerTokenEconomyDesc: 'Token-saving mode description',
+  JokerTokenEconomySavings: 'Saved {{tokens}} tokens',
+  JokerTokenEconomySavingsLoading: 'Loading savings',
+  JokerTokenEconomySavingsEmpty: 'Savings empty',
+  JokerTokenEconomyAdvanced: 'Token-saving advanced settings',
+  JokerTokenEconomyAdvancedDesc: 'Token-saving advanced settings description',
+  JokerTokenEconomyOptions: 'Token-saving options',
+  JokerTokenEconomyOptionsDesc: 'Token-saving options description',
+  JokerCompressToolDescriptions: 'Compress tool descriptions',
+  JokerCompressToolResults: 'Compress tool results',
+  JokerConciseResponses: 'Concise responses',
+  JokerHistoryHygiene: 'History guard',
+  JokerHistoryHygieneDesc: 'History guard description',
+  JokerHistoryMaxResultLines: 'Max result lines',
+  JokerHistoryMaxResultBytes: 'Max result bytes',
+  JokerHistoryMaxResultTokens: 'Max result tokens',
+  JokerHistoryMaxArgumentBytes: 'Max argument bytes',
+  JokerHistoryMaxArgumentTokens: 'Max argument tokens',
+  JokerHistoryMaxArrayItems: 'Max array items',
   runtimeToken: 'Runtime token',
   runtimeTokenDesc: 'Runtime token description',
   showSecret: 'Show',
   hideSecret: 'Hide',
-  RcodeInsecure: 'Insecure',
-  RcodeInsecureDesc: 'Insecure description',
-  RcodeInsecureForcedDesc: 'Insecure forced',
-  RcodeAdvanced: 'Advanced runtime settings',
-  RcodeAdvancedDetails: 'Storage, model context, and tool guards',
-  RcodeAdvancedDetailsDesc: 'Per-model context policy comes from models.profiles',
-  RcodeStorageBackend: 'Storage backend',
-  RcodeStorageBackendDesc: 'Storage backend description',
-  RcodeStorageHybrid: 'Hybrid storage',
-  RcodeStorageFile: 'Pure JSONL file storage',
-  RcodeStorageSqlitePath: 'SQLite path',
-  RcodeStorageSqlitePathDesc: 'SQLite path description',
-  RcodeStorageSqlitePathPlaceholder: 'Automatic SQLite path',
-  RcodeModelContextProfile: 'Current model context policy',
-  RcodeModelContextProfileDesc: 'Current model context policy description',
-  RcodeModelContextModel: 'Matched model',
-  RcodeModelContextWindow: 'Context window',
-  RcodeModelContextSoft: 'Model soft threshold',
-  RcodeModelContextHard: 'Model hard threshold',
-  RcodeModelContextSourceBuiltIn: 'Built-in model config',
-  RcodeModelContextSourceFallback: 'Fallback model config',
-  RcodeCompactionThresholds: 'Fallback compaction thresholds',
-  RcodeCompactionThresholdsDesc: 'Fallback compaction thresholds description',
-  RcodeCompactionSoftThreshold: 'Fallback soft threshold',
-  RcodeCompactionHardThreshold: 'Fallback hard threshold',
-  RcodeCompactionSummary: 'Compaction summary',
-  RcodeCompactionSummaryDesc: 'Compaction summary description',
-  RcodeCompactionSummaryMode: 'Summary mode',
-  RcodeCompactionSummaryHeuristic: 'Heuristic summary',
-  RcodeCompactionSummaryModel: 'Model summary',
-  RcodeCompactionSummaryTimeout: 'Summary timeout',
-  RcodeCompactionSummaryMaxTokens: 'Summary max tokens',
-  RcodeCompactionSummaryInputBytes: 'Summary input bytes',
-  RcodeMaxWallTime: 'Maximum turn duration',
-  RcodeMaxWallTimeDesc: 'Maximum turn duration description',
-  RcodeStreamIdleTimeout: 'Stream idle timeout',
-  RcodeStreamIdleTimeoutDesc: 'Stream idle timeout description',
-  RcodeToolStorm: 'Tool storm',
-  RcodeToolStormDesc: 'Tool storm description',
-  RcodeToolStormLimits: 'Tool storm limits',
-  RcodeToolStormLimitsDesc: 'Tool storm limits description',
-  RcodeToolStormWindowSize: 'Tool storm window',
-  RcodeToolStormThreshold: 'Tool storm threshold',
-  RcodeToolOutputLimits: 'Tool output limits',
-  RcodeToolOutputLimitsDesc: 'Tool output limits description',
-  RcodeToolOutputMaxLines: 'Tool output max lines',
-  RcodeToolOutputMaxBytes: 'Tool output max bytes',
-  RcodeToolArgumentRepair: 'Tool argument repair',
-  RcodeToolArgumentRepairDesc: 'Tool argument repair description',
-  RcodeInstructions: 'AGENTS.md instructions',
-  RcodeInstructionsDesc: 'AGENTS.md instructions description',
-  RcodeInstructionsDiagnostics: '1 source injected last turn',
-  RcodeDiagnostics: 'Rcode diagnostics',
-  RcodeDiagnosticsAdvanced: 'Detailed diagnostics',
-  RcodeDiagnosticsAdvancedDesc: 'Detailed diagnostics description',
-  RcodeRuntimeCapabilities: 'Runtime capabilities',
-  RcodeRuntimeCapabilitiesDesc: 'Runtime capabilities description',
-  RcodeRuntimeModel: 'Runtime model',
-  RcodeRuntimePid: 'Runtime PID',
-  RcodeDiagnosticsRefresh: 'Refresh diagnostics',
-  RcodeToolDiagnostics: 'Tool diagnostics',
-  RcodeToolDiagnosticsDesc: 'Tool diagnostics description',
-  RcodeDiagnosticsProviders: 'Providers',
-  RcodeDiagnosticsMcpServers: 'MCP servers',
-  RcodeDiagnosticsSkills: 'Discovered Skills',
-  RcodeDiagnosticsAttachments: 'Attachments',
-  RcodeMemoryRecords: 'Memory records',
-  RcodeMemoryRecordsDesc: 'Memory records description',
-  RcodeMemoryEmpty: 'No memories',
-  RcodeMemoryDisable: 'Disable memory',
+  JokerInsecure: 'Insecure',
+  JokerInsecureDesc: 'Insecure description',
+  JokerInsecureForcedDesc: 'Insecure forced',
+  JokerAdvanced: 'Advanced runtime settings',
+  JokerAdvancedDetails: 'Storage, model context, and tool guards',
+  JokerAdvancedDetailsDesc: 'Per-model context policy comes from models.profiles',
+  JokerStorageBackend: 'Storage backend',
+  JokerStorageBackendDesc: 'Storage backend description',
+  JokerStorageHybrid: 'Hybrid storage',
+  JokerStorageFile: 'Pure JSONL file storage',
+  JokerStorageSqlitePath: 'SQLite path',
+  JokerStorageSqlitePathDesc: 'SQLite path description',
+  JokerStorageSqlitePathPlaceholder: 'Automatic SQLite path',
+  JokerModelContextProfile: 'Current model context policy',
+  JokerModelContextProfileDesc: 'Current model context policy description',
+  JokerModelContextModel: 'Matched model',
+  JokerModelContextWindow: 'Context window',
+  JokerModelContextSoft: 'Model soft threshold',
+  JokerModelContextHard: 'Model hard threshold',
+  JokerModelContextSourceBuiltIn: 'Built-in model config',
+  JokerModelContextSourceFallback: 'Fallback model config',
+  JokerCompactionThresholds: 'Fallback compaction thresholds',
+  JokerCompactionThresholdsDesc: 'Fallback compaction thresholds description',
+  JokerCompactionSoftThreshold: 'Fallback soft threshold',
+  JokerCompactionHardThreshold: 'Fallback hard threshold',
+  JokerCompactionSummary: 'Compaction summary',
+  JokerCompactionSummaryDesc: 'Compaction summary description',
+  JokerCompactionSummaryMode: 'Summary mode',
+  JokerCompactionSummaryHeuristic: 'Heuristic summary',
+  JokerCompactionSummaryModel: 'Model summary',
+  JokerCompactionSummaryTimeout: 'Summary timeout',
+  JokerCompactionSummaryMaxTokens: 'Summary max tokens',
+  JokerCompactionSummaryInputBytes: 'Summary input bytes',
+  JokerMaxWallTime: 'Maximum turn duration',
+  JokerMaxWallTimeDesc: 'Maximum turn duration description',
+  JokerStreamIdleTimeout: 'Stream idle timeout',
+  JokerStreamIdleTimeoutDesc: 'Stream idle timeout description',
+  JokerToolStorm: 'Tool storm',
+  JokerToolStormDesc: 'Tool storm description',
+  JokerToolStormLimits: 'Tool storm limits',
+  JokerToolStormLimitsDesc: 'Tool storm limits description',
+  JokerToolStormWindowSize: 'Tool storm window',
+  JokerToolStormThreshold: 'Tool storm threshold',
+  JokerToolOutputLimits: 'Tool output limits',
+  JokerToolOutputLimitsDesc: 'Tool output limits description',
+  JokerToolOutputMaxLines: 'Tool output max lines',
+  JokerToolOutputMaxBytes: 'Tool output max bytes',
+  JokerToolArgumentRepair: 'Tool argument repair',
+  JokerToolArgumentRepairDesc: 'Tool argument repair description',
+  JokerInstructions: 'AGENTS.md instructions',
+  JokerInstructionsDesc: 'AGENTS.md instructions description',
+  JokerInstructionsDiagnostics: '1 source injected last turn',
+  JokerDiagnostics: 'Joker diagnostics',
+  JokerDiagnosticsAdvanced: 'Detailed diagnostics',
+  JokerDiagnosticsAdvancedDesc: 'Detailed diagnostics description',
+  JokerRuntimeCapabilities: 'Runtime capabilities',
+  JokerRuntimeCapabilitiesDesc: 'Runtime capabilities description',
+  JokerRuntimeModel: 'Runtime model',
+  JokerRuntimePid: 'Runtime PID',
+  JokerDiagnosticsRefresh: 'Refresh diagnostics',
+  JokerToolDiagnostics: 'Tool diagnostics',
+  JokerToolDiagnosticsDesc: 'Tool diagnostics description',
+  JokerDiagnosticsProviders: 'Providers',
+  JokerDiagnosticsMcpServers: 'MCP servers',
+  JokerDiagnosticsSkills: 'Discovered Skills',
+  JokerDiagnosticsAttachments: 'Attachments',
+  JokerMemoryRecords: 'Memory records',
+  JokerMemoryRecordsDesc: 'Memory records description',
+  JokerMemoryEmpty: 'No memories',
+  JokerMemoryDisable: 'Disable memory',
   memoryRestore: 'Restore',
-  RcodeMemoryDelete: 'Delete memory',
-  RcodeMemoryDisabled: 'Disabled',
+  JokerMemoryDelete: 'Delete memory',
+  JokerMemoryDisabled: 'Disabled',
   skill: 'Skill',
   skillsLocation: 'Skill location',
   skillsLocationDesc: 'Skill location description',
@@ -315,8 +315,8 @@ function baseCtx(): Record<string, unknown> {
   const noop = () => undefined
   const asyncNoop = async () => undefined
   const ref = { current: null }
-  const Rcode = {
-    ...defaultRcodeRuntimeSettings(),
+  const Joker = {
+    ...defaultJokerRuntimeSettings(),
     autoStart: true,
     runtimeToken: '',
     insecure: true
@@ -325,10 +325,10 @@ function baseCtx(): Record<string, unknown> {
     t,
     tCommon: t,
     form: { claw: { skills: { extraDirs: ['/tmp/project/.agents/skills'] } } },
-    Rcode,
+    Joker,
     activeApiKey: '',
     update: noop,
-    updateRcode: noop,
+    updateJoker: noop,
     updateSharedCredential: noop,
     sharedApiKey: '',
     sharedBaseUrl: '',
@@ -379,7 +379,7 @@ function baseCtx(): Record<string, unknown> {
     skillNotice: null,
     openSkillRoot: asyncNoop,
     openPlugins: noop,
-    mcpConfigPath: '/tmp/project/.Rcode/mcp.json',
+    mcpConfigPath: '/tmp/project/.Joker/mcp.json',
     mcpConfigExists: true,
     mcpConfigText: '{"mcpServers":{}}',
     setMcpConfigText: noop,
@@ -392,7 +392,7 @@ function baseCtx(): Record<string, unknown> {
     activeProjectWorkspaceRoot: '/tmp/project',
     projectConfig: {
       workspaceRoot: '/tmp/project',
-      path: '/tmp/project/.Rcode/project.json',
+      path: '/tmp/project/.Joker/project.json',
       content: '{"version":1}',
       exists: true,
       status: 'valid',
@@ -416,7 +416,7 @@ function baseCtx(): Record<string, unknown> {
     memoryRecords: [],
     runtimeDiagnosticsBusy: false,
     runtimeDiagnosticsNotice: null,
-    refreshRcodeDiagnostics: asyncNoop,
+    refreshJokerDiagnostics: asyncNoop,
     disableMemoryRecord: asyncNoop,
     deleteMemoryRecord: asyncNoop,
     pickClawWorkspace: asyncNoop,
@@ -427,7 +427,7 @@ function baseCtx(): Record<string, unknown> {
   }
 }
 
-describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
+describe('AgentsSettingsSection Joker diagnostics smoke', () => {
   it('builds a single patch when adding and selecting a model provider', () => {
     const provider = defaultModelProviderSettings()
     const customProvider = {
@@ -443,13 +443,13 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
     const patch = modelProvidersSettingsPatch({
       provider,
       providers: [...provider.providers, customProvider],
-      Rcode: { providerId: customProvider.id }
+      Joker: { providerId: customProvider.id }
     })
 
     expect(patch.provider?.providers).toEqual([...provider.providers, customProvider])
-    expect(patch.agents?.Rcode?.providerId).toBe(customProvider.id)
-    expect(patch.agents?.Rcode?.apiKey).toBe('')
-    expect(patch.agents?.Rcode?.baseUrl).toBe('')
+    expect(patch.agents?.Joker?.providerId).toBe(customProvider.id)
+    expect(patch.agents?.Joker?.apiKey).toBe('')
+    expect(patch.agents?.Joker?.baseUrl).toBe('')
   })
 
   it('builds a single patch when removing the active model provider', () => {
@@ -472,13 +472,13 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
         ]
       },
       providers: provider.providers,
-      Rcode: { providerId: DEFAULT_MODEL_PROVIDER_ID }
+      Joker: { providerId: DEFAULT_MODEL_PROVIDER_ID }
     })
 
     expect(patch.provider?.providers).toEqual(provider.providers)
-    expect(patch.agents?.Rcode?.providerId).toBe(DEFAULT_MODEL_PROVIDER_ID)
-    expect(patch.agents?.Rcode?.apiKey).toBe('')
-    expect(patch.agents?.Rcode?.baseUrl).toBe('')
+    expect(patch.agents?.Joker?.providerId).toBe(DEFAULT_MODEL_PROVIDER_ID)
+    expect(patch.agents?.Joker?.apiKey).toBe('')
+    expect(patch.agents?.Joker?.baseUrl).toBe('')
   })
 
   it('builds a single patch when adding a preset model provider', () => {
@@ -490,7 +490,7 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
     const patch = modelProvidersSettingsPatch({
       provider,
       providers: [...provider.providers, xiaomiProvider],
-      Rcode: {
+      Joker: {
         providerId: xiaomiProvider.id,
         model: xiaomiProvider.models[0]
       }
@@ -504,7 +504,7 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
         models: expect.arrayContaining(['mimo-v2.5'])
       })
     ]))
-    expect(patch.agents?.Rcode).toEqual(expect.objectContaining({
+    expect(patch.agents?.Joker).toEqual(expect.objectContaining({
       providerId: 'xiaomi',
       model: xiaomiProvider.models[0]
     }))
@@ -519,14 +519,14 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
     const patch = modelProvidersSettingsPatch({
       provider,
       providers: [...provider.providers, minimaxProvider],
-      currentRcode: defaultRcodeRuntimeSettings(),
-      Rcode: {
+      currentJoker: defaultJokerRuntimeSettings(),
+      Joker: {
         providerId: minimaxProvider.id,
         model: minimaxProvider.models[0]
       }
     })
 
-    expect(patch.agents?.Rcode).toEqual(expect.objectContaining({
+    expect(patch.agents?.Joker).toEqual(expect.objectContaining({
       providerId: 'minimax',
       model: minimaxProvider.models[0],
       textToSpeech: expect.objectContaining({
@@ -565,8 +565,8 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
           ...provider,
           providers: [...provider.providers, customProvider]
         },
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           providerId: customProvider.id
         }
       }
@@ -612,8 +612,8 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
           ...provider,
           providers: [...provider.providers, customProvider]
         },
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           providerId: customProvider.id
         }
       }
@@ -639,8 +639,8 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
           ...provider,
           providers: [...provider.providers, modelProviderPresetProfile(xiaomi!)]
         },
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           providerId: 'xiaomi'
         }
       }
@@ -658,7 +658,7 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
       ctx: {
         ...baseCtx(),
         provider: defaultModelProviderSettings(),
-        Rcode: defaultRcodeRuntimeSettings()
+        Joker: defaultJokerRuntimeSettings()
       }
     }))
 
@@ -764,7 +764,7 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
 
     const html = renderToStaticMarkup(createElement(AgentsSettingsSection, { ctx }))
 
-    expect(html).toContain('Rcode diagnostics')
+    expect(html).toContain('Joker diagnostics')
     expect(html).toContain('MCP')
     expect(html).toContain('available')
     expect(html).toContain('2/2')
@@ -785,7 +785,7 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
     const html = renderToStaticMarkup(createElement(AgentsSettingsSection, { ctx: baseCtx() }))
 
     expect(html).toContain('External tool config path')
-    expect(html).toContain('/tmp/project/.Rcode/mcp.json')
+    expect(html).toContain('/tmp/project/.Joker/mcp.json')
     expect(html).toContain('Model and API credentials do not live in this MCP file')
     expect(html).not.toContain('DeepSeek auth')
     expect(html).not.toContain('Base URL are stored in this file')
@@ -796,7 +796,7 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
     const html = renderToStaticMarkup(createElement(AgentsSettingsSection, { ctx: baseCtx() }))
 
     expect(html).toContain('Project MCP &amp; Skills')
-    expect(html).toContain('/tmp/project/.Rcode/project.json')
+    expect(html).toContain('/tmp/project/.Joker/project.json')
     expect(html).toContain('Valid configuration')
     expect(html).toContain('MCP not approved')
     expect(html).toContain('sha256:aaaaaaaaaaaa')
@@ -884,9 +884,9 @@ describe('AgentsSettingsSection Rcode diagnostics smoke', () => {
           skillCount: 2
         },
         {
-          id: 'global-Rcode',
-          disableKey: 'global-Rcode',
-          path: '/home/me/.Rcode/skills',
+          id: 'global-Joker',
+          disableKey: 'global-Joker',
+          path: '/home/me/.Joker/skills',
           scope: 'global',
           source: 'common',
           exists: true,

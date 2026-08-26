@@ -74,7 +74,7 @@ async function pathExists(path: string): Promise<boolean> {
 }
 
 function resolveBranchWorktreeRoot(worktreeRoot?: string): string {
-  return worktreeRoot?.trim() || join(homedir(), '.Rcode', 'worktrees')
+  return worktreeRoot?.trim() || join(homedir(), '.Joker', 'worktrees')
 }
 
 function normalizeGitPath(path: string): string {
@@ -108,7 +108,7 @@ async function getPrimaryWorktreeRoot(cwd: string, fallback: string): Promise<st
 
 async function allocateDerivedWorktreeBranch(cwd: string): Promise<string> {
   for (let i = 0; i < 100; i += 1) {
-    const branch = `Rcode/worktree-${randomBytes(3).toString('hex')}`
+    const branch = `Joker/worktree-${randomBytes(3).toString('hex')}`
     try {
       await runGit(cwd, ['show-ref', '--verify', '--quiet', `refs/heads/${branch}`])
     } catch {

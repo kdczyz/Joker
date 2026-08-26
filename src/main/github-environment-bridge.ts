@@ -1,12 +1,12 @@
 /**
  * Bridges the GUI's GitHub OAuth credentials into the runtime's
- * `process.env.RCODE_GITHUB_ACCOUNT_CONTEXT`. The runtime rebuilds its
+ * `process.env.JOKER_GITHUB_ACCOUNT_CONTEXT`. The runtime rebuilds its
  * immutable prefix on every restart, so we MUST also trigger `restartRuntime`
  * after mutating the env — otherwise stale prefix will keep masking the new
  * identity.
  *
  * Why an env var: the runtime and the GUI share the same Electron main process,
- * so process.env is the cheapest cross-cutting channel. Rcode's
+ * so process.env is the cheapest cross-cutting channel. Joker's
  * `environment-context.ts` reads this var on every prefix build.
  */
 import {
@@ -16,9 +16,9 @@ import {
 import {
   serializeGithubAccountContext,
   type GithubAccountContext
-} from '../../Rcode/src/cache/environment-context'
+} from '../../Joker/src/cache/environment-context'
 
-const ENV_KEY = 'RCODE_GITHUB_ACCOUNT_CONTEXT'
+const ENV_KEY = 'JOKER_GITHUB_ACCOUNT_CONTEXT'
 
 /**
  * Snapshot the currently-credentialed GitHub user into process.env. Idempotent:

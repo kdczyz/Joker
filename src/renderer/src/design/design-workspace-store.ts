@@ -652,11 +652,11 @@ export const useDesignWorkspaceStore = create<DesignWorkspaceState>((set, get) =
 
     refreshDesignSystemHash: async () => {
       const { workspaceRoot } = get()
-      if (!workspaceRoot || typeof window.RcodeGui?.readWorkspaceFile !== 'function') {
+      if (!workspaceRoot || typeof window.JokerGui?.readWorkspaceFile !== 'function') {
         set({ designSystemHash: '' })
         return
       }
-      const res = await window.RcodeGui
+      const res = await window.JokerGui
         .readWorkspaceFile({ path: PROJECT_DESIGN_MD_PATH, workspaceRoot })
         .catch(() => null)
       const parsed = res?.ok

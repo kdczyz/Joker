@@ -1,4 +1,4 @@
-import { ExtensionContributionsSchema } from '@Rcode/extension-api'
+import { ExtensionContributionsSchema } from '@joker-code/extension-api'
 import { describe, expect, it } from 'vitest'
 import {
   ContributionRegistry,

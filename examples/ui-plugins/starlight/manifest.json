@@ -1,9 +1,9 @@
 {
   "id": "starlight",
-  "name": "星夜 Rcode",
+  "name": "星夜 Joker",
   "version": "1.1.0",
-  "author": "Rcode Team",
-  "description": "官方示例插件:深紫星夜配色的 Rcode 形象,含舞台背景、主题色与进行中文案。",
+  "author": "Joker Team",
+  "description": "官方示例插件:深紫星夜配色的 Joker 形象,含舞台背景、主题色与进行中文案。",
   "figures": {
     "swim": "img/bird.png",
     "surf": "img/surf.png",

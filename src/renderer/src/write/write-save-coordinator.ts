@@ -37,7 +37,7 @@ export function enqueueWriteWorkspaceFileTask<T>(
 
 export function enqueueWriteWorkspaceSave(
   payload: WorkspaceFileWritePayload,
-  writeWorkspaceFile: WriteWorkspaceFile = window.RcodeGui.writeWorkspaceFile
+  writeWorkspaceFile: WriteWorkspaceFile = window.JokerGui.writeWorkspaceFile
 ): Promise<WorkspaceFileWriteResult> {
   const key = writeSaveQueueKey(payload.workspaceRoot ?? '', payload.path)
   const contents = pendingSaveContents.get(key) ?? new Map<string, number>()

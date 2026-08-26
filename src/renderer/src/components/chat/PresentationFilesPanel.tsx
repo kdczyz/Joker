@@ -62,7 +62,7 @@ function PresentationFileCard({
         : await revealWorkspaceFileInFileManager(file.path, workspaceRoot, file.contentSha256)
       if (!result.ok) {
         setFailedAction(action)
-        void window.RcodeGui?.logError?.('presentation-open', 'Failed to open presentation artifact', {
+        void window.JokerGui?.logError?.('presentation-open', 'Failed to open presentation artifact', {
           action,
           message: result.message.slice(0, 1000),
           path: file.path.slice(0, 1000)
@@ -70,7 +70,7 @@ function PresentationFileCard({
       }
     } catch (error) {
       setFailedAction(action)
-      void window.RcodeGui?.logError?.('presentation-open', 'Failed to open presentation artifact', {
+      void window.JokerGui?.logError?.('presentation-open', 'Failed to open presentation artifact', {
         action,
         message: error instanceof Error ? error.message.slice(0, 1000) : String(error).slice(0, 1000),
         path: file.path.slice(0, 1000)
@@ -80,8 +80,8 @@ function PresentationFileCard({
     }
   }
 
-  const kindLabel = file.kind === 'Rcode-html'
-    ? t('presentationKindRcodeHtml')
+  const kindLabel = file.kind === 'Joker-html'
+    ? t('presentationKindJokerHtml')
     : t('presentationKindPowerPoint')
   const details = [kindLabel, file.extension, formatByteSize(file.byteSize)].filter(Boolean).join(' · ')
   const busy = busyAction !== null

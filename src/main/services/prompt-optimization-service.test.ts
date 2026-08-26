@@ -4,7 +4,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultTerminalSettings,
@@ -14,7 +14,7 @@ import {
 } from '../../shared/app-settings'
 import { optimizePrompt } from './prompt-optimization-service'
 
-function createSettings(patch: Partial<AppSettingsV1['agents']['Rcode']> = {}): AppSettingsV1 {
+function createSettings(patch: Partial<AppSettingsV1['agents']['Joker']> = {}): AppSettingsV1 {
   return {
     version: 1,
     locale: 'en',
@@ -23,18 +23,18 @@ function createSettings(patch: Partial<AppSettingsV1['agents']['Rcode']> = {}): 
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      Rcode: {
-        ...defaultRcodeRuntimeSettings(),
+      Joker: {
+        ...defaultJokerRuntimeSettings(),
         apiKey: 'sk-runtime',
         promptOptimization: {
-          ...defaultRcodeRuntimeSettings().promptOptimization,
+          ...defaultJokerRuntimeSettings().promptOptimization,
           enabled: true
         },
         ...patch
       }
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: {
       enabled: true,
       retentionDays: 2

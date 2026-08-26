@@ -13,9 +13,9 @@ import type {
   ExtensionViewSessionRecord,
   ExtensionViewSessionRegistry
 } from './extension-view-sessions'
-import { RCODE_EXTENSION_PRIVILEGED_SCHEME } from './extension-resource-protocol'
+import { JOKER_EXTENSION_PRIVILEGED_SCHEME } from './extension-resource-protocol'
 
-export const RCODE_MEDIA_SCHEME = 'Rcode-media'
+export const JOKER_MEDIA_SCHEME = 'Joker-media'
 
 const DEFAULT_LEASE_TTL_MS = 5 * 60 * 1_000
 const DEFAULT_MAX_LEASES_PER_VIEW = 32
@@ -104,8 +104,8 @@ export class ExtensionMediaProtocolError extends Error {
   }
 }
 
-export const RCODE_MEDIA_PRIVILEGED_SCHEME = {
-  scheme: RCODE_MEDIA_SCHEME,
+export const JOKER_MEDIA_PRIVILEGED_SCHEME = {
+  scheme: JOKER_MEDIA_SCHEME,
   privileges: {
     standard: true,
     secure: true,
@@ -116,15 +116,15 @@ export const RCODE_MEDIA_PRIVILEGED_SCHEME = {
   }
 } as const
 
-export function registerRcodeMediaSchemeAsPrivileged(protocol: SchemeRegistrar): void {
-  protocol.registerSchemesAsPrivileged([RCODE_MEDIA_PRIVILEGED_SCHEME])
+export function registerJokerMediaSchemeAsPrivileged(protocol: SchemeRegistrar): void {
+  protocol.registerSchemesAsPrivileged([JOKER_MEDIA_PRIVILEGED_SCHEME])
 }
 
 /** Electron permits privileged-scheme registration only once before app ready. */
-export function registerRcodeExtensionPlatformSchemesAsPrivileged(protocol: SchemeRegistrar): void {
+export function registerJokerExtensionPlatformSchemesAsPrivileged(protocol: SchemeRegistrar): void {
   protocol.registerSchemesAsPrivileged([
-    RCODE_EXTENSION_PRIVILEGED_SCHEME,
-    RCODE_MEDIA_PRIVILEGED_SCHEME
+    JOKER_EXTENSION_PRIVILEGED_SCHEME,
+    JOKER_MEDIA_PRIVILEGED_SCHEME
   ])
 }
 
@@ -169,11 +169,11 @@ export class ExtensionMediaProtocolRegistry {
     }
     const protocol = this.options.protocolForPartition(record.partition)
     try {
-      protocol.unhandle(RCODE_MEDIA_SCHEME)
+      protocol.unhandle(JOKER_MEDIA_SCHEME)
     } catch {
       // First registration has no existing handler.
     }
-    protocol.handle(RCODE_MEDIA_SCHEME, (request) => this.handleRequest(record.sessionId, request))
+    protocol.handle(JOKER_MEDIA_SCHEME, (request) => this.handleRequest(record.sessionId, request))
     this.registrations.set(record.sessionId, {
       protocol,
       partition: record.partition,
@@ -253,7 +253,7 @@ export class ExtensionMediaProtocolRegistry {
     return {
       leaseId,
       handleId: lease.handleId,
-      url: `${RCODE_MEDIA_SCHEME}://lease/${leaseId}`,
+      url: `${JOKER_MEDIA_SCHEME}://lease/${leaseId}`,
       mimeType,
       expiresAt: new Date(expiresAt).toISOString()
     }
@@ -295,7 +295,7 @@ export class ExtensionMediaProtocolRegistry {
     if (!prepared) return revoked > 0
     this.registrations.delete(sessionId)
     try {
-      prepared.protocol.unhandle(RCODE_MEDIA_SCHEME)
+      prepared.protocol.unhandle(JOKER_MEDIA_SCHEME)
     } catch {
       // The temporary Electron Session may already be gone.
     }
@@ -314,7 +314,7 @@ export class ExtensionMediaProtocolRegistry {
 
   diagnostics(): ExtensionMediaDiagnostics {
     return {
-      scheme: RCODE_MEDIA_SCHEME,
+      scheme: JOKER_MEDIA_SCHEME,
       preparedViewCount: this.registrations.size,
       activeLeaseCount: this.leases.size,
       activeStreamCount: this.activeStreamCount,
@@ -331,7 +331,7 @@ export class ExtensionMediaProtocolRegistry {
 
   private async handleRequest(sessionId: string, request: Request): Promise<Response> {
     try {
-      const leaseId = parseRcodeMediaUrl(request.url)
+      const leaseId = parseJokerMediaUrl(request.url)
       const lease = this.requireRequestLease(sessionId, leaseId)
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         throw new ExtensionMediaProtocolError('MEDIA_METHOD_NOT_ALLOWED', 405)
@@ -590,7 +590,7 @@ function parseRangeInteger(value: string, resourceSize: number): number {
   return parsed
 }
 
-export function parseRcodeMediaUrl(rawUrl: string): string {
+export function parseJokerMediaUrl(rawUrl: string): string {
   let url: URL
   try {
     url = new URL(rawUrl)
@@ -598,7 +598,7 @@ export function parseRcodeMediaUrl(rawUrl: string): string {
     throw new ExtensionMediaProtocolError('MEDIA_URL_INVALID')
   }
   if (
-    url.protocol !== `${RCODE_MEDIA_SCHEME}:` ||
+    url.protocol !== `${JOKER_MEDIA_SCHEME}:` ||
     url.hostname !== 'lease' ||
     url.username ||
     url.password ||
@@ -622,8 +622,8 @@ function mediaResponseHeaders(
     'Content-Length': String(contentLength),
     'Content-Type': lease.mimeType,
     'Cache-Control': 'private, no-store',
-    // The protected resource intentionally crosses from Rcode-extension://<id>
-    // to Rcode-media://lease. Access remains bound to the View's unique Session
+    // The protected resource intentionally crosses from Joker-extension://<id>
+    // to Joker-media://lease. Access remains bound to the View's unique Session
     // partition and opaque lease; CORP must permit that media embed.
     'Cross-Origin-Resource-Policy': 'cross-origin',
     ETag: lease.etag,

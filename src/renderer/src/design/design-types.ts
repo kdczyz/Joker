@@ -151,7 +151,7 @@ export function inferDesignArtifactFoundationRole(
 
 /**
  * A 设计稿 (design document) — the top-level container, one per directory under
- * `.Rcode-design/<id>/`. Holds HTML, SVG, and ShapeOps canvas artifacts and
+ * `.Joker-design/<id>/`. Holds HTML, SVG, and ShapeOps canvas artifacts and
  * owns its own project-canvas surface + AI conversation. The store keeps the
  * flat `artifacts`/`activeArtifactId` as a projection of the active document.
  */

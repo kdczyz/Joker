@@ -6,7 +6,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultTerminalSettings,
@@ -40,7 +40,7 @@ function settings(workspaceRoot: string, nestedRoot = workspaceRoot): AppSetting
     uiFontScale: 1,
     chatContentMaxWidthPx: 896,
     provider: { ...defaultModelProviderSettings(), apiKey: 'must-not-export' },
-    agents: { Rcode: { ...defaultRcodeRuntimeSettings(), runtimeToken: 'must-not-export' } },
+    agents: { Joker: { ...defaultJokerRuntimeSettings(), runtimeToken: 'must-not-export' } },
     workspaceRoot,
     conversationWorkspaceRoot: workspaceRoot,
     log: { enabled: true, retentionDays: 7 },
@@ -62,7 +62,7 @@ function settings(workspaceRoot: string, nestedRoot = workspaceRoot): AppSetting
 
 describe('data migration export inventory', () => {
   it('deduplicates Code/Design roots and records nested Write ownership', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-migration-inventory-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-migration-inventory-'))
     roots.push(root)
     const project = join(root, 'project')
     const nested = join(project, 'books', 'novel')
@@ -81,19 +81,19 @@ describe('data migration export inventory', () => {
   })
 
   it('scans safely, applies presets, protects portable artifacts, and never follows links', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-migration-files-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-migration-files-'))
     roots.push(root)
     const project = join(root, 'project')
     const outside = join(root, 'outside')
     await mkdir(join(project, '.git'), { recursive: true })
     await mkdir(join(project, 'node_modules'), { recursive: true })
-    await mkdir(join(project, '.Rcode-design', 'node_modules'), { recursive: true })
+    await mkdir(join(project, '.Joker-design', 'node_modules'), { recursive: true })
     await mkdir(outside, { recursive: true })
     await writeFile(join(project, 'README.md'), 'hello')
     await writeFile(join(project, '.env'), 'TOKEN=secret')
     await writeFile(join(project, '.git', 'HEAD'), 'main')
     await writeFile(join(project, 'node_modules', 'package.js'), 'generated')
-    await writeFile(join(project, '.Rcode-design', 'node_modules', 'canvas.json'), '{}')
+    await writeFile(join(project, '.Joker-design', 'node_modules', 'canvas.json'), '{}')
     await writeFile(join(outside, 'secret.txt'), 'outside')
     await symlink(outside, join(project, 'external-link'))
     const [workspace] = await discoverDataMigrationWorkspaces({ settings: settings(project) })
@@ -103,7 +103,7 @@ describe('data migration export inventory', () => {
       sensitiveContentAcknowledged: false
     })
     expect(result.files.map((file) => file.relativePath)).toEqual([
-      '.Rcode-design/node_modules/canvas.json',
+      '.Joker-design/node_modules/canvas.json',
       'README.md'
     ])
     expect(result.estimate.sensitiveFindings[0]?.path).toBe('.env')
@@ -112,7 +112,7 @@ describe('data migration export inventory', () => {
   })
 
   it('exports only allowlisted settings and deactivates automation definitions', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-migration-settings-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-migration-settings-'))
     roots.push(root)
     const value = settings(root)
     value.schedule.tasks = [{
@@ -140,10 +140,10 @@ describe('data migration export inventory', () => {
   })
 
   it('rejects export destinations inside selected workspaces or migration internals', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-migration-output-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-migration-output-'))
     roots.push(root)
     const [workspace] = await discoverDataMigrationWorkspaces({ settings: settings(root) })
-    expect(() => assertMigrationOutputOutsideWorkspaces(join(root, 'backup.Rcodepack'), [workspace!])).toThrow('inside a selected workspace')
-    expect(() => assertMigrationOutputOutsideWorkspaces(join(root, '..', '.Rcode-migration-backup', 'backup.Rcodepack'), [])).toThrow('staging or backup')
+    expect(() => assertMigrationOutputOutsideWorkspaces(join(root, 'backup.Jokerpack'), [workspace!])).toThrow('inside a selected workspace')
+    expect(() => assertMigrationOutputOutsideWorkspaces(join(root, '..', '.Joker-migration-backup', 'backup.Jokerpack'), [])).toThrow('staging or backup')
   })
 })

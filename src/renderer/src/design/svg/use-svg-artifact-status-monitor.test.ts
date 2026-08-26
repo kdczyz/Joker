@@ -45,7 +45,7 @@ describe('SVG artifact background status', () => {
   })
 
   it('does not dispatch or restart watches when a pending skeleton remains pending', async () => {
-    const relativePath = '.Rcode-design/doc/motion/v1.svg'
+    const relativePath = '.Joker-design/doc/motion/v1.svg'
     const motion: DesignArtifact = {
       id: 'motion', kind: 'svg', title: 'Motion', relativePath,
       createdAt: now, updatedAt: now, previewStatus: 'pending',

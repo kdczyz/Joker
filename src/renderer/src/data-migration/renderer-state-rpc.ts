@@ -28,13 +28,13 @@ import {
 } from '../lib/thread-fork-registry'
 import { readCodeWorkspaceRoots, saveCodeWorkspaceRoots } from '../store/chat-store-helpers'
 
-const PLAN_REGISTRY_STORAGE_KEY = 'Rcode.plan.registry.v1'
-const THREAD_COMPOSER_MODE_STORAGE_KEY = 'Rcode.threadComposerMode.v1'
-const MIGRATION_TRUST_STORAGE_KEY = 'Rcode.dataMigration.workspaceTrust.v1'
+const PLAN_REGISTRY_STORAGE_KEY = 'Joker.plan.registry.v1'
+const THREAD_COMPOSER_MODE_STORAGE_KEY = 'Joker.threadComposerMode.v1'
+const MIGRATION_TRUST_STORAGE_KEY = 'Joker.dataMigration.workspaceTrust.v1'
 
 export function installDataMigrationRendererRpc(): () => void {
-  if (!window.RcodeGui?.dataMigration?.onRendererRequest) return () => undefined
-  return window.RcodeGui.dataMigration.onRendererRequest((request) => {
+  if (!window.JokerGui?.dataMigration?.onRendererRequest) return () => undefined
+  return window.JokerGui.dataMigration.onRendererRequest((request) => {
     void handleRequest(request).then(
       (value) => respond({ requestId: request.requestId, ok: true, value }),
       (error) => respond({
@@ -59,7 +59,7 @@ async function handleRequest(request: DataMigrationRendererRequest): Promise<unk
       applyTrustResetSnapshot(normalizeTrustResetSnapshot(request.payload))
       return true
     case 'refresh':
-      window.dispatchEvent(new CustomEvent('Rcode:data-migration-refresh'))
+      window.dispatchEvent(new CustomEvent('Joker:data-migration-refresh'))
       setTimeout(() => window.location.reload(), 50)
       return true
   }
@@ -250,5 +250,5 @@ function isString(value: unknown): value is string {
 }
 
 function respond(response: DataMigrationRendererResponse): Promise<void> {
-  return window.RcodeGui.dataMigration.respondRendererRequest(response)
+  return window.JokerGui.dataMigration.respondRendererRequest(response)
 }

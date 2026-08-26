@@ -17,12 +17,12 @@ function createNativeMediaSmokeInvocation({
     command: process.execPath,
     args: [vitest, 'run', 'src/services/extension-media-native-smoke.test.ts'],
     options: {
-      cwd: join(root, 'Rcode'),
+      cwd: join(root, 'Joker'),
       env: {
         ...environment,
-        RCODE_RUN_MEDIA_SMOKE: '1',
-        RCODE_FFMPEG_PATH: executables.ffmpeg,
-        RCODE_FFPROBE_PATH: executables.ffprobe
+        JOKER_RUN_MEDIA_SMOKE: '1',
+        JOKER_FFMPEG_PATH: executables.ffmpeg,
+        JOKER_FFPROBE_PATH: executables.ffprobe
       },
       shell: false,
       stdio: 'inherit',
@@ -58,7 +58,7 @@ if (require.main === module) {
     runNativeMediaSmoke()
     process.stdout.write(
       `Extension native FFmpeg broker smoke OK (${process.platform}/${process.arch}): ` +
-      'RCODE_RUN_MEDIA_SMOKE=1, real ffprobe/FFmpeg proof, H.264, post-probe, and cancellation.\n'
+      'JOKER_RUN_MEDIA_SMOKE=1, real ffprobe/FFmpeg proof, H.264, post-probe, and cancellation.\n'
     )
   } catch (error) {
     process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`)

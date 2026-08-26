@@ -1,16 +1,16 @@
-# @Rcode/extension-react
+# @joker-code/extension-react
 
-Optional React bindings for sandboxed Rcode extension Webviews. The package layers
-on `@Rcode/extension-api` and never exposes Electron or `window.RcodeGui`.
+Optional React bindings for sandboxed Joker extension Webviews. The package layers
+on `@joker-code/extension-api` and never exposes Electron or `window.JokerGui`.
 
 In this repository, use `npm ci` at the root and build the
-`@Rcode/extension-react` workspace. In a standalone project, verify both published
+`@joker-code/extension-react` workspace. In a standalone project, verify both published
 packages before installing by name:
 
 ```sh
-npm view @Rcode/extension-api@1.2.0 version
-npm view @Rcode/extension-react@1.2.0 version
-npm install @Rcode/extension-api@^1.2.0 @Rcode/extension-react@^1.2.0
+npm view @joker-code/extension-api@1.2.0 version
+npm view @joker-code/extension-react@1.2.0 version
+npm install @joker-code/extension-api@^1.2.0 @joker-code/extension-react@^1.2.0
 ```
 
 Do not continue after `E404`; use the repository workflow until the configured

@@ -5,7 +5,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -94,9 +94,9 @@ function buildSettings(): AppSettingsV1 {
     uiFontScale: 0.88,
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
-    agents: { Rcode: defaultRcodeRuntimeSettings() },
+    agents: { Joker: defaultJokerRuntimeSettings() },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: { enabled: true, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -166,7 +166,7 @@ function buildTelegramSettings(): AppSettingsV1 {
       kind: 'telegram',
       botToken: '123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi',
       allowedChatIds: '123456789',
-      botUsername: 'Rcode_test_bot',
+      botUsername: 'Joker_test_bot',
       createdAt: '2026-06-19T00:00:00.000Z'
     },
     conversations: [],
@@ -234,7 +234,7 @@ describe('ClawSettingsSection', () => {
     )
 
     expect(html).toContain('Telegram Bot Credentials')
-    expect(html).toContain('@Rcode_test_bot is connected and saved locally.')
+    expect(html).toContain('@Joker_test_bot is connected and saved locally.')
     expect(html).not.toContain('Connect Telegram Bot')
   })
 })

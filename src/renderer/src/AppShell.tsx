@@ -37,7 +37,7 @@ function RouteFallback(): React.ReactElement {
 export default function AppShell(): React.ReactElement {
   const route = useChatStore((s) => s.route)
   const boot = useChatStore((s) => s.boot)
-  const platform = typeof window !== 'undefined' ? window.RcodeGui?.platform ?? 'unknown' : 'unknown'
+  const platform = typeof window !== 'undefined' ? window.JokerGui?.platform ?? 'unknown' : 'unknown'
   const hasDesktopTitleBar = supportsDesktopTitleBar(platform)
 
   useEffect(() => {

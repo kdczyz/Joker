@@ -128,7 +128,7 @@ function localizeKnownChineseCopy(
       return {
         title: '回滚扩展',
         message: `要回滚 ${binding.extensionId} 吗？`,
-        detail: 'Rcode 将切换到保留的上一版本扩展包，并恢复兼容的状态快照。'
+        detail: 'Joker 将切换到保留的上一版本扩展包，并恢复兼容的状态快照。'
       }
     case 'extension.uninstall\u0000Uninstall extension':
       return {
@@ -140,7 +140,7 @@ function localizeKnownChineseCopy(
       return {
         title: '重新加载开发扩展',
         message: `要从开发目录重新加载 ${binding.extensionId} 吗？`,
-        detail: '激活前，Rcode 会再次验证可变的开发源代码。'
+        detail: '激活前，Joker 会再次验证可变的开发源代码。'
       }
     case 'account.create-session\u0000Connect provider account':
       return {
@@ -151,8 +151,8 @@ function localizeKnownChineseCopy(
         ),
         detail: copy.detail
           ?.replace(
-            /^Rcode will activate (.+) for the declared authentication flow\. Extension Webviews cannot approve this action\.$/m,
-            'Rcode 将为声明的身份验证流程激活 $1。扩展 Webview 无法代替你批准此操作。'
+            /^Joker will activate (.+) for the declared authentication flow\. Extension Webviews cannot approve this action\.$/m,
+            'Joker 将为声明的身份验证流程激活 $1。扩展 Webview 无法代替你批准此操作。'
           )
           .replace(/^OAuth scopes:/m, 'OAuth 范围：')
       }
@@ -169,8 +169,8 @@ function localizeKnownChineseCopy(
       return {
         title: '使用扩展模型提供商',
         message: copy.message.replace(
-          /^Allow (.+) to handle Rcode model requests\?$/,
-          '要允许 $1 处理 Rcode 的模型请求吗？'
+          /^Allow (.+) to handle Joker model requests\?$/,
+          '要允许 $1 处理 Joker 的模型请求吗？'
         ),
         detail: copy.detail ? localizeProviderBindingDetail(copy.detail) : undefined
       }
@@ -201,8 +201,8 @@ function localizeProviderBindingDetail(detail: string): string {
     .replace('declared input types', '声明的输入类型')
     .replace('advertised tool names, descriptions, and input schemas', '公开的工具名称、描述和输入 Schema')
     .replace(
-      'Rcode stores only the provider, opaque account reference, model, extension version, and acknowledgement. Credential material is not copied into this binding. Requests will fail explicitly if this exact provider/account/model becomes unavailable.',
-      'Rcode 只保存提供商、不透明的账户引用、模型、扩展版本和确认记录。凭据内容不会复制到此绑定中。如果这个确切的提供商、账户或模型不可用，请求会明确失败。'
+      'Joker stores only the provider, opaque account reference, model, extension version, and acknowledgement. Credential material is not copied into this binding. Requests will fail explicitly if this exact provider/account/model becomes unavailable.',
+      'Joker 只保存提供商、不透明的账户引用、模型、扩展版本和确认记录。凭据内容不会复制到此绑定中。如果这个确切的提供商、账户或模型不可用，请求会明确失败。'
     )
 }
 
@@ -221,13 +221,13 @@ function localizePermissionReviewDetail(detail: string): string {
 
 function localizePermissionChangeReviewDetail(detail: string): string {
   return detail
-    .replace('After approval, Rcode will apply these permissions to the selected workspace and enable the extension globally.', '确认后，Rcode 会把这些权限应用到当前工作区，并在全局启用此扩展。')
-    .replace('After approval, Rcode will apply these permissions and enable the extension in the selected workspace.', '确认后，Rcode 会应用这些权限，并在当前工作区启用此扩展。')
+    .replace('After approval, Joker will apply these permissions to the selected workspace and enable the extension globally.', '确认后，Joker 会把这些权限应用到当前工作区，并在全局启用此扩展。')
+    .replace('After approval, Joker will apply these permissions and enable the extension in the selected workspace.', '确认后，Joker 会应用这些权限，并在当前工作区启用此扩展。')
     .replace('This permission change applies only to the selected workspace.', '此次权限变更仅适用于所选工作区。')
     .replace('Added broker permissions:', '新增的 Broker 权限：')
     .replace('Removed broker permissions:', '移除的 Broker 权限：')
     .replace('Resulting broker permissions:', '变更后的 Broker 权限：')
-    .replace('Host-authored risk summary:', 'Rcode 生成的风险摘要：')
+    .replace('Host-authored risk summary:', 'Joker 生成的风险摘要：')
     .replace(/• none/gu, '• 无')
     .replace('Runs Node code with your operating-system user privileges.', 'Node 代码使用当前操作系统用户的权限运行。')
     .replace('Workspace read permission can expose files and extension state from the approved workspace.', '工作区读取权限可访问已批准工作区中的文件和扩展状态。')
@@ -235,7 +235,7 @@ function localizePermissionChangeReviewDetail(detail: string): string {
     .replace('Media read permission can inspect user-selected local media through opaque grants.', '媒体读取权限可通过不透明授权检查用户选择的本地媒体。')
     .replace('Media processing and job permissions can run and manage durable local work.', '媒体处理和任务权限可运行并管理持久化的本地任务。')
     .replace('Media export permission can write to user-approved output targets.', '媒体导出权限可写入用户批准的输出位置。')
-    .replace('Agent and tool permissions can start private Agent runs and expose declared tools to Rcode.', 'Agent 和工具权限可启动私有 Agent 运行，并向 Rcode 提供声明的工具。')
+    .replace('Agent and tool permissions can start private Agent runs and expose declared tools to Joker.', 'Agent 和工具权限可启动私有 Agent 运行，并向 Joker 提供声明的工具。')
     .replace('Direct DOM permission can read and alter visible workbench content and may imitate ordinary UI.', 'Direct DOM 权限可读取和修改可见工作台内容，并可能仿冒普通界面。')
     .replace('External Webview permission can display approved remote websites inside an isolated browser session.', '外部 Webview 权限可在隔离的浏览器会话中显示已批准的远程网站。')
     .replace('Provider permission can receive full model inputs when the user explicitly selects that provider.', '用户明确选择该提供商后，提供商权限可接收完整的模型输入。')
@@ -252,7 +252,7 @@ function localizeInstallReviewDetail(detail: string): string {
       '包含 Node 入口的扩展会使用当前操作系统用户的权限运行。Broker 权限并不是操作系统沙箱。'
     )
     .replace(/^Source:/m, '来源：')
-    .replace('Local .Rcodex archive', '本地 .Rcodex 归档包')
+    .replace('Local .Jokerx archive', '本地 .Jokerx 归档包')
     .replace('Development directory', '开发目录')
     .replace('Custom HTTPS Index', '自定义 HTTPS 索引')
     .replace(
@@ -261,9 +261,9 @@ function localizeInstallReviewDetail(detail: string): string {
     )
     .replace(/^Package SHA-256:/m, '扩展包 SHA-256：')
     .replace('Signature: verified.', '签名：已验证。')
-    .replace('Signature: signature present, but not verified by Rcode.', '签名：存在签名，但 Rcode 尚未验证。')
+    .replace('Signature: signature present, but not verified by Joker.', '签名：存在签名，但 Joker 尚未验证。')
     .replace('Signature: unsigned.', '签名：未签名。')
-    .replace('Host-authored risk summary:', 'Rcode 生成的风险摘要：')
+    .replace('Host-authored risk summary:', 'Joker 生成的风险摘要：')
     .replace('no additional high-risk contribution detected.', '未检测到其他高风险贡献。')
     .replace('Requested broker permissions:', '申请的 Broker 权限：')
     .replace('This package requests no broker permissions.', '此扩展包未申请 Broker 权限。')
@@ -296,12 +296,12 @@ function localizeInstallReviewDetail(detail: string): string {
       '包含沙箱化的扩展界面；它通过 Broker 使用的能力仍取决于下列授权。'
     )
     .replace(
-      'Rcode will download this exact version, verify the displayed SHA-256, then revalidate the package manifest, integrity, compatibility, and permission metadata before activation.',
-      'Rcode 将下载此确切版本、验证上方显示的 SHA-256，并在激活前重新验证清单、完整性、兼容性和权限元数据。'
+      'Joker will download this exact version, verify the displayed SHA-256, then revalidate the package manifest, integrity, compatibility, and permission metadata before activation.',
+      'Joker 将下载此确切版本、验证上方显示的 SHA-256，并在激活前重新验证清单、完整性、兼容性和权限元数据。'
     )
     .replace(
-      'Rcode will revalidate package integrity, compatibility, and declared resources before activation.',
-      '激活前，Rcode 会重新验证扩展包完整性、兼容性和声明的资源。'
+      'Joker will revalidate package integrity, compatibility, and declared resources before activation.',
+      '激活前，Joker 会重新验证扩展包完整性、兼容性和声明的资源。'
     )
     .replace(/• …and (\d+) more/g, '• ……另有 $1 项')
 }

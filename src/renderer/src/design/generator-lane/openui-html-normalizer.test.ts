@@ -10,13 +10,13 @@ import {
 const now = '2026-06-29T00:00:00.000Z'
 
 function artifact(id = 'home'): DesignArtifact {
-  const relativePath = `.Rcode-design/doc/${id}/v1.html`
+  const relativePath = `.Joker-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',
     title: 'Home artifact',
     relativePath,
-    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
+    designMdPath: `.Joker-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
     versions: [{ id: `${id}-v1`, relativePath, createdAt: now, summary: '' }]
@@ -56,7 +56,7 @@ const html = `
 
 describe('openui html normalizer', () => {
   it('uses the stable report path', () => {
-    expect(OPENUI_NORMALIZATION_REPORT_PATH).toBe('.Rcode-design/openui-normalization.json')
+    expect(OPENUI_NORMALIZATION_REPORT_PATH).toBe('.Joker-design/openui-normalization.json')
   })
 
   it('normalizes generated HTML into screen, token, component, and link hints', () => {
@@ -65,8 +65,8 @@ describe('openui html normalizer', () => {
     expect(normalized.screen).toMatchObject({
       artifactId: 'home',
       title: 'Dispatch handoff dashboard',
-      htmlPath: '.Rcode-design/doc/home/v1.html',
-      designMdPath: '.Rcode-design/doc/home/DESIGN.md',
+      htmlPath: '.Joker-design/doc/home/v1.html',
+      designMdPath: '.Joker-design/doc/home/DESIGN.md',
       documentTitle: 'OpsPilot dashboard',
       h1: 'Dispatch handoff dashboard',
       moduleCount: 4,
@@ -101,14 +101,14 @@ describe('openui html normalizer', () => {
 
     expect(report).toMatchObject({
       version: 1,
-      kind: 'Rcode.openui.normalization',
+      kind: 'Joker.openui.normalization',
       screens: [{ artifactId: 'empty', title: 'Empty' }]
     })
     expect(report.tokens).toEqual([])
     expect(report.components.map((component) => component.kind)).toEqual(['hero'])
     expect(report.warnings).toEqual([
-      '.Rcode-design/doc/empty/v1.html: no reusable CSS tokens found',
-      '.Rcode-design/doc/empty/v1.html: no local prototype links found'
+      '.Joker-design/doc/empty/v1.html: no reusable CSS tokens found',
+      '.Joker-design/doc/empty/v1.html: no local prototype links found'
     ])
   })
 
@@ -121,6 +121,6 @@ describe('openui html normalizer', () => {
     )
 
     expect(content.endsWith('\n')).toBe(true)
-    expect(JSON.parse(content)).toMatchObject({ kind: 'Rcode.openui.normalization' })
+    expect(JSON.parse(content)).toMatchObject({ kind: 'Joker.openui.normalization' })
   })
 })

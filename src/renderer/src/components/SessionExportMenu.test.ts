@@ -52,7 +52,7 @@ describe('SessionExportMenu', () => {
       addEventListener: vi.fn((type: string, listener: EventListener) => listeners.set(type, listener)),
       removeEventListener: vi.fn((type: string) => listeners.delete(type))
     })
-    vi.stubGlobal('window', { RcodeGui: { exportConversation } })
+    vi.stubGlobal('window', { JokerGui: { exportConversation } })
 
     let renderer: ReactTestRenderer
     act(() => {

@@ -34,7 +34,7 @@ const root = resolve(__dirname, '..')
 const PACKAGED_COMMAND = 'npm run smoke:packaged-video-editor-native'
 const NATIVE_BROKER_COMMAND = 'npm run smoke:extension-native-media'
 const EVIDENCE_COMMAND = 'npm run evidence:extension-native'
-const VIDEO_EDITOR_PACK_COMMAND = 'npm run pack:Rcode-video-editor'
+const VIDEO_EDITOR_PACK_COMMAND = 'npm run pack:Joker-video-editor'
 
 test('requires the complete packaged P0-P2 video tool surface', () => {
   const registrations = EXPECTED_TOOL_IDS.map((name) => ({ declaration: { name } }))
@@ -60,21 +60,21 @@ test('keeps burned captions strict by default and allows an explicit sidecar fal
 })
 
 test('resolves an explicit host media executable and fails closed for missing paths', async (t) => {
-  const directory = await mkdtemp(join(tmpdir(), 'Rcode-native-media-resolve-'))
+  const directory = await mkdtemp(join(tmpdir(), 'Joker-native-media-resolve-'))
   t.after(() => rm(directory, { recursive: true, force: true }))
   const executable = join(directory, process.platform === 'win32' ? 'ffmpeg.exe' : 'ffmpeg')
   await writeFile(executable, '')
   if (process.platform !== 'win32') await chmod(executable, 0o700)
   assert.equal(resolveHostMediaExecutable('ffmpeg', {
-    environment: { RCODE_FFMPEG_PATH: executable },
+    environment: { JOKER_FFMPEG_PATH: executable },
     platform: process.platform
   }), realpathSync(executable))
   assert.throws(() => resolveHostMediaExecutable('ffprobe', {
-    environment: { RCODE_FFPROBE_PATH: join(directory, 'missing') },
+    environment: { JOKER_FFPROBE_PATH: join(directory, 'missing') },
     platform: process.platform
   }), /does not identify an executable file/)
   assert.throws(() => resolveHostMediaExecutable('ffmpeg', {
-    environment: { RCODE_FFMPEG_PATH: 'relative/ffmpeg' },
+    environment: { JOKER_FFMPEG_PATH: 'relative/ffmpeg' },
     platform: process.platform
   }), /absolute path/)
   assert.throws(() => resolveHostMediaExecutable('ffprobe', {
@@ -103,9 +103,9 @@ test('creates bounded argument-array-only deterministic H.264 fixtures', () => {
   }
 })
 
-test('reexecutes the smoke in the host-native packaged Rcode executable', () => {
+test('reexecutes the smoke in the host-native packaged Joker executable', () => {
   const invocation = createPackagedReexecInvocation({
-    runtimeExecutable: '/packaged/Rcode',
+    runtimeExecutable: '/packaged/Joker',
     scriptPath: '/repo/scripts/smoke-packaged-video-editor-native.cjs',
     argv: ['--resources', '/packaged/resources'],
     environment: {
@@ -114,7 +114,7 @@ test('reexecutes the smoke in the host-native packaged Rcode executable', () => 
       ELECTRON_RENDERER_URL: 'http://127.0.0.1:5173'
     }
   })
-  assert.equal(invocation.command, resolve('/packaged/Rcode'))
+  assert.equal(invocation.command, resolve('/packaged/Joker'))
   assert.deepEqual(invocation.args, [
     resolve('/repo/scripts/smoke-packaged-video-editor-native.cjs'),
     '--resources',
@@ -122,8 +122,8 @@ test('reexecutes the smoke in the host-native packaged Rcode executable', () => 
   ])
   assert.equal(invocation.options.shell, false)
   assert.equal(invocation.options.env.ELECTRON_RUN_AS_NODE, '1')
-  assert.equal(invocation.options.env.RCODE_DISABLE_OS_CREDENTIAL_STORE, '1')
-  assert.equal(invocation.options.env.RCODE_PACKAGED_VIDEO_EDITOR_NATIVE_SMOKE_REEXEC, '1')
+  assert.equal(invocation.options.env.JOKER_DISABLE_OS_CREDENTIAL_STORE, '1')
+  assert.equal(invocation.options.env.JOKER_PACKAGED_VIDEO_EDITOR_NATIVE_SMOKE_REEXEC, '1')
   assert.equal(invocation.options.timeout, 10 * 60_000)
   assert.equal(invocation.options.killSignal, 'SIGKILL')
   assert.equal(invocation.options.env.NODE_OPTIONS, undefined)
@@ -141,11 +141,11 @@ test('runs npm and the opt-in native suite with explicit fail-closed environment
   const npm = createNpmInvocation({
     args: ['--prefix', '/repo/example', 'run', 'build'],
     cwd: '/repo',
-    runtimeExecutable: '/packaged/Rcode',
+    runtimeExecutable: '/packaged/Joker',
     environment: { npm_execpath: __filename },
     platform: process.platform
   })
-  assert.equal(npm.command, '/packaged/Rcode')
+  assert.equal(npm.command, '/packaged/Joker')
   assert.equal(npm.options.shell, false)
   assert.equal(npm.args[0], __filename)
 
@@ -153,14 +153,14 @@ test('runs npm and the opt-in native suite with explicit fail-closed environment
     root: '/repo',
     platform: process.platform,
     environment: {
-      RCODE_FFMPEG_PATH: process.execPath,
-      RCODE_FFPROBE_PATH: process.execPath
+      JOKER_FFMPEG_PATH: process.execPath,
+      JOKER_FFPROBE_PATH: process.execPath
     }
   })
   assert.equal(native.options.shell, false)
-  assert.equal(native.options.env.RCODE_RUN_MEDIA_SMOKE, '1')
-  assert.equal(native.options.env.RCODE_FFMPEG_PATH, process.execPath)
-  assert.equal(native.options.env.RCODE_FFPROBE_PATH, process.execPath)
+  assert.equal(native.options.env.JOKER_RUN_MEDIA_SMOKE, '1')
+  assert.equal(native.options.env.JOKER_FFMPEG_PATH, process.execPath)
+  assert.equal(native.options.env.JOKER_FFPROBE_PATH, process.execPath)
   assert.equal(native.options.timeout, 180_000)
   assert.equal(native.options.killSignal, 'SIGKILL')
 })
@@ -195,7 +195,7 @@ test('compares structured tool content by value', () => {
 })
 
 test('requires exactly one video and one ordered deterministic SRT artifact', async (t) => {
-  const directory = await mkdtemp(join(tmpdir(), 'Rcode-native-subtitle-'))
+  const directory = await mkdtemp(join(tmpdir(), 'Joker-native-subtitle-'))
   t.after(() => rm(directory, { recursive: true, force: true }))
   const subtitle = join(directory, 'final.srt')
   await writeFile(
@@ -246,12 +246,12 @@ test('requires exactly one video and one ordered deterministic SRT artifact', as
 })
 
 test('accepts only the exact non-empty release archive for byte-identical lifecycle smoke', async (t) => {
-  const directory = await mkdtemp(join(tmpdir(), 'Rcode-native-release-archive-'))
+  const directory = await mkdtemp(join(tmpdir(), 'Joker-native-release-archive-'))
   t.after(() => rm(directory, { recursive: true, force: true }))
-  const archive = join(directory, 'Rcode-video-editor-0.4.4.Rcodex')
+  const archive = join(directory, 'Joker-video-editor-0.4.4.Jokerx')
   await writeFile(archive, 'release archive bytes')
   assert.doesNotThrow(() => assertReleaseArchive(archive))
-  const wrong = join(directory, 'Rcode-video-editor-9.9.9.Rcodex')
+  const wrong = join(directory, 'Joker-video-editor-9.9.9.Jokerx')
   await writeFile(wrong, 'wrong release archive')
   assert.throws(() => assertReleaseArchive(wrong), /must be named/)
   await writeFile(archive, '')
@@ -332,7 +332,7 @@ test('PR, release, and daily jobs run both native media smokes before evidence',
         )
         if (command === NATIVE_BROKER_COMMAND) {
           assert.equal(
-            step.env?.RCODE_RUN_MEDIA_SMOKE,
+            step.env?.JOKER_RUN_MEDIA_SMOKE,
             '1',
             `${label}/${jobId} does not explicitly opt into the real native FFmpeg suite`
           )
@@ -340,13 +340,13 @@ test('PR, release, and daily jobs run both native media smokes before evidence',
       }
       if (jobId === 'package' || jobId === 'build-linux') {
         const packIndex = commands.indexOf(VIDEO_EDITOR_PACK_COMMAND)
-        assert.notEqual(packIndex, -1, `${label}/${jobId} omits deterministic release .Rcodex pack`)
-        assert.ok(packIndex < packagedIndex, `${label}/${jobId} smokes before packing release .Rcodex`)
+        assert.notEqual(packIndex, -1, `${label}/${jobId} omits deterministic release .Jokerx pack`)
+        assert.ok(packIndex < packagedIndex, `${label}/${jobId} smokes before packing release .Jokerx`)
         assert.ok(
           commands[packagedIndex].includes(
-            `--archive dist/Rcode-video-editor-${EXTENSION_VERSION}.Rcodex`
+            `--archive dist/Joker-video-editor-${EXTENSION_VERSION}.Jokerx`
           ),
-          `${label}/${jobId} does not smoke the uploaded release .Rcodex bytes`
+          `${label}/${jobId} does not smoke the uploaded release .Jokerx bytes`
         )
       }
     }

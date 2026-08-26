@@ -1,7 +1,7 @@
 import {
   HostContentScriptDiagnosticSchema,
   type HostContentScriptContext
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
@@ -19,7 +19,7 @@ import type {
   ExtensionDescriptorResolver,
   ResolvedHostContentScript
 } from './extension-descriptor-resolver'
-import { resolveRcodeExtensionResource } from './extension-resource-protocol'
+import { resolveJokerExtensionResource } from './extension-resource-protocol'
 
 const MAX_CONTENT_SCRIPT_FILE_BYTES = 2 * 1024 * 1024
 const MAX_CONTENT_SCRIPT_TOTAL_BYTES = 8 * 1024 * 1024
@@ -62,7 +62,7 @@ export type ExtensionContentScriptControllerOptions = {
 /**
  * Owns Direct DOM identity, resource loading, isolated-world assignment and
  * teardown. Renderer descriptors are hints only: every package, permission,
- * workspace and contribution claim is resolved again through Rcode.
+ * workspace and contribution claim is resolved again through Joker.
  *
  * `documentStart` is never approximated with a late Main-process eval. When a
  * newly eligible start script is discovered after the page started, the plan is
@@ -301,7 +301,7 @@ export class ExtensionContentScriptController {
       if (totalBytes > MAX_CONTENT_SCRIPT_TOTAL_BYTES) {
         throw new Error('Content script resources are too large.')
       }
-      styles.push({ css, url: `Rcode-extension://${contribution.extensionId}/${stylePath}` })
+      styles.push({ css, url: `Joker-extension://${contribution.extensionId}/${stylePath}` })
     }
     for (const scriptPath of contribution.scripts) {
       const code = await readConfinedResource(contribution, scriptPath)
@@ -309,7 +309,7 @@ export class ExtensionContentScriptController {
       if (totalBytes > MAX_CONTENT_SCRIPT_TOTAL_BYTES) {
         throw new Error('Content script resources are too large.')
       }
-      scripts.push({ code, url: `Rcode-extension://${contribution.extensionId}/${scriptPath}` })
+      scripts.push({ code, url: `Joker-extension://${contribution.extensionId}/${scriptPath}` })
     }
 
     const workspaceScope = workspaceRoot
@@ -582,8 +582,8 @@ async function readConfinedResource(
   contribution: ResolvedHostContentScript,
   relativePath: string
 ): Promise<string> {
-  const url = `Rcode-extension://${contribution.extensionId}/${relativePath}`
-  const resolved = await resolveRcodeExtensionResource(url, async () => ({
+  const url = `Joker-extension://${contribution.extensionId}/${relativePath}`
+  const resolved = await resolveJokerExtensionResource(url, async () => ({
     extensionId: contribution.extensionId,
     extensionVersion: contribution.extensionVersion,
     packageRoot: contribution.packageRoot,
@@ -603,7 +603,7 @@ async function deactivate(
 ): Promise<void> {
   await frame.executeJavaScriptInIsolatedWorld(binding.worldId, [{
     code: EXTENSION_CONTENT_SCRIPT_DEACTIVATION_SOURCE,
-    url: `Rcode-extension://${binding.context.extensionId}/__Rcode_deactivate__.js`
+    url: `Joker-extension://${binding.context.extensionId}/__Joker_deactivate__.js`
   }])
 }
 

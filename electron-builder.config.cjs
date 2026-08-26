@@ -4,17 +4,17 @@ const {
   configureElectronNativeBuildEnvironment
 } = require('./scripts/electron-native-build-env.cjs')
 
-// 品牌升级后构建环境变量改用 RCODE_* 前缀;旧的 DEEPSEEK_GUI_* 仍然
+// 品牌升级后构建环境变量改用 JOKER_* 前缀;旧的 DEEPSEEK_GUI_* 仍然
 // 兼容读取,避免 CI / 本地发布脚本一刀切失效。
-function envWithLegacyFallback(RcodeName, legacyName) {
-  const value = process.env[RcodeName]
+function envWithLegacyFallback(JokerName, legacyName) {
+  const value = process.env[JokerName]
   if (value !== undefined && value !== '') return value
   return process.env[legacyName]
 }
 
 function loadLocalReleaseEnv() {
   const candidates = [
-    envWithLegacyFallback('RCODE_RELEASE_ENV', 'DEEPSEEK_GUI_RELEASE_ENV'),
+    envWithLegacyFallback('JOKER_RELEASE_ENV', 'DEEPSEEK_GUI_RELEASE_ENV'),
     join(__dirname, 'scripts', 'release.local.env'),
     join(__dirname, 'release.local.env')
   ].filter(Boolean)
@@ -57,22 +57,22 @@ const hasNotaryToolCredentials = Boolean(
 
 // R2 release prefix 维持旧值不动:线上老版本轮询的就是
 // `…/deepseek-gui/channels/<channel>/latest/`,prefix 一改老客户端就再也
-// 收不到更新。默认公开域名优先使用 Rcode-agent,运行时仍会兜底旧域名。
-const r2PublicBaseUrl = (process.env.R2_PUBLIC_BASE_URL || 'https://www.Rcode-agent.com/api/r2')
+// 收不到更新。默认公开域名优先使用 Joker-agent,运行时仍会兜底旧域名。
+const r2PublicBaseUrl = (process.env.R2_PUBLIC_BASE_URL || 'https://www.Joker-agent.com/api/r2')
   .trim()
   .replace(/\/+$/, '')
 const r2ReleasePrefix = (process.env.R2_RELEASE_PREFIX || 'deepseek-gui')
   .trim()
   .replace(/^\/+|\/+$/g, '')
 const updateChannel = normalizeUpdateChannel(
-  envWithLegacyFallback('RCODE_UPDATE_CHANNEL', 'DEEPSEEK_GUI_UPDATE_CHANNEL') || 'stable'
+  envWithLegacyFallback('JOKER_UPDATE_CHANNEL', 'DEEPSEEK_GUI_UPDATE_CHANNEL') || 'stable'
 )
 const genericUpdateUrl = `${r2PublicBaseUrl}/${r2ReleasePrefix}/channels/${updateChannel}/latest/`
 const releaseAppVersion = (
-  envWithLegacyFallback('RCODE_APP_VERSION', 'DEEPSEEK_GUI_APP_VERSION') || ''
+  envWithLegacyFallback('JOKER_APP_VERSION', 'DEEPSEEK_GUI_APP_VERSION') || ''
 ).trim()
 const releaseArtifactVersion = (
-  envWithLegacyFallback('RCODE_ARTIFACT_VERSION', 'DEEPSEEK_GUI_ARTIFACT_VERSION') || ''
+  envWithLegacyFallback('JOKER_ARTIFACT_VERSION', 'DEEPSEEK_GUI_ARTIFACT_VERSION') || ''
 ).trim()
 const artifactVersion = releaseArtifactVersion || releaseAppVersion || '${version}'
 const semverVersionPattern = /^\d+\.\d+\.\d+(?:-[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/
@@ -81,37 +81,37 @@ const artifactVersionPattern = /^[0-9A-Za-z][0-9A-Za-z._-]*$/
 function normalizeUpdateChannel(raw) {
   const value = String(raw || '').trim()
   if (value === 'stable' || value === 'frontier') return value
-  throw new Error(`RCODE_UPDATE_CHANNEL (or legacy DEEPSEEK_GUI_UPDATE_CHANNEL) must be "stable" or "frontier", got: ${raw}`)
+  throw new Error(`JOKER_UPDATE_CHANNEL (or legacy DEEPSEEK_GUI_UPDATE_CHANNEL) must be "stable" or "frontier", got: ${raw}`)
 }
 
 if (releaseAppVersion && !semverVersionPattern.test(releaseAppVersion)) {
   throw new Error(
-    `RCODE_APP_VERSION (or legacy DEEPSEEK_GUI_APP_VERSION) must be a valid semver for electron-updater, got: ${releaseAppVersion}`
+    `JOKER_APP_VERSION (or legacy DEEPSEEK_GUI_APP_VERSION) must be a valid semver for electron-updater, got: ${releaseAppVersion}`
   )
 }
 
 if (releaseArtifactVersion && !artifactVersionPattern.test(releaseArtifactVersion)) {
   throw new Error(
-    `RCODE_ARTIFACT_VERSION (or legacy DEEPSEEK_GUI_ARTIFACT_VERSION) must use only letters, numbers, dots, dashes, and underscores, got: ${releaseArtifactVersion}`
+    `JOKER_ARTIFACT_VERSION (or legacy DEEPSEEK_GUI_ARTIFACT_VERSION) must use only letters, numbers, dots, dashes, and underscores, got: ${releaseArtifactVersion}`
   )
 }
 
 module.exports = {
-  // appId 永远保持旧值,即使品牌已改名 Rcode:
+  // appId 永远保持旧值,即使品牌已改名 Joker:
   //  - macOS 端 Squirrel.Mac 校验更新包签名时锚定 bundle identifier,
   //    换了 id 老版本会拒绝安装新版本;
   //  - Windows 端 NSIS 以 appId 派生卸载 GUID,换了 id 升级安装不会
   //    卸载旧版本,用户会装出两份应用;
   //  - macOS TCC 权限、通知授权也都挂在这个 id 上。
   appId: 'com.xingyuzhong.deepseekgui',
-  productName: 'Rcode',
+  productName: 'Joker',
   asar: true,
   asarUnpack: [
-    '**/Rcode/dist/**/*',
-    '**/Rcode/package*.json',
-    '**/Rcode/node_modules/**/*',
+    '**/Joker/dist/**/*',
+    '**/Joker/package*.json',
+    '**/Joker/node_modules/**/*',
     '**/packages/extension-api/**/*',
-    '**/packages/create-Rcode-extension/**/*',
+    '**/packages/create-Joker-extension/**/*',
     '**/node_modules/better-sqlite3/**/*',
     '**/node_modules/node-pty/**/*',
     '**/node_modules/bindings/**/*',
@@ -143,32 +143,32 @@ module.exports = {
   ],
   npmRebuild: true,
   directories: {
-    output: envWithLegacyFallback('RCODE_DIST_DIR', 'DEEPSEEK_GUI_DIST_DIR') || 'dist'
+    output: envWithLegacyFallback('JOKER_DIST_DIR', 'DEEPSEEK_GUI_DIST_DIR') || 'dist'
   },
   files: [
     'out/**/*',
     'package.json',
-    'Rcode/dist/**/*',
-    'Rcode/package.json',
-    'Rcode/package-lock.json',
-    'Rcode/node_modules/**/*',
+    'Joker/dist/**/*',
+    'Joker/package.json',
+    'Joker/package-lock.json',
+    'Joker/node_modules/**/*',
     'packages/extension-api/package.json',
     'packages/extension-api/dist/**/*',
     'packages/extension-api/schema/**/*',
     'packages/extension-api/fixtures/**/*',
-    'packages/create-Rcode-extension/package.json',
-    'packages/create-Rcode-extension/src/**/*',
+    'packages/create-Joker-extension/package.json',
+    'packages/create-Joker-extension/src/**/*',
     // The Agent SDK ships a ~222MB per-platform Claude Code binary as an optional
     // dep; do NOT bundle it into the installer. It's downloaded on demand into the
     // user-data dir (see src/main/agent-sdk-installer.ts). The small SDK JS stays.
-    '!Rcode/node_modules/@anthropic-ai/claude-agent-sdk-*/**',
+    '!Joker/node_modules/@anthropic-ai/claude-agent-sdk-*/**',
     '!**/*.map',
     '!**/*.d.ts',
     '!**/*.ts',
     '!**/tsconfig*.json',
     '!**/README*',
     '!**/CHANGELOG*',
-    'packages/create-Rcode-extension/templates/**/*'
+    'packages/create-Joker-extension/templates/**/*'
     // node_modules/openclaw (the vendor/openclaw-shim file: dep) must ship:
     // the WeChat bridge imports @tencent-weixin/openclaw-weixin/dist at
     // runtime to send media, and that chain resolves openclaw/plugin-sdk/*.
@@ -177,7 +177,7 @@ module.exports = {
     {
       from: 'resources/bundled-extensions',
       to: 'bundled-extensions',
-      filter: ['catalog.json', '*.Rcodex']
+      filter: ['catalog.json', '*.Jokerx']
     },
     {
       from: 'resources/whisper',
@@ -194,7 +194,7 @@ module.exports = {
       filter: ['grok']
     }
   ],
-  artifactName: `Rcode-${artifactVersion}-\${os}-\${arch}.\${ext}`,
+  artifactName: `Joker-${artifactVersion}-\${os}-\${arch}.\${ext}`,
   publish: [
     {
       provider: 'generic',
@@ -217,10 +217,10 @@ module.exports = {
     entitlementsInherit: 'build/entitlements.mac.inherit.plist',
     extendInfo: {
       // 语音输入：渲染进程通过 getUserMedia 录音做语音转文字。
-      NSMicrophoneUsageDescription: 'Rcode uses the microphone for voice-to-text input.'
+      NSMicrophoneUsageDescription: 'Joker uses the microphone for voice-to-text input.'
     },
     // macOS 不会自动套圆角遮罩,图标文件本身需要是「圆角方块 + 透明边距」
-    icon: './src/asset/img/Rcode_mac.png',
+    icon: './src/asset/img/Joker_mac.png',
     // arm64 (Apple Silicon) + x64 (Intel). On M 系列 Mac 本地打包会各出一组 dmg/zip。
     target: [
       { target: 'dmg', arch: ['arm64', 'x64'] },
@@ -235,7 +235,7 @@ module.exports = {
     // desktop/start-menu/taskbar shortcuts do not show a hard square edge.
     // Ship a multi-size .ico (16/24/32/48/64/72/96/128/256) so Explorer and
     // the desktop render crisp icons at small sizes (#222). Regenerate with:
-    // npx --yes png2icons src/asset/img/Rcode_mac.png build/icon -icowe -bc
+    // npx --yes png2icons src/asset/img/Joker_mac.png build/icon -icowe -bc
     icon: './build/icon.ico',
     target: [{ target: 'nsis', arch: ['x64'] }]
   },
@@ -249,13 +249,13 @@ module.exports = {
     // 明确创建快捷方式；always 在覆盖安装时也会重建（即使用户曾删掉桌面图标）
     createDesktopShortcut: 'always',
     createStartMenuShortcut: true,
-    shortcutName: 'Rcode',
-    uninstallDisplayName: 'Rcode',
+    shortcutName: 'Joker',
+    uninstallDisplayName: 'Joker',
     deleteAppDataOnUninstall: false
   },
   linux: {
     category: 'Development',
-    icon: './src/asset/img/Rcode.png',
+    icon: './src/asset/img/Joker.png',
     target: [{ target: 'AppImage', arch: ['x64'] }]
   },
   // Override electron-builder's sandbox-disabling default desktop argument.

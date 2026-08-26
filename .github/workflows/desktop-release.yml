@@ -44,17 +44,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Verify packaged native architecture
-        run: node ./scripts/verify-packaged-macos-native-architecture.cjs --resources "dist/mac-arm64/Rcode.app/Contents/Resources" --arch arm64
+        run: node ./scripts/verify-packaged-macos-native-architecture.cjs --resources "dist/mac-arm64/Joker.app/Contents/Resources" --arch arm64
 
       - name: Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rcode-macos-arm64
+          name: joker-macos-arm64
           if-no-files-found: error
           retention-days: 14
           path: |
-            dist/Rcode-*-mac-arm64.dmg
-            dist/Rcode-*-mac-arm64.zip
+            dist/Joker-*-mac-arm64.dmg
+            dist/Joker-*-mac-arm64.zip
 
   build-windows:
     name: Build Windows x64 installer
@@ -89,12 +89,12 @@ jobs:
       - name: Upload Windows artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: rcode-windows-x64
+          name: joker-windows-x64
           if-no-files-found: error
           retention-days: 14
           path: |
-            dist/Rcode-*-win-x64.exe
-            dist/Rcode-*-win-x64.exe.blockmap
+            dist/Joker-*-win-x64.exe
+            dist/Joker-*-win-x64.exe.blockmap
             dist/latest.yml
 
   release:
@@ -134,10 +134,10 @@ jobs:
             PRERELEASE_FLAG="--prerelease"
           fi
           gh release create "$TAG" \
-            --title "Rcode $TAG" \
+            --title "Joker $TAG" \
             --generate-notes \
             $PRERELEASE_FLAG \
-            artifacts/rcode-macos-arm64/*
+            artifacts/joker-macos-arm64/*
           gh release upload "$TAG" \
-            artifacts/rcode-windows-x64/* \
+            artifacts/joker-windows-x64/* \
             --clobber

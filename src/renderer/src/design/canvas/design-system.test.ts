@@ -74,7 +74,7 @@ describe('design-system-template', () => {
       {
         op: 'design-system-template',
         operation: 'create',
-        name: 'IRCODE World',
+        name: 'IJOKER World',
         seedColor: '#D4AF37',
         mode: 'dark',
         template: 'game'
@@ -131,7 +131,7 @@ describe('design-system-template', () => {
       {
         op: 'design-system-template',
         operation: 'create',
-        name: 'IRCODE World',
+        name: 'IJOKER World',
         seedColor: '#D4AF37',
         mode: 'both',
         x: 120,

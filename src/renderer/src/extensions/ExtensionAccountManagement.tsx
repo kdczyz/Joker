@@ -15,7 +15,7 @@ import type {
   AccountSession,
   AuthenticationProviderDeclaration,
   ModelProviderDeclaration
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import {
   extensionWorkbenchClient,
   type ExtensionAccountList,
@@ -363,8 +363,8 @@ export function ExtensionAccountManagement({
       })
       await loadCatalog()
     }, copy(
-      'Provider 绑定已保存；Rcode 不会在不可用时静默切换供应商。',
-      'Provider binding saved; Rcode will not silently switch providers if it becomes unavailable.'
+      'Provider 绑定已保存；Joker 不会在不可用时静默切换供应商。',
+      'Provider binding saved; Joker will not silently switch providers if it becomes unavailable.'
     ))
   }
 
@@ -422,7 +422,7 @@ export function ExtensionAccountManagement({
               {list?.protection.degraded ? (
                 <div className="mt-2 flex gap-1.5 rounded-lg bg-amber-500/10 px-2 py-1.5 text-[9.5px] leading-4 text-amber-800 dark:text-amber-200">
                   <ShieldAlert className="mt-0.5 h-3 w-3 shrink-0" />
-                  {copy('系统凭据设施不可用，Rcode 正使用认证加密的降级存储。', 'System credential storage is unavailable; Rcode is using authenticated encrypted fallback storage.')}
+                  {copy('系统凭据设施不可用，Joker 正使用认证加密的降级存储。', 'System credential storage is unavailable; Joker is using authenticated encrypted fallback storage.')}
                 </div>
               ) : null}
 
@@ -434,7 +434,7 @@ export function ExtensionAccountManagement({
 
               {!descriptor.canRead ? (
                 <div className="mt-2 rounded-lg border border-dashed border-ds-border px-2 py-2 text-[9.5px] leading-4 text-ds-faint">
-                  {copy('此扩展未获 accounts.read；Rcode 不会向 renderer 返回账号元数据，但仍可在受保护窗口创建新账号。', 'This extension has no accounts.read grant. Rcode will not return account metadata to the renderer, but a new account can still be created in a protected window.')}
+                  {copy('此扩展未获 accounts.read；Joker 不会向 renderer 返回账号元数据，但仍可在受保护窗口创建新账号。', 'This extension has no accounts.read grant. Joker will not return account metadata to the renderer, but a new account can still be created in a protected window.')}
                 </div>
               ) : null}
 
@@ -466,7 +466,7 @@ export function ExtensionAccountManagement({
                     <Bot className="mt-0.5 h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
                     <div className="min-w-0 flex-1">
                       <div className="text-[10px] font-semibold text-ds-ink">
-                        {copy('用于 Rcode / 扩展 Agent', 'Use for Rcode / extension Agents')}
+                        {copy('用于 Joker / 扩展 Agent', 'Use for Joker / extension Agents')}
                       </div>
                       <p className="mt-0.5 text-[9.5px] leading-4 text-ds-faint">
                         {copy(
@@ -507,8 +507,8 @@ export function ExtensionAccountManagement({
                   </select>
                   <div className="rounded-lg bg-amber-500/8 px-2 py-1.5 text-[9px] leading-4 text-amber-800 dark:text-amber-200">
                     {copy(
-                      '该 Node Provider 可接收完整对话历史、系统/模式指令、附件和工具 Schema。Rcode 不会把凭据写入绑定，也不会在失败时改用其他 Provider。',
-                      'This Node provider can receive complete conversation history, system/mode instructions, attachments, and tool schemas. Rcode never writes credentials into the binding or falls back to another provider.'
+                      '该 Node Provider 可接收完整对话历史、系统/模式指令、附件和工具 Schema。Joker 不会把凭据写入绑定，也不会在失败时改用其他 Provider。',
+                      'This Node provider can receive complete conversation history, system/mode instructions, attachments, and tool schemas. Joker never writes credentials into the binding or falls back to another provider.'
                     )}
                   </div>
                   {catalogEntry?.binding ? (
@@ -519,8 +519,8 @@ export function ExtensionAccountManagement({
                             `Current binding: ${catalogEntry.binding.modelId} (acknowledged)`
                           )
                         : copy(
-                            '已有绑定当前不可用；Rcode 会显式报错，不会自动替换账号或 Provider。',
-                            'The saved binding is currently unavailable; Rcode fails explicitly instead of substituting an account or provider.'
+                            '已有绑定当前不可用；Joker 会显式报错，不会自动替换账号或 Provider。',
+                            'The saved binding is currently unavailable; Joker fails explicitly instead of substituting an account or provider.'
                           )}
                     </div>
                   ) : null}
@@ -712,7 +712,7 @@ export function AccountSessionCard({
             <button
               type="button"
               disabled={disabled}
-              onClick={() => void window.RcodeGui.openExternal(openableUrl).catch(() => undefined)}
+              onClick={() => void window.JokerGui.openExternal(openableUrl).catch(() => undefined)}
               className="mt-1 rounded-md border border-ds-border px-2 py-1 text-[9px] font-semibold text-ds-muted hover:bg-ds-hover disabled:opacity-50"
             >
               {copy('在浏览器打开', 'Open in browser')}

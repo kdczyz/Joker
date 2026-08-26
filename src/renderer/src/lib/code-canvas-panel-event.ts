@@ -1,4 +1,4 @@
-export const CODE_CANVAS_OPEN_REQUEST_EVENT = 'Rcode:code-canvas-open-request'
+export const CODE_CANVAS_OPEN_REQUEST_EVENT = 'Joker:code-canvas-open-request'
 
 export function requestCodeCanvasPanelOpen(): void {
   if (typeof window === 'undefined' || typeof window.dispatchEvent !== 'function') return

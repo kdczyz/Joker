@@ -4,7 +4,7 @@ import type {
   SseEndPayload,
   SseErrorPayload,
   SseEventPayload
-} from '@shared/Rcode-gui-api'
+} from '@shared/Joker-gui-api'
 
 class RendererRuntimeClient {
   private cachedSettings: AppSettingsV1 | null = null
@@ -16,7 +16,7 @@ class RendererRuntimeClient {
     }
     if (this.cachedSettings) return this.cachedSettings
     if (this.settingsPromise) return this.settingsPromise
-    const task = window.RcodeGui.getSettings().then((settings) => {
+    const task = window.JokerGui.getSettings().then((settings) => {
       this.cachedSettings = settings
       return settings
     })
@@ -27,7 +27,7 @@ class RendererRuntimeClient {
   }
 
   async setSettings(partial: AppSettingsPatch): Promise<AppSettingsV1> {
-    const settings = await window.RcodeGui.setSettings(partial)
+    const settings = await window.JokerGui.setSettings(partial)
     this.cachedSettings = settings
     this.settingsPromise = null
     return settings
@@ -40,14 +40,14 @@ class RendererRuntimeClient {
 
   runtimeRequest(path: string, method?: string, body?: string): Promise<RuntimeRequestResult> {
     if (body === undefined) {
-      if (method === undefined) return window.RcodeGui.runtimeRequest(path)
-      return window.RcodeGui.runtimeRequest(path, method)
+      if (method === undefined) return window.JokerGui.runtimeRequest(path)
+      return window.JokerGui.runtimeRequest(path, method)
     }
-    return window.RcodeGui.runtimeRequest(path, method, body)
+    return window.JokerGui.runtimeRequest(path, method, body)
   }
 
   restartRuntime(): Promise<void> {
-    return window.RcodeGui.restartRuntime()
+    return window.JokerGui.restartRuntime()
   }
 
   startSse(
@@ -56,27 +56,27 @@ class RendererRuntimeClient {
     streamId?: string,
     options?: { acknowledgedBatches?: boolean }
   ): Promise<{ streamId: string }> {
-    return window.RcodeGui.startSse(threadId, sinceSeq, streamId, options)
+    return window.JokerGui.startSse(threadId, sinceSeq, streamId, options)
   }
 
   stopSse(streamId: string): Promise<boolean> {
-    return window.RcodeGui.stopSse(streamId)
+    return window.JokerGui.stopSse(streamId)
   }
 
   ackSse(streamId: string, batchId: string): Promise<boolean> {
-    return window.RcodeGui.ackSse(streamId, batchId)
+    return window.JokerGui.ackSse(streamId, batchId)
   }
 
   onSseEvent(handler: (payload: SseEventPayload) => void): () => void {
-    return window.RcodeGui.onSseEvent(handler)
+    return window.JokerGui.onSseEvent(handler)
   }
 
   onSseEnd(handler: (payload: SseEndPayload) => void): () => void {
-    return window.RcodeGui.onSseEnd(handler)
+    return window.JokerGui.onSseEnd(handler)
   }
 
   onSseError(handler: (payload: SseErrorPayload) => void): () => void {
-    return window.RcodeGui.onSseError(handler)
+    return window.JokerGui.onSseError(handler)
   }
 }
 

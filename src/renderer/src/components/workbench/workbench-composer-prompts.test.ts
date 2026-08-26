@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { composerReferencesToUserFileReferences } from './workbench-composer-prompts'
 
 describe('workbench composer prompt helpers', () => {
-  it('maps composer file references to the Rcode request contract', () => {
+  it('maps composer file references to the Joker request contract', () => {
     expect(composerReferencesToUserFileReferences([
       {
         path: '/repo/src/renderer/App.tsx',

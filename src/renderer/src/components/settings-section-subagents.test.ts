@@ -1,18 +1,18 @@
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { describe, expect, it, vi } from 'vitest'
-import { defaultRcodeRuntimeSettings } from '@shared/app-settings'
+import { defaultJokerRuntimeSettings } from '@shared/app-settings'
 import { SettingsSidebar } from './SettingsSidebar'
 import { SubagentsSettingsSection } from './settings-section-subagents'
 
 vi.mock('./subagents/SubagentSettingsEditor', () => ({
   SubagentSettingsEditor: (props: {
-    Rcode: { model: string }
+    Joker: { model: string }
     onPatch: unknown
     variant: string
   }) => createElement('div', {
     'data-testid': 'subagent-settings-editor',
-    'data-model': props.Rcode.model,
+    'data-model': props.Joker.model,
     'data-on-patch': typeof props.onPatch,
     'data-variant': props.variant
   })
@@ -45,11 +45,11 @@ function t(key: string): string {
 }
 
 describe('SubagentsSettingsSection', () => {
-  it('renders the settings editor with the current Rcode settings and settings layout', () => {
+  it('renders the settings editor with the current Joker settings and settings layout', () => {
     const html = renderToStaticMarkup(createElement(SubagentsSettingsSection, {
       ctx: {
-        Rcode: defaultRcodeRuntimeSettings(),
-        updateRcode: () => undefined
+        Joker: defaultJokerRuntimeSettings(),
+        updateJoker: () => undefined
       }
     }))
 

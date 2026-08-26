@@ -13,8 +13,8 @@ function artifact(id: string, kind: DesignArtifact['kind'], patch: Partial<Desig
   const createdAt = '2026-06-20T00:00:00.000Z'
   const relativePath =
     kind === 'canvas'
-      ? `.Rcode-design/${id}/canvas.json`
-      : `.Rcode-design/${id}/v1.${kind === 'svg' ? 'svg' : 'html'}`
+      ? `.Joker-design/${id}/canvas.json`
+      : `.Joker-design/${id}/v1.${kind === 'svg' ? 'svg' : 'html'}`
   return {
     id,
     kind,

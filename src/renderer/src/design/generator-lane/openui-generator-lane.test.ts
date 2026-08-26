@@ -70,7 +70,7 @@ describe('openui generator lane', () => {
       followUpToolIds: ['design.repair']
     })
     expect(model.actions.find((action) => action.id === 'normalize-system')?.prompt).toContain(
-      "Rcode's Design Graph and Design System"
+      "Joker's Design Graph and Design System"
     )
     expect(model.actions.find((action) => action.id === 'normalize-system')?.toolInputSeed).toMatchObject({
       toolId: 'design.system',

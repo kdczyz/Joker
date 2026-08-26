@@ -97,7 +97,7 @@ async function fetchWithTimeout(url, signal) {
   const connectTimer = setTimeout(() => controller.abort(), CONNECT_TIMEOUT_MS)
   try {
     return await fetch(url, {
-      headers: { 'User-Agent': 'Rcode local-whisper prepare', Range: 'bytes=0-' },
+      headers: { 'User-Agent': 'Joker local-whisper prepare', Range: 'bytes=0-' },
       signal: controller.signal
     })
   } finally {
@@ -151,7 +151,7 @@ async function downloadModel(model, force) {
 
 async function streamDownload(url, tempPath, model) {
   const response = await fetch(url, {
-    headers: { 'User-Agent': 'Rcode local-whisper prepare' },
+    headers: { 'User-Agent': 'Joker local-whisper prepare' },
     signal: abortOnStall()
   })
   if (!response.ok || !response.body) {

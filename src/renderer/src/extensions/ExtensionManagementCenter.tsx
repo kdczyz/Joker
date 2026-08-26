@@ -168,7 +168,7 @@ export function ExtensionManagementCenter({
   }
 
   return (
-    <section className="ds-extension-center flex h-full min-h-0 flex-1 flex-col bg-ds-main" aria-label={copy('Rcode 扩展管理中心', 'Rcode Extension Center')}>
+    <section className="ds-extension-center flex h-full min-h-0 flex-1 flex-col bg-ds-main" aria-label={copy('Joker 扩展管理中心', 'Joker Extension Center')}>
       <header className="ds-drag flex h-14 shrink-0 items-center gap-3 border-b border-ds-border-muted px-4">
         <SidebarTitlebarToggleButton
           onClick={onToggleLeftSidebar}
@@ -214,7 +214,7 @@ export function ExtensionManagementCenter({
         <div className="mx-auto max-w-5xl">
           <div className="mb-4 flex items-start gap-3 rounded-xl border border-amber-300/60 bg-amber-50/70 p-3 text-[11.5px] leading-5 text-amber-950 dark:border-amber-800/60 dark:bg-amber-950/20 dark:text-amber-100">
             <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
-            <span>{copy('Node 扩展是受信任代码，会以当前用户的操作系统权限运行；权限清单用于 Broker 授权和风险披露，不是操作系统沙箱。Direct DOM 同样属于高风险且不受兼容性保证。Rcode 不会自动检查扩展更新。', 'Node extensions are trusted code running with the current user’s OS privileges. Broker permissions are authorization and disclosure, not an OS sandbox. Direct DOM is also high risk and outside compatibility guarantees. No automatic update checks are performed.')}</span>
+            <span>{copy('Node 扩展是受信任代码，会以当前用户的操作系统权限运行；权限清单用于 Broker 授权和风险披露，不是操作系统沙箱。Direct DOM 同样属于高风险且不受兼容性保证。Joker 不会自动检查扩展更新。', 'Node extensions are trusted code running with the current user’s OS privileges. Broker permissions are authorization and disclosure, not an OS sandbox. Direct DOM is also high risk and outside compatibility guarantees. No automatic update checks are performed.')}</span>
           </div>
 
           <button
@@ -225,7 +225,7 @@ export function ExtensionManagementCenter({
             <ChevronLeft className="h-4 w-4 shrink-0 text-ds-faint" />
             <span className="min-w-0 flex-1">
               <span className="block text-[12px] font-semibold text-ds-ink">{copy('寻找 UI 外观包、MCP 或 Skill？', 'Looking for UI appearance packs, MCP, or Skills?')}</span>
-              <span className="mt-0.5 block text-[11px] text-ds-faint">{copy('这些系统保持独立，不会转换成 .Rcodex 扩展。', 'Those systems remain separate and are not converted into .Rcodex extensions.')}</span>
+              <span className="mt-0.5 block text-[11px] text-ds-faint">{copy('这些系统保持独立，不会转换成 .Jokerx 扩展。', 'Those systems remain separate and are not converted into .Jokerx extensions.')}</span>
             </span>
           </button>
 
@@ -237,8 +237,8 @@ export function ExtensionManagementCenter({
 
           {tab === 'install' ? (
             <div className="grid gap-4 md:grid-cols-3">
-              <InstallCard icon={<FileArchive className="h-5 w-5" />} title={copy('本地 .Rcodex', 'Local .Rcodex')} description={copy('选择本地扩展包；检查完成后在受保护窗口审核权限和来源。', 'Choose a local package, then review its source and permissions in a protected window.')} action={copy('选择扩展包', 'Choose package')} disabled={busyId !== null} onClick={() => void installArchive()} />
-              <InstallCard icon={<FolderCode className="h-5 w-5" />} title={copy('开发目录', 'Development directory')} description={copy('显式注册可变开发目录；Rcode 不复制内容，也不会自动重载。', 'Explicitly register a mutable development directory. Rcode never copies or auto-reloads it.')} action={copy('选择目录', 'Choose directory')} disabled={busyId !== null} onClick={() => void installDevelopment()} />
+              <InstallCard icon={<FileArchive className="h-5 w-5" />} title={copy('本地 .Jokerx', 'Local .Jokerx')} description={copy('选择本地扩展包；检查完成后在受保护窗口审核权限和来源。', 'Choose a local package, then review its source and permissions in a protected window.')} action={copy('选择扩展包', 'Choose package')} disabled={busyId !== null} onClick={() => void installArchive()} />
+              <InstallCard icon={<FolderCode className="h-5 w-5" />} title={copy('开发目录', 'Development directory')} description={copy('显式注册可变开发目录；Joker 不复制内容，也不会自动重载。', 'Explicitly register a mutable development directory. Joker never copies or auto-reloads it.')} action={copy('选择目录', 'Choose directory')} disabled={busyId !== null} onClick={() => void installDevelopment()} />
               <div className="rounded-xl border border-ds-border bg-ds-card p-4">
                 <div className="flex items-center gap-2 text-[13px] font-semibold text-ds-ink"><Globe2 className="h-5 w-5" />{copy('自定义 HTTPS Index', 'Custom HTTPS Index')}</div>
                 <p className="mt-2 text-[11px] leading-5 text-ds-faint">{copy('仅在你明确操作时读取 Index 并安装指定版本；不会自动检查更新。', 'Read an Index only on explicit action and install an exact version. No automatic update checks.')}</p>
@@ -252,7 +252,7 @@ export function ExtensionManagementCenter({
             </div>
           ) : tab === 'diagnostics' ? (
             <div className="space-y-3">
-              {sortedEntries.map((entry) => <DiagnosticCard key={entry.id} entry={entry} diagnostic={diagnostics.get(entry.id)?.host} seed={diagnostics.get(entry.id)?.seed} copy={copy} onOpenLogs={() => void window.RcodeGui.openLogDir()} />)}
+              {sortedEntries.map((entry) => <DiagnosticCard key={entry.id} entry={entry} diagnostic={diagnostics.get(entry.id)?.host} seed={diagnostics.get(entry.id)?.seed} copy={copy} onOpenLogs={() => void window.JokerGui.openLogDir()} />)}
               {!loading && sortedEntries.length === 0 ? <EmptyState text={copy('没有扩展诊断。', 'No extension diagnostics.')} /> : null}
             </div>
           ) : (
@@ -418,7 +418,7 @@ export function ExtensionManagementCenter({
                   </article>
                 )
               })}
-              {!loading && sortedEntries.length === 0 ? <EmptyState text={copy('尚未安装 .Rcodex 扩展。', 'No .Rcodex extensions are installed.')} /> : null}
+              {!loading && sortedEntries.length === 0 ? <EmptyState text={copy('尚未安装 .Jokerx 扩展。', 'No .Jokerx extensions are installed.')} /> : null}
             </div>
           )}
         </div>

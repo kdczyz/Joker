@@ -107,7 +107,7 @@ export type GrokBuildEvent =
 
 /**
  * Adapter that spawns grok-build in ACP stdio mode and manages the
- * JSON-RPC lifecycle. Designed to mirror the RcodeRuntimeAdapter
+ * JSON-RPC lifecycle. Designed to mirror the JokerRuntimeAdapter
  * interface so it can be swapped in with minimal changes to the
  * Electron main process.
  */
@@ -125,7 +125,7 @@ export const GrokBuildAdapter = {
   _providerConfig: null as GrokProviderConfig | null,
 
   // ------------------------------------------------------------------
-  // Public API (mirrors RcodeRuntimeAdapter)
+  // Public API (mirrors JokerRuntimeAdapter)
   // ------------------------------------------------------------------
 
   /** Resolve the grok binary path. */

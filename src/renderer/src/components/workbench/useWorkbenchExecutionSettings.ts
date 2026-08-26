@@ -22,8 +22,8 @@ export function useWorkbenchExecutionSettings({
       .then((settings) => {
         if (cancelled) return
         setComposerExecutionSettings({
-          approvalPolicy: settings.agents.Rcode.approvalPolicy,
-          sandboxMode: settings.agents.Rcode.sandboxMode
+          approvalPolicy: settings.agents.Joker.approvalPolicy,
+          sandboxMode: settings.agents.Joker.sandboxMode
         })
       })
       .catch(() => undefined)
@@ -40,15 +40,15 @@ export function useWorkbenchExecutionSettings({
     setComposerExecutionApplying(true)
     void rendererRuntimeClient.setSettings({
       agents: {
-        Rcode: {
+        Joker: {
           ...(patch.approvalPolicy ? { approvalPolicy: patch.approvalPolicy as ApprovalPolicy } : {}),
           ...(patch.sandboxMode ? { sandboxMode: patch.sandboxMode as SandboxMode } : {})
         }
       }
     }).then((settings) => {
       setComposerExecutionSettings({
-        approvalPolicy: settings.agents.Rcode.approvalPolicy,
-        sandboxMode: settings.agents.Rcode.sandboxMode
+        approvalPolicy: settings.agents.Joker.approvalPolicy,
+        sandboxMode: settings.agents.Joker.sandboxMode
       })
       onSettingsUpdated()
     }).catch((error: unknown) => {

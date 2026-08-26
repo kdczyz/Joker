@@ -11,7 +11,7 @@ import { createEmptyDesignSystem, type DesignSystem } from './design-system-type
 
 describe('design-system-persistence', () => {
   it('puts design-system.json at the doc dir (baseDir)', () => {
-    expect(designSystemPath('.Rcode-design/doc_123')).toBe('.Rcode-design/doc_123/design-system.json')
+    expect(designSystemPath('.Joker-design/doc_123')).toBe('.Joker-design/doc_123/design-system.json')
   })
 
   it('round-trips a design system through serialize/parse', () => {
@@ -81,7 +81,7 @@ describe('design-system-persistence', () => {
     it('does not let one design-system file cancel another design-system save', () => {
       vi.useFakeTimers()
       const writeWorkspaceFile = vi.fn(async () => ({ ok: true as const }))
-      vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
+      vi.stubGlobal('window', { JokerGui: { writeWorkspaceFile } })
       const designSystem: DesignSystem = {
         tokens: {
           'brand/primary': { name: 'brand/primary', kind: 'color', value: '#3b82d8' }
@@ -95,18 +95,18 @@ describe('design-system-persistence', () => {
         components: {}
       }
 
-      persistDesignSystem('/workspace', designSystem, '.Rcode-design/doc-1')
-      persistDesignSystem('/workspace', codeSystem, '.Rcode-canvas/code-thread-1')
+      persistDesignSystem('/workspace', designSystem, '.Joker-design/doc-1')
+      persistDesignSystem('/workspace', codeSystem, '.Joker-canvas/code-thread-1')
       vi.advanceTimersByTime(600)
 
       expect(writeWorkspaceFile).toHaveBeenCalledTimes(2)
       expect(writeWorkspaceFile).toHaveBeenCalledWith({
-        path: designSystemPath('.Rcode-design/doc-1'),
+        path: designSystemPath('.Joker-design/doc-1'),
         workspaceRoot: '/workspace',
         content: serializeDesignSystem(designSystem)
       })
       expect(writeWorkspaceFile).toHaveBeenCalledWith({
-        path: designSystemPath('.Rcode-canvas/code-thread-1'),
+        path: designSystemPath('.Joker-canvas/code-thread-1'),
         workspaceRoot: '/workspace',
         content: serializeDesignSystem(codeSystem)
       })
@@ -115,7 +115,7 @@ describe('design-system-persistence', () => {
     it('keeps debouncing repeated saves for the same design-system file', () => {
       vi.useFakeTimers()
       const writeWorkspaceFile = vi.fn(async () => ({ ok: true as const }))
-      vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
+      vi.stubGlobal('window', { JokerGui: { writeWorkspaceFile } })
       const firstSystem = createEmptyDesignSystem()
       const latestSystem: DesignSystem = {
         tokens: {
@@ -124,13 +124,13 @@ describe('design-system-persistence', () => {
         components: {}
       }
 
-      persistDesignSystem('/workspace', firstSystem, '.Rcode-canvas/code-thread-1')
-      persistDesignSystem('/workspace', latestSystem, '.Rcode-canvas/code-thread-1')
+      persistDesignSystem('/workspace', firstSystem, '.Joker-canvas/code-thread-1')
+      persistDesignSystem('/workspace', latestSystem, '.Joker-canvas/code-thread-1')
       vi.advanceTimersByTime(600)
 
       expect(writeWorkspaceFile).toHaveBeenCalledTimes(1)
       expect(writeWorkspaceFile).toHaveBeenCalledWith({
-        path: designSystemPath('.Rcode-canvas/code-thread-1'),
+        path: designSystemPath('.Joker-canvas/code-thread-1'),
         workspaceRoot: '/workspace',
         content: serializeDesignSystem(latestSystem)
       })
@@ -143,7 +143,7 @@ describe('design-system-persistence', () => {
         path,
         savedAt: 'now'
       }))
-      vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
+      vi.stubGlobal('window', { JokerGui: { writeWorkspaceFile } })
       const latestSystem: DesignSystem = {
         tokens: {
           'brand/primary': { name: 'brand/primary', kind: 'color', value: '#14b8a6' }
@@ -151,13 +151,13 @@ describe('design-system-persistence', () => {
         components: {}
       }
 
-      persistDesignSystem('/workspace', createEmptyDesignSystem(), '.Rcode-design/doc-1')
-      persistDesignSystem('/workspace', latestSystem, '.Rcode-design/doc-1')
+      persistDesignSystem('/workspace', createEmptyDesignSystem(), '.Joker-design/doc-1')
+      persistDesignSystem('/workspace', latestSystem, '.Joker-design/doc-1')
       await flushPendingDesignSystems('/workspace')
 
       expect(writeWorkspaceFile).toHaveBeenCalledTimes(1)
       expect(writeWorkspaceFile).toHaveBeenCalledWith({
-        path: designSystemPath('.Rcode-design/doc-1'),
+        path: designSystemPath('.Joker-design/doc-1'),
         workspaceRoot: '/workspace',
         content: serializeDesignSystem(latestSystem)
       })

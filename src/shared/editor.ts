@@ -23,7 +23,7 @@ export type OpenEditorPathOptions = {
   column?: number
   /** Main-owned validation policy for generated artifact actions. */
   openPolicy?: 'presentation-artifact'
-  /** Trusted write-time digest required before system-opening a Rcode HTML deck. */
+  /** Trusted write-time digest required before system-opening a Joker HTML deck. */
   expectedSha256?: string
 }
 

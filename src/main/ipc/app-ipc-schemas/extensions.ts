@@ -3,7 +3,7 @@ import {
   JsonValueSchema,
   ManifestLocaleTagSchema,
   PermissionSchema
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import { z } from 'zod'
 import {
   EXTENSION_HOST_SURFACES,

@@ -1,5 +1,5 @@
 {
-  "name": "@Rcode-examples/hello-sidebar",
+  "name": "@Joker-examples/hello-sidebar",
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
@@ -7,11 +7,11 @@
   "scripts": {
     "build": "vite build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
-    "validate": "node ../run-repository-Rcode-cli.mjs extension validate .",
-    "pack": "npm run build && node ../run-repository-Rcode-cli.mjs extension pack ."
+    "validate": "node ../run-repository-Joker-cli.mjs extension validate .",
+    "pack": "npm run build && node ../run-repository-Joker-cli.mjs extension pack ."
   },
   "dependencies": {
-    "@Rcode/extension-api": "^1.0.0"
+    "@joker-code/extension-api": "^1.0.0"
   },
   "devDependencies": {
     "typescript": "^5.8.2",

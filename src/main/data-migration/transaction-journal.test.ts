@@ -30,7 +30,7 @@ function plan(operationId = 'import_journal') {
 
 describe('durable migration transaction journal', () => {
   it('persists the inspected plan and a mutation before the external action is marked applied', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-migration-journal-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-migration-journal-'))
     roots.push(root)
     let now = new Date('2026-07-15T00:00:00.000Z')
     const store = new MigrationJournalStore(root, () => now)
@@ -42,7 +42,7 @@ describe('durable migration transaction journal', () => {
       target: 'workspace',
       action: 'create',
       targetPath: '/target/Project',
-      sourcePath: '/target/.Rcode-migration-staging/import/ws',
+      sourcePath: '/target/.Joker-migration-staging/import/ws',
       expectedAfterIdentity: 'tree:abc',
       details: { workspaceId: 'ws' }
     })
@@ -57,7 +57,7 @@ describe('durable migration transaction journal', () => {
   })
 
   it('enforces phase transitions, records cancellation, and exposes startup recovery', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-migration-recovery-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-migration-recovery-'))
     roots.push(root)
     const store = new MigrationJournalStore(root)
     await store.createInspected(plan('import_recovery'))
@@ -72,7 +72,7 @@ describe('durable migration transaction journal', () => {
   })
 
   it('serializes concurrent journal updates without dropping recovery findings', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-migration-journal-lock-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-migration-journal-lock-'))
     roots.push(root)
     const store = new MigrationJournalStore(root)
     await store.createInspected(plan('import_parallel'))
@@ -83,7 +83,7 @@ describe('durable migration transaction journal', () => {
   })
 
   it('does not let a mutation id be reused for a different target', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-migration-journal-id-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-migration-journal-id-'))
     roots.push(root)
     const store = new MigrationJournalStore(root)
     await store.createInspected(plan('import_mutation_id'))

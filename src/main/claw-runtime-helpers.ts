@@ -147,7 +147,7 @@ export function formatFeishuMirrorText(text: string, direction: 'user' | 'assist
   const trimmed = text.trim()
   if (direction === 'user') {
     return {
-      markdown: `**From Rcode**\n\n> ${trimmed.replace(/\n/g, '\n> ')}`
+      markdown: `**From Joker**\n\n> ${trimmed.replace(/\n/g, '\n> ')}`
     }
   }
   return { markdown: trimmed || '(empty reply)' }

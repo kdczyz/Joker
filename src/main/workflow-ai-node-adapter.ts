@@ -56,7 +56,7 @@ export async function executeAiWorkflowNode(input: {
     settings,
     {
       providerId: node.config.providerId,
-      model: node.config.model.trim() || settings.agents.Rcode.model,
+      model: node.config.model.trim() || settings.agents.Joker.model,
       reasoningEffort: node.config.reasoningEffort
     },
     settings.workflow.providerId?.trim() || ''

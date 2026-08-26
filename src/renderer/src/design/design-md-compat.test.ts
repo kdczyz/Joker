@@ -12,13 +12,13 @@ import type { CanvasShape } from './canvas/canvas-types'
 const now = '2026-06-29T00:00:00.000Z'
 
 function artifact(id: string, title: string, extra: Partial<DesignArtifact> = {}): DesignArtifact {
-  const relativePath = `.Rcode-design/doc/${id}/v1.html`
+  const relativePath = `.Joker-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',
     title,
     relativePath,
-    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
+    designMdPath: `.Joker-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
     versions: [{ id: `${id}-v1`, relativePath, createdAt: now, summary: '' }],
@@ -27,13 +27,13 @@ function artifact(id: string, title: string, extra: Partial<DesignArtifact> = {}
 }
 
 function svgArtifact(id: string, title: string): DesignArtifact {
-  const relativePath = `.Rcode-design/doc/${id}/v1.svg`
+  const relativePath = `.Joker-design/doc/${id}/v1.svg`
   return {
     id,
     kind: 'svg',
     title,
     relativePath,
-    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
+    designMdPath: `.Joker-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
     versions: [{ id: `${id}-v1`, relativePath, createdAt: now, summary: '' }],
@@ -65,7 +65,7 @@ function shape(id: string): CanvasShape {
 
 describe('design-md-compat', () => {
   it('keeps the generated handoff separate from root DESIGN.md', () => {
-    expect(STITCH_DESIGN_MD_PATH).toBe('.Rcode-design/HANDOFF.md')
+    expect(STITCH_DESIGN_MD_PATH).toBe('.Joker-design/HANDOFF.md')
   })
 
   it('exports context, tokens, components, screens, and prototype flow', () => {
@@ -94,8 +94,8 @@ describe('design-md-compat', () => {
         tone: ['专业']
       },
       designSystem: system,
-      designSystemMdPath: '.Rcode-design/design-system.json',
-      projectBriefPath: '.Rcode-design/doc/design.md',
+      designSystemMdPath: '.Joker-design/design-system.json',
+      projectBriefPath: '.Joker-design/doc/design.md',
       artifacts: [
         artifact('home', 'Home', {
           direction: { id: 'dir_1', name: 'Ops direction', status: 'active' },
@@ -115,17 +115,17 @@ describe('design-md-compat', () => {
     })
 
     expect(markdown).toContain('# DESIGN.md: Ops app')
-    expect(markdown).toContain('Project brief: `.Rcode-design/doc/design.md`')
+    expect(markdown).toContain('Project brief: `.Joker-design/doc/design.md`')
     expect(markdown).toContain('Preset: shadcn/ui')
     expect(markdown).toContain('Target: App')
     expect(markdown).toContain('Brand color anchor: #2563eb')
     expect(markdown).toContain('| `brand/primary` | color | #2563eb |')
     expect(markdown).toContain('**Insight card**')
-    expect(markdown).toContain('**Home** (home): HTML `.Rcode-design/doc/home/v1.html`; frame 390x844')
+    expect(markdown).toContain('**Home** (home): HTML `.Joker-design/doc/home/v1.html`; frame 390x844')
     expect(markdown).toContain('direction: Ops direction')
     expect(markdown).toContain('Open details -> Details (details) via `../details/v1.html`')
     expect(markdown).toContain(
-      '**Orbit loader** (orbit): SVG `.Rcode-design/doc/orbit/v1.svg`; canvas frame 320x240; notes `.Rcode-design/doc/orbit/DESIGN.md`'
+      '**Orbit loader** (orbit): SVG `.Joker-design/doc/orbit/v1.svg`; canvas frame 320x240; notes `.Joker-design/doc/orbit/DESIGN.md`'
     )
     expect(markdown).toContain('Keep SVG motion declarative')
   })
@@ -149,8 +149,8 @@ describe('design-md-compat', () => {
       updatedAt: now
     })
 
-    expect(markdown).toContain('**Dashboard** (dashboard): HTML `.Rcode-design/doc/dashboard/v1.html`; frame 1280x800')
-    expect(markdown).toContain('**Wide review** (wide): HTML `.Rcode-design/doc/wide/v1.html`; frame 1440x900')
+    expect(markdown).toContain('**Dashboard** (dashboard): HTML `.Joker-design/doc/dashboard/v1.html`; frame 1280x800')
+    expect(markdown).toContain('**Wide review** (wide): HTML `.Joker-design/doc/wide/v1.html`; frame 1440x900')
   })
 
   it('parses exported markdown into importable guideline sections', () => {

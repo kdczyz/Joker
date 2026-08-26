@@ -10,7 +10,7 @@ describe('AppShell', () => {
 
   it('keeps the macOS app shell on the same full-height flex chain as desktop titlebar platforms', () => {
     vi.stubGlobal('window', {
-      RcodeGui: { platform: 'darwin' }
+      JokerGui: { platform: 'darwin' }
     })
 
     const html = renderToStaticMarkup(createElement(AppShell))
@@ -22,7 +22,7 @@ describe('AppShell', () => {
 
   it('renders a visible route fallback instead of a blank shell while lazy views load', () => {
     vi.stubGlobal('window', {
-      RcodeGui: { platform: 'win32' }
+      JokerGui: { platform: 'win32' }
     })
 
     const html = renderToStaticMarkup(createElement(AppShell))

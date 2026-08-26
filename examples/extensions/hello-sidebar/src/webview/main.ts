@@ -1,14 +1,14 @@
-import { ExtensionHostClient, type HostTransport } from '@Rcode/extension-api'
+import { ExtensionHostClient, type HostTransport } from '@joker-code/extension-api'
 
 declare global {
   interface Window {
-    readonly RcodeExtension: HostTransport
+    readonly JokerExtension: HostTransport
   }
 }
 
 type HelloState = { greetings: number }
 
-const client = new ExtensionHostClient(window.RcodeExtension)
+const client = new ExtensionHostClient(window.JokerExtension)
 const button = document.querySelector<HTMLButtonElement>('#greet')
 const count = document.querySelector<HTMLOutputElement>('#count')
 const localeLabel = document.querySelector<HTMLElement>('#locale')
@@ -22,7 +22,7 @@ async function applyTheme(): Promise<void> {
   const theme = await client.ui.getTheme()
   document.documentElement.dataset.theme = theme.kind
   for (const [name, value] of Object.entries(theme.tokens)) {
-    document.documentElement.style.setProperty(`--Rcode-${name}`, value)
+    document.documentElement.style.setProperty(`--Joker-${name}`, value)
   }
 }
 
@@ -34,7 +34,7 @@ button?.addEventListener('click', () => {
 
 client.ui.onDidChangeTheme(() => void applyTheme())
 const locale = await client.ui.getLocale()
-if (localeLabel) localeLabel.textContent = `Rcode Extension · ${locale.language}`
+if (localeLabel) localeLabel.textContent = `Joker Extension · ${locale.language}`
 await applyTheme()
 render()
 

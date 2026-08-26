@@ -15,7 +15,7 @@ describe('design workspace isolation', () => {
   it('rejects a late hydration result after the workspace changes', async () => {
     const indexRead = deferred<{ ok: true; content: string }>()
     const readWorkspaceFile = vi.fn((request: { path: string }) => {
-      if (request.path === '.Rcode-design/documents.json') return indexRead.promise
+      if (request.path === '.Joker-design/documents.json') return indexRead.promise
       return Promise.resolve({ ok: false as const, message: 'missing' })
     })
     const listWorkspaceDirectory = vi.fn(async () => ({
@@ -28,7 +28,7 @@ describe('design workspace isolation', () => {
       savedAt: createdAt
     }))
     vi.stubGlobal('window', {
-      RcodeGui: { writeWorkspaceFile, readWorkspaceFile, listWorkspaceDirectory }
+      JokerGui: { writeWorkspaceFile, readWorkspaceFile, listWorkspaceDirectory }
     })
     useDesignWorkspaceStore.setState({
       workspaceRoot: '/workspace/a',

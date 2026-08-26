@@ -19,7 +19,7 @@ set -euo pipefail
 #
 # Speed knobs:
 #   RELEASE_UPLOAD_CONCURRENCY=4    GitHub/R2 upload concurrency
-#   RCODE_RUNTIME_CACHE=0             disable bundled runtime cache
+#   JOKER_RUNTIME_CACHE=0             disable bundled runtime cache
 #
 # After this completes, run on Windows (same version):
 #   ./scripts/release-win.sh --tag v<RELEASE_VERSION from output> --r2 --r2-promote --publish
@@ -90,12 +90,12 @@ resolve_mac_resources() {
   case "${arch}" in
     arm64)
       candidates=(
-        "${ROOT}/dist/mac-arm64/Rcode.app/Contents/Resources"
+        "${ROOT}/dist/mac-arm64/Joker.app/Contents/Resources"
       )
       ;;
     x64)
       candidates=(
-        "${ROOT}/dist/mac/Rcode.app/Contents/Resources"
+        "${ROOT}/dist/mac/Joker.app/Contents/Resources"
       )
       ;;
     *) die "Unsupported macOS Extension smoke architecture: ${arch}" ;;
@@ -143,7 +143,7 @@ smoke_macos_extensions() {
   esac
 
   cyan "Smoking packaged OCR dependencies (host-native macOS ${host_arch})..."
-  RCODE_PACKAGED_RESOURCES_DIR="${host_resources}" node scripts/smoke-packaged-ocr.cjs \
+  JOKER_PACKAGED_RESOURCES_DIR="${host_resources}" node scripts/smoke-packaged-ocr.cjs \
     || die "macOS packaged OCR dependency smoke failed"
 
   cyan "Smoking packaged Extension desktop Chromium (host-native macOS ${host_arch})..."
@@ -151,13 +151,13 @@ smoke_macos_extensions() {
     || die "macOS packaged Extension desktop Chromium smoke failed"
 
   cyan "Smoking host-native FFmpeg broker (macOS ${host_arch})..."
-  RCODE_RUN_MEDIA_SMOKE=1 npm run smoke:extension-native-media \
+  JOKER_RUN_MEDIA_SMOKE=1 npm run smoke:extension-native-media \
     || die "macOS host-native FFmpeg broker smoke failed"
 
-  cyan "Smoking packaged Rcode Video Editor native workflow (macOS ${host_arch})..."
+  cyan "Smoking packaged Joker Video Editor native workflow (macOS ${host_arch})..."
   npm run smoke:packaged-video-editor-native -- --resources "${host_resources}" \
-    --archive "${ROOT}/dist/Rcode-video-editor-0.4.4.Rcodex" \
-    || die "macOS packaged Rcode Video Editor native workflow smoke failed"
+    --archive "${ROOT}/dist/Joker-video-editor-0.4.4.Jokerx" \
+    || die "macOS packaged Joker Video Editor native workflow smoke failed"
 
   cyan "Recording commit-bound macOS native evidence..."
   npm run evidence:extension-native \
@@ -195,9 +195,9 @@ release_clean_dist_artifacts
 cyan "Building macOS..."
 build_macos
 
-cyan "Building deterministic Rcode Video Editor extension package..."
-rm -f "${ROOT}"/dist/Rcode-video-editor-*.Rcodex
-npm run pack:Rcode-video-editor || die "Rcode Video Editor extension package failed"
+cyan "Building deterministic Joker Video Editor extension package..."
+rm -f "${ROOT}"/dist/Joker-video-editor-*.Jokerx
+npm run pack:Joker-video-editor || die "Joker Video Editor extension package failed"
 
 smoke_macos_extensions
 
@@ -256,14 +256,14 @@ collect_optional() {
   done
 }
 
-# artifactName: Rcode-${version}-mac-${arch}.dmg|zip
-collect "macOS arm64 dmg" "dist/Rcode-*-mac-arm64.dmg"
-collect "macOS x64 dmg" "dist/Rcode-*-mac-x64.dmg"
-collect "macOS arm64 zip" "dist/Rcode-*-mac-arm64.zip"
-collect "macOS x64 zip" "dist/Rcode-*-mac-x64.zip"
+# artifactName: Joker-${version}-mac-${arch}.dmg|zip
+collect "macOS arm64 dmg" "dist/Joker-*-mac-arm64.dmg"
+collect "macOS x64 dmg" "dist/Joker-*-mac-x64.dmg"
+collect "macOS arm64 zip" "dist/Joker-*-mac-arm64.zip"
+collect "macOS x64 zip" "dist/Joker-*-mac-x64.zip"
 collect "macOS native evidence" "dist/extension-native-evidence-darwin.json"
-collect "Rcode Video Editor extension" "dist/Rcode-video-editor-*.Rcodex"
-collect_optional "macOS blockmap" "dist/Rcode-*-mac-*.zip.blockmap"
+collect "Joker Video Editor extension" "dist/Joker-video-editor-*.Jokerx"
+collect_optional "macOS blockmap" "dist/Joker-*-mac-*.zip.blockmap"
 
 upload_github_assets() {
   local tag="$1"
@@ -319,7 +319,7 @@ This is an unsigned build. macOS Gatekeeper will block first launch.
 Run this after downloading:
 
 ```sh
-xattr -cr "Rcode.app"
+xattr -cr "Joker.app"
 # or
 npm run mac:unquarantine
 ```
@@ -366,4 +366,4 @@ green "macOS release ${TAG_NAME} ready (draft)."
 cyan "  Meta: dist/.release-meta.env"
 cyan "  Channel: ${RELEASE_CHANNEL}"
 cyan "  Next on Windows: ./scripts/release-win.sh --tag ${TAG_NAME} --channel ${RELEASE_CHANNEL}"
-cyan "  https://github.com/kdczyz/Rcode/releases/tag/${TAG_NAME}"
+cyan "  https://github.com/kdczyz/Joker/releases/tag/${TAG_NAME}"

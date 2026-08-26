@@ -12,7 +12,7 @@ import { buildDesignReferencePanelModel } from './design-reference-panel'
 const createdAt = '2026-07-02T00:00:00.000Z'
 
 function artifact(id: string, title: string, extra: Partial<DesignArtifact> = {}): DesignArtifact {
-  const relativePath = `.Rcode-design/doc/${id}/v1.html`
+  const relativePath = `.Joker-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',
@@ -44,7 +44,7 @@ describe('buildDesignReferencePanelModel', () => {
       name: 'Hero reference',
       width: 320,
       height: 180,
-      imageUrl: '.Rcode-design/assets/hero.png'
+      imageUrl: '.Joker-design/assets/hero.png'
     }, moodboard.id)
     addShape(doc, {
       ...createDefaultShape('image', 400, 24),
@@ -59,7 +59,7 @@ describe('buildDesignReferencePanelModel', () => {
     const homeFrame = addShape(doc, createHtmlFrameShape('Home', 800, 0, 'home'))
     const artifacts = [
       artifact('home', 'Home', {
-        designMdPath: '.Rcode-design/doc/home/DESIGN.md',
+        designMdPath: '.Joker-design/doc/home/DESIGN.md',
         prototypeLinks: [{ targetTitle: 'Checkout', targetArtifactId: 'checkout', href: '../checkout/v1.html' }],
         direction: { id: 'd1', name: 'Warm marketplace', status: 'active' }
       }),
@@ -90,14 +90,14 @@ describe('buildDesignReferencePanelModel', () => {
     expect(model.screens[0]).toMatchObject({
       id: 'home',
       frameId: homeFrame.id,
-      designMdPath: '.Rcode-design/doc/home/DESIGN.md',
+      designMdPath: '.Joker-design/doc/home/DESIGN.md',
       directionName: 'Warm marketplace',
       prototypeLinkCount: 1,
       active: true
     })
     expect(model.action.disabledReasonKey).toBeUndefined()
-    expect(model.action.prompt).toContain('.Rcode-design/assets/hero.png')
-    expect(model.action.prompt).toContain('.Rcode-design/doc/home/DESIGN.md')
+    expect(model.action.prompt).toContain('.Joker-design/assets/hero.png')
+    expect(model.action.prompt).toContain('.Joker-design/doc/home/DESIGN.md')
   })
 
   it('disables the action when no project memory exists', () => {

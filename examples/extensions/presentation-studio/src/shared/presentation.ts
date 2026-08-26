@@ -930,7 +930,7 @@ export function applyPresentationOperations(
   }
 }
 
-const MODEL_MARKER_START = '<script id="Rcode-presentation-model" type="application/json">'
+const MODEL_MARKER_START = '<script id="Joker-presentation-model" type="application/json">'
 const MODEL_MARKER_END = '</script>'
 
 function escapeHtml(value: string): string {
@@ -1004,7 +1004,7 @@ function renderElement(
   className: string,
   slideId: string
 ): string {
-  const attributes = `class="Rcode-element ${className} Rcode-${element.type}" data-Rcode-slide-id="${escapeHtml(slideId)}" data-Rcode-element-id="${escapeHtml(element.id)}"`
+  const attributes = `class="Joker-element ${className} Joker-${element.type}" data-Joker-slide-id="${escapeHtml(slideId)}" data-Joker-element-id="${escapeHtml(element.id)}"`
   if (element.type === 'text') return `<div ${attributes}>${escapeHtml(element.text)}</div>`
   if (element.type === 'shape') {
     return `<div ${attributes} role="img" aria-label="${escapeHtml(`${element.shape} shape`)}"></div>`
@@ -1016,14 +1016,14 @@ export function serializePresentationHtml(value: PresentationProject): string {
   const project = normalizePresentationProject(value)
   const dynamicCss: string[] = []
   const slides = project.slides.map((slide, slideIndex) => {
-    const slideClass = `Rcode-slide-${slideIndex}`
+    const slideClass = `Joker-slide-${slideIndex}`
     dynamicCss.push(`.${slideClass}{background:${slide.backgroundColor ?? project.theme.backgroundColor}}`)
     const elements = slide.elements.map((element, elementIndex) => {
-      const className = `Rcode-element-${slideIndex}-${elementIndex}`
+      const className = `Joker-element-${slideIndex}-${elementIndex}`
       dynamicCss.push(elementCss(element, className, elementIndex))
       return renderElement(element, className, slide.id)
     }).join('\n')
-    return `<section class="Rcode-slide ${slideClass}" data-Rcode-slide-id="${escapeHtml(slide.id)}" aria-label="${escapeHtml(slide.title)}">
+    return `<section class="Joker-slide ${slideClass}" data-Joker-slide-id="${escapeHtml(slide.id)}" aria-label="${escapeHtml(slide.title)}">
 ${elements}
 </section>`
   }).join('\n')
@@ -1040,17 +1040,17 @@ ${MODEL_MARKER_START}${embeddedJson}${MODEL_MARKER_END}
 :root{color-scheme:dark;font-family:${fontStack(project.theme.fontFamily)};background:#0B0F19}
 *{box-sizing:border-box}
 html,body{margin:0;min-height:100%;background:#0B0F19}
-.Rcode-deck{display:grid;gap:5vh;justify-items:center;padding:5vh 3vw;scroll-snap-type:y mandatory}
-.Rcode-slide{position:relative;container-type:inline-size;width:min(94vw,calc(90vh * 16 / 9));aspect-ratio:16/9;overflow:hidden;scroll-snap-align:center;box-shadow:0 1rem 3rem #0008}
-.Rcode-element{position:absolute;margin:0;box-sizing:border-box;overflow:hidden}
-.Rcode-text{display:flex;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.15}
-.Rcode-image{display:block}
+.Joker-deck{display:grid;gap:5vh;justify-items:center;padding:5vh 3vw;scroll-snap-type:y mandatory}
+.Joker-slide{position:relative;container-type:inline-size;width:min(94vw,calc(90vh * 16 / 9));aspect-ratio:16/9;overflow:hidden;scroll-snap-align:center;box-shadow:0 1rem 3rem #0008}
+.Joker-element{position:absolute;margin:0;box-sizing:border-box;overflow:hidden}
+.Joker-text{display:flex;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.15}
+.Joker-image{display:block}
 ${dynamicCss.join('\n')}
-@media print{@page{size:13.333in 7.5in;margin:0}html,body{background:#fff}.Rcode-deck{display:block;padding:0}.Rcode-slide{width:13.333in;height:7.5in;break-after:page;box-shadow:none}.Rcode-slide:last-child{break-after:auto}}
+@media print{@page{size:13.333in 7.5in;margin:0}html,body{background:#fff}.Joker-deck{display:block;padding:0}.Joker-slide{width:13.333in;height:7.5in;break-after:page;box-shadow:none}.Joker-slide:last-child{break-after:auto}}
 </style>
 </head>
 <body>
-<main class="Rcode-deck" data-Rcode-presentation-id="${escapeHtml(project.id)}">
+<main class="Joker-deck" data-Joker-presentation-id="${escapeHtml(project.id)}">
 ${slides}
 </main>
 </body>

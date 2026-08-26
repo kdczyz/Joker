@@ -452,15 +452,15 @@ export function SddDraftEditorView({
   useEffect(() => {
     if (!activeDraftId || !activeDraftWorkspaceRoot || !activeDraftRelativePath) return
     if (
-      typeof window.RcodeGui?.watchWorkspaceFile !== 'function' ||
-      typeof window.RcodeGui?.unwatchWorkspaceFile !== 'function' ||
-      typeof window.RcodeGui?.onWorkspaceFileChanged !== 'function'
+      typeof window.JokerGui?.watchWorkspaceFile !== 'function' ||
+      typeof window.JokerGui?.unwatchWorkspaceFile !== 'function' ||
+      typeof window.JokerGui?.onWorkspaceFileChanged !== 'function'
     ) {
       return
     }
 
     return startWriteWorkspaceFileWatch({
-      api: window.RcodeGui,
+      api: window.JokerGui,
       workspaceRoot: activeDraftWorkspaceRoot,
       path: activeDraftAbsolutePath ?? activeDraftRelativePath,
       kind: 'text',
@@ -570,7 +570,7 @@ export function SddDraftEditorView({
       ))
       return
     }
-    if (typeof window.RcodeGui?.requestWriteInlineCompletion !== 'function') {
+    if (typeof window.JokerGui?.requestWriteInlineCompletion !== 'function') {
       setOperationStatus('error', t('writeInlineEditUnavailable'))
       return
     }
@@ -592,7 +592,7 @@ export function SddDraftEditorView({
 
     setInlineEditInFlight(true)
     try {
-      const result = await window.RcodeGui.requestWriteInlineCompletion(
+      const result = await window.JokerGui.requestWriteInlineCompletion(
         buildWriteInlineEditCompletionRequest(draft.request)
       )
       if (!result.ok) {
@@ -725,7 +725,7 @@ export function SddDraftEditorView({
       setOperationStatus('error', t('writeInlineEditNoSelection'))
       return
     }
-    if (typeof window.RcodeGui?.generateWriteInfographic !== 'function') {
+    if (typeof window.JokerGui?.generateWriteInfographic !== 'function') {
       setOperationStatus('error', t('writeInfographicUnavailable'))
       return
     }
@@ -741,7 +741,7 @@ export function SddDraftEditorView({
 
   const generateDesignDraftFromImage = async (image: WriteSelectedImage): Promise<void> => {
     if (readOnly || !unitImageDir) return
-    if (typeof window.RcodeGui?.generateWriteInfographic !== 'function') {
+    if (typeof window.JokerGui?.generateWriteInfographic !== 'function') {
       setOperationStatus('error', t('writeInfographicUnavailable'))
       return
     }
@@ -911,9 +911,9 @@ export function SddDraftEditorView({
       if (latest.activeDraft?.id === draftId) {
         return latest.content.includes(job.pendingMarkdown)
       }
-      if (typeof window.RcodeGui?.readWorkspaceFile !== 'function') return true
+      if (typeof window.JokerGui?.readWorkspaceFile !== 'function') return true
       try {
-        const file = await window.RcodeGui.readWorkspaceFile({
+        const file = await window.JokerGui.readWorkspaceFile({
           path: docAbsolutePath,
           workspaceRoot: draftWorkspaceRoot
         })
@@ -929,7 +929,7 @@ export function SddDraftEditorView({
     let lastContent: string | null = null
     const tick = async (): Promise<void> => {
       try {
-        const file = await window.RcodeGui.readWorkspaceFile({
+        const file = await window.JokerGui.readWorkspaceFile({
           path: prototypePath,
           workspaceRoot: draftWorkspaceRoot
         })
@@ -974,7 +974,7 @@ export function SddDraftEditorView({
     let replacementMarkdown: string | null = null
     let failureMessage: string | null = null
     try {
-      const result = await window.RcodeGui.generateWriteInfographic({
+      const result = await window.JokerGui.generateWriteInfographic({
         text: job.text,
         filePath: docAbsolutePath,
         workspaceRoot: draftWorkspaceRoot,
@@ -1032,13 +1032,13 @@ export function SddDraftEditorView({
     // The draft was closed mid-generation; dismissing flushed it to disk with
     // the placeholder inside, so patch it on disk.
     if (
-      typeof window.RcodeGui?.readWorkspaceFile !== 'function' ||
-      typeof window.RcodeGui?.writeWorkspaceFile !== 'function'
+      typeof window.JokerGui?.readWorkspaceFile !== 'function' ||
+      typeof window.JokerGui?.writeWorkspaceFile !== 'function'
     ) {
       return false
     }
     try {
-      const file = await window.RcodeGui.readWorkspaceFile({
+      const file = await window.JokerGui.readWorkspaceFile({
         path: docAbsolutePath,
         workspaceRoot: draftWorkspaceRoot
       })
@@ -1049,7 +1049,7 @@ export function SddDraftEditorView({
         replacementMarkdown
       )
       if (next === null) return false
-      const written = await window.RcodeGui.writeWorkspaceFile({
+      const written = await window.JokerGui.writeWorkspaceFile({
         path: docAbsolutePath,
         workspaceRoot: draftWorkspaceRoot,
         content: next

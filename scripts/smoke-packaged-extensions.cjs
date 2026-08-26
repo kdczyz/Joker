@@ -32,24 +32,24 @@ const {
 const { tmpdir } = require('node:os')
 const { basename, dirname, isAbsolute, join, relative, resolve, sep } = require('node:path')
 const { pathToFileURL } = require('node:url')
-const { RCODE_RUNTIME_REQUIRED_PATHS } = require('./after-pack.cjs')
+const { JOKER_RUNTIME_REQUIRED_PATHS } = require('./after-pack.cjs')
 
-const EXTENSION_ID = 'Rcode-smoke.packaged'
+const EXTENSION_ID = 'Joker-smoke.packaged'
 const DEFAULT_EXTENSION_IDS = [
-  'Rcode-examples.Rcode-video-editor',
-  'Rcode-examples.presentation-studio',
-  'Rcode-examples.social-media-sidebar'
+  'Joker-examples.Joker-video-editor',
+  'Joker-examples.presentation-studio',
+  'Joker-examples.social-media-sidebar'
 ]
-const RUNTIME_TOKEN = 'Rcode-packaged-extension-smoke-token'
+const RUNTIME_TOKEN = 'Joker-packaged-extension-smoke-token'
 const PACKAGED_EXTENSION_SMOKE_SUCCESS_MARKER = 'Packaged Extension smoke OK ('
 
 async function main() {
   // Headless release smoke profiles must not depend on an interactive OS
   // credential service. The runtime still exercises encrypted 0600 key-file
   // storage; production keeps its normal fail-closed keychain behavior.
-  process.env.RCODE_DISABLE_OS_CREDENTIAL_STORE = '1'
+  process.env.JOKER_DISABLE_OS_CREDENTIAL_STORE = '1'
   const resourcesDir = resolveResources(argumentValue('--resources'))
-  if (process.env.RCODE_PACKAGED_EXTENSION_SMOKE_REEXEC !== '1') {
+  if (process.env.JOKER_PACKAGED_EXTENSION_SMOKE_REEXEC !== '1') {
     const runtimeExecutable = resolvePackagedRuntimeExecutable(
       resourcesDir,
       argumentValue('--runtime-executable')
@@ -69,10 +69,10 @@ async function main() {
     }
   }
   const unpackedRoot = join(resourcesDir, 'app.asar.unpacked')
-  const runtimeEntry = join(unpackedRoot, 'Rcode', 'dist', 'cli', 'serve-entry.js')
+  const runtimeEntry = join(unpackedRoot, 'Joker', 'dist', 'cli', 'serve-entry.js')
   validatePackagedResources(resourcesDir, unpackedRoot)
 
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-packaged-extension-smoke-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-packaged-extension-smoke-'))
   let server
   let primaryFailed = false
   let primaryError
@@ -85,13 +85,13 @@ async function main() {
     await installSmokeExtensionFixture({
       temporaryRoot,
       profile,
-      runCli: (args) => runRcode(runtimeEntry, args)
+      runCli: (args) => runJoker(runtimeEntry, args)
     })
 
-    const [{ parseServeOptions }, { startRcodeServe }, { makeUserItem }] = await Promise.all([
-      importFresh(join(unpackedRoot, 'Rcode', 'dist', 'cli', 'serve.js')),
-      importFresh(join(unpackedRoot, 'Rcode', 'dist', 'server', 'runtime-factory.js')),
-      importFresh(join(unpackedRoot, 'Rcode', 'dist', 'domain', 'item.js'))
+    const [{ parseServeOptions }, { startJokerServe }, { makeUserItem }] = await Promise.all([
+      importFresh(join(unpackedRoot, 'Joker', 'dist', 'cli', 'serve.js')),
+      importFresh(join(unpackedRoot, 'Joker', 'dist', 'server', 'runtime-factory.js')),
+      importFresh(join(unpackedRoot, 'Joker', 'dist', 'domain', 'item.js'))
     ])
     const port = await availablePort()
     const options = parseServeOptions([
@@ -106,7 +106,7 @@ async function main() {
       '--approval-policy', 'auto',
       '--sandbox-mode', 'danger-full-access'
     ], {})
-    server = await startRcodeServe(options)
+    server = await startJokerServe(options)
 
     const activated = await activateSmokeExtension(server.runtime, workspace)
     await smokeWorkbenchAndWebview(port, activated.workspace)
@@ -124,9 +124,9 @@ async function main() {
 
     await server.close()
     server = undefined
-    runRcode(runtimeEntry, ['extension', 'doctor', EXTENSION_ID, '--data-dir', profile, '--json'])
-    runRcode(runtimeEntry, ['extension', 'uninstall', EXTENSION_ID, '--data-dir', profile, '--json'])
-    const listed = JSON.parse(runRcode(runtimeEntry, [
+    runJoker(runtimeEntry, ['extension', 'doctor', EXTENSION_ID, '--data-dir', profile, '--json'])
+    runJoker(runtimeEntry, ['extension', 'uninstall', EXTENSION_ID, '--data-dir', profile, '--json'])
+    const listed = JSON.parse(runJoker(runtimeEntry, [
       'extension', 'list', '--data-dir', profile, '--json'
     ]))
     if (!Array.isArray(listed.extensions) || listed.extensions.length !== DEFAULT_EXTENSION_IDS.length) {
@@ -137,14 +137,14 @@ async function main() {
       if (installed?.globallyEnabled !== true) {
         throw new Error(`Packaged default extension was not enabled through the registry: ${id}`)
       }
-      runRcode(runtimeEntry, [
+      runJoker(runtimeEntry, [
         'extension', 'uninstall', id, '--data-dir', profile, '--json'
       ])
     }
-    server = await startRcodeServe(options)
+    server = await startJokerServe(options)
     await server.close()
     server = undefined
-    const afterRemoval = JSON.parse(runRcode(runtimeEntry, [
+    const afterRemoval = JSON.parse(runJoker(runtimeEntry, [
       'extension', 'list', '--data-dir', profile, '--json'
     ]))
     if (!Array.isArray(afterRemoval.extensions) || afterRemoval.extensions.length !== 0) {
@@ -156,7 +156,7 @@ async function main() {
     primaryError = error
   } finally {
     await server?.close().catch(() => undefined)
-    if (process.env.RCODE_KEEP_PACKAGED_EXTENSION_SMOKE === '1') {
+    if (process.env.JOKER_KEEP_PACKAGED_EXTENSION_SMOKE === '1') {
       process.stderr.write(`Preserved packaged Extension smoke profile: ${temporaryRoot}\n`)
     } else {
       try {
@@ -178,7 +178,7 @@ async function main() {
   }
   if (cleanupFailed) throw cleanupError
   process.stdout.write(
-    `${PACKAGED_EXTENSION_SMOKE_SUCCESS_MARKER}${process.platform}): resources, bundled-default seed/removal, .Rcodex lifecycle, Webview session, headless tool, Agent/tool round-trip, custom Provider/account stream, diagnostics, and uninstall.\n`
+    `${PACKAGED_EXTENSION_SMOKE_SUCCESS_MARKER}${process.platform}): resources, bundled-default seed/removal, .Jokerx lifecycle, Webview session, headless tool, Agent/tool round-trip, custom Provider/account stream, diagnostics, and uninstall.\n`
   )
 }
 
@@ -200,8 +200,8 @@ function createPackagedExtensionSmokeReexecEnvironment(environment = process.env
   return {
     ...environment,
     ELECTRON_RUN_AS_NODE: '1',
-    RCODE_DISABLE_OS_CREDENTIAL_STORE: '1',
-    RCODE_PACKAGED_EXTENSION_SMOKE_REEXEC: '1'
+    JOKER_DISABLE_OS_CREDENTIAL_STORE: '1',
+    JOKER_PACKAGED_EXTENSION_SMOKE_REEXEC: '1'
   }
 }
 
@@ -220,14 +220,14 @@ function resolvePackagedRuntimeExecutable(resourcesDir, explicit) {
         : undefined
     if (packagedArch && packagedArch !== process.arch) return undefined
     if (!normalized.endsWith('.app/Contents/Resources')) return undefined
-    const candidate = join(dirname(resourcesDir), 'MacOS', 'Rcode')
+    const candidate = join(dirname(resourcesDir), 'MacOS', 'Joker')
     assertExists(candidate, 'runtime executable')
     return candidate
   }
   const appOutDir = dirname(resourcesDir)
   const names = process.platform === 'win32'
-    ? ['Rcode.exe']
-    : ['Rcode', 'Rcode', 'Rcode-gui']
+    ? ['Joker.exe']
+    : ['Joker', 'Joker', 'Joker-gui']
   const candidate = names.map((name) => join(appOutDir, name)).find(existsSync)
   if (!candidate) {
     throw new Error(`Cannot find packaged runtime executable beside ${resourcesDir}`)
@@ -254,8 +254,8 @@ async function makeTreeWritable(root) {
 
 function packagedResourceCandidates(platform = process.platform, arch = process.arch) {
   if (platform === 'darwin') {
-    if (arch === 'arm64') return ['dist/mac-arm64/Rcode.app/Contents/Resources']
-    if (arch === 'x64') return ['dist/mac/Rcode.app/Contents/Resources']
+    if (arch === 'arm64') return ['dist/mac-arm64/Joker.app/Contents/Resources']
+    if (arch === 'x64') return ['dist/mac/Joker.app/Contents/Resources']
     return []
   }
   if (platform === 'win32') return ['dist/win-unpacked/resources']
@@ -284,13 +284,13 @@ function resolveResources(explicit) {
 function validatePackagedResources(resourcesDir, unpackedRoot) {
   assertExists(join(resourcesDir, 'app.asar'), 'app.asar')
   assertExists(unpackedRoot, 'app.asar.unpacked')
-  for (const relativePath of RCODE_RUNTIME_REQUIRED_PATHS) {
+  for (const relativePath of JOKER_RUNTIME_REQUIRED_PATHS) {
     assertConfinedPackagedPath(unpackedRoot, relativePath)
   }
   validateBundledDefaultExtension(resourcesDir)
   for (const relativePath of [
-    'Rcode/node_modules/@Rcode/extension-api',
-    'Rcode/node_modules/create-Rcode-extension'
+    'Joker/node_modules/@joker-code/extension-api',
+    'Joker/node_modules/create-Joker-extension'
   ]) {
     const details = lstatSync(join(unpackedRoot, relativePath))
     if (!details.isDirectory() || details.isSymbolicLink()) {
@@ -328,7 +328,7 @@ function validateBundledDefaultExtension(resourcesDir) {
     const entry = matches[0]
     if (
       typeof entry.archive !== 'string' ||
-      !/^[0-9A-Za-z][0-9A-Za-z._-]*\.Rcodex$/u.test(entry.archive) ||
+      !/^[0-9A-Za-z][0-9A-Za-z._-]*\.Jokerx$/u.test(entry.archive) ||
       typeof entry.sha256 !== 'string' ||
       !/^[a-f0-9]{64}$/u.test(entry.sha256)
     ) {
@@ -414,16 +414,16 @@ function hasAsarEntry(header, path) {
 async function createSmokeExtension(root, { webviewConnectUrls = [] } = {}) {
   const webviewCsp = smokeWebviewCsp(webviewConnectUrls)
   await mkdir(join(root, 'dist', 'webview'), { recursive: true })
-  await writeFile(join(root, 'Rcode-extension.json'), `${JSON.stringify({
+  await writeFile(join(root, 'Joker-extension.json'), `${JSON.stringify({
     manifestVersion: 1,
     apiVersion: '1.2.0',
-    publisher: 'Rcode-smoke',
+    publisher: 'Joker-smoke',
     name: 'packaged',
     version: '1.0.0',
     displayName: 'Packaged Extension Smoke',
     description: 'Release-only deterministic packaged Extension Platform smoke fixture.',
     license: 'MIT',
-    engines: { Rcode: '>=0.1.0' },
+    engines: { Joker: '>=0.1.0' },
     main: 'dist/extension.js',
     browser: 'dist/webview/index.html',
     activationEvents: ['onTool:echo', 'onProvider:echo', 'onView:smoke'],
@@ -493,7 +493,7 @@ async function createSmokeExtension(root, { webviewConnectUrls = [] } = {}) {
   await writeFile(join(root, 'dist', 'webview', 'index.html'), [
     '<!doctype html>',
     `<html><head><meta charset="utf-8"><meta http-equiv="Content-Security-Policy" content="${webviewCsp}"></head>`,
-    '<body><main data-Rcode-packaged-webview-smoke="ready">Packaged Webview smoke</main></body></html>',
+    '<body><main data-Joker-packaged-webview-smoke="ready">Packaged Webview smoke</main></body></html>',
     ''
   ].join('\n'))
   await writeFile(join(root, 'dist', 'extension.js'), `
@@ -581,7 +581,7 @@ async function installSmokeExtensionFixture({
 }) {
   if (typeof runCli !== 'function') throw new TypeError('runCli must be a function')
   const source = join(temporaryRoot, 'source')
-  const archive = join(temporaryRoot, 'packaged-smoke.Rcodex')
+  const archive = join(temporaryRoot, 'packaged-smoke.Jokerx')
   await createSmokeExtension(source, { webviewConnectUrls })
 
   runCli(['extension', 'validate', source, '--json'])
@@ -600,7 +600,7 @@ async function installSmokeExtensionFixture({
   ])
 
   const installedRoot = join(profile, 'extensions', EXTENSION_ID, '1.0.0')
-  assertExists(join(installedRoot, 'Rcode-extension.json'), 'installed Manifest')
+  assertExists(join(installedRoot, 'Joker-extension.json'), 'installed Manifest')
   assertExists(join(installedRoot, 'dist', 'webview', 'index.html'), 'installed Webview resource')
   return { source, archive, installedRoot }
 }
@@ -630,8 +630,8 @@ function smokeWebviewCsp(webviewConnectUrls = []) {
   return [
     "default-src 'none'",
     "style-src 'self'",
-    "img-src 'self' data: Rcode-media:",
-    "media-src 'self' Rcode-media:",
+    "img-src 'self' data: Joker-media:",
+    "media-src 'self' Joker-media:",
     `connect-src ${connectSources.length > 0 ? connectSources.join(' ') : "'none'"}`
   ].join('; ')
 }
@@ -839,7 +839,7 @@ async function runtimeJson(port, path, init = {}) {
   return body ? JSON.parse(body) : undefined
 }
 
-function runRcode(entry, args) {
+function runJoker(entry, args) {
   return execFileSync(process.execPath, [entry, ...args], {
     cwd: dirname(entry),
     env: { ...process.env, ELECTRON_RUN_AS_NODE: '1' },

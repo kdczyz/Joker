@@ -1,7 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-const SESSION_ARGUMENT = '--Rcode-extension-view-session='
-const NONCE_ARGUMENT = '--Rcode-extension-view-nonce='
+const SESSION_ARGUMENT = '--Joker-extension-view-session='
+const NONCE_ARGUMENT = '--Joker-extension-view-nonce='
 const sessionId =
   process.argv.find((argument) => argument.startsWith(SESSION_ARGUMENT))?.slice(SESSION_ARGUMENT.length) ?? ''
 const sessionNonce =
@@ -146,4 +146,4 @@ const transport = {
   }
 }
 
-contextBridge.exposeInMainWorld('RcodeExtension', transport)
+contextBridge.exposeInMainWorld('JokerExtension', transport)

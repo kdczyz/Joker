@@ -190,9 +190,9 @@ export function normalizeDailyUsageResponse(raw: RawDailyUsageResponse): DailyUs
 }
 
 export async function loadDailyUsage(range: DailyUsageRange): Promise<DailyUsageSummary | null> {
-  if (typeof window.RcodeGui?.runtimeRequest !== 'function') return null
+  if (typeof window.JokerGui?.runtimeRequest !== 'function') return null
   const response = await withUsageRequestTimeout(
-    window.RcodeGui.runtimeRequest(buildDailyUsagePath(range), 'GET'),
+    window.JokerGui.runtimeRequest(buildDailyUsagePath(range), 'GET'),
     'daily usage'
   )
   if (!response.ok || !response.body.trim()) {

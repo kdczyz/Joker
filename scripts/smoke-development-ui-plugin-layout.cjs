@@ -69,10 +69,10 @@ async function main() {
     if (!existsSync(path)) throw new Error(`${label} is missing: ${path}. Run npm run build first.`)
   }
 
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-development-ui-plugin-layout-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-development-ui-plugin-layout-'))
   const home = join(temporaryRoot, 'home')
-  const profile = join(home, '.Rcode', 'data')
-  const installedPluginsRoot = join(home, '.Rcode', 'ui-plugins')
+  const profile = join(home, '.Joker', 'data')
+  const installedPluginsRoot = join(home, '.Joker', 'ui-plugins')
   const userData = join(temporaryRoot, 'electron-user-data')
   const appData = join(temporaryRoot, 'app-data')
   const localAppData = join(temporaryRoot, 'local-app-data')
@@ -136,7 +136,7 @@ async function main() {
       explicitUserData: userData
     }).map(async (directory) => {
       await mkdir(directory, { recursive: true })
-      await writeFile(join(directory, 'Rcode-settings.json'), serializedSettings)
+      await writeFile(join(directory, 'Joker-settings.json'), serializedSettings)
     }))
 
     const isolatedEnvironment = developmentRendererEnvironment(
@@ -196,7 +196,7 @@ async function main() {
 
     let workbench = await findWorkbenchWindow(electronApplication, timeoutMs)
     await workbench.evaluate(() => {
-      localStorage.setItem('Rcode.layout.leftSidebarCollapsed', '0')
+      localStorage.setItem('Joker.layout.leftSidebarCollapsed', '0')
     })
     // On macOS the OS may clamp an initial 1800px BrowserWindow to the work
     // area while Electron still accepts later renderer surface resizes. Prime
@@ -209,9 +209,9 @@ async function main() {
         emulateRequestedWidth: true
       })
       await workbench.evaluate((id) => {
-        localStorage.setItem('Rcode.uiMode', id)
-        localStorage.setItem('Rcode.iRcodeMode', id === 'iRcode' ? '1' : '0')
-        localStorage.setItem('Rcode.layout.leftSidebarCollapsed', '0')
+        localStorage.setItem('Joker.uiMode', id)
+        localStorage.setItem('Joker.iJokerMode', id === 'iJoker' ? '1' : '0')
+        localStorage.setItem('Joker.layout.leftSidebarCollapsed', '0')
       }, plugin.id)
       await workbench.reload({ waitUntil: 'domcontentloaded' })
       workbench = await findWorkbenchWindow(electronApplication, timeoutMs)
@@ -220,7 +220,7 @@ async function main() {
 
       const wide = await readLayoutSnapshot(workbench)
       assertWidePresentation(plugin.id, wide)
-      const screenshotPath = join(evidenceRoot, `${plugin.id}-Rcode-ui-plugin.png`)
+      const screenshotPath = join(evidenceRoot, `${plugin.id}-Joker-ui-plugin.png`)
       await captureWorkbench(electronApplication, screenshotPath)
 
       const modeEvidence = captureModes
@@ -257,7 +257,7 @@ async function main() {
     report.overviewPath = await writeOverview(evidenceRoot, plugins)
     const reportPath = await writeReport(evidenceRoot, report)
     process.stdout.write(
-      `Development Rcode UI Plugin layout smoke OK (${process.platform}/${process.arch}): ` +
+      `Development Joker UI Plugin layout smoke OK (${process.platform}/${process.arch}): ` +
       `${plugins.length} theme(s); evidence=${evidenceRoot}; report=${reportPath}\n`
     )
   } catch (error) {
@@ -288,7 +288,7 @@ async function main() {
     await waitForPortsClosed([runtimePort, rendererPort], 2_000)
       .catch((error) => cleanupErrors.push(error))
 
-    if (process.env.RCODE_KEEP_DEVELOPMENT_UI_PLUGIN_LAYOUT_SMOKE === '1') {
+    if (process.env.JOKER_KEEP_DEVELOPMENT_UI_PLUGIN_LAYOUT_SMOKE === '1') {
       process.stderr.write(`Preserved development UI Plugin profile: ${temporaryRoot}\n`)
       process.stderr.write(`Preserved development UI Plugin workspace: ${workspaceRoot}\n`)
     } else {
@@ -481,7 +481,7 @@ async function captureModeEvidence({
 
     const screenshotPath = join(
       evidenceRoot,
-      `${plugin.id}-${definition.mode}-Rcode-ui-plugin.png`
+      `${plugin.id}-${definition.mode}-Joker-ui-plugin.png`
     )
     await captureWorkbench(electronApplication, screenshotPath)
     evidence[definition.mode] = { screenshotPath, ...snapshot }
@@ -496,7 +496,7 @@ async function captureModeEvidence({
 async function setWorkbenchBounds(electronApplication, bounds, options = {}) {
   return electronApplication.evaluate(async ({ BrowserWindow }, request) => {
     const window = BrowserWindow.getAllWindows().find((candidate) => !candidate.isDestroyed())
-    if (!window) throw new Error('Rcode development workbench BrowserWindow is unavailable')
+    if (!window) throw new Error('Joker development workbench BrowserWindow is unavailable')
     window.webContents.setZoomFactor(1)
     const current = window.getBounds()
     window.setBounds({ ...current, width: request.bounds.width, height: request.bounds.height }, false)
@@ -534,7 +534,7 @@ async function waitForActivePresentation(workbench, id, timeoutMs) {
     const image = document.querySelector('.ds-ui-plugin-character')
     const sceneArtwork = [...document.querySelectorAll('.ds-ui-plugin-scene-artwork')]
     const timeline = document.querySelector('.ds-message-timeline-content')
-    const style = document.querySelector('#Rcode-ui-plugin-theme-cdp')
+    const style = document.querySelector('#Joker-ui-plugin-theme-cdp')
     const sceneReady = root.getAttribute('data-ui-plugin-scene') !== 'on' || (
       Boolean(root.getAttribute('data-ui-plugin-scene-layout')) &&
       sceneArtwork.length > 0 &&
@@ -633,7 +633,7 @@ async function readLayoutSnapshot(workbench) {
     const composer = document.querySelector('.ds-floating-composer')
     const composerInput = document.querySelector('.ds-composer-textarea')
     const composerPrimaryAction = document.querySelector('.ds-composer-primary-action')
-    const cdpStyle = document.querySelector('#Rcode-ui-plugin-theme-cdp')
+    const cdpStyle = document.querySelector('#Joker-ui-plugin-theme-cdp')
     const attributes = Object.fromEntries(
       root.getAttributeNames()
         .filter((name) => name.startsWith('data-ui-plugin'))
@@ -797,7 +797,7 @@ function assertWidePresentation(id, snapshot) {
   ) {
     throw new Error(
       `${id}: neither the portrait nor a decoded visible foreground subject is ` +
-      'visible in the wide Rcode workbench'
+      'visible in the wide Joker workbench'
     )
   }
   if (!sceneEnabled && !snapshot.character.topmostAtCenter) {
@@ -815,7 +815,7 @@ function assertWidePresentation(id, snapshot) {
     for (const name of ['sceneStage', 'sceneVisual']) {
       const layer = snapshot.layers[name]
       if (layer.style?.display === 'none' || !hasArea(layer.rect)) {
-        throw new Error(`${id}: ${name} layer is hidden in the wide Rcode workbench`)
+        throw new Error(`${id}: ${name} layer is hidden in the wide Joker workbench`)
       }
     }
     if (sceneForeground) {
@@ -835,11 +835,11 @@ function assertWidePresentation(id, snapshot) {
     ) {
       throw new Error(
         `${id}: ${reserve} content reserve leaves less than ` +
-        `${CONTENT_COLUMN_CLEARANCE_PX}px between the Rcode content column and portrait`
+        `${CONTENT_COLUMN_CLEARANCE_PX}px between the Joker content column and portrait`
       )
     }
     if (snapshot.layers.character.style?.display === 'none' || !hasArea(snapshot.layers.character.rect)) {
-      throw new Error(`${id}: character layer is hidden in the wide Rcode workbench`)
+      throw new Error(`${id}: character layer is hidden in the wide Joker workbench`)
     }
   }
 
@@ -860,7 +860,7 @@ function assertWidePresentation(id, snapshot) {
     if (layerZIndex === null || contentZIndex === null || layerZIndex >= contentZIndex) {
       throw new Error(
         `${id}: ${name} presentation z-index ${layer.style?.zIndex ?? 'missing'} must stay below ` +
-        `Rcode content z-index ${snapshot.content.stageContent.style?.zIndex ?? 'missing'}`
+        `Joker content z-index ${snapshot.content.stageContent.style?.zIndex ?? 'missing'}`
       )
     }
   }
@@ -885,9 +885,9 @@ function assertWidePresentation(id, snapshot) {
     ? snapshot.layers.sceneVisual.rect
     : snapshot.character.rect
   if (rectanglesOverlap(topbarCollisionBounds, snapshot.content.topbar.rect)) {
-    throw new Error(`${id}: portrait overlaps the Rcode top bar`)
+    throw new Error(`${id}: portrait overlaps the Joker top bar`)
   }
-  if (!hasArea(snapshot.stage.rect)) throw new Error(`${id}: Rcode chat stage is unavailable`)
+  if (!hasArea(snapshot.stage.rect)) throw new Error(`${id}: Joker chat stage is unavailable`)
   const widthRatio = snapshot.character.rect.width / snapshot.stage.rect.width
   if ((!sceneEnabled || sceneForeground) && widthRatio > 0.8) {
     throw new Error(`${id}: portrait occupies ${formatPercent(widthRatio)} of stage width (maximum 80%)`)
@@ -984,14 +984,14 @@ function rectanglesOverlap(left, right) {
 async function captureWorkbench(electronApplication, outputPath) {
   const pngBase64 = await electronApplication.evaluate(async ({ BrowserWindow }) => {
     const window = BrowserWindow.getAllWindows().find((candidate) => !candidate.isDestroyed())
-    if (!window) throw new Error('Rcode development workbench BrowserWindow is unavailable for capture')
+    if (!window) throw new Error('Joker development workbench BrowserWindow is unavailable for capture')
     return (await window.capturePage()).toPNG().toString('base64')
   })
   await writeFile(outputPath, Buffer.from(pngBase64, 'base64'))
 }
 
 async function writeReport(evidenceRoot, report) {
-  const reportPath = join(evidenceRoot, 'Rcode-ui-plugin-layout-report.json')
+  const reportPath = join(evidenceRoot, 'Joker-ui-plugin-layout-report.json')
   await writeFile(reportPath, `${JSON.stringify(report, null, 2)}\n`)
   return reportPath
 }
@@ -1026,7 +1026,7 @@ async function writeOverview(evidenceRoot, plugins) {
     '<stop offset="1" stop-color="#edf8f7"/></linearGradient></defs>' +
     `<rect width="${width}" height="${height}" fill="url(#page)"/>` +
     '<text x="40" y="52" fill="#2f2832" font-family="Arial, sans-serif" font-size="34" ' +
-    'font-weight="800">11 REAL RCODE UI PLUGIN WORKBENCH CAPTURES</text>' +
+    'font-weight="800">11 REAL JOKER UI PLUGIN WORKBENCH CAPTURES</text>' +
     '<text x="42" y="83" fill="#7d727f" font-family="Arial, sans-serif" font-size="14" ' +
     'font-weight="700" letter-spacing="2">HOST CDP · DECLARATIVE UI PLUGIN · WIDE + NARROW VERIFIED</text>' +
     `${cards}</svg>`
@@ -1034,7 +1034,7 @@ async function writeOverview(evidenceRoot, plugins) {
   const layers = await Promise.all(plugins.map(async (plugin, index) => {
     const column = index % columns
     const row = Math.floor(index / columns)
-    const input = await sharp(join(evidenceRoot, `${plugin.id}-Rcode-ui-plugin.png`))
+    const input = await sharp(join(evidenceRoot, `${plugin.id}-Joker-ui-plugin.png`))
       .resize(520, 252, { fit: 'cover', position: 'centre' })
       .png()
       .toBuffer()
@@ -1044,7 +1044,7 @@ async function writeOverview(evidenceRoot, plugins) {
       top: headerHeight + row * (cardHeight + gap) + 20
     }
   }))
-  const outputPath = join(evidenceRoot, 'Rcode-ui-plugin-real-overview.png')
+  const outputPath = join(evidenceRoot, 'Joker-ui-plugin-real-overview.png')
   await sharp(frame, { density: 72 })
     .composite(layers)
     .png({ compressionLevel: 9, palette: true, quality: 95 })

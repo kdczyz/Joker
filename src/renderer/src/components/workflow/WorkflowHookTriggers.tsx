@@ -24,7 +24,7 @@ function newTriggerId(): string {
 }
 
 /**
- * Editor for binding Create Loop workflows to Rcode agent hook phases — reactive
+ * Editor for binding Create Loop workflows to Joker agent hook phases — reactive
  * automation in code mode (e.g. PostToolUse on write/edit → run a review workflow).
  */
 export function WorkflowHookTriggers({

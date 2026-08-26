@@ -127,7 +127,7 @@ describe('code thread classification', () => {
     const designWorkspaceThread = makeThread({
       id: 'thr_design_workspace',
       title: 'Design Assistant',
-      workspace: '/Users/zxy/.Rcode/design-workspace'
+      workspace: '/Users/zxy/.Joker/design-workspace'
     })
 
     expect(isCodeSidebarThread(designWorkspaceThread)).toBe(false)
@@ -334,7 +334,7 @@ describe('thread event sink binding', () => {
   it('projects a replayed duplicate completion once, including external effects', () => {
     const showTurnCompleteNotification = vi.fn(async () => ({ ok: true }))
     vi.stubGlobal('window', {
-      RcodeGui: { showTurnCompleteNotification }
+      JokerGui: { showTurnCompleteNotification }
     })
     const refreshThreads = vi.fn(async () => undefined)
     const drainQueuedMessages = vi.fn(async () => undefined)

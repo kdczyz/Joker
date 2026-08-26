@@ -52,11 +52,11 @@ describe('design.export package output', () => {
         id: 'artifact_home',
         kind: 'html',
         title: 'Home',
-        relativePath: '.Rcode-design/doc/artifact_home/v1.html',
-        designMdPath: '.Rcode-design/doc/artifact_home/DESIGN.md',
+        relativePath: '.Joker-design/doc/artifact_home/v1.html',
+        designMdPath: '.Joker-design/doc/artifact_home/DESIGN.md',
         createdAt,
         updatedAt: createdAt,
-        versions: [{ id: 'artifact_home-v1', relativePath: '.Rcode-design/doc/artifact_home/v1.html', createdAt, summary: 'Home screen' }],
+        versions: [{ id: 'artifact_home-v1', relativePath: '.Joker-design/doc/artifact_home/v1.html', createdAt, summary: 'Home screen' }],
         direction: { id: 'dir_calm', name: 'Calm operator', status: 'active' },
         prototypeLinks: [{ targetTitle: 'Settings', targetArtifactId: 'artifact_settings', href: './settings.html', label: 'Configure routing' }]
       },
@@ -64,22 +64,22 @@ describe('design.export package output', () => {
         id: 'artifact_settings',
         kind: 'html',
         title: 'Settings',
-        relativePath: '.Rcode-design/doc/artifact_settings/v1.html',
-        designMdPath: '.Rcode-design/doc/artifact_settings/DESIGN.md',
+        relativePath: '.Joker-design/doc/artifact_settings/v1.html',
+        designMdPath: '.Joker-design/doc/artifact_settings/DESIGN.md',
         createdAt,
         updatedAt: createdAt,
-        versions: [{ id: 'artifact_settings-v1', relativePath: '.Rcode-design/doc/artifact_settings/v1.html', createdAt, summary: 'Settings screen' }],
+        versions: [{ id: 'artifact_settings-v1', relativePath: '.Joker-design/doc/artifact_settings/v1.html', createdAt, summary: 'Settings screen' }],
         direction: { id: 'dir_calm', name: 'Calm operator', status: 'active' }
       },
       {
         id: 'artifact_motion',
         kind: 'svg',
         title: 'Orbit loader',
-        relativePath: '.Rcode-design/doc/artifact_motion/v1.svg',
-        designMdPath: '.Rcode-design/doc/artifact_motion/DESIGN.md',
+        relativePath: '.Joker-design/doc/artifact_motion/v1.svg',
+        designMdPath: '.Joker-design/doc/artifact_motion/DESIGN.md',
         createdAt,
         updatedAt: createdAt,
-        versions: [{ id: 'artifact_motion-v1', relativePath: '.Rcode-design/doc/artifact_motion/v1.svg', createdAt, summary: 'Motion asset' }]
+        versions: [{ id: 'artifact_motion-v1', relativePath: '.Joker-design/doc/artifact_motion/v1.svg', createdAt, summary: 'Motion asset' }]
       }
     ]
     const document: DesignDocument = {
@@ -122,14 +122,14 @@ describe('design.export package output', () => {
     expect(output.markdown).toContain('# DESIGN.md: Routing redesign')
     expect(output.markdown).toContain('Configure routing -> Settings')
     expect(output.markdown).toContain(
-      '**Orbit loader** (artifact_motion): SVG `.Rcode-design/doc/artifact_motion/v1.svg`'
+      '**Orbit loader** (artifact_motion): SVG `.Joker-design/doc/artifact_motion/v1.svg`'
     )
     expect(output.resources).toEqual(expect.arrayContaining([
-      expect.objectContaining({ kind: 'project-design-md', path: '.Rcode-design/HANDOFF.md' }),
-      expect.objectContaining({ kind: 'html', path: '.Rcode-design/doc/artifact_home/v1.html', artifactId: 'artifact_home', frameId: homeFrame.id }),
-      expect.objectContaining({ kind: 'svg', path: '.Rcode-design/doc/artifact_motion/v1.svg', artifactId: 'artifact_motion', frameId: motionFrame.id }),
-      expect.objectContaining({ kind: 'screen-design-md', path: '.Rcode-design/doc/artifact_home/DESIGN.md', artifactId: 'artifact_home' }),
-      expect.objectContaining({ kind: 'graph-json', path: '.Rcode-design/design-graph.json' })
+      expect.objectContaining({ kind: 'project-design-md', path: '.Joker-design/HANDOFF.md' }),
+      expect.objectContaining({ kind: 'html', path: '.Joker-design/doc/artifact_home/v1.html', artifactId: 'artifact_home', frameId: homeFrame.id }),
+      expect.objectContaining({ kind: 'svg', path: '.Joker-design/doc/artifact_motion/v1.svg', artifactId: 'artifact_motion', frameId: motionFrame.id }),
+      expect.objectContaining({ kind: 'screen-design-md', path: '.Joker-design/doc/artifact_home/DESIGN.md', artifactId: 'artifact_home' }),
+      expect.objectContaining({ kind: 'graph-json', path: '.Joker-design/design-graph.json' })
     ]))
     expect(output.directions).toEqual([
       expect.objectContaining({ id: 'dir_calm', name: 'Calm operator', screenCount: 2 })

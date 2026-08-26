@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  resolveRcodeSpeechToTextSettings,
-  getRcodeRuntimeSettings,
+  resolveJokerSpeechToTextSettings,
+  getJokerRuntimeSettings,
   type AppSettingsV1,
-  type RcodePromptOptimizationSettingsV1,
-  type RcodeSpeechToTextSettingsV1
+  type JokerPromptOptimizationSettingsV1,
+  type JokerSpeechToTextSettingsV1
 } from '@shared/app-settings'
 import { SPEECH_TRANSCRIPTION_MAX_DURATION_MS } from '@shared/speech-to-text'
 import { SETTINGS_CHANGED_EVENT } from '../../lib/keyboard-shortcut-settings'
@@ -20,16 +20,16 @@ const MIN_RECORDING_MS = 500
 const RECORDER_MIME_CANDIDATES = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4']
 
 /** Resolved speech-to-text settings, kept in sync with the settings screen. */
-export function useSpeechToTextSettings(): RcodeSpeechToTextSettingsV1 | null {
-  const [speechToText, setSpeechToText] = useState<RcodeSpeechToTextSettingsV1 | null>(null)
+export function useSpeechToTextSettings(): JokerSpeechToTextSettingsV1 | null {
+  const [speechToText, setSpeechToText] = useState<JokerSpeechToTextSettingsV1 | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const apply = (settings: AppSettingsV1): void => {
-      if (!cancelled) setSpeechToText(resolveRcodeSpeechToTextSettings(settings))
+      if (!cancelled) setSpeechToText(resolveJokerSpeechToTextSettings(settings))
     }
-    if (typeof window.RcodeGui?.getSettings === 'function') {
-      void window.RcodeGui.getSettings().then(apply).catch(() => undefined)
+    if (typeof window.JokerGui?.getSettings === 'function') {
+      void window.JokerGui.getSettings().then(apply).catch(() => undefined)
     }
     const onSettingsChanged = (event: Event): void => {
       apply((event as CustomEvent<AppSettingsV1>).detail)
@@ -44,16 +44,16 @@ export function useSpeechToTextSettings(): RcodeSpeechToTextSettingsV1 | null {
   return speechToText
 }
 
-export function usePromptOptimizationSettings(): RcodePromptOptimizationSettingsV1 | null {
-  const [promptOptimization, setPromptOptimization] = useState<RcodePromptOptimizationSettingsV1 | null>(null)
+export function usePromptOptimizationSettings(): JokerPromptOptimizationSettingsV1 | null {
+  const [promptOptimization, setPromptOptimization] = useState<JokerPromptOptimizationSettingsV1 | null>(null)
 
   useEffect(() => {
     let cancelled = false
     const apply = (settings: AppSettingsV1): void => {
-      if (!cancelled) setPromptOptimization(getRcodeRuntimeSettings(settings).promptOptimization)
+      if (!cancelled) setPromptOptimization(getJokerRuntimeSettings(settings).promptOptimization)
     }
-    if (typeof window.RcodeGui?.getSettings === 'function') {
-      void window.RcodeGui.getSettings().then(apply).catch(() => undefined)
+    if (typeof window.JokerGui?.getSettings === 'function') {
+      void window.JokerGui.getSettings().then(apply).catch(() => undefined)
     }
     const onSettingsChanged = (event: Event): void => {
       apply((event as CustomEvent<AppSettingsV1>).detail)
@@ -73,7 +73,7 @@ export function useVoiceDictation({
   speechToText
 }: {
   onText: (text: string, intent: VoiceDictationIntent) => void
-  speechToText?: RcodeSpeechToTextSettingsV1 | null
+  speechToText?: JokerSpeechToTextSettingsV1 | null
 }): {
   status: VoiceDictationStatus
   error: string | null
@@ -142,7 +142,7 @@ export function useVoiceDictation({
   const transcribeBlob = useCallback(async (blob: Blob, durationMs: number, intent: VoiceDictationIntent): Promise<void> => {
     try {
       const wav = await encodeBlobAsWav(blob)
-      const result = await window.RcodeGui.transcribeSpeech({
+      const result = await window.JokerGui.transcribeSpeech({
         audioBase64: wav.base64,
         mimeType: 'audio/wav',
         durationMs: Math.min(durationMs, SPEECH_TRANSCRIPTION_MAX_DURATION_MS),

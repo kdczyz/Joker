@@ -20,11 +20,11 @@ function artifact(id: string, title: string): DesignArtifact {
     id,
     kind: 'html',
     title,
-    relativePath: `.Rcode-design/doc/${id}/v1.html`,
-    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
+    relativePath: `.Joker-design/doc/${id}/v1.html`,
+    designMdPath: `.Joker-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
-    versions: [{ id: `${id}-v1`, relativePath: `.Rcode-design/doc/${id}/v1.html`, createdAt: now, summary: `${title} summary` }]
+    versions: [{ id: `${id}-v1`, relativePath: `.Joker-design/doc/${id}/v1.html`, createdAt: now, summary: `${title} summary` }]
   }
 }
 
@@ -56,7 +56,7 @@ function promptState(artifacts: DesignArtifact[]): Pick<
 }
 
 const tokensByArtifact: Record<string, DerivedTokens> = {
-  '.Rcode-design/doc/home/v1.html': {
+  '.Joker-design/doc/home/v1.html': {
     extracted: {
       colors: [{ name: '--brand-primary', value: '#2563eb', role: 'primary' }],
       fonts: [],
@@ -88,7 +88,7 @@ describe('design turn prompt payload', () => {
       target: 'canvas',
       mode: 'text',
       promptText: '做一个 SaaS 登录页',
-      artifactRelativePath: '.Rcode-design/doc/board.canvas.json',
+      artifactRelativePath: '.Joker-design/doc/board.canvas.json',
       workspaceRoot: '/workspace',
       promptState: promptState(artifacts),
       boardArtifact: { ...artifact('board', 'Board'), kind: 'canvas' },
@@ -170,12 +170,12 @@ describe('design turn prompt payload', () => {
         ? ''
         : '<!doctype html><html><body><main><button>Click</button></main></body></html>'
     }))
-    vi.stubGlobal('window', { RcodeGui: { readWorkspaceFile } })
+    vi.stubGlobal('window', { JokerGui: { readWorkspaceFile } })
 
     const findings = await readDesignHtmlQualityFindings({
       workspaceRoot: '/workspace',
-      htmlPath: '.Rcode-design/doc/home/v1.html',
-      designNotesPath: '.Rcode-design/doc/home/DESIGN.md'
+      htmlPath: '.Joker-design/doc/home/v1.html',
+      designNotesPath: '.Joker-design/doc/home/DESIGN.md'
     })
 
     expect(readWorkspaceFile).toHaveBeenCalled()
@@ -187,12 +187,12 @@ describe('design turn prompt payload', () => {
     const image = createDefaultShape('image', 10, 20)
     image.id = 'asset_logo'
     image.name = 'Logo'
-    image.imageUrl = '.Rcode-design/assets/logo.png'
+    image.imageUrl = '.Joker-design/assets/logo.png'
     const payload = await buildDesignTurnPromptPayload({
       target: 'canvas',
       mode: 'text',
       promptText: 'Use this logo',
-      artifactRelativePath: '.Rcode-design/doc/board.canvas.json',
+      artifactRelativePath: '.Joker-design/doc/board.canvas.json',
       workspaceRoot: '/workspace',
       promptState: promptState([]),
       boardArtifact: { ...artifact('board', 'Board'), kind: 'canvas' },
@@ -208,6 +208,6 @@ describe('design turn prompt payload', () => {
     })
 
     expect(payload.prompt).toContain('Selected on the canvas')
-    expect(payload.prompt).toContain('.Rcode-design/assets/logo.png')
+    expect(payload.prompt).toContain('.Joker-design/assets/logo.png')
   })
 })

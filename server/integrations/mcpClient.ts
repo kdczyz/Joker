@@ -69,7 +69,7 @@ function bearerTokenForServer(serverId: string, envName?: string) {
   if (!envName) return undefined;
   if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(envName)) throw new Error(`Invalid bearer token environment variable: ${envName}`);
   const token = process.env[envName]?.trim();
-  if (!token) throw new Error(`MCP authentication token is not configured. Set ${envName} in .env.local and restart Rcode.`);
+  if (!token) throw new Error(`MCP authentication token is not configured. Set ${envName} in .env.local and restart Joker.`);
   return token;
 }
 
@@ -113,7 +113,7 @@ async function initializeHttp(session: HttpSessionEntry, serverId: string, url: 
   session.initialized ??= postHttp(session, serverId, url, bearerTokenEnvVar, "initialize", params ?? {
     protocolVersion: "2024-11-05",
     capabilities: {},
-    clientInfo: { name: "Rcode", version: "0.1.0" }
+    clientInfo: { name: "Joker", version: "0.1.0" }
   }).then(async (result) => {
     await postHttp(session, serverId, url, bearerTokenEnvVar, "notifications/initialized");
     return result;
@@ -207,7 +207,7 @@ export class StdioMcpSession {
     this.initialized ??= this.request("initialize", params ?? {
       protocolVersion: "2024-11-05",
       capabilities: {},
-      clientInfo: { name: "Rcode", version: "0.1.0" }
+      clientInfo: { name: "Joker", version: "0.1.0" }
     }).then((result) => {
       this.notify("notifications/initialized");
       return result;
@@ -259,7 +259,7 @@ export async function testMcpServer(serverId: string) {
   await requestServer(serverId, "initialize", {
     protocolVersion: "2024-11-05",
     capabilities: {},
-    clientInfo: { name: "Rcode", version: "0.1.0" }
+    clientInfo: { name: "Joker", version: "0.1.0" }
   });
   const result = await requestServer(serverId, "tools/list");
   const tools = asTools(result);

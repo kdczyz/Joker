@@ -13,7 +13,7 @@ import { readdir, readFile, stat } from 'node:fs/promises'
 import { basename, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const PRODUCT_NAME = 'Rcode'
+const PRODUCT_NAME = 'Joker'
 const DEFAULT_RELEASE_PREFIX = 'deepseek-gui'
 const DEFAULT_RELEASE_CHANNEL = 'frontier'
 const PLATFORMS = ['mac', 'win', 'linux']
@@ -24,15 +24,15 @@ const ROOT = resolve(SCRIPT_DIR, '..')
 const PLATFORM_SPECS = {
   mac: {
     updateFile: 'latest-mac.yml',
-    assetPattern: /^Rcode-.+-mac-(arm64|x64)\.(dmg|zip)(\.blockmap)?$/
+    assetPattern: /^Joker-.+-mac-(arm64|x64)\.(dmg|zip)(\.blockmap)?$/
   },
   win: {
     updateFile: 'latest.yml',
-    assetPattern: /^Rcode-.+-win-x64\.exe(\.blockmap)?$/
+    assetPattern: /^Joker-.+-win-x64\.exe(\.blockmap)?$/
   },
   linux: {
     updateFile: 'latest-linux.yml',
-    assetPattern: /^Rcode-.+-linux-x86_64\.AppImage(\.blockmap)?$/
+    assetPattern: /^Joker-.+-linux-x86_64\.AppImage(\.blockmap)?$/
   }
 }
 
@@ -45,7 +45,7 @@ If --platforms is omitted, promote uses the platform manifests already uploaded 
 If --channel is omitted, the default channel is frontier.
 
 Environment:
-  RCODE_RELEASE_ENV=scripts/release.local.env (legacy DEEPSEEK_GUI_RELEASE_ENV is also accepted)
+  JOKER_RELEASE_ENV=scripts/release.local.env (legacy DEEPSEEK_GUI_RELEASE_ENV is also accepted)
   RELEASE_CHANNEL=frontier|stable
   R2_BUCKET or S3_BUCKET
   R2_ENDPOINT or S3_ENDPOINT
@@ -76,7 +76,7 @@ function parseEnvFile(content) {
 }
 
 function loadLocalEnv() {
-  const configured = process.env.RCODE_RELEASE_ENV?.trim() || process.env.DEEPSEEK_GUI_RELEASE_ENV?.trim()
+  const configured = process.env.JOKER_RELEASE_ENV?.trim() || process.env.DEEPSEEK_GUI_RELEASE_ENV?.trim()
   const candidates = [
     configured,
     join(ROOT, 'scripts', 'release.local.env'),
@@ -152,7 +152,7 @@ function readChannel(flags) {
   return normalizeChannel(
     flags.get('channel') ||
       process.env.RELEASE_CHANNEL ||
-      process.env.RCODE_UPDATE_CHANNEL ||
+      process.env.JOKER_UPDATE_CHANNEL ||
       process.env.DEEPSEEK_GUI_UPDATE_CHANNEL ||
       DEFAULT_RELEASE_CHANNEL
   )
@@ -353,7 +353,7 @@ async function collectPlatformRelease({ distDir, platform, tag, channel, config 
   const tagVersion = tag.slice(1)
   if (updateMetadata.version !== tagVersion) {
     throw new Error(
-      `${spec.updateFile} version ${updateMetadata.version} does not match ${tag}. Rebuild with RCODE_APP_VERSION=${tagVersion} (legacy DEEPSEEK_GUI_APP_VERSION is also accepted).`
+      `${spec.updateFile} version ${updateMetadata.version} does not match ${tag}. Rebuild with JOKER_APP_VERSION=${tagVersion} (legacy DEEPSEEK_GUI_APP_VERSION is also accepted).`
     )
   }
 
@@ -633,7 +633,7 @@ async function promoteRelease({ flags, dryRun }) {
       tag,
       releaseDate,
       generatedAt: new Date().toISOString(),
-      githubReleaseUrl: `https://github.com/kdczyz/Rcode/releases/tag/${tag}`,
+      githubReleaseUrl: `https://github.com/kdczyz/Joker/releases/tag/${tag}`,
       updateBaseUrl: joinUrl(config.publicBaseUrl, target.basePath, 'latest') + '/',
       updateMetadata: Object.fromEntries(
         platformManifests.map((manifest) => [

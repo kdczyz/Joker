@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 
 /**
  * Shared model/provider selection state for the document-assistant rail.

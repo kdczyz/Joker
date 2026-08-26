@@ -22,11 +22,11 @@ function artifact(id: string, title: string): DesignArtifact {
     id,
     kind: 'html',
     title,
-    relativePath: `.Rcode-design/doc/${id}/v1.html`,
-    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
+    relativePath: `.Joker-design/doc/${id}/v1.html`,
+    designMdPath: `.Joker-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
-    versions: [{ id: `${id}-v1`, relativePath: `.Rcode-design/doc/${id}/v1.html`, createdAt: now, summary: '' }],
+    versions: [{ id: `${id}-v1`, relativePath: `.Joker-design/doc/${id}/v1.html`, createdAt: now, summary: '' }],
     direction: { id: 'dir_1', name: 'Ops direction', status: 'active', createdAt: now }
   }
 }
@@ -55,7 +55,7 @@ function canvasDocument(): CanvasDocument {
     id: 'asset_logo',
     name: 'Logo',
     parentId: ROOT_SHAPE_ID,
-    imageUrl: '.Rcode-design/assets/logo.png'
+    imageUrl: '.Joker-design/assets/logo.png'
   }
   doc.objects[ROOT_SHAPE_ID] = { ...doc.objects[ROOT_SHAPE_ID], children: [frame.id, image.id] }
   doc.objects[frame.id] = frame
@@ -120,7 +120,7 @@ describe('design project contract', () => {
     })
 
     expect(markdown).toContain('# DESIGN.md: Ops app')
-    expect(markdown).toContain('Project brief: `.Rcode-design/doc/design.md`')
+    expect(markdown).toContain('Project brief: `.Joker-design/doc/design.md`')
     expect(markdown).toContain('## Design Document')
     expect(markdown).toContain('- Document: Ops app (`doc`)')
     expect(markdown).toContain('## Design Mode')
@@ -139,7 +139,7 @@ describe('design project contract', () => {
     expect(markdown).toContain('## Code Bindings')
     expect(markdown).toContain('`frame_home` -> component (active); `src/pages/Home.tsx`; component `HomeView`; route `/`')
     expect(markdown).toContain('## Assets')
-    expect(markdown).toContain('`asset_logo` image: Logo; `.Rcode-design/assets/logo.png`; workspace; model-ready; 100x100')
+    expect(markdown).toContain('`asset_logo` image: Logo; `.Joker-design/assets/logo.png`; workspace; model-ready; 100x100')
     expect(markdown).toContain('## Agent Contract')
     expect(markdown).toContain('### Tool Protocol')
     expect(markdown).toContain('design.ops (operations): Apply validated Design Operations')
@@ -158,7 +158,7 @@ describe('design project contract', () => {
     })
 
     expect(summary).toMatchObject({
-      path: '.Rcode-design/HANDOFF.md',
+      path: '.Joker-design/HANDOFF.md',
       title: 'Ops app',
       artifactCount: 1,
       screenCount: 1,
@@ -253,7 +253,7 @@ describe('design project contract', () => {
       toolInputSeed: {
         format: 'package',
         title: 'Ops app',
-        designMdPath: '.Rcode-design/HANDOFF.md'
+        designMdPath: '.Joker-design/HANDOFF.md'
       }
     })
     expect(ready.toolAction.prompt).toContain('Suggested tool call: design.export')

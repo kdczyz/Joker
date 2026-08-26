@@ -240,7 +240,7 @@ export function summarizeDesignHtmlQualityStatus(
     return {
       kind: 'checking',
       label: 'Quality check',
-      title: 'Rcode is checking the rendered design for layout and accessibility issues.',
+      title: 'Joker is checking the rendered design for layout and accessibility issues.',
       count: 0
     }
   }

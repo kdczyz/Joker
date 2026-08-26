@@ -35,7 +35,7 @@ describe('design documents index persistence', () => {
       path,
       savedAt: 'now'
     }))
-    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { JokerGui: { writeWorkspaceFile } })
     const first = [document('first')]
     const latest = [document('latest')]
 
@@ -58,7 +58,7 @@ describe('design documents index persistence', () => {
       path,
       savedAt: 'now'
     }))
-    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { JokerGui: { writeWorkspaceFile } })
 
     persistDocumentsIndex('/workspace/a', [document('a')], 'a')
     persistDocumentsIndex('/workspace/b', [document('b')], 'b')

@@ -18,7 +18,7 @@ import {
   type DataMigrationWorkspaceMapping,
   type PackageRelativePath
 } from '../../shared/data-migration'
-import { validateRcodepackEntryPath } from './archive-security'
+import { validateJokerpackEntryPath } from './archive-security'
 
 export type DestinationFileSystemProbe = {
   root: string
@@ -39,7 +39,7 @@ export async function probeDestinationFileSystem(
 ): Promise<DestinationFileSystemProbe> {
   const canonicalRoot = await realpath(root).catch(() => resolve(root))
   const token = randomUUID().replaceAll('-', '')
-  const probe = join(canonicalRoot, `.Rcode-migration-probe-${token}`)
+  const probe = join(canonicalRoot, `.Joker-migration-probe-${token}`)
   let writable = false
   let caseSensitive = true
   let unicodeNormalizationSensitive = true
@@ -337,7 +337,7 @@ function destinationPathIssue(
   probe: DestinationFileSystemProbe
 ): { kind: 'invalid-name' | 'path-too-long' } | null {
   try {
-    validateRcodepackEntryPath(path)
+    validateJokerpackEntryPath(path)
   } catch {
     return { kind: 'invalid-name' }
   }

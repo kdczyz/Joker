@@ -127,7 +127,7 @@ describe('useWorkbenchFileTreeController thread transitions', () => {
     ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
     storage = new MemoryStorage()
     vi.stubGlobal('window', {
-      RcodeGui: { platform: 'linux' },
+      JokerGui: { platform: 'linux' },
       localStorage: storage
     })
     setRightPanelMode = vi.fn<(mode: RightPanelMode) => void>()
@@ -241,7 +241,7 @@ describe('useWorkbenchFileTreeController thread transitions', () => {
     })
     expect(latestController.openFilePreviewTargets).toEqual([])
     expect(latestController.pinnedFilePreviewTargetKeys).toEqual([])
-    expect(storage.getItem('Rcode.filePreview.pinnedTargets')).toBe('[]')
+    expect(storage.getItem('Joker.filePreview.pinnedTargets')).toBe('[]')
   })
 
   it('closes the file panel only when a switch leaves no retained file tabs', async () => {

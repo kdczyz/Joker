@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { SkillRootListItem } from '@shared/Rcode-gui-api'
+import type { SkillRootListItem } from '@shared/Joker-gui-api'
 import {
   compactList,
   modelContextProfileSummary,
@@ -75,7 +75,7 @@ describe('settings-section-agents-utils', () => {
     })).toMatchObject({
       modelLabel: 'deepseek-v4-pro',
       contextWindowLabel: '1,000,000',
-      sourceLabelKey: 'RcodeModelContextSourceBuiltIn'
+      sourceLabelKey: 'JokerModelContextSourceBuiltIn'
     })
 
     expect(modelContextProfileSummary({
@@ -87,12 +87,12 @@ describe('settings-section-agents-utils', () => {
       contextWindowLabel: 'models.profiles',
       softThresholdLabel: '10',
       hardThresholdLabel: '20',
-      sourceLabelKey: 'RcodeModelContextSourceFallback'
+      sourceLabelKey: 'JokerModelContextSourceFallback'
     })
   })
 
   it('formats compact labels without leaking long lists into settings cards', () => {
-    expect(skillRootShortLabel('C:\\Users\\me\\.Rcode\\skills')).toBe('.Rcode/skills')
+    expect(skillRootShortLabel('C:\\Users\\me\\.Joker\\skills')).toBe('.Joker/skills')
     expect(compactList(['one', 'two', 'three', 'four', 'five'], 'empty')).toBe('one, two, three, four')
     expect(compactList([], 'empty')).toBe('empty')
   })
@@ -102,7 +102,7 @@ function root(patch: Partial<SkillRootListItem>): SkillRootListItem {
   return {
     id: patch.id ?? 'root',
     disableKey: `${patch.id ?? 'root'}:disable`,
-    path: patch.path ?? '/repo/.Rcode/skills',
+    path: patch.path ?? '/repo/.Joker/skills',
     scope: patch.scope ?? 'project',
     source: patch.source ?? 'extra',
     exists: patch.exists ?? true,

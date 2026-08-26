@@ -124,7 +124,7 @@ export async function generateImage(input: GenerateImageInput): Promise<Generate
     try {
       response = await fetch(endpoint, {
         method: "POST",
-        headers: { authorization: `Bearer ${provider.apiKey}`, "content-type": "application/json", accept: "application/json", "user-agent": "Rcode" },
+        headers: { authorization: `Bearer ${provider.apiKey}`, "content-type": "application/json", accept: "application/json", "user-agent": "Joker" },
         body: JSON.stringify(payload),
         signal: input.signal ? AbortSignal.any([input.signal, AbortSignal.timeout(180_000)]) : AbortSignal.timeout(180_000)
       });

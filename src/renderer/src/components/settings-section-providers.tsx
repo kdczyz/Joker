@@ -2,8 +2,8 @@ import { useEffect, useRef, useState, type ReactElement, type ReactNode } from '
 import type {
   AppSettingsPatch,
   ImageGenerationProtocol,
-  RcodeRuntimeSettingsPatchV1,
-  RcodeRuntimeSettingsV1,
+  JokerRuntimeSettingsPatchV1,
+  JokerRuntimeSettingsV1,
   MusicGenerationProtocol,
   ModelEndpointFormat,
   ModelProviderImageCapabilityV1,
@@ -28,7 +28,7 @@ import {
   MODEL_ENDPOINT_FORMATS,
   MODEL_PROVIDER_PRESETS,
   TOKEN_PLAN_PROVIDER_ID_SUFFIX,
-  defaultMiniMaxMediaGenerationRcodePatch,
+  defaultMiniMaxMediaGenerationJokerPatch,
   defaultModelRequestRetrySettings,
   defaultModelProviderSettings,
   getModelProviderPreset,
@@ -40,7 +40,7 @@ import {
   tokenPlanProviderId
 } from '@shared/app-settings'
 import type { ModelProviderPreset } from '@shared/model-provider-presets'
-import type { ModelProviderProbeResult } from '@shared/Rcode-gui-api'
+import type { ModelProviderProbeResult } from '@shared/Joker-gui-api'
 import {
   AudioLines,
   ChevronDown,
@@ -117,20 +117,20 @@ const VIDEO_GENERATION_PROTOCOL_LABEL_KEYS: Record<VideoGenerationProtocol, stri
 export function modelProvidersSettingsPatch(input: {
   provider: ModelProviderSettingsV1
   providers: ModelProviderProfileV1[]
-  Rcode?: RcodeRuntimeSettingsPatchV1
-  currentRcode?: Partial<RcodeRuntimeSettingsV1>
+  Joker?: JokerRuntimeSettingsPatchV1
+  currentJoker?: Partial<JokerRuntimeSettingsV1>
 }): AppSettingsPatch {
   const defaultProvider = input.providers.find((item) => item.id === DEFAULT_MODEL_PROVIDER_ID)
-  const miniMaxMediaDefaults = defaultMiniMaxMediaGenerationRcodePatch({
+  const miniMaxMediaDefaults = defaultMiniMaxMediaGenerationJokerPatch({
     providers: input.providers,
-    currentRcode: input.currentRcode,
-    RcodePatch: input.Rcode
+    currentJoker: input.currentJoker,
+    JokerPatch: input.Joker
   })
-  const baseRcodePatch = input.Rcode?.providerId?.trim()
-    ? { ...input.Rcode, apiKey: '', baseUrl: '' }
-    : input.Rcode ?? {}
-  const RcodePatch = {
-    ...baseRcodePatch,
+  const baseJokerPatch = input.Joker?.providerId?.trim()
+    ? { ...input.Joker, apiKey: '', baseUrl: '' }
+    : input.Joker ?? {}
+  const JokerPatch = {
+    ...baseJokerPatch,
     ...(miniMaxMediaDefaults ?? {})
   }
   return {
@@ -140,7 +140,7 @@ export function modelProvidersSettingsPatch(input: {
       proxy: input.provider.proxy,
       providers: input.providers
     },
-    ...(Object.keys(RcodePatch).length > 0 ? { agents: { Rcode: RcodePatch } } : {})
+    ...(Object.keys(JokerPatch).length > 0 ? { agents: { Joker: JokerPatch } } : {})
   }
 }
 
@@ -364,15 +364,15 @@ function CodexLoginSection({
   type UsageState =
     | { status: 'idle' }
     | { status: 'loading' }
-    | { status: 'ok'; data: Extract<import('@shared/Rcode-gui-api').CodexAccountUsageResult, { ok: true }> }
+    | { status: 'ok'; data: Extract<import('@shared/Joker-gui-api').CodexAccountUsageResult, { ok: true }> }
     | { status: 'error'; message: string }
   const [usage, setUsage] = useState<UsageState>({ status: 'idle' })
   const refreshUsage = async (silent = false): Promise<void> => {
-    if (typeof window.RcodeGui?.codexAccountUsage !== 'function') return
+    if (typeof window.JokerGui?.codexAccountUsage !== 'function') return
     // 首次加载显示 loading，后续静默更新不闪烁
     setUsage((prev) => (silent && prev.status === 'ok' ? prev : { status: 'loading' }))
     try {
-      const result = await window.RcodeGui.codexAccountUsage()
+      const result = await window.JokerGui.codexAccountUsage()
       if (result.ok) {
         setUsage({ status: 'ok', data: result })
       } else {
@@ -423,7 +423,7 @@ function CodexLoginSection({
     runId?: number
     fallbackNotice?: InlineNotice | null
   } = {}): Promise<void> => {
-    if (typeof window.RcodeGui?.startCodexAuth !== 'function') {
+    if (typeof window.JokerGui?.startCodexAuth !== 'function') {
       if (!isCurrentLoginRun(runId)) return
       setPhase('error')
       setError('ChatGPT 订阅登录不可用，请重启应用')
@@ -434,7 +434,7 @@ function CodexLoginSection({
     setError('')
     setNotice(fallbackNotice)
     try {
-      const result = await window.RcodeGui.startCodexAuth()
+      const result = await window.JokerGui.startCodexAuth()
       if (!isCurrentLoginRun(runId)) return
       if (!result.ok) {
         setPhase('error')
@@ -454,9 +454,9 @@ function CodexLoginSection({
           clearPoll()
           return
         }
-        if (typeof window.RcodeGui?.pollCodexAuth !== 'function') return
+        if (typeof window.JokerGui?.pollCodexAuth !== 'function') return
         try {
-          const poll = await window.RcodeGui.pollCodexAuth(deviceCode, uc)
+          const poll = await window.JokerGui.pollCodexAuth(deviceCode, uc)
           if (!isCurrentLoginRun(runId)) return
           if (poll.done) {
             clearPoll()
@@ -487,7 +487,7 @@ function CodexLoginSection({
 
   const startBrowserLogin = async (): Promise<void> => {
     const runId = beginLoginRun()
-    if (typeof window.RcodeGui?.startCodexBrowserAuth !== 'function') {
+    if (typeof window.JokerGui?.startCodexBrowserAuth !== 'function') {
       setPhase('error')
       setError('ChatGPT 订阅浏览器登录不可用，请重启应用')
       setNotice(null)
@@ -497,7 +497,7 @@ function CodexLoginSection({
     setError('')
     setNotice(null)
     try {
-      const result = await window.RcodeGui.startCodexBrowserAuth()
+      const result = await window.JokerGui.startCodexBrowserAuth()
       if (!isCurrentLoginRun(runId)) return
       if (result.ok) {
         setNotice(null)
@@ -543,8 +543,8 @@ function CodexLoginSection({
 
   const openVerifyUrl = (): void => {
     if (!verifyUrl) return
-    if (typeof window.RcodeGui?.openExternal === 'function') {
-      void window.RcodeGui.openExternal(verifyUrl).catch(() => {
+    if (typeof window.JokerGui?.openExternal === 'function') {
+      void window.JokerGui.openExternal(verifyUrl).catch(() => {
         window.open(verifyUrl, '_blank', 'noopener,noreferrer')
       })
       return
@@ -905,7 +905,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     t,
     form,
     provider: providerFromContext,
-    Rcode,
+    Joker,
     update,
     showApiKey,
     setShowApiKey,
@@ -978,7 +978,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     }
   }
   const [selectedProviderId, setSelectedProviderId] = useState<string>(
-    Rcode.providerId?.trim() || modelProviders[0]?.id || ''
+    Joker.providerId?.trim() || modelProviders[0]?.id || ''
   )
   const [addMenuOpen, setAddMenuOpen] = useState(false)
   const addMenuRef = useRef<HTMLDivElement>(null)
@@ -1022,7 +1022,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     !getModelProviderPreset(activeProvider.id) &&
     !tokenPlanPresetForProfileId(activeProvider.id)
   )
-  const activeRcodeProviderId: string = Rcode.providerId?.trim() || modelProviders[0]?.id || ''
+  const activeJokerProviderId: string = Joker.providerId?.trim() || modelProviders[0]?.id || ''
   const providerProxy = provider.proxy ?? { enabled: false, url: '' }
 
   const updateProviderProxy = (patch: Partial<typeof providerProxy>): void => {
@@ -1042,21 +1042,21 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     confirmLabel?: string
     cancelLabel?: string
   }): Promise<boolean> => {
-    if (typeof window.RcodeGui?.confirmDialog === 'function') {
-      return window.RcodeGui.confirmDialog(options)
+    if (typeof window.JokerGui?.confirmDialog === 'function') {
+      return window.JokerGui.confirmDialog(options)
     }
     return true
   }
 
   const updateModelProviders = (
     providers: ModelProviderProfileV1[],
-    RcodePatch?: RcodeRuntimeSettingsPatchV1
+    JokerPatch?: JokerRuntimeSettingsPatchV1
   ): void => {
     update(modelProvidersSettingsPatch({
       provider,
       providers,
-      Rcode: RcodePatch,
-      currentRcode: Rcode
+      Joker: JokerPatch,
+      currentJoker: Joker
     }))
   }
 
@@ -1204,7 +1204,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     setSelectedProviderId(nextId)
     updateModelProviders(
       modelProviders.map((item) => item.id === id ? { ...item, id: nextId } : item),
-      Rcode.providerId === id ? { providerId: nextId } : undefined
+      Joker.providerId === id ? { providerId: nextId } : undefined
     )
   }
 
@@ -1219,7 +1219,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     updateModelProviders(
       [...modelProviders, draftProvider],
       hasKey
-        ? { providerId: draftProvider.id, model: draftProvider.models[0] ?? Rcode.model }
+        ? { providerId: draftProvider.id, model: draftProvider.models[0] ?? Joker.model }
         : undefined
     )
     setDraftProvider(null)
@@ -1229,7 +1229,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   const cancelProviderDraft = (): void => {
     if (!draftProvider) return
     setDraftProvider(null)
-    setSelectedProviderId(activeRcodeProviderId)
+    setSelectedProviderId(activeJokerProviderId)
   }
 
   const addModelProvider = (): void => {
@@ -1298,7 +1298,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     updateModelProviders(
       nextProviders,
       nextProvider.apiKey.trim()
-        ? { providerId: nextProvider.id, model: nextProvider.models[0] ?? Rcode.model }
+        ? { providerId: nextProvider.id, model: nextProvider.models[0] ?? Joker.model }
         : undefined
     )
   }
@@ -1306,12 +1306,12 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   const removeModelProvider = async (id: string): Promise<void> => {
     const target = modelProviders.find((item) => item.id === id)
     if (!target) return
-    const usedByChat = activeRcodeProviderId === id
-    const usedByImage = (Rcode.imageGeneration?.providerId ?? '').trim() === id
-    const usedBySpeech = (Rcode.speechToText?.providerId ?? '').trim() === id
-    const usedByTextToSpeech = (Rcode.textToSpeech?.providerId ?? '').trim() === id
-    const usedByMusic = (Rcode.musicGeneration?.providerId ?? '').trim() === id
-    const usedByVideo = (Rcode.videoGeneration?.providerId ?? '').trim() === id
+    const usedByChat = activeJokerProviderId === id
+    const usedByImage = (Joker.imageGeneration?.providerId ?? '').trim() === id
+    const usedBySpeech = (Joker.speechToText?.providerId ?? '').trim() === id
+    const usedByTextToSpeech = (Joker.textToSpeech?.providerId ?? '').trim() === id
+    const usedByMusic = (Joker.musicGeneration?.providerId ?? '').trim() === id
+    const usedByVideo = (Joker.videoGeneration?.providerId ?? '').trim() === id
     const writeInline = form?.write?.inlineCompletion
     const usedByWrite = Boolean(
       writeInline && !writeInline.inheritProvider && writeInline.providerId === id
@@ -1334,7 +1334,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     if (!confirmed) return
     const nextProviders = modelProviders.filter((item) => item.id !== id)
     const firstProviderId = nextProviders[0]?.id ?? ''
-    const RcodePatch: RcodeRuntimeSettingsPatchV1 | undefined =
+    const JokerPatch: JokerRuntimeSettingsPatchV1 | undefined =
       usedByChat || usedByImage || usedBySpeech || usedByTextToSpeech || usedByMusic || usedByVideo
         ? {
             ...(usedByChat ? { providerId: firstProviderId } : {}),
@@ -1348,8 +1348,8 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     const patch = modelProvidersSettingsPatch({
       provider,
       providers: nextProviders,
-      Rcode: RcodePatch,
-      currentRcode: Rcode
+      Joker: JokerPatch,
+      currentJoker: Joker
     })
     if (usedByWrite) {
       patch.write = { inlineCompletion: { inheritProvider: true, providerId: '' } }
@@ -1359,7 +1359,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   }
 
   const runProbe = async (target: ModelProviderProfileV1, mode: 'test' | 'fetch'): Promise<void> => {
-    if (typeof window.RcodeGui?.probeModelProvider !== 'function') return
+    if (typeof window.JokerGui?.probeModelProvider !== 'function') return
     const fingerprint = providerConnectionFingerprint(target)
     // Subscription (agent-sdk) providers have no HTTP /models endpoint — the turn
     // is delegated to the Claude Agent SDK. "Test" reports login readiness instead
@@ -1370,7 +1370,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
         // No HTTP /models endpoint — list the subscription's models via the SDK.
         let modelIds: string[] = []
         try {
-          modelIds = await window.RcodeGui.claudeSubscriptionModels(target.apiKey.trim() || undefined)
+          modelIds = await window.JokerGui.claudeSubscriptionModels(target.apiKey.trim() || undefined)
         } catch {
           modelIds = []
         }
@@ -1392,7 +1392,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
       let ready = target.apiKey.trim().length > 0
       if (!ready) {
         try {
-          ready = (await window.RcodeGui.claudeSubscriptionStatus()).loggedIn
+          ready = (await window.JokerGui.claudeSubscriptionStatus()).loggedIn
         } catch {
           ready = false
         }
@@ -1420,7 +1420,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     setProbeStates((prev) => ({ ...prev, [target.id]: { fingerprint, mode, status: 'busy' } }))
     let result: ModelProviderProbeResult
     try {
-      result = await window.RcodeGui.probeModelProvider({
+      result = await window.JokerGui.probeModelProvider({
         baseUrl: target.baseUrl,
         apiKey: target.apiKey,
         endpointFormat: target.endpointFormat
@@ -1588,7 +1588,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
   const renderProviderButton = (item: ModelProviderProfileV1): ReactElement => {
     const selected = activeProvider?.id === item.id
     const isDraft = draftProvider?.id === item.id
-    const inUse = !isDraft && activeRcodeProviderId === item.id
+    const inUse = !isDraft && activeJokerProviderId === item.id
     const missingKey = !item.apiKey.trim()
     return (
       <button

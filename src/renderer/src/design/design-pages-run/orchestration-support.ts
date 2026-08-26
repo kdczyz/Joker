@@ -171,7 +171,7 @@ export async function writeWorkspaceTextFile(
   path: string,
   content: string
 ): Promise<boolean> {
-  if (typeof window === 'undefined' || typeof window.RcodeGui?.writeWorkspaceFile !== 'function') {
+  if (typeof window === 'undefined' || typeof window.JokerGui?.writeWorkspaceFile !== 'function') {
     return false
   }
   const result = await writeDesignWorkspaceFile({ path, workspaceRoot, content })
@@ -392,7 +392,7 @@ export async function createFoundationCard(opts: {
   title: string
 }): Promise<{ id: string; relativePath: string } | null> {
   const id = createDesignArtifactId()
-  const relativePath = `.Rcode-design/${opts.docId}/${id}/v1.html`
+  const relativePath = `.Joker-design/${opts.docId}/${id}/v1.html`
   const createdAt = new Date().toISOString()
   const index = useDesignWorkspaceStore.getState().artifacts.length
   useDesignWorkspaceStore.getState().upsertArtifact({

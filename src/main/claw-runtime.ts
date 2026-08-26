@@ -21,7 +21,7 @@ import {
   DEFAULT_CLAW_MODEL,
   DEFAULT_MODEL_PROVIDER_ID,
   buildClawRuntimePrompt,
-  getRcodeRuntimeSettings,
+  getJokerRuntimeSettings,
   getModelProviderSettings,
   isComposerChatModelId,
   listNonTextModelIds,
@@ -63,7 +63,7 @@ import {
   type SseSubscriber,
   subscribeRuntimeThreadEvents
 } from './claw-runtime-helpers'
-import { getRuntimeBaseUrlForSettings, runtimeAuthHeaders } from './runtime/Rcode-adapter'
+import { getRuntimeBaseUrlForSettings, runtimeAuthHeaders } from './runtime/Joker-adapter'
 import { FeishuStreamer } from './feishu-streamer'
 import type { TelegramInboundPayload } from './telegram-runtime'
 import {
@@ -103,11 +103,11 @@ function cdataText(value: string): string {
 
 function buildImRuntimePrompt(prompt: string): string {
   return [
-    '<Rcode_im_context>',
+    '<Joker_im_context>',
     '<channel>remote_im</channel>',
     '<interactive_gui_input_available>false</interactive_gui_input_available>',
     '<instruction>The user is on a remote IM channel and cannot answer GUI prompts. Do not ask for structured GUI input or wait for GUI confirmation. If information is missing, state your assumption and continue, or ask in the final reply so the user can answer in the next IM message.</instruction>',
-    '</Rcode_im_context>',
+    '</Joker_im_context>',
     '',
     '<user_message><![CDATA[',
     cdataText(prompt),
@@ -129,11 +129,11 @@ function currentImModel(
   conversation?: ClawImConversationV1
 ): string {
   // IM messages ALWAYS use the desktop's CURRENT selected model
-  // (settings.agents.Rcode.model, kept in sync with the composer model picker).
+  // (settings.agents.Joker.model, kept in sync with the composer model picker).
   // We intentionally ignore the model bound to the IM conversation/channel at
   // connect time — that binding is what made WeChat keep calling an old default
   // (e.g. mimo) even after the desktop model was switched to something else.
-  return getRcodeRuntimeSettings(settings).model.trim() ||
+  return getJokerRuntimeSettings(settings).model.trim() ||
     DEFAULT_CLAW_MODEL
 }
 
@@ -144,7 +144,7 @@ function currentImProviderId(
 ): string {
   // Same as currentImModel: follow the desktop's current provider so the selected
   // model routes to the correct provider instead of the IM channel's old binding.
-  return getRcodeRuntimeSettings(settings).providerId?.trim() ||
+  return getJokerRuntimeSettings(settings).providerId?.trim() ||
     DEFAULT_MODEL_PROVIDER_ID
 }
 
@@ -217,8 +217,8 @@ function settingsWithImModelProvider(
     ...settings,
     agents: {
       ...settings.agents,
-      Rcode: {
-        ...settings.agents.Rcode,
+      Joker: {
+        ...settings.agents.Joker,
         providerId: trimmedProviderId,
         model: resolvedModel
       }
@@ -229,7 +229,7 @@ function settingsWithImModelProvider(
 function effectiveImRuntimeModel(settings: AppSettingsV1, requestedModel: string): string {
   const trimmed = requestedModel.trim()
   if (trimmed && trimmed.toLowerCase() !== DEFAULT_CLAW_MODEL) return trimmed
-  return getRcodeRuntimeSettings(settings).model.trim() || trimmed || DEFAULT_CLAW_MODEL
+  return getJokerRuntimeSettings(settings).model.trim() || trimmed || DEFAULT_CLAW_MODEL
 }
 
 function imCommandHelpText(settings: AppSettingsV1): string {
@@ -239,16 +239,16 @@ function imCommandHelpText(settings: AppSettingsV1): string {
       '- `/help`：查看命令帮助',
       '- `/new`：当前 IM 连接开启新话题',
       '- `/clear`：等同于 `/new`，当前 IM 连接开启新话题',
-      '- `/stop`：停止当前 Rcode 会话里正在运行的任务',
-      '- `/pwd`：查看当前 Rcode 会话工作目录本地路径',
-      '- `/usage`：查看当前 Rcode 会话 token 消耗、供应商和模型',
-      '- `/list-skills`：查看当前 Rcode 可用技能',
-      '- `/list-mcp`：查看当前 Rcode MCP 服务器',
-      '- `/list-goal`：查看当前 Rcode 会话目标',
-      '- `/goal <目标>`：设置当前 Rcode 会话目标',
-      '- `/list-threads`：列出最近的 Rcode 会话',
-      '- `/current`：查看当前 IM 会话连接的 Rcode 会话',
-      '- `/switch <序号|thread id>`：切换当前 IM 会话到指定 Rcode 会话',
+      '- `/stop`：停止当前 Joker 会话里正在运行的任务',
+      '- `/pwd`：查看当前 Joker 会话工作目录本地路径',
+      '- `/usage`：查看当前 Joker 会话 token 消耗、供应商和模型',
+      '- `/list-skills`：查看当前 Joker 可用技能',
+      '- `/list-mcp`：查看当前 Joker MCP 服务器',
+      '- `/list-goal`：查看当前 Joker 会话目标',
+      '- `/goal <目标>`：设置当前 Joker 会话目标',
+      '- `/list-threads`：列出最近的 Joker 会话',
+      '- `/current`：查看当前 IM 会话连接的 Joker 会话',
+      '- `/switch <序号|thread id>`：切换当前 IM 会话到指定 Joker 会话',
       '- `/list-model`：查看所有可用文本模型',
       '- `/model <序号>`：按 `/list-model` 列出的序号切换当前 IM 连接模型',
       '命令前缀可以从 `/` 改成 `-`，例如 `-new`、`-list-threads`、`-switch 2`。'
@@ -259,16 +259,16 @@ function imCommandHelpText(settings: AppSettingsV1): string {
     '- `/help`: show command help',
     '- `/new`: start a new topic for this IM connection',
     '- `/clear`: same as `/new`, start a new topic for this IM connection',
-    '- `/stop`: stop the running task in the current Rcode conversation',
-    '- `/pwd`: show the local workspace path for the current Rcode conversation',
-    '- `/usage`: show token usage plus provider/model for the current Rcode conversation',
-    '- `/list-skills`: list available Rcode skills',
-    '- `/list-mcp`: list Rcode MCP servers',
-    '- `/list-goal`: show the current Rcode conversation goal',
-    '- `/goal <objective>`: set the current Rcode conversation goal',
-    '- `/list-threads`: list recent Rcode conversations',
-    '- `/current`: show the Rcode conversation connected to this IM chat',
-    '- `/switch <number|thread id>`: switch this IM chat to a Rcode conversation',
+    '- `/stop`: stop the running task in the current Joker conversation',
+    '- `/pwd`: show the local workspace path for the current Joker conversation',
+    '- `/usage`: show token usage plus provider/model for the current Joker conversation',
+    '- `/list-skills`: list available Joker skills',
+    '- `/list-mcp`: list Joker MCP servers',
+    '- `/list-goal`: show the current Joker conversation goal',
+    '- `/goal <objective>`: set the current Joker conversation goal',
+    '- `/list-threads`: list recent Joker conversations',
+    '- `/current`: show the Joker conversation connected to this IM chat',
+    '- `/switch <number|thread id>`: switch this IM chat to a Joker conversation',
     '- `/list-model`: list all available text models',
     '- `/model <number>`: switch this IM connection to a model listed by `/list-model`',
     'The command prefix can be changed from `/` to `-`, for example `-new`, `-list-threads`, or `-switch 2`.'
@@ -327,7 +327,7 @@ function resolveImModelByIndex(settings: AppSettingsV1, value: string): ImModelR
 
 function imModelCommandHint(settings: AppSettingsV1, value: string): string {
   const count = listImModelOptions(settings).length
-  return imRcodeErrorText(settings, isChineseLocale(settings)
+  return imJokerErrorText(settings, isChineseLocale(settings)
     ? `无效的模型序号 \`${value}\`。${count > 0 ? '发送 `/list-model` 查看可用序号。' : '还没有可用的文本模型。'}`
     : `Invalid model number \`${value}\`. ${count > 0 ? 'Send `/list-model` to see available numbers.' : 'No usable text models are available yet.'}`)
 }
@@ -378,15 +378,15 @@ function imNewTopicText(settings: AppSettingsV1): string {
     : 'Started a new topic. The next message will create a fresh local conversation.'
 }
 
-function imRcodeErrorText(_settings: AppSettingsV1, message: string): string {
-  return imRcodeSystemText(message)
+function imJokerErrorText(_settings: AppSettingsV1, message: string): string {
+  return imJokerSystemText(message)
 }
 
-function imRcodeSystemText(message: string): string {
+function imJokerSystemText(message: string): string {
   const trimmed = message.trim()
-  if (trimmed.startsWith('[Rcode]')) return trimmed
-  if (trimmed.startsWith('Rcode:')) return `[Rcode] ${trimmed.slice('Rcode:'.length).trim()}`
-  return `[Rcode] ${trimmed}`
+  if (trimmed.startsWith('[Joker]')) return trimmed
+  if (trimmed.startsWith('Joker:')) return `[Joker] ${trimmed.slice('Joker:'.length).trim()}`
+  return `[Joker] ${trimmed}`
 }
 
 type ImSkillSummary = {
@@ -444,8 +444,8 @@ function parseSkillsResponse(body: string): { enabled: boolean; skills: ImSkillS
 function imSkillListText(settings: AppSettingsV1, enabled: boolean, skills: readonly ImSkillSummary[]): string {
   if (!enabled) {
     return isChineseLocale(settings)
-      ? 'Rcode 技能当前未启用。'
-      : 'Rcode skills are currently disabled.'
+      ? 'Joker 技能当前未启用。'
+      : 'Joker skills are currently disabled.'
   }
   if (skills.length === 0) {
     return isChineseLocale(settings)
@@ -462,7 +462,7 @@ function imSkillListText(settings: AppSettingsV1, enabled: boolean, skills: read
     ? (isChineseLocale(settings) ? `还有 ${skills.length - rows.length} 个技能未显示。` : `${skills.length - rows.length} more skills not shown.`)
     : ''
   return [
-    isChineseLocale(settings) ? '可用 Rcode 技能：' : 'Available Rcode skills:',
+    isChineseLocale(settings) ? '可用 Joker 技能：' : 'Available Joker skills:',
     ...rows,
     ...(extra ? [extra] : [])
   ].join('\n')
@@ -531,8 +531,8 @@ function parseThreadUsageResponse(body: string, threadId: string): ImThreadUsage
 function imMcpListText(settings: AppSettingsV1, servers: readonly ImMcpServerSummary[]): string {
   if (servers.length === 0) {
     return isChineseLocale(settings)
-      ? '当前没有配置 Rcode MCP 服务器。'
-      : 'No Rcode MCP servers are configured.'
+      ? '当前没有配置 Joker MCP 服务器。'
+      : 'No Joker MCP servers are configured.'
   }
   const rows = servers.map((server, index) => {
     const state = server.available
@@ -546,21 +546,21 @@ function imMcpListText(settings: AppSettingsV1, servers: readonly ImMcpServerSum
     return `- ${index + 1}. \`${server.id}\` ${state}${transport}${tools}${error}`
   })
   return [
-    isChineseLocale(settings) ? 'Rcode MCP 服务器：' : 'Rcode MCP servers:',
+    isChineseLocale(settings) ? 'Joker MCP 服务器：' : 'Joker MCP servers:',
     ...rows
   ].join('\n')
 }
 
 function imWorkspaceText(settings: AppSettingsV1, threadId: string, workspace: string): string {
   return isChineseLocale(settings)
-    ? `当前 Rcode 会话 \`${threadId}\` 的工作目录：\n\`${workspace}\``
-    : `Workspace for current Rcode conversation \`${threadId}\`:\n\`${workspace}\``
+    ? `当前 Joker 会话 \`${threadId}\` 的工作目录：\n\`${workspace}\``
+    : `Workspace for current Joker conversation \`${threadId}\`:\n\`${workspace}\``
 }
 
 function imWorkspaceMissingText(settings: AppSettingsV1, threadId: string): string {
-  return imRcodeErrorText(settings, isChineseLocale(settings)
-    ? `没有读取到当前 Rcode 会话 \`${threadId}\` 的工作目录。`
-    : `Could not read the workspace path for current Rcode conversation \`${threadId}\`.`)
+  return imJokerErrorText(settings, isChineseLocale(settings)
+    ? `没有读取到当前 Joker 会话 \`${threadId}\` 的工作目录。`
+    : `Could not read the workspace path for current Joker conversation \`${threadId}\`.`)
 }
 
 function imMarkdownLines(lines: string[]): string {
@@ -580,7 +580,7 @@ function imUsageText(
   const costText = costParts.length > 0 ? costParts.join(' · ') : (isChineseLocale(settings) ? '无' : 'none')
   if (isChineseLocale(settings)) {
     return imMarkdownLines([
-      `当前 Rcode 会话：\`${threadId}\``,
+      `当前 Joker 会话：\`${threadId}\``,
       `供应商：\`${model.provider.id}\``,
       `模型：\`${model.model}\``,
       `Token 消耗：total ${usage.totalTokens} · input ${usage.promptTokens} · output ${usage.completionTokens}`,
@@ -590,7 +590,7 @@ function imUsageText(
     ])
   }
   return imMarkdownLines([
-    `Current Rcode conversation: \`${threadId}\``,
+    `Current Joker conversation: \`${threadId}\``,
     `Provider: \`${model.provider.id}\``,
     `Model: \`${model.model}\``,
     `Token usage: total ${usage.totalTokens} · input ${usage.promptTokens} · output ${usage.completionTokens}`,
@@ -619,16 +619,16 @@ function parseGoalResponse(body: string): ImGoalSummary | null {
 }
 
 function imNoCurrentThreadText(settings: AppSettingsV1): string {
-  return imRcodeErrorText(settings, isChineseLocale(settings)
-    ? '当前 IM 会话还没有绑定 Rcode 会话。先发送普通消息创建会话，或用 `/list-threads` 和 `/switch` 切换到已有会话。'
-    : 'This IM chat is not connected to a Rcode conversation yet. Send a normal message to create one, or use `/list-threads` and `/switch` to pick one.')
+  return imJokerErrorText(settings, isChineseLocale(settings)
+    ? '当前 IM 会话还没有绑定 Joker 会话。先发送普通消息创建会话，或用 `/list-threads` 和 `/switch` 切换到已有会话。'
+    : 'This IM chat is not connected to a Joker conversation yet. Send a normal message to create one, or use `/list-threads` and `/switch` to pick one.')
 }
 
 function imGoalText(settings: AppSettingsV1, goal: ImGoalSummary | null): string {
   if (!goal) {
     return isChineseLocale(settings)
-      ? '当前 Rcode 会话还没有设置目标。使用 `/goal <目标>` 设置。'
-      : 'The current Rcode conversation has no goal yet. Set one with `/goal <objective>`.'
+      ? '当前 Joker 会话还没有设置目标。使用 `/goal <目标>` 设置。'
+      : 'The current Joker conversation has no goal yet. Set one with `/goal <objective>`.'
   }
   const status = goal.status ? ` · ${goal.status}` : ''
   const tokens = typeof goal.tokensUsed === 'number' ? ` · ${goal.tokensUsed} tokens` : ''
@@ -638,13 +638,13 @@ function imGoalText(settings: AppSettingsV1, goal: ImGoalSummary | null): string
 }
 
 function imGoalMissingObjectiveText(settings: AppSettingsV1): string {
-  return imRcodeErrorText(settings, isChineseLocale(settings)
+  return imJokerErrorText(settings, isChineseLocale(settings)
     ? '`/goal` 后面必须带目标内容，例如：`/goal 阅读并总结文档 A`。查看当前目标请用 `/list-goal`。'
     : '`/goal` requires an objective, for example: `/goal Read and summarize document A`. Use `/list-goal` to view the current goal.')
 }
 
 function imGoalAlreadyExistsText(settings: AppSettingsV1, goal: ImGoalSummary): string {
-  return imRcodeErrorText(settings, isChineseLocale(settings)
+  return imJokerErrorText(settings, isChineseLocale(settings)
     ? `当前会话已经有目标，不能重复设置：\n${goal.objective}`
     : `This conversation already has a goal, so a new one was not set:\n${goal.objective}`)
 }
@@ -705,8 +705,8 @@ function imThreadListText(
 ): string {
   if (threads.length === 0) {
     return isChineseLocale(settings)
-      ? '还没有找到可切换的 Rcode 会话。先发送普通消息创建会话，或发送 `/new` 开启新话题。'
-      : 'No switchable Rcode conversations were found yet. Send a normal message to create one, or send `/new` to start a new topic.'
+      ? '还没有找到可切换的 Joker 会话。先发送普通消息创建会话，或发送 `/new` 开启新话题。'
+      : 'No switchable Joker conversations were found yet. Send a normal message to create one, or send `/new` to start a new topic.'
   }
   const rows = threads.map((thread, index) => {
     const marker = thread.id === currentThreadId ? '*' : '-'
@@ -715,15 +715,15 @@ function imThreadListText(
   })
   if (isChineseLocale(settings)) {
     return [
-      currentThreadId ? `当前会话：\`${currentThreadId}\`。` : '当前还没有绑定 Rcode 会话。',
-      '最近 Rcode 会话：',
+      currentThreadId ? `当前会话：\`${currentThreadId}\`。` : '当前还没有绑定 Joker 会话。',
+      '最近 Joker 会话：',
       ...rows,
       '切换会话：`/switch <序号|thread id>`。新话题：`/new`。'
     ].join('\n')
   }
   return [
-    currentThreadId ? `Current conversation: \`${currentThreadId}\`.` : 'No Rcode conversation is connected yet.',
-    'Recent Rcode conversations:',
+    currentThreadId ? `Current conversation: \`${currentThreadId}\`.` : 'No Joker conversation is connected yet.',
+    'Recent Joker conversations:',
     ...rows,
     'Switch with `/switch <number|thread id>`. Start fresh with `/new`.'
   ].join('\n')
@@ -736,19 +736,19 @@ function imCurrentThreadText(
   shared = false
 ): string {
   if (!currentThreadId) {
-    return imRcodeErrorText(settings, isChineseLocale(settings)
-      ? '当前 IM 会话还没有绑定 Rcode 会话。发送普通消息会创建一个新会话。'
-      : 'This IM chat is not connected to a Rcode conversation yet. Send a normal message to create one.')
+    return imJokerErrorText(settings, isChineseLocale(settings)
+      ? '当前 IM 会话还没有绑定 Joker 会话。发送普通消息会创建一个新会话。'
+      : 'This IM chat is not connected to a Joker conversation yet. Send a normal message to create one.')
   }
   if (!thread) {
-    return imRcodeErrorText(settings, isChineseLocale(settings)
-      ? `当前绑定的 Rcode 会话是 \`${currentThreadId}\`，但线程列表里暂时没有读取到它。`
+    return imJokerErrorText(settings, isChineseLocale(settings)
+      ? `当前绑定的 Joker 会话是 \`${currentThreadId}\`，但线程列表里暂时没有读取到它。`
       : `This IM chat is connected to \`${currentThreadId}\`, but it was not found in the thread list.`)
   }
   const status = thread.status?.trim() ? ` · ${thread.status.trim()}` : ''
   const text = isChineseLocale(settings)
-    ? `当前 Rcode 会话：\`${thread.id}\` ${imThreadTitle(thread)}${status}。`
-    : `Current Rcode conversation: \`${thread.id}\` ${imThreadTitle(thread)}${status}.`
+    ? `当前 Joker 会话：\`${thread.id}\` ${imThreadTitle(thread)}${status}。`
+    : `Current Joker conversation: \`${thread.id}\` ${imThreadTitle(thread)}${status}.`
   return shared ? `${text}\n\n${imSharedThreadWarningText(settings)}` : text
 }
 
@@ -769,21 +769,21 @@ function resolveImThreadSwitchTarget(
 }
 
 function imThreadSwitchNotFoundText(settings: AppSettingsV1, target: string): string {
-  return imRcodeErrorText(settings, isChineseLocale(settings)
+  return imJokerErrorText(settings, isChineseLocale(settings)
     ? `没有找到可切换的会话 \`${target}\`。发送 \`/list-threads\` 查看最近会话。`
     : `Could not find a switchable conversation for \`${target}\`. Send \`/list-threads\` to list recent conversations.`)
 }
 
 function imSharedThreadWarningText(settings: AppSettingsV1): string {
   return isChineseLocale(settings)
-    ? '注意：这个 Rcode 会话也被其他 IM 会话持有。Rcode 不会对共享会话做 IM 侧并发控制，请不要在多个 IM 里同时对话。'
-    : 'Note: this Rcode conversation is also held by another IM chat. Rcode does not add IM-side concurrency control for shared conversations, so avoid chatting into it from multiple IM chats at the same time.'
+    ? '注意：这个 Joker 会话也被其他 IM 会话持有。Joker 不会对共享会话做 IM 侧并发控制，请不要在多个 IM 里同时对话。'
+    : 'Note: this Joker conversation is also held by another IM chat. Joker does not add IM-side concurrency control for shared conversations, so avoid chatting into it from multiple IM chats at the same time.'
 }
 
 function imThreadSwitchedText(settings: AppSettingsV1, thread: ThreadRecordJson, shared: boolean): string {
   const text = isChineseLocale(settings)
-    ? `已切换到 Rcode 会话 \`${thread.id}\`：${imThreadTitle(thread)}。后续消息会继续这个上下文。`
-    : `Switched to Rcode conversation \`${thread.id}\`: ${imThreadTitle(thread)}. Future messages will continue that context.`
+    ? `已切换到 Joker 会话 \`${thread.id}\`：${imThreadTitle(thread)}。后续消息会继续这个上下文。`
+    : `Switched to Joker conversation \`${thread.id}\`: ${imThreadTitle(thread)}. Future messages will continue that context.`
   return shared ? `${text}\n\n${imSharedThreadWarningText(settings)}` : text
 }
 
@@ -810,15 +810,15 @@ function hasOtherImThreadBinding(
 }
 
 function imStopNoRunningTurnText(settings: AppSettingsV1): string {
-  return imRcodeErrorText(settings, isChineseLocale(settings)
-    ? '当前 Rcode 会话没有正在运行的任务。'
-    : 'The current Rcode conversation has no running task.')
+  return imJokerErrorText(settings, isChineseLocale(settings)
+    ? '当前 Joker 会话没有正在运行的任务。'
+    : 'The current Joker conversation has no running task.')
 }
 
 function imStopSucceededText(settings: AppSettingsV1, turnId: string): string {
   return isChineseLocale(settings)
-    ? `Rcode 已停止当前任务：\`${turnId}\`。`
-    : `Rcode stopped the current task: \`${turnId}\`.`
+    ? `Joker 已停止当前任务：\`${turnId}\`。`
+    : `Joker stopped the current task: \`${turnId}\`.`
 }
 
 /**
@@ -827,11 +827,11 @@ function imStopSucceededText(settings: AppSettingsV1, turnId: string): string {
  */
 export function imWelcomeText(settings: AppSettingsV1, channel?: ClawImChannelV1): string {
   const profile = channel?.agentProfile
-  const name = profile?.name.trim() || channel?.label.trim() || 'Rcode'
+  const name = profile?.name.trim() || channel?.label.trim() || 'Joker'
   const description = profile?.description.trim() ?? ''
   if (isChineseLocale(settings)) {
     return [
-      `你好，我是 ${name}，通过 Rcode 连接到这个对话的 AI 助手。`,
+      `你好，我是 ${name}，通过 Joker 连接到这个对话的 AI 助手。`,
       ...(description ? [description] : []),
       '你可以直接发消息让我帮忙：回答问题、查资料、读写已连接电脑工作区里的文件、生成文档等，完成后我会在这里回复你。',
       imCommandHelpText(settings),
@@ -839,7 +839,7 @@ export function imWelcomeText(settings: AppSettingsV1, channel?: ClawImChannelV1
     ].join('\n\n')
   }
   return [
-    `Hi, I am ${name}, an AI assistant connected to this chat through Rcode.`,
+    `Hi, I am ${name}, an AI assistant connected to this chat through Joker.`,
     ...(description ? [description] : []),
     'Send me a message and I will handle it on the connected computer: answering questions, research, reading and writing workspace files, generating documents — I reply here once done.',
     imCommandHelpText(settings),
@@ -1035,19 +1035,19 @@ export class ClawRuntime {
     try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'runPrompt', ts: new Date().toISOString(), providerId: options.providerId, model: options.model, existingThreadId: options.threadId }) + '\n') } catch {}
     const workspace = options.workspaceRoot.trim() || settings.workspaceRoot
     const existingThreadId = options.threadId?.trim()
-    const requestedModel = normalizeTaskModel(options.model) ?? (settings.agents.Rcode.model.trim() || DEFAULT_CLAW_MODEL)
+    const requestedModel = normalizeTaskModel(options.model) ?? (settings.agents.Joker.model.trim() || DEFAULT_CLAW_MODEL)
     const runtimeSettings = settingsWithImModelProvider(settings, options.providerId, requestedModel)
     const model = effectiveImRuntimeModel(runtimeSettings, requestedModel)
     // Pass the resolved providerId to the runtime so MultiProviderModelClient
     // routes to the correct provider. Without this, the runtime falls back to
     // the default client (often Codex) while the model belongs to a different
     // provider, causing 400 errors like "model not supported when using Codex".
-    const providerId = options.providerId?.trim() || runtimeSettings.agents.Rcode.providerId.trim()
+    const providerId = options.providerId?.trim() || runtimeSettings.agents.Joker.providerId.trim()
     // IM turns follow the per-IM permission policy when the user picked one,
     // otherwise they fall back to the global agent permission policy
-    // (`agents.Rcode.approvalPolicy`/`sandboxMode`) — the historical behavior.
-    const imApprovalPolicy = settings.claw.im.approvalPolicy ?? runtimeSettings.agents.Rcode.approvalPolicy
-    const imSandboxMode = settings.claw.im.sandboxMode ?? runtimeSettings.agents.Rcode.sandboxMode
+    // (`agents.Joker.approvalPolicy`/`sandboxMode`) — the historical behavior.
+    const imApprovalPolicy = settings.claw.im.approvalPolicy ?? runtimeSettings.agents.Joker.approvalPolicy
+    const imSandboxMode = settings.claw.im.sandboxMode ?? runtimeSettings.agents.Joker.sandboxMode
     const createThread = async (): Promise<ThreadRecordJson | null> => {
       const body: Record<string, unknown> = { workspace, model, mode: options.mode }
       if (providerId) body.providerId = providerId
@@ -1895,7 +1895,7 @@ export class ClawRuntime {
         threadId: target.id
       })
       if (!switched) {
-        return imRcodeErrorText(settings, isChineseLocale(settings)
+        return imJokerErrorText(settings, isChineseLocale(settings)
           ? '当前消息没有匹配到可保存切换状态的 IM 通道，无法切换会话。'
           : 'This message did not match an IM channel that can persist thread switching.')
       }
@@ -1936,7 +1936,7 @@ export class ClawRuntime {
   ): Promise<string | null> {
     try {
       const reply = await this.handleIncomingImCommand(settings, input)
-      return reply === null ? null : imRcodeSystemText(reply)
+      return reply === null ? null : imJokerSystemText(reply)
     } catch (error) {
       const message = errorMessage(error)
       this.deps.logError('claw-im-command', 'IM command failed', {
@@ -1944,7 +1944,7 @@ export class ClawRuntime {
         channelId: input.channel?.id,
         message
       })
-      return imRcodeErrorText(settings, message || 'IM command failed.')
+      return imJokerErrorText(settings, message || 'IM command failed.')
     }
   }
 
@@ -2095,7 +2095,7 @@ export class ClawRuntime {
         { method: 'GET' }
       )
       if (!detailRes.ok) {
-        this.deps.logError('claw-feishu', 'Failed to read recent generated files from Rcode thread', {
+        this.deps.logError('claw-feishu', 'Failed to read recent generated files from Joker thread', {
           ...context,
           threadId: targetThreadId,
           message: runtimeErrorMessage(detailRes, 'Failed to read thread result.')
@@ -2108,7 +2108,7 @@ export class ClawRuntime {
         maxFiles: 3
       })
     } catch (error) {
-      this.deps.logError('claw-feishu', 'Failed to inspect Rcode thread for recent generated files', {
+      this.deps.logError('claw-feishu', 'Failed to inspect Joker thread for recent generated files', {
         ...context,
         threadId: targetThreadId,
         message: errorMessage(error)
@@ -2236,7 +2236,7 @@ export class ClawRuntime {
       scheduleResultPush: (settings, input) => this.scheduleImResultPush(settings, input),
       resolveGeneratedFiles: (files, workspaceRoot, context) =>
         this.resolveImGeneratedFiles(files, workspaceRoot, context),
-      formatError: imRcodeErrorText,
+      formatError: imJokerErrorText,
       logError: this.deps.logError
     })
   }
@@ -2269,7 +2269,7 @@ export class ClawRuntime {
         return { providerId: resolution.provider.id, model: resolution.model }
       },
       createScheduledTaskFromText: this.deps.createScheduledTaskFromText,
-      formatError: imRcodeErrorText,
+      formatError: imJokerErrorText,
       resolveGeneratedFiles: (files, workspaceRoot, context) =>
         this.resolveImGeneratedFiles(files, workspaceRoot, context),
       recentGeneratedFiles: (settings, threadId, workspaceRoot, context, turnId) =>
@@ -2325,7 +2325,7 @@ export class ClawRuntime {
   private async handleWebhook(req: IncomingMessage, res: ServerResponse): Promise<void> {
     try {
       if (this.stopController.signal.aborted) {
-        writeJson(res, 503, { ok: false, message: 'Rcode: Claw runtime is stopping.' })
+        writeJson(res, 503, { ok: false, message: 'Joker: Claw runtime is stopping.' })
         return
       }
       const settings = await this.deps.store.load()
@@ -2334,32 +2334,32 @@ export class ClawRuntime {
       if (url.pathname === '/claw/internal/gui-plan/create' && req.method === 'POST') {
         // The legacy `gui_plan_create` MCP bridge is no longer the
         // active plan path. GUI plan creation now flows through the
-        // native Rcode `create_plan` tool. Reject legacy calls
+        // native Joker `create_plan` tool. Reject legacy calls
         // loudly so older clients see a clear migration error.
         writeJson(res, 410, {
           ok: false,
           code: 'gui_plan_create_retired',
           message:
-            'Rcode: The /claw/internal/gui-plan/create endpoint is no longer active. Use the Rcode create_plan tool.'
+            'Joker: The /claw/internal/gui-plan/create endpoint is no longer active. Use the Joker create_plan tool.'
         })
         return
       }
       if (req.method !== 'POST' || url.pathname !== im.path) {
-        writeJson(res, 404, { ok: false, message: 'Rcode: Not found.' })
+        writeJson(res, 404, { ok: false, message: 'Joker: Not found.' })
         return
       }
       if (!settings.claw.enabled || !im.enabled) {
-        writeJson(res, 503, { ok: false, message: 'Rcode: Claw IM webhook is disabled.' })
+        writeJson(res, 503, { ok: false, message: 'Joker: Claw IM webhook is disabled.' })
         return
       }
       if (im.secret) {
         const auth = req.headers.authorization ?? ''
-        // 新名字 x-Rcode-secret 优先;旧名字 x-deepseek-gui-secret 已配置
+        // 新名字 x-Joker-secret 优先;旧名字 x-deepseek-gui-secret 已配置
         // 在外部系统里,属于对外契约,必须长期兼容。
-        const rawHeaderSecret = req.headers['x-Rcode-secret'] ?? req.headers['x-deepseek-gui-secret']
+        const rawHeaderSecret = req.headers['x-Joker-secret'] ?? req.headers['x-deepseek-gui-secret']
         const headerSecret = Array.isArray(rawHeaderSecret) ? rawHeaderSecret[0] : rawHeaderSecret
         if (auth !== `Bearer ${im.secret}` && headerSecret !== im.secret) {
-          writeJson(res, 401, { ok: false, message: 'Rcode: Unauthorized.' })
+          writeJson(res, 401, { ok: false, message: 'Joker: Unauthorized.' })
           return
         }
       }
@@ -2367,12 +2367,12 @@ export class ClawRuntime {
       const body = await readRequestBody(req)
       const payload = parseJsonObject(body)
       if (!payload) {
-        writeJson(res, 400, { ok: false, message: 'Rcode: Expected a JSON object.' })
+        writeJson(res, 400, { ok: false, message: 'Joker: Expected a JSON object.' })
         return
       }
       const prompt = extractIncomingPrompt(payload)
       if (!prompt) {
-        writeJson(res, 400, { ok: false, message: 'Rcode: No message text found.' })
+        writeJson(res, 400, { ok: false, message: 'Joker: No message text found.' })
         return
       }
       const sender = extractSenderLabel(payload)
@@ -2439,7 +2439,7 @@ export class ClawRuntime {
         return
       }
       if (taskCreation.kind === 'error') {
-        const reply = imRcodeErrorText(settings, taskCreation.message)
+        const reply = imJokerErrorText(settings, taskCreation.message)
         writeJson(res, 500, { ok: false, message: reply, reply })
         return
       }
@@ -2454,8 +2454,8 @@ export class ClawRuntime {
       if (!result.ok) {
         writeJson(res, 500, {
           ...result,
-          message: imRcodeErrorText(settings, result.message),
-          reply: imRcodeErrorText(settings, result.message)
+          message: imJokerErrorText(settings, result.message),
+          reply: imJokerErrorText(settings, result.message)
         })
         return
       }
@@ -2501,7 +2501,7 @@ export class ClawRuntime {
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error)
       this.deps.logError('claw-webhook', 'Claw IM webhook request failed', { message })
-      writeJson(res, 500, { ok: false, message: 'Rcode: Internal server error.' })
+      writeJson(res, 500, { ok: false, message: 'Joker: Internal server error.' })
     }
   }
 }

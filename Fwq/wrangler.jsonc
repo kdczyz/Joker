@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "rcode-remote-server",
+  "name": "joker-remote-server",
   "main": "src/index.ts",
   "compatibility_date": "2026-07-17",
   "compatibility_flags": ["nodejs_compat"],
@@ -16,7 +16,7 @@
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "rcode-remote-db",
+      "database_name": "joker-remote-db",
       "database_id": "de7203b9-9146-4e39-8d79-6d11419f4aec",
       "migrations_dir": "migrations"
     }

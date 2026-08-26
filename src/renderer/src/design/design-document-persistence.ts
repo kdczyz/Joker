@@ -1,8 +1,8 @@
 /**
  * Durable 设计稿 (design document) index. The in-memory `documents` list is
- * mirrored to a single `.Rcode-design/documents.json` index that records each
+ * mirrored to a single `.Joker-design/documents.json` index that records each
  * 设计稿's metadata + ordering + the active pointers. Artifact membership is NOT
- * stored here — it is implied by directory nesting (`.Rcode-design/<docId>/<id>/`)
+ * stored here — it is implied by directory nesting (`.Joker-design/<docId>/<id>/`)
  * and recovered by scanning each 设计稿 dir on rehydrate. Presence of this file
  * also marks "the legacy → nested migration has run" (see the store).
  */
@@ -13,7 +13,7 @@ import {
   writeDesignWorkspaceFile
 } from './design-persistence-coordinator'
 
-const DESIGN_DIR = '.Rcode-design'
+const DESIGN_DIR = '.Joker-design'
 
 export function documentsIndexPath(): string {
   return `${DESIGN_DIR}/documents.json`
@@ -23,11 +23,11 @@ export function documentDirPath(docId: string): string {
   return `${DESIGN_DIR}/${docId}`
 }
 
-/** Best-effort creation of the physical `.Rcode-design/<docId>/` directory. */
+/** Best-effort creation of the physical `.Joker-design/<docId>/` directory. */
 export async function ensureDocumentDir(workspaceRoot: string, docId: string): Promise<void> {
-  if (!workspaceRoot || !docId || typeof window.RcodeGui?.createWorkspaceDirectory !== 'function') return
-  await window.RcodeGui.createWorkspaceDirectory({ path: DESIGN_DIR, workspaceRoot }).catch(() => null)
-  await window.RcodeGui.createWorkspaceDirectory({ path: documentDirPath(docId), workspaceRoot }).catch(() => null)
+  if (!workspaceRoot || !docId || typeof window.JokerGui?.createWorkspaceDirectory !== 'function') return
+  await window.JokerGui.createWorkspaceDirectory({ path: DESIGN_DIR, workspaceRoot }).catch(() => null)
+  await window.JokerGui.createWorkspaceDirectory({ path: documentDirPath(docId), workspaceRoot }).catch(() => null)
 }
 
 /** Persisted per-设计稿 metadata (no artifacts — those live on disk by nesting). */

@@ -1,5 +1,5 @@
 import { contextBridge, ipcRenderer, webFrame, webUtils } from 'electron'
-import type { RcodeGuiApi } from '../shared/Rcode-gui-api'
+import type { JokerGuiApi } from '../shared/Joker-gui-api'
 import { registerExtensionContentScriptPreload } from './extension-content-script'
 
 registerExtensionContentScriptPreload({ contextBridge, ipcRenderer, webFrame })
@@ -7,7 +7,7 @@ registerExtensionContentScriptPreload({ contextBridge, ipcRenderer, webFrame })
 // The preload runs sandboxed (webPreferences.sandbox = true), so it cannot
 // require node built-ins like node:os. The home dir is passed in from the main
 // process via additionalArguments and read off process.argv instead.
-const HOME_DIR_ARG = '--Rcode-home-dir='
+const HOME_DIR_ARG = '--Joker-home-dir='
 const homeDirFromArgs =
   process.argv.find((arg) => arg.startsWith(HOME_DIR_ARG))?.slice(HOME_DIR_ARG.length) ?? ''
 
@@ -80,7 +80,7 @@ const api = {
     ipcRenderer.invoke('runtime:request', { path, method, body }),
   uploadRuntimeImageAttachment: (request) =>
     ipcRenderer.invoke('runtime:attachment:upload-image', request),
-  resolveRcodeApproval: (request) => ipcRenderer.invoke('approval:decide', request),
+  resolveJokerApproval: (request) => ipcRenderer.invoke('approval:decide', request),
   restartRuntime: () => ipcRenderer.invoke('runtime:restart'),
   fetchUpstreamModels: () => ipcRenderer.invoke('upstream:models'),
   probeModelProvider: (payload) => ipcRenderer.invoke('provider:probe', payload),
@@ -128,11 +128,11 @@ const api = {
   confirmDialog: (options) =>
     ipcRenderer.invoke('dialog:confirm', options),
   detectLegacySessions: () =>
-    ipcRenderer.invoke('Rcode:sessions:detect-legacy'),
+    ipcRenderer.invoke('Joker:sessions:detect-legacy'),
   importLegacySessions: (sourceDir) =>
-    ipcRenderer.invoke('Rcode:sessions:import-legacy', { sourceDir }),
+    ipcRenderer.invoke('Joker:sessions:import-legacy', { sourceDir }),
   pickLegacySessionDir: () =>
-    ipcRenderer.invoke('Rcode:sessions:pick-source-dir'),
+    ipcRenderer.invoke('Joker:sessions:pick-source-dir'),
   listSkills: (workspaceRoot) =>
     ipcRenderer.invoke('skill:list', { workspaceRoot }),
   listSkillRoots: (workspaceRoot) =>
@@ -195,24 +195,24 @@ const api = {
     ipcRenderer.invoke('ui-plugin:theme:activate', { id }),
   deactivateUiPluginTheme: () =>
     ipcRenderer.invoke('ui-plugin:theme:deactivate'),
-  getRcodeConfigFile: () =>
-    ipcRenderer.invoke('Rcode:config:read'),
-  setRcodeConfigFile: (content) =>
-    ipcRenderer.invoke('Rcode:config:write', content),
-  openRcodeConfigDir: () =>
-    ipcRenderer.invoke('Rcode:config:open-dir'),
-  getRcodeProjectConfigFile: (workspaceRoot) =>
-    ipcRenderer.invoke('Rcode:project-config:read', { workspaceRoot }),
-  setRcodeProjectConfigFile: (workspaceRoot, content) =>
-    ipcRenderer.invoke('Rcode:project-config:write', { workspaceRoot, content }),
-  setRcodeProjectConfigTrust: (workspaceRoot, trusted, expectedDigest) =>
-    ipcRenderer.invoke('Rcode:project-config:trust', {
+  getJokerConfigFile: () =>
+    ipcRenderer.invoke('Joker:config:read'),
+  setJokerConfigFile: (content) =>
+    ipcRenderer.invoke('Joker:config:write', content),
+  openJokerConfigDir: () =>
+    ipcRenderer.invoke('Joker:config:open-dir'),
+  getJokerProjectConfigFile: (workspaceRoot) =>
+    ipcRenderer.invoke('Joker:project-config:read', { workspaceRoot }),
+  setJokerProjectConfigFile: (workspaceRoot, content) =>
+    ipcRenderer.invoke('Joker:project-config:write', { workspaceRoot, content }),
+  setJokerProjectConfigTrust: (workspaceRoot, trusted, expectedDigest) =>
+    ipcRenderer.invoke('Joker:project-config:trust', {
       workspaceRoot,
       trusted,
       ...(trusted && expectedDigest ? { expectedDigest } : {})
     }),
-  openRcodeProjectConfigDir: (workspaceRoot) =>
-    ipcRenderer.invoke('Rcode:project-config:open-dir', { workspaceRoot }),
+  openJokerProjectConfigDir: (workspaceRoot) =>
+    ipcRenderer.invoke('Joker:project-config:open-dir', { workspaceRoot }),
   getGitBranches: (workspaceRoot) =>
     ipcRenderer.invoke('git:branches', workspaceRoot),
   switchGitBranch: (workspaceRoot, branch) =>
@@ -614,6 +614,6 @@ const api = {
       return () => ipcRenderer.removeListener('grok:event', wrapped)
     }
   }
-} satisfies RcodeGuiApi
+} satisfies JokerGuiApi
 
-contextBridge.exposeInMainWorld('RcodeGui', api)
+contextBridge.exposeInMainWorld('JokerGui', api)

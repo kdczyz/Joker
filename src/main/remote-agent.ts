@@ -57,7 +57,7 @@ export interface RemoteAgentExecuteOptions {
 }
 
 export interface RemoteAgentDeps {
-  /** Execute an agent prompt headlessly via Rcode runtime. */
+  /** Execute an agent prompt headlessly via Joker runtime. */
   executeAgent: (
     prompt: string,
     mode: ScheduleRunMode,
@@ -103,7 +103,7 @@ export async function getOrCreateDeviceId(): Promise<string> {
 function buildDeviceMetadata(deviceId: string, settings: AppSettingsV1): RemoteDeviceMetadata {
   const providers = settings.provider?.providers ?? []
   const models = providers.flatMap((p) => p.models ?? [])
-  const defaultModel = settings.agents?.Rcode?.model || models[0] || ''
+  const defaultModel = settings.agents?.Joker?.model || models[0] || ''
   // Sync lightweight provider info (no apiKey/baseUrl) so the controller can
   // pick a providerId that matches the desktop's configured providers — this
   // is critical for correct model→provider routing on the agent side.
@@ -121,7 +121,7 @@ function buildDeviceMetadata(deviceId: string, settings: AppSettingsV1): RemoteD
     name: hostname() || 'Desktop',
     platform: process.platform,
     appVersion: app.getVersion(),
-    projectName: 'Rcode',
+    projectName: 'Joker',
     ready: true,
     workspace: {
       projects: [],
@@ -133,7 +133,7 @@ function buildDeviceMetadata(deviceId: string, settings: AppSettingsV1): RemoteD
 }
 
 /* ------------------------------------------------------------------ */
-/*  Mode mapping: remote protocol → Rcode ScheduleRunMode                */
+/*  Mode mapping: remote protocol → Joker ScheduleRunMode                */
 /* ------------------------------------------------------------------ */
 
 function mapRemoteMode(remoteMode: string | undefined): ScheduleRunMode {

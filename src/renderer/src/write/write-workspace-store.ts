@@ -149,9 +149,9 @@ export const useWriteWorkspaceStore = create<WriteWorkspaceState>((set, get) => 
     let size = options.size
     let truncated = options.truncated
     if (typeof content !== 'string') {
-      let result: Awaited<ReturnType<typeof window.RcodeGui.readWorkspaceFile>>
+      let result: Awaited<ReturnType<typeof window.JokerGui.readWorkspaceFile>>
       try {
-        result = await window.RcodeGui.readWorkspaceFile({
+        result = await window.JokerGui.readWorkspaceFile({
           path: snapshot.activeFilePath,
           workspaceRoot
         })
@@ -341,7 +341,7 @@ export const useWriteWorkspaceStore = create<WriteWorkspaceState>((set, get) => 
     if (path && !pathsEqual(path, snapshot.activeFilePath)) return false
 
     try {
-      const result = await window.RcodeGui.readWorkspaceImage({
+      const result = await window.JokerGui.readWorkspaceImage({
         path: snapshot.activeFilePath,
         workspaceRoot
       })
@@ -437,7 +437,7 @@ export const useWriteWorkspaceStore = create<WriteWorkspaceState>((set, get) => 
       set((current) => writeDocumentContextMatches(current, context) && current.contentRevision === revision
         ? { saveStatus: 'saving' }
         : {})
-      let result: Awaited<ReturnType<typeof window.RcodeGui.writeWorkspaceFile>>
+      let result: Awaited<ReturnType<typeof window.JokerGui.writeWorkspaceFile>>
       try {
         result = await enqueueWriteWorkspaceSave({
           path: context.filePath,

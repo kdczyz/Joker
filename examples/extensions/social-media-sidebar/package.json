@@ -1,5 +1,5 @@
 {
-  "name": "@Rcode-examples/social-media-sidebar",
+  "name": "@Joker-examples/social-media-sidebar",
   "version": "0.1.3",
   "private": true,
   "license": "MIT",
@@ -8,8 +8,8 @@
     "build": "vite build",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
-    "validate": "node ../run-repository-Rcode-cli.mjs extension validate .",
-    "pack": "npm run build && node ../run-repository-Rcode-cli.mjs extension pack . --overwrite"
+    "validate": "node ../run-repository-Joker-cli.mjs extension validate .",
+    "pack": "npm run build && node ../run-repository-Joker-cli.mjs extension pack . --overwrite"
   },
   "devDependencies": {
     "typescript": "^5.8.2",

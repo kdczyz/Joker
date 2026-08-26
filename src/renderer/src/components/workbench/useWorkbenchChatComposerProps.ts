@@ -1,5 +1,5 @@
 import { useMemo, type Dispatch, type SetStateAction } from 'react'
-import type { CoreRuntimeInfoJson } from '../../agent/Rcode-contract'
+import type { CoreRuntimeInfoJson } from '../../agent/Joker-contract'
 import type { ComposerChangeSummary } from '../../lib/composer-change-summary'
 import type { QueuedUserMessage } from '../../store/chat-store-types'
 import { canGuideQueuedMessage } from '../../store/queued-message-guidance'

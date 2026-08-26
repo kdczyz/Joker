@@ -4,7 +4,7 @@ import type {
   JsonObject,
   ToolInvocationContext,
   ToolResult
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 
 export const workspaceSummaryTool = {
   id: 'workspace-summary',
@@ -79,5 +79,5 @@ export async function activate(context: ExtensionContext): Promise<void> {
 }
 
 export async function deactivate(): Promise<void> {
-  // Rcode cancels in-flight invocations and disposes the registration.
+  // Joker cancels in-flight invocations and disposes the registration.
 }

@@ -216,7 +216,7 @@ export function ChatFileTreePanel({
   }, [root])
 
   const loadDirectory = useCallback((path: string): void => {
-    if (!root || typeof window.RcodeGui?.listWorkspaceDirectory !== 'function') return
+    if (!root || typeof window.JokerGui?.listWorkspaceDirectory !== 'function') return
     setDirectories((current) => ({
       ...current,
       [path || ROOT_PATH]: {
@@ -225,7 +225,7 @@ export function ChatFileTreePanel({
         error: null
       }
     }))
-    void window.RcodeGui
+    void window.JokerGui
       .listWorkspaceDirectory({
         workspaceRoot: root,
         path: path || root
@@ -258,7 +258,7 @@ export function ChatFileTreePanel({
   }, [directories, expanded, loadDirectory, root])
 
   useEffect(() => {
-    const listWorkspaceDirectory = window.RcodeGui?.listWorkspaceDirectory?.bind(window.RcodeGui)
+    const listWorkspaceDirectory = window.JokerGui?.listWorkspaceDirectory?.bind(window.JokerGui)
     if (!root || typeof listWorkspaceDirectory !== 'function') return
     let cancelled = false
     setRecentScan({ entries: [], loading: true, error: null })
@@ -355,8 +355,8 @@ export function ChatFileTreePanel({
   }
 
   const revealEntry = async (entry: WorkspaceEntry): Promise<void> => {
-    if (typeof window.RcodeGui?.openEditorPath !== 'function') return
-    await window.RcodeGui.openEditorPath({
+    if (typeof window.JokerGui?.openEditorPath !== 'function') return
+    await window.JokerGui.openEditorPath({
       path: entry.path,
       workspaceRoot: root,
       editorId: 'file-manager'
@@ -572,7 +572,7 @@ export function ChatFileTreePanel({
           >
             <FolderSearch className="h-3.5 w-3.5 text-ds-muted" strokeWidth={1.9} />
             <span className="min-w-0 truncate">
-              {window.RcodeGui?.platform === 'darwin'
+              {window.JokerGui?.platform === 'darwin'
                 ? t('fileTreeRevealInFinder')
                 : t('fileTreeRevealInFileManager')}
             </span>

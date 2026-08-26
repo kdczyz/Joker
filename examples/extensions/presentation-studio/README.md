@@ -1,8 +1,8 @@
-# Rcode PPT
+# Joker PPT
 
-Rcode PPT is a runnable Rcode Extension API v1 example for repeatedly
-editing one standalone HTML slide deck with a person and the main Rcode Agent. Each deck
-is stored as a root-level `*.Rcode-ppt.html` workspace file. A bounded,
+Joker PPT is a runnable Joker Extension API v1 example for repeatedly
+editing one standalone HTML slide deck with a person and the main Joker Agent. Each deck
+is stored as a root-level `*.Joker-ppt.html` workspace file. A bounded,
 schema-versioned model embedded in that file is authoritative; the visible HTML
 is a deterministic projection that remains useful in a regular browser.
 
@@ -20,18 +20,18 @@ atomicity remains a platform limitation.
 
 ## Safety and format boundaries
 
-- Only a single root-level filename ending in `.Rcode-ppt.html` is accepted.
+- Only a single root-level filename ending in `.Joker-ppt.html` is accepted.
 - The Host uses `context.workspace`; it does not access workspace files with
-  Node filesystem APIs or private Rcode imports.
+  Node filesystem APIs or private Joker imports.
 - Presentation text is structured data. It is never executed or injected as
   arbitrary HTML, CSS, JavaScript, event handlers, or remote resources in the
   bridge-bearing Webview.
 - A revision conflict fails closed. Reload the latest project and deliberately
   reapply the intended operations.
-- Export creates another `.Rcode-ppt.html` copy only after checking that its
+- Export creates another `.Joker-ppt.html` copy only after checking that its
   destination is absent or already identical. The API v1 cross-process race
   limitation above still applies. Native PPTX/PDF conversion remains a
-  separate, future workflow; Rcode's managed PPT Master flow is unchanged.
+  separate, future workflow; Joker's managed PPT Master flow is unchanged.
 
 ## Commands and Host messages
 
@@ -47,7 +47,7 @@ message on channel `presentation.changed` with this payload:
 
 ```json
 {
-  "path": "roadmap.Rcode-ppt.html",
+  "path": "roadmap.Joker-ppt.html",
   "revision": 2,
   "source": "command",
   "changedIds": ["slide-agenda", "element-title"]
@@ -58,11 +58,11 @@ The source is either `command` or `tool`. A closed View does not turn a durable
 workspace write into a failed tool invocation.
 
 The sidebar has three focused tabs: Slides, Canvas, and Properties. Ask the main
-Rcode Agent in the normal conversation to create or revise a deck; a successful
+Joker Agent in the normal conversation to create or revise a deck; a successful
 tool mutation publishes `presentation.changed` and the open sidebar follows the
 Agent-written path and reloads the new revision automatically. When the sidebar
 opens without a restored deck, it discovers and loads the most recently modified
-root-level `.Rcode-ppt.html` file so a deck created while the View was closed is
+root-level `.Joker-ppt.html` file so a deck created while the View was closed is
 still rendered immediately.
 
 The shell is designed for the workbench sidebar rather than a full document
@@ -98,7 +98,7 @@ main-Agent edits share revision checks, undo, autosave, and deterministic HTML
 projection. Selectors, at-rules, comments, URLs, unsupported properties, and
 out-of-canvas geometry are rejected rather than injected into the Webview.
 
-For `presentation-apply`, `operationId` is optional and Rcode derives a bounded
+For `presentation-apply`, `operationId` is optional and Joker derives a bounded
 key from the tool invocation when it is omitted. Inserted slides default an
 omitted `backgroundColor` to `null` (the deck theme), and text elements may use
 an optional `fontFamily` override. `element.style` accepts the same bounded CSS
@@ -107,15 +107,15 @@ normal main-Agent calls compact while the saved model remains canonical.
 
 ## Chat handoff
 
-When an Agent turn finishes after a successful presentation write, Rcode shows a
+When an Agent turn finishes after a successful presentation write, Joker shows a
 deduplicated presentation file card below the final reply. The primary action
-uses the operating system's default file association: `.Rcode-ppt.html` normally
+uses the operating system's default file association: `.Joker-ppt.html` normally
 opens in the default browser, while native `.ppt`/`.pptx` output from PPT Master
 opens in WPS, PowerPoint, LibreOffice, or whichever compatible application the
 user configured. The card can also reveal the exact workspace file in the
-platform file manager. Before opening a standalone HTML deck, Rcode verifies its
+platform file manager. Before opening a standalone HTML deck, Joker verifies its
 current SHA-256 against the digest returned by the successful Studio write, so
-a file changed afterward must be saved again in Rcode PPT. Rcode never
+a file changed afterward must be saved again in Joker PPT. Joker never
 launches a presentation automatically and does not probe or execute
 application-specific commands.
 
@@ -128,17 +128,17 @@ npm --prefix examples/extensions/presentation-studio run typecheck
 npm --prefix examples/extensions/presentation-studio run test
 npm --prefix examples/extensions/presentation-studio run build
 node examples/extensions/validate-manifest.mjs \
-  examples/extensions/presentation-studio/Rcode-extension.json
+  examples/extensions/presentation-studio/Joker-extension.json
 ```
 
 `npm run check:extension-examples` additionally validates and packs every
-example with the repository's Rcode CLI.
+example with the repository's Joker CLI.
 
-`npm run dev` and production builds also package Rcode PPT into the
-product-owned bundled extension catalog. On startup, Rcode seeds it through the
-normal extension registry beside Rcode Video Editor. A user who explicitly
+`npm run dev` and production builds also package Joker PPT into the
+product-owned bundled extension catalog. On startup, Joker seeds it through the
+normal extension registry beside Joker Video Editor. A user who explicitly
 uninstalls it remains in control; later launches do not silently reinstall it.
-The right-side activity rail shows the Rcode PPT icon; selecting it
+The right-side activity rail shows the Joker PPT icon; selecting it
 opens the revision-aware editor in its sidebar layout without replacing the
 main conversation page.
 
@@ -148,5 +148,5 @@ The interaction vocabulary was informed by the separately inspected
 NQ-PPT-HTML-Editor project: a 16:9 canvas, slide rail, direct manipulation,
 property inspector, preview, and iterative Agent editing. No source code,
 runtime DOM snapshot format, temporary-ID scheme, iframe bridge, styling, or
-assets were copied. Rcode PPT was implemented against Rcode's public
+assets were copied. Joker PPT was implemented against Joker's public
 Extension API v1 and this repository's OpenSpec artifacts.

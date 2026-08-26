@@ -1,7 +1,7 @@
 import type { WorkspaceFileTarget } from '@shared/workspace-file'
 
 function rendererPlatform(): string {
-  return typeof window !== 'undefined' ? window.RcodeGui?.platform ?? '' : ''
+  return typeof window !== 'undefined' ? window.JokerGui?.platform ?? '' : ''
 }
 
 function isWindowsStylePath(path: string): boolean {

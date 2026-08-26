@@ -11,8 +11,8 @@ import type {
 } from './canvas/design-system-types'
 import { resolvePrototypeViewportFrame } from './prototype-player'
 
-/** Project-level Rcode handoff. Root DESIGN.md is the canonical theme source. */
-export const STITCH_DESIGN_MD_PATH = '.Rcode-design/HANDOFF.md'
+/** Project-level Joker handoff. Root DESIGN.md is the canonical theme source. */
+export const STITCH_DESIGN_MD_PATH = '.Joker-design/HANDOFF.md'
 
 export type BuildStitchDesignMarkdownOptions = {
   title?: string
@@ -148,7 +148,7 @@ function formatDesignArtifacts(
 }
 
 export function buildStitchDesignMarkdown(options: BuildStitchDesignMarkdownOptions): string {
-  const title = clean(options.title) || 'Rcode design project'
+  const title = clean(options.title) || 'Joker design project'
   const updatedAt = options.updatedAt ?? new Date().toISOString()
   const contextLines = formatDesignContextLines(options.designContext).filter((line) => line.trim())
   const preset = options.designContext?.designSystemPreset
@@ -158,14 +158,14 @@ export function buildStitchDesignMarkdown(options: BuildStitchDesignMarkdownOpti
   return [
     `# DESIGN.md: ${title}`,
     '',
-    'Portable project design guide for Rcode, Stitch-style workflows, and code agents.',
+    'Portable project design guide for Joker, Stitch-style workflows, and code agents.',
     '',
     '## Source',
     '',
     `- Updated: ${updatedAt}`,
     `- Project brief: ${code(options.projectBriefPath)}`,
     `- Shared token file: ${code(options.designSystemMdPath)}`,
-    '- Origin: Rcode design mode',
+    '- Origin: Joker design mode',
     '',
     '## Product Brief',
     '',
@@ -185,7 +185,7 @@ export function buildStitchDesignMarkdown(options: BuildStitchDesignMarkdownOpti
     '## Components',
     '',
     ...(referencesCanonicalTheme
-      ? ['See root `DESIGN.md` for public component guidance; Rcode-native rich component trees remain in internal document sidecars.']
+      ? ['See root `DESIGN.md` for public component guidance; Joker-native rich component trees remain in internal document sidecars.']
       : formatComponents(options.designSystem)),
     '',
     '## Screens and Prototype Flow',

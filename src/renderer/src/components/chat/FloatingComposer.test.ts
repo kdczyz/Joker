@@ -1664,7 +1664,7 @@ describe('FloatingComposer capability controls', () => {
           id: 'html-screen-frame:s1:login',
           kind: 'html-screen-frame',
           label: 'Login screen',
-          detail: '1280 x 800 - .Rcode-design/login/v1.html',
+          detail: '1280 x 800 - .Joker-design/login/v1.html',
           removable: true
         }],
         onRemoveContextChip: () => undefined,

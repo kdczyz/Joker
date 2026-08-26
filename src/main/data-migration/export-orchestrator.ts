@@ -22,11 +22,11 @@ import {
   workspaceFilesToZipEntries
 } from './export-inventory'
 import {
-  createRcodepackPackage,
-  serializeRcodepackJson,
-  type RcodepackCatalogInput
-} from './Rcodepack-container'
-import type { Zip64ArchiveEntryInput } from './Rcodepack-zip'
+  createJokerpackPackage,
+  serializeJokerpackJson,
+  type JokerpackCatalogInput
+} from './Jokerpack-container'
+import type { Zip64ArchiveEntryInput } from './Jokerpack-zip'
 
 export type RuntimeThreadForMigration = {
   id: string
@@ -41,7 +41,7 @@ export type RuntimeThreadForMigration = {
   updatedAt: string
 }
 
-export interface RcodeMigrationSnapshotClient {
+export interface JokerMigrationSnapshotClient {
   create(input: {
     threadIds: string[]
     includeAttachments: boolean
@@ -87,7 +87,7 @@ export type DataMigrationExportResult = {
 }
 
 export class DataMigrationExportOrchestrator {
-  constructor(private readonly runtime: RcodeMigrationSnapshotClient) {}
+  constructor(private readonly runtime: JokerMigrationSnapshotClient) {}
 
   async estimate(input: Pick<
     DataMigrationExportRequest,
@@ -151,7 +151,7 @@ export class DataMigrationExportOrchestrator {
     assertMigrationOutputOutsideWorkspaces(input.outputPath, selectedWorkspaces)
     const packageId = `pkg_${randomUUID().replaceAll('-', '')}`
     const startedAt = new Date().toISOString()
-    const temporaryRoot = join(dirname(input.outputPath), `.Rcode-migration-staging-${input.operationId}-${randomUUID()}`)
+    const temporaryRoot = join(dirname(input.outputPath), `.Joker-migration-staging-${input.operationId}-${randomUUID()}`)
     const runtimeSnapshotPath = join(temporaryRoot, 'runtime-snapshot.jsonl')
     let runtimeSnapshotId: string | undefined
     let omittedThreadIds: string[] = []
@@ -199,7 +199,7 @@ export class DataMigrationExportOrchestrator {
       const exportedThreadSet = new Set(exportedThreadIds)
       const exportedThreads = input.runtimeThreads.filter((thread) => exportedThreadSet.has(thread.id))
 
-      const catalogs: RcodepackCatalogInput[] = [
+      const catalogs: JokerpackCatalogInput[] = [
         {
           path: parsePackageRelativePath('catalog/workspaces.json'),
           value: inventory.estimate.workspaces
@@ -252,7 +252,7 @@ export class DataMigrationExportOrchestrator {
         memories: runtimeContentCounts.memories
       })
       this.progress(input, 'packaging', 0, inventory.estimate.logicalBytes, true)
-      await createRcodepackPackage({
+      await createJokerpackPackage({
         outputPath: input.outputPath,
         manifest,
         catalogs,
@@ -364,7 +364,7 @@ function normalizeMigrationId(value: string): string {
 }
 
 function sha256Json(value: unknown): string {
-  return createHash('sha256').update(serializeRcodepackJson(value)).digest('hex')
+  return createHash('sha256').update(serializeJokerpackJson(value)).digest('hex')
 }
 
 function safeProgressPath(value: string) {

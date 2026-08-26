@@ -1,4 +1,4 @@
-import { ContributionIdSchema } from '@Rcode/extension-api'
+import { ContributionIdSchema } from '@joker-code/extension-api'
 
 export const BUILTIN_RIGHT_PANEL_IDS = {
   todo: 'builtin:right-panel-todo',

@@ -11,9 +11,9 @@ import i18n from '../i18n'
  * fallback for non-Electron contexts such as tests.
  */
 export async function confirmDialog(message: string, detail?: string): Promise<boolean> {
-  if (typeof window !== 'undefined' && typeof window.RcodeGui?.confirmDialog === 'function') {
+  if (typeof window !== 'undefined' && typeof window.JokerGui?.confirmDialog === 'function') {
     try {
-      return await window.RcodeGui.confirmDialog({
+      return await window.JokerGui.confirmDialog({
         message,
         detail,
         confirmLabel: i18n.t('common:confirm'),

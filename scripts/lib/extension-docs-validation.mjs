@@ -10,17 +10,17 @@ export const SDK_SNAPSHOTS_END = '<!-- END GENERATED SDK PUBLIC SURFACE SNAPSHOT
 
 const SDK_DEFINITIONS = [
   {
-    name: '@Rcode/extension-api',
+    name: '@joker-code/extension-api',
     packageRoot: 'packages/extension-api',
     entry: 'src/index.ts'
   },
   {
-    name: '@Rcode/extension-react',
+    name: '@joker-code/extension-react',
     packageRoot: 'packages/extension-react',
     entry: 'src/index.tsx'
   },
   {
-    name: '@Rcode/extension-test',
+    name: '@joker-code/extension-test',
     packageRoot: 'packages/extension-test',
     entry: 'src/index.ts'
   }
@@ -103,7 +103,7 @@ export async function validateExtensionDocumentation(root) {
       SDK_SNAPSHOTS_BEGIN,
       SDK_SNAPSHOTS_END
     ))
-    const apiVersion = sdkPackages.find((candidate) => candidate.name === '@Rcode/extension-api')?.version
+    const apiVersion = sdkPackages.find((candidate) => candidate.name === '@joker-code/extension-api')?.version
     if (apiVersion && !markdown.includes(`### v${apiVersion}`)) {
       problems.push(`${name}: API Changelog has no v${apiVersion} entry`)
     }

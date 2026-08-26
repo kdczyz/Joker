@@ -4,8 +4,8 @@ import { buildWorkspaceProjectPickerOptions } from './WorkspaceProjectPicker'
 describe('buildWorkspaceProjectPickerOptions', () => {
   it('groups remembered worktree roots under their source project', () => {
     const projectPath = '/Users/zxy/code/Kook-VoiceShop-Bot'
-    const worktree38e2 = '/Users/zxy/.Rcode/worktrees/38e2/Kook-VoiceShop-Bot'
-    const worktreePython = '/Users/zxy/.Rcode/worktrees/python/Kook-VoiceShop-Bot'
+    const worktree38e2 = '/Users/zxy/.Joker/worktrees/38e2/Kook-VoiceShop-Bot'
+    const worktreePython = '/Users/zxy/.Joker/worktrees/python/Kook-VoiceShop-Bot'
     const { currentRoot, options } = buildWorkspaceProjectPickerOptions({
       currentWorkspaceRoot: worktree38e2,
       workspaceRoots: [
@@ -13,7 +13,7 @@ describe('buildWorkspaceProjectPickerOptions', () => {
         worktree38e2,
         worktreePython,
         '/Users/zxy/code/DeepSeek-GUI',
-        '~/.Rcode/write_workspace'
+        '~/.Joker/write_workspace'
       ],
       threadWorktrees: {
         'thread-38e2': {
@@ -37,7 +37,7 @@ describe('buildWorkspaceProjectPickerOptions', () => {
 
   it('resolves worktree roots to their source project without a registry entry', () => {
     const projectPath = '/Users/zxy/code/Kook-VoiceShop-Bot'
-    const worktreePath = '/Users/zxy/.Rcode/worktrees/ab12/Kook-VoiceShop-Bot'
+    const worktreePath = '/Users/zxy/.Joker/worktrees/ab12/Kook-VoiceShop-Bot'
     const { currentRoot, options } = buildWorkspaceProjectPickerOptions({
       currentWorkspaceRoot: worktreePath,
       workspaceRoots: [projectPath, worktreePath],
@@ -55,10 +55,10 @@ describe('buildWorkspaceProjectPickerOptions', () => {
       currentWorkspaceRoot: '/Users/zxy/project-a',
       workspaceRoots: [
         '/Users/zxy/project-a',
-        '/Users/zxy/Documents/Rcode/20260626-153012', // conversation workspace
+        '/Users/zxy/Documents/Joker/20260626-153012', // conversation workspace
         '/Users/zxy/project-b'
       ],
-      conversationWorkspaceRoot: '/Users/zxy/Documents/Rcode'
+      conversationWorkspaceRoot: '/Users/zxy/Documents/Joker'
     })
 
     // Only regular project folders should be included
@@ -73,13 +73,13 @@ describe('buildWorkspaceProjectPickerOptions', () => {
 
   it('includes regular project folders but excludes conversation workspaces', () => {
     const result = buildWorkspaceProjectPickerOptions({
-      currentWorkspaceRoot: '/Users/zxy/Documents/Rcode/20260627-091234', // conversation workspace as current
+      currentWorkspaceRoot: '/Users/zxy/Documents/Joker/20260627-091234', // conversation workspace as current
       workspaceRoots: [
         '/Users/zxy/project-x',
         '/Users/zxy/project-y',
-        '/Users/zxy/Documents/Rcode/20260626-153012' // another conversation workspace
+        '/Users/zxy/Documents/Joker/20260626-153012' // another conversation workspace
       ],
-      conversationWorkspaceRoot: '/Users/zxy/Documents/Rcode'
+      conversationWorkspaceRoot: '/Users/zxy/Documents/Joker'
     })
 
     // Even if current workspace is a conversation workspace, it should not
@@ -87,17 +87,17 @@ describe('buildWorkspaceProjectPickerOptions', () => {
     const optionRoots = result.options.map((opt) => opt.root)
     expect(optionRoots).toContain('/Users/zxy/project-x')
     expect(optionRoots).toContain('/Users/zxy/project-y')
-    expect(optionRoots).not.toContain('/Users/zxy/Documents/Rcode/20260626-153012')
+    expect(optionRoots).not.toContain('/Users/zxy/Documents/Joker/20260626-153012')
 
     // Current root should still be returned even if it's a conversation workspace
-    expect(result.currentRoot).toBe('/Users/zxy/Documents/Rcode/20260627-091234')
+    expect(result.currentRoot).toBe('/Users/zxy/Documents/Joker/20260627-091234')
   })
 
   it('handles empty workspace roots gracefully', () => {
     const result = buildWorkspaceProjectPickerOptions({
       currentWorkspaceRoot: '',
       workspaceRoots: [],
-      conversationWorkspaceRoot: '/Users/zxy/Documents/Rcode'
+      conversationWorkspaceRoot: '/Users/zxy/Documents/Joker'
     })
 
     expect(result.currentRoot).toBe('')
@@ -112,7 +112,7 @@ describe('buildWorkspaceProjectPickerOptions', () => {
         '/Users/zxy/project-a/', // duplicate with trailing slash
         '/Users/zxy/project-b'
       ],
-      conversationWorkspaceRoot: '/Users/zxy/Documents/Rcode'
+      conversationWorkspaceRoot: '/Users/zxy/Documents/Joker'
     })
 
     // Should only have unique entries

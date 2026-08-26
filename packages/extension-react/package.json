@@ -1,7 +1,7 @@
 {
-  "name": "@Rcode/extension-react",
+  "name": "@joker-code/extension-react",
   "version": "1.2.0",
-  "description": "Official React bindings for Rcode extension Webviews",
+  "description": "Official React bindings for Joker extension Webviews",
   "type": "module",
   "sideEffects": false,
   "main": "./dist/index.js",
@@ -25,13 +25,13 @@
     "prepack": "npm run build"
   },
   "dependencies": {
-    "@Rcode/extension-api": "1.2.0"
+    "@joker-code/extension-api": "1.2.0"
   },
   "peerDependencies": {
     "react": ">=18 <20"
   },
   "devDependencies": {
-    "@Rcode/extension-test": "1.2.0",
+    "@joker-code/extension-test": "1.2.0",
     "@types/react": "^19.0.10",
     "react": "^19.0.0",
     "react-test-renderer": "19.0.0",

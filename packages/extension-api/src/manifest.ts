@@ -345,7 +345,7 @@ const ManifestCommonShape = {
   localizations: ManifestLocalizationsSchema.optional(),
   license: z.string().min(1).max(128).optional(),
   homepage: z.string().url().optional(),
-  engines: z.strictObject({ Rcode: SemverRangeSchema }),
+  engines: z.strictObject({ Joker: SemverRangeSchema }),
   activationEvents: z.array(ActivationEventSchema).max(512),
   contributes: ExtensionContributionsSchema,
   permissions: z.array(PermissionSchema).max(256),

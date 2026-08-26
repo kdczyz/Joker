@@ -104,7 +104,7 @@ import {
   subscribeThreadEventsWithRecovery
 } from './chat-store-thread-action-helpers'
 import { GitCheckpointAvailabilityCache } from '../lib/git-checkpoint-availability'
-import type { ComposerContextAttachment } from '@Rcode/extension-api'
+import type { ComposerContextAttachment } from '@joker-code/extension-api'
 
 type SseAbortRef = { current: AbortController | null }
 
@@ -173,11 +173,11 @@ export function createThreadActions(
       // 对话会话:不绑定项目文件夹,在 conversationWorkspaceRoot 下自动创建
       // 一个时间戳子目录作为工作目录(主进程负责实际建目录)。
       if (options.conversation) {
-        if (typeof window.RcodeGui === 'undefined' || typeof window.RcodeGui.createConversationWorkspace !== 'function') {
+        if (typeof window.JokerGui === 'undefined' || typeof window.JokerGui.createConversationWorkspace !== 'function') {
           set({ error: i18n.t('common:workspacePickerUnavailable') })
           return
         }
-        const created = await window.RcodeGui.createConversationWorkspace(
+        const created = await window.JokerGui.createConversationWorkspace(
           settings.conversationWorkspaceRoot || undefined
         )
         if (!created.ok || !created.path) {
@@ -186,7 +186,7 @@ export function createThreadActions(
         }
         const pickedAgentId = options.agentId?.trim() || get().composerAgentId?.trim() || ''
         const personaProfile = pickedAgentId
-          ? settings.agents?.Rcode?.subagents?.profiles?.find(
+          ? settings.agents?.Joker?.subagents?.profiles?.find(
             (profile) => profile.id === pickedAgentId &&
               profile.enabled &&
               (profile.mode === 'primary' || profile.mode === 'all')
@@ -254,13 +254,13 @@ export function createThreadActions(
         try {
           let branch = options.worktreeBranch?.trim() ?? ''
           if (!branch) {
-            const branches = await window.RcodeGui.getGitBranches(workspaceRoot)
+            const branches = await window.JokerGui.getGitBranches(workspaceRoot)
             if (branches.ok) branch = branches.currentBranch ?? ''
           }
           if (!branch) {
             throw new Error(i18n.t('common:worktreeBranchRequired'))
           }
-          const wt = await window.RcodeGui.checkoutGitBranchWorktree(workspaceRoot, branch)
+          const wt = await window.JokerGui.checkoutGitBranchWorktree(workspaceRoot, branch)
           if (!wt.ok) {
             throw new Error(wt.message)
           }
@@ -280,7 +280,7 @@ export function createThreadActions(
       // at create time so later agent edits don't drift the thread.
       const pickedAgentId = options.agentId?.trim() || get().composerAgentId?.trim() || ''
       const personaProfile = pickedAgentId
-        ? settings.agents?.Rcode?.subagents?.profiles?.find(
+        ? settings.agents?.Joker?.subagents?.profiles?.find(
             (profile) => profile.id === pickedAgentId &&
               profile.enabled &&
               (profile.mode === 'primary' || profile.mode === 'all')
@@ -298,7 +298,7 @@ export function createThreadActions(
         } : {})
       })
       // Register + activate optimistically before refreshing. A freshly created
-      // Rcode thread may not be listed until the first message is written.
+      // Joker thread may not be listed until the first message is written.
       // Setting it active first lets refreshThreads preserve it in the sidebar.
       set((s) => ({
         activeThreadId: t.id,
@@ -359,7 +359,7 @@ export function createThreadActions(
       // The server has settled but a tool/approval/user_input block may still be
       // open (e.g. a delegate_task interrupted by a runtime restart). Settle it,
       // otherwise threadHasPendingRuntimeWork stays true and the queued message
-      // we are recovering re-queues forever instead of draining (kdczyz/Rcode#621).
+      // we are recovering re-queues forever instead of draining (kdczyz/Joker#621).
       const blocks = busy ? loaded : settlePendingRuntimeWorkAfterInterrupt(loaded)
       const currentTurnUserId = busy
         ? state.currentTurnUserId ?? latestUserMessageId ?? findLatestUserBlockId(blocks)
@@ -757,7 +757,7 @@ export function createThreadActions(
         : undefined
       const overrideModel = overrides?.model?.trim()
       // Claw/IM composer picker writes to the desktop default
-      // (`settings.agents.Rcode.model`) via setComposerModel, so the channel's
+      // (`settings.agents.Joker.model`) via setComposerModel, so the channel's
       // bound model is always stale and must NOT shadow the global default.
       // Ignore `channel.model` here; only an explicit override or the global
       // composer model should drive the runtime call.
@@ -853,7 +853,7 @@ export function createThreadActions(
     const threadSnap = get().threads.find((thread) => thread.id === activeThreadId)
     const overrideModel = overrides?.model?.trim()
     // Claw/IM composer picker writes to the desktop default
-    // (`settings.agents.Rcode.model`) via setComposerModel, so the channel's
+    // (`settings.agents.Joker.model`) via setComposerModel, so the channel's
     // bound model is always stale and must NOT shadow the global default.
     // Only an explicit override (queued or call-site), or the global composer
     // model, should drive the runtime call.
@@ -984,7 +984,7 @@ export function createThreadActions(
         }))
         void get().refreshThreads()
       } catch (e) {
-        void window.RcodeGui.logError('create-thread', 'Failed to create thread', {
+        void window.JokerGui.logError('create-thread', 'Failed to create thread', {
           message: e instanceof Error ? e.message : String(e)
         }).catch(() => undefined)
         set({
@@ -1029,9 +1029,9 @@ export function createThreadActions(
       if (
         checkpointWorkspaceRoot &&
         checkpointGitAvailability.canAttempt(checkpointWorkspaceKey) &&
-        typeof window.RcodeGui.createGitCheckpoint === 'function'
+        typeof window.JokerGui.createGitCheckpoint === 'function'
       ) {
-        const checkpoint = await window.RcodeGui.createGitCheckpoint({
+        const checkpoint = await window.JokerGui.createGitCheckpoint({
           workspaceRoot: checkpointWorkspaceRoot,
           threadId: activeThreadId
         }).catch((error) => ({
@@ -1045,7 +1045,7 @@ export function createThreadActions(
           if (checkpoint.reason === 'git_unavailable') {
             checkpointGitAvailability.markUnavailable(checkpointWorkspaceKey)
           }
-          void window.RcodeGui.logError(
+          void window.JokerGui.logError(
             'git-checkpoint',
             checkpoint.reason === 'git_unavailable'
               ? 'Git checkpoint disabled for this workspace because Git was not found'
@@ -1157,8 +1157,8 @@ export function createThreadActions(
           })()
         }))
       }
-      if (channel && typeof window.RcodeGui?.mirrorClawChannelMessage === 'function') {
-        const userMirror = await window.RcodeGui.mirrorClawChannelMessage(
+      if (channel && typeof window.JokerGui?.mirrorClawChannelMessage === 'function') {
+        const userMirror = await window.JokerGui.mirrorClawChannelMessage(
           activeThreadId,
           trimmedText,
           'user'
@@ -1201,7 +1201,7 @@ export function createThreadActions(
       return true
     } catch (e) {
       clearBusyWatchdog()
-      void window.RcodeGui.logError('send-message', 'Failed to send message', {
+      void window.JokerGui.logError('send-message', 'Failed to send message', {
         message: e instanceof Error ? e.message : String(e),
         threadId: activeThreadId
       }).catch(() => undefined)

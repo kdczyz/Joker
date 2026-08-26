@@ -43,10 +43,10 @@ jobs:
       - name: Upload Windows installer artifact
         uses: actions/upload-artifact@v4
         with:
-          name: rcode-windows-x64
+          name: joker-windows-x64
           if-no-files-found: error
           retention-days: 14
           path: |
-            dist/Rcode-*-win-x64.exe
-            dist/Rcode-*-win-x64.exe.blockmap
+            dist/Joker-*-win-x64.exe
+            dist/Joker-*-win-x64.exe.blockmap
             dist/latest.yml

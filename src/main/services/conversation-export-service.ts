@@ -8,7 +8,7 @@ import type {
 } from '../../shared/conversation-export'
 import { renderMarkdownDocumentToPdf } from './write-export-service'
 
-const FALLBACK_FILE_NAME = 'Rcode-conversation'
+const FALLBACK_FILE_NAME = 'Joker-conversation'
 
 export function sanitizeConversationExportFileName(value: string): string {
   return Array.from(value, (character) => {

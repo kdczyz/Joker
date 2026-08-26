@@ -69,7 +69,7 @@ describe('MediaGenerationSettingsSection', () => {
       ctx: {
         t,
         selectControlClass: 'select',
-        updateRcode: vi.fn(),
+        updateJoker: vi.fn(),
         provider: {
           providers: [{
             id: 'minimax',
@@ -92,7 +92,7 @@ describe('MediaGenerationSettingsSection', () => {
             }
           }]
         },
-        Rcode: {
+        Joker: {
           textToSpeech: {
             enabled: true,
             providerId: 'minimax',

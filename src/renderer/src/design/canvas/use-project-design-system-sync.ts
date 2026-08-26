@@ -18,7 +18,7 @@ export function projectDesignMdExternalRevisionDecision(
 }
 
 async function saveProjectDesignMdNow(workspaceRoot: string, content: string, expectedHash: string): Promise<boolean> {
-  const api = window.RcodeGui
+  const api = window.JokerGui
   if (!workspaceRoot || !api?.readWorkspaceFile || !api.writeWorkspaceFile) return false
   const current = await api.readWorkspaceFile({ path: PROJECT_DESIGN_MD_PATH, workspaceRoot }).catch(() => null)
   const currentContent = current?.ok ? current.content : ''
@@ -76,7 +76,7 @@ export async function persistNativeDesignSystemToProjectDesignMd(workspaceRoot: 
 export function useProjectDesignSystemSync(workspaceRoot: string, enabled: boolean): void {
   useEffect(() => {
     if (!enabled || !workspaceRoot) return
-    const api = window.RcodeGui
+    const api = window.JokerGui
     if (!api?.readWorkspaceFile) return
     let cancelled = false
     let applyingExternal = false

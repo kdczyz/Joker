@@ -32,7 +32,7 @@ import type {
   ClawImSettingsV1,
   ClawModel
 } from '@shared/app-settings'
-import type { ClawImInstallPollResult, ClawImInstallQrResult } from '@shared/Rcode-gui-api'
+import type { ClawImInstallPollResult, ClawImInstallQrResult } from '@shared/Joker-gui-api'
 import { confirmDialog } from '../../lib/confirm-dialog'
 import {
   type ClawInstallQrState,
@@ -137,7 +137,7 @@ export function createTelegramCredential(
 
 export function createConnectPhoneAgentProfile(): ClawImAgentProfileV1 {
   return {
-    name: 'Rcode',
+    name: 'Joker',
     description: '',
     identity: '',
     personality: '',
@@ -318,7 +318,7 @@ export function ConnectPhoneView({
     }
     if (
       typeof window === 'undefined' ||
-      typeof window.RcodeGui?.startClawImInstallQr !== 'function'
+      typeof window.JokerGui?.startClawImInstallQr !== 'function'
     ) {
       setInstallQr({
         ...INITIAL_QR_STATE,
@@ -337,7 +337,7 @@ export function ConnectPhoneView({
     const request = connectPhoneInstallRequestOptions(target)
     let result: ClawImInstallQrResult
     try {
-      result = await window.RcodeGui.startClawImInstallQr(request.provider, request.options)
+      result = await window.JokerGui.startClawImInstallQr(request.provider, request.options)
     } catch (error) {
       if (installAttempt !== installAttemptRef.current) return
       setInstallQr({
@@ -389,11 +389,11 @@ export function ConnectPhoneView({
       try {
         if (
           typeof window === 'undefined' ||
-          typeof window.RcodeGui?.pollClawImInstall !== 'function'
+          typeof window.JokerGui?.pollClawImInstall !== 'function'
         ) {
           throw new Error(t('clawAddImOfficialQrUnavailable'))
         }
-        const poll = await window.RcodeGui.pollClawImInstall(request.provider, result.deviceCode)
+        const poll = await window.JokerGui.pollClawImInstall(request.provider, result.deviceCode)
         if (installAttempt !== installAttemptRef.current) return
         if (poll.done) {
           clearInstallTimers()
@@ -621,7 +621,7 @@ export function ConnectPhoneView({
                 <div className="relative flex h-12 shrink-0 items-center justify-between border-b border-[#f0f1ef] px-4 text-[#111827]">
                   <ChevronLeft className="h-6 w-6" strokeWidth={1.8} />
                   <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-1.5 text-[14px] font-semibold">
-                    <span>Rcode</span>
+                    <span>Joker</span>
                     <span className="rounded-[4px] bg-[#eee7ff] px-1.5 py-0.5 text-[10px] font-semibold text-[#8b5cf6]">AI</span>
                   </div>
                   <MoreHorizontal className="h-5 w-5" strokeWidth={2} />
@@ -641,7 +641,7 @@ export function ConnectPhoneView({
                     </span>
                     <div className="overflow-hidden rounded-[8px] border border-[#dfe6e9] bg-[#fffefa] text-left shadow-sm">
                       <div className="flex items-center gap-2 bg-[#d2f5db] px-3 py-2">
-                        <span className="text-[12px] font-semibold text-[#15803d]">Rcode</span>
+                        <span className="text-[12px] font-semibold text-[#15803d]">Joker</span>
                         <span className="rounded-[4px] bg-[#bff0cf] px-1.5 py-0.5 text-[10px] font-semibold text-[#15803d]">
                           {t('connectPhonePreviewDone')}
                         </span>
@@ -806,7 +806,7 @@ export function ConnectPhoneSidebarPanel({
     }
     if (
       typeof window === 'undefined' ||
-      typeof window.RcodeGui?.startClawImInstallQr !== 'function'
+      typeof window.JokerGui?.startClawImInstallQr !== 'function'
     ) {
       setInstallQr({
         ...INITIAL_QR_STATE,
@@ -825,7 +825,7 @@ export function ConnectPhoneSidebarPanel({
     const request = connectPhoneInstallRequestOptions(target)
     let result: ClawImInstallQrResult
     try {
-      result = await window.RcodeGui.startClawImInstallQr(request.provider, request.options)
+      result = await window.JokerGui.startClawImInstallQr(request.provider, request.options)
     } catch (error) {
       if (installAttempt !== installAttemptRef.current) return
       setInstallQr({
@@ -877,11 +877,11 @@ export function ConnectPhoneSidebarPanel({
       try {
         if (
           typeof window === 'undefined' ||
-          typeof window.RcodeGui?.pollClawImInstall !== 'function'
+          typeof window.JokerGui?.pollClawImInstall !== 'function'
         ) {
           throw new Error(t('clawAddImOfficialQrUnavailable'))
         }
-        const poll = await window.RcodeGui.pollClawImInstall(request.provider, result.deviceCode)
+        const poll = await window.JokerGui.pollClawImInstall(request.provider, result.deviceCode)
         if (installAttempt !== installAttemptRef.current) return
         if (poll.done) {
           clearInstallTimers()

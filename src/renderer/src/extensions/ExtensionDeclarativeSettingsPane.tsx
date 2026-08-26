@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
-import type { JsonValue } from '@Rcode/extension-api'
+import type { JsonValue } from '@joker-code/extension-api'
 import type { RegisteredContribution } from './contribution-registry'
 import { DeclarativeSettingsSections } from './ControlledContributionSurfaces'
 import type {

@@ -29,10 +29,10 @@ const {
   resolveHostMediaExecutables
 } = require('./lib/extension-native-media-smoke.cjs')
 
-const EXTENSION_ID = 'Rcode-examples.Rcode-video-editor'
+const EXTENSION_ID = 'Joker-examples.Joker-video-editor'
 const EXTENSION_VERSION = '0.4.4'
-const SUCCESS_MARKER = 'Packaged Rcode Video Editor native smoke OK ('
-const REEXEC_MARKER = 'RCODE_PACKAGED_VIDEO_EDITOR_NATIVE_SMOKE_REEXEC'
+const SUCCESS_MARKER = 'Packaged Joker Video Editor native smoke OK ('
+const REEXEC_MARKER = 'JOKER_PACKAGED_VIDEO_EDITOR_NATIVE_SMOKE_REEXEC'
 const DEFAULT_COMMAND_TIMEOUT_MS = 180_000
 const DEFAULT_JOB_TIMEOUT_MS = 120_000
 const DEFAULT_SMOKE_TIMEOUT_MS = 10 * 60_000
@@ -77,7 +77,7 @@ async function main() {
   )
   if (!runtimeExecutable) {
     throw new Error(
-      `Packaged Rcode Video Editor native smoke requires a host-native packaged runtime for ` +
+      `Packaged Joker Video Editor native smoke requires a host-native packaged runtime for ` +
       `${process.platform}/${process.arch}`
     )
   }
@@ -115,7 +115,7 @@ function createPackagedReexecInvocation({
   const env = scrubEnvironment(environment)
   Object.assign(env, {
     ELECTRON_RUN_AS_NODE: '1',
-    RCODE_DISABLE_OS_CREDENTIAL_STORE: '1',
+    JOKER_DISABLE_OS_CREDENTIAL_STORE: '1',
     [REEXEC_MARKER]: '1',
     NODE_ENV: 'production'
   })
@@ -140,12 +140,12 @@ function assertPackagedReexecResult(result) {
   if (result.error) throw result.error
   if (result.status !== 0) {
     throw new Error(
-      `Packaged Rcode Video Editor native smoke child failed ` +
+      `Packaged Joker Video Editor native smoke child failed ` +
       `(${result.signal ?? result.status ?? 'unknown exit'})`
     )
   }
   if (!String(result.stdout ?? '').includes(SUCCESS_MARKER)) {
-    throw new Error('Packaged Rcode Video Editor native smoke child omitted its completion marker')
+    throw new Error('Packaged Joker Video Editor native smoke child omitted its completion marker')
   }
 }
 
@@ -159,22 +159,22 @@ async function runPackagedVideoEditorNativeSmoke({
   jobTimeoutMs = DEFAULT_JOB_TIMEOUT_MS
 }) {
   const unpackedRoot = join(resourcesDir, 'app.asar.unpacked')
-  const runtimeEntry = join(unpackedRoot, 'Rcode', 'dist', 'cli', 'serve-entry.js')
+  const runtimeEntry = join(unpackedRoot, 'Joker', 'dist', 'cli', 'serve-entry.js')
   validatePackagedResources(resourcesDir, unpackedRoot)
 
   const root = resolve(repositoryRoot)
-  const exampleRoot = join(root, 'examples', 'extensions', 'Rcode-video-editor')
-  assertPath(join(exampleRoot, 'Rcode-extension.json'), 'Rcode Video Editor manifest')
-  assertPath(join(exampleRoot, 'package.json'), 'Rcode Video Editor package')
+  const exampleRoot = join(root, 'examples', 'extensions', 'Joker-video-editor')
+  assertPath(join(exampleRoot, 'Joker-extension.json'), 'Joker Video Editor manifest')
+  assertPath(join(exampleRoot, 'package.json'), 'Joker Video Editor package')
   const exampleDist = join(exampleRoot, 'dist')
   const exampleDistExisted = existsSync(exampleDist)
-  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Rcode-packaged-video-editor-native-'))
+  const temporaryRoot = await mkdtemp(join(tmpdir(), 'Joker-packaged-video-editor-native-'))
   const profile = join(temporaryRoot, 'profile')
   const workspace = join(temporaryRoot, 'workspace')
   const fixtureDirectory = join(workspace, 'fixtures')
   const exportDirectory = join(workspace, 'exports')
   const archive = archivePath === undefined
-    ? join(temporaryRoot, 'Rcode-video-editor.Rcodex')
+    ? join(temporaryRoot, 'Joker-video-editor.Jokerx')
     : resolve(archivePath)
   const shortFixture = join(fixtureDirectory, 'short-source.mp4')
   const cancellationFixture = join(fixtureDirectory, 'cancellation-source.mp4')
@@ -220,7 +220,7 @@ async function runPackagedVideoEditorNativeSmoke({
       '--accept-permissions',
       '--json'
     ], { cwd: root, timeoutMs: commandTimeoutMs })
-    assertPath(join(profile, 'extensions', EXTENSION_ID, EXTENSION_VERSION, 'Rcode-extension.json'), 'installed video editor manifest')
+    assertPath(join(profile, 'extensions', EXTENSION_ID, EXTENSION_VERSION, 'Joker-extension.json'), 'installed video editor manifest')
     assertPath(join(profile, 'extensions', EXTENSION_ID, EXTENSION_VERSION, 'dist', 'host', 'extension.js'), 'installed video editor Host')
 
     for (const invocation of createDeterministicVideoFixtureInvocations({
@@ -291,7 +291,7 @@ async function runPackagedVideoEditorNativeSmoke({
       '--json'
     ], { cwd: root, timeoutMs: commandTimeoutMs }))
     if (!Array.isArray(listed.extensions) || listed.extensions.some(({ id }) => id === EXTENSION_ID)) {
-      throw new Error('Packaged Rcode Video Editor uninstall left a registry entry')
+      throw new Error('Packaged Joker Video Editor uninstall left a registry entry')
     }
     await assertRegularNonEmptyFile(videoOutput, 'export preserved after extension uninstall')
     await assertRegularNonEmptyFile(proofOutput, 'proof preserved after extension uninstall')
@@ -302,12 +302,12 @@ async function runPackagedVideoEditorNativeSmoke({
     await assertSourcePreserved(shortFixture, sourceHashes.short, 'short source')
     await assertSourcePreserved(cancellationFixture, sourceHashes.cancellation, 'cancellation source')
     if (await sha256File(archive) !== archiveHash) {
-      throw new Error('Packaged Rcode Video Editor smoke archive changed during lifecycle validation')
+      throw new Error('Packaged Joker Video Editor smoke archive changed during lifecycle validation')
     }
 
     process.stdout.write(
-      `${SUCCESS_MARKER}${process.platform}/${process.arch}): real packaged Rcode runtime, ` +
-      `real Rcode-video-editor .Rcodex ${archivePath === undefined ? 'build/' : ''}validate/install/activation, ` +
+      `${SUCCESS_MARKER}${process.platform}/${process.arch}): real packaged Joker runtime, ` +
+      `real Joker-video-editor .Jokerx ${archivePath === undefined ? 'build/' : ''}validate/install/activation, ` +
       'host-native ffprobe, proof artifact, ' +
       `${captionMode === 'both' ? 'burned-caption' : 'sidecar-caption fallback'} H.264/SRT export, ` +
       'post-probe/artifact publication, durable cancellation, executable-unavailable path, ' +
@@ -319,7 +319,7 @@ async function runPackagedVideoEditorNativeSmoke({
     if (!exampleDistExisted) {
       await rm(exampleDist, { recursive: true, force: true }).catch((error) => cleanupErrors.push(error))
     }
-    if (process.env.RCODE_KEEP_PACKAGED_VIDEO_EDITOR_NATIVE_SMOKE === '1') {
+    if (process.env.JOKER_KEEP_PACKAGED_VIDEO_EDITOR_NATIVE_SMOKE === '1') {
       process.stderr.write(`Preserved packaged video editor native smoke profile: ${temporaryRoot}\n`)
     } else {
       await makeTreeWritable(temporaryRoot).catch(() => undefined)
@@ -331,7 +331,7 @@ async function runPackagedVideoEditorNativeSmoke({
     const primary = primaryError instanceof Error
       ? primaryError.stack ?? primaryError.message
       : primaryError === undefined
-        ? 'Packaged Rcode Video Editor native smoke cleanup failed'
+        ? 'Packaged Joker Video Editor native smoke cleanup failed'
         : String(primaryError)
     const cleanup = cleanupErrors.length > 0
       ? `\nCleanup failures:\n${cleanupErrors.map((error) => `- ${error instanceof Error ? error.message : String(error)}`).join('\n')}`
@@ -554,7 +554,7 @@ async function exerciseUnavailableExecutablePath(_runtime, smoke, { sourceHandle
 
 async function withPackagedRuntime({
   parseServeOptions,
-  createRcodeServeRuntime,
+  createJokerServeRuntime,
   profile,
   workspace,
   executables
@@ -568,7 +568,7 @@ async function withPackagedRuntime({
       '--approval-policy', 'auto',
       '--sandbox-mode', 'danger-full-access'
     ], {})
-    const runtime = await createRcodeServeRuntime(options)
+    const runtime = await createJokerServeRuntime(options)
     try {
       const smoke = await prepareRuntime(runtime, workspace)
       return await operation(runtime, smoke)
@@ -580,7 +580,7 @@ async function withPackagedRuntime({
 
 async function prepareRuntime(runtime, workspace) {
   if (!runtime.extensionPlatform || !runtime.toolHost) {
-    throw new Error('Packaged Rcode runtime omitted the Extension Platform or ToolHost')
+    throw new Error('Packaged Joker runtime omitted the Extension Platform or ToolHost')
   }
   const platform = runtime.extensionPlatform
   const entry = await platform.registry.get(EXTENSION_ID)
@@ -589,7 +589,7 @@ async function prepareRuntime(runtime, workspace) {
     : entry?.selectedVersion
       ? entry.versions[entry.selectedVersion]
       : undefined
-  if (!active) throw new Error('Installed Rcode Video Editor has no selected registry version')
+  if (!active) throw new Error('Installed Joker Video Editor has no selected registry version')
   const canonicalWorkspace = await realpath(workspace)
   const workspaceKey = platform.paths.workspaceKey(canonicalWorkspace)
   await platform.registry.setWorkspaceEnabled(EXTENSION_ID, workspaceKey, true)
@@ -609,7 +609,7 @@ async function prepareRuntime(runtime, workspace) {
       active: true
     }
   })
-  if (!host) throw new Error('Packaged Rcode Video Editor Host did not activate')
+  if (!host) throw new Error('Packaged Joker Video Editor Host did not activate')
   const registrations = platform.tools.list(EXTENSION_ID)
   assertRegisteredToolIds(registrations)
   const aliases = new Map(registrations.map((registration) => [
@@ -627,7 +627,7 @@ async function prepareRuntime(runtime, workspace) {
   const approvalCounts = new Map()
   const invokeRaw = async (localToolId, args) => {
     const toolName = aliases.get(localToolId)
-    if (!toolName) throw new Error(`Packaged Rcode Video Editor tool is unavailable: ${localToolId}`)
+    if (!toolName) throw new Error(`Packaged Joker Video Editor tool is unavailable: ${localToolId}`)
     callSequence += 1
     const controller = new AbortController()
     return await runtime.toolHost.execute({
@@ -707,7 +707,7 @@ function assertRegisteredToolIds(registrations) {
   const missing = expected.filter((name) => !actualSet.has(name))
   const unexpected = actual.filter((name) => !expectedSet.has(name))
   throw new Error(
-    `Packaged Rcode Video Editor registered an unexpected tool surface ` +
+    `Packaged Joker Video Editor registered an unexpected tool surface ` +
     `(expected ${expected.length}, received ${registrations.length}; ` +
     `missing: ${missing.join(', ') || 'none'}; ` +
     `unexpected: ${unexpected.join(', ') || 'none'})`
@@ -716,16 +716,16 @@ function assertRegisteredToolIds(registrations) {
 
 async function loadPackagedRuntimeModules(unpackedRoot) {
   const [serve, runtimeFactory] = await Promise.all([
-    importFresh(join(unpackedRoot, 'Rcode', 'dist', 'cli', 'serve.js')),
-    importFresh(join(unpackedRoot, 'Rcode', 'dist', 'server', 'runtime-factory.js'))
+    importFresh(join(unpackedRoot, 'Joker', 'dist', 'cli', 'serve.js')),
+    importFresh(join(unpackedRoot, 'Joker', 'dist', 'server', 'runtime-factory.js'))
   ])
   if (typeof serve.parseServeOptions !== 'function' ||
-      typeof runtimeFactory.createRcodeServeRuntime !== 'function') {
-    throw new Error('Packaged Rcode runtime omitted the required native smoke composition exports')
+      typeof runtimeFactory.createJokerServeRuntime !== 'function') {
+    throw new Error('Packaged Joker runtime omitted the required native smoke composition exports')
   }
   return {
     parseServeOptions: serve.parseServeOptions,
-    createRcodeServeRuntime: runtimeFactory.createRcodeServeRuntime
+    createJokerServeRuntime: runtimeFactory.createJokerServeRuntime
   }
 }
 
@@ -779,7 +779,7 @@ function runPackagedCli(runtimeExecutable, runtimeEntry, args, {
       },
       shell: false
     })
-  }, `packaged Rcode ${args.join(' ')}`)
+  }, `packaged Joker ${args.join(' ')}`)
 }
 
 function runRequiredCommand(invocation, {
@@ -945,24 +945,24 @@ function jobId(result, label) {
 
 async function withMediaEnvironment(executables, operation) {
   const previous = {
-    ffmpeg: process.env.RCODE_FFMPEG_PATH,
-    ffprobe: process.env.RCODE_FFPROBE_PATH
+    ffmpeg: process.env.JOKER_FFMPEG_PATH,
+    ffprobe: process.env.JOKER_FFPROBE_PATH
   }
-  process.env.RCODE_FFMPEG_PATH = executables.ffmpeg
-  process.env.RCODE_FFPROBE_PATH = executables.ffprobe
+  process.env.JOKER_FFMPEG_PATH = executables.ffmpeg
+  process.env.JOKER_FFPROBE_PATH = executables.ffprobe
   try {
     return await operation()
   } finally {
-    restoreEnvironment('RCODE_FFMPEG_PATH', previous.ffmpeg)
-    restoreEnvironment('RCODE_FFPROBE_PATH', previous.ffprobe)
+    restoreEnvironment('JOKER_FFMPEG_PATH', previous.ffmpeg)
+    restoreEnvironment('JOKER_FFPROBE_PATH', previous.ffprobe)
   }
 }
 
 function mediaEnvironment(environment, executables) {
   return {
     ...environment,
-    RCODE_FFMPEG_PATH: executables.ffmpeg,
-    RCODE_FFPROBE_PATH: executables.ffprobe
+    JOKER_FFMPEG_PATH: executables.ffmpeg,
+    JOKER_FFPROBE_PATH: executables.ffprobe
   }
 }
 
@@ -998,12 +998,12 @@ function assertPath(path, label) {
 function assertReleaseArchive(path) {
   const details = lstatSync(path)
   if (!details.isFile() || details.isSymbolicLink() || details.size === 0) {
-    throw new Error(`Packaged Rcode Video Editor smoke archive must be a non-empty regular file: ${path}`)
+    throw new Error(`Packaged Joker Video Editor smoke archive must be a non-empty regular file: ${path}`)
   }
-  if (basename(path) !== `Rcode-video-editor-${EXTENSION_VERSION}.Rcodex`) {
+  if (basename(path) !== `Joker-video-editor-${EXTENSION_VERSION}.Jokerx`) {
     throw new Error(
-      `Packaged Rcode Video Editor smoke archive must be named ` +
-      `Rcode-video-editor-${EXTENSION_VERSION}.Rcodex`
+      `Packaged Joker Video Editor smoke archive must be named ` +
+      `Joker-video-editor-${EXTENSION_VERSION}.Jokerx`
     )
   }
 }

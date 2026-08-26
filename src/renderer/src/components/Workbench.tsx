@@ -121,8 +121,8 @@ export function Workbench(): ReactElement {
     [activeThreadId, threads, workspaceRoot]
   )
   useEffect(() => {
-    if (typeof window.RcodeGui?.onExtensionComposerContext !== 'function') return
-    return window.RcodeGui.onExtensionComposerContext(attachExtensionComposerContext)
+    if (typeof window.JokerGui?.onExtensionComposerContext !== 'function') return
+    return window.JokerGui.onExtensionComposerContext(attachExtensionComposerContext)
   }, [attachExtensionComposerContext])
   const extensionComposerContextChips = useMemo(() => {
     if (route !== 'chat') return []

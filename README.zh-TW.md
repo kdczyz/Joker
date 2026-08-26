@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⌁ Rcode
+# ⌁ Joker code
 
 ### 本地優先、權限可控的 AI Coding Agent
 
@@ -26,12 +26,12 @@
 
 ## ✦ 專案簡介
 
-Rcode 是一個面向真實開發工作的本地 AI Agent 框架。它透過桌面客戶端連接 OpenAI-compatible 模型，在專案工作區內呼叫檔案、終端機、Git、瀏覽器與桌面自動化工具，並以 `allow / ask / deny` 權限規則控制操作範圍。
+Joker code 是一個面向真實開發工作的本地 AI Agent 框架。它透過桌面客戶端連接 OpenAI-compatible 模型，在專案工作區內呼叫檔案、終端機、Git、瀏覽器與桌面自動化工具，並以 `allow / ask / deny` 權限規則控制操作範圍。
 
 專案同時包含 Android 客戶端與 Cloudflare 遠端服務：電腦在線時，可從手機進入公開的專案和對話繼續執行 Agent 任務；電腦離線時，Work 模式仍可透過雲端代理聊天或生成圖片。
 
 > [!IMPORTANT]
-> Rcode 依賴路徑校驗、指令分析、工具審批和審計記錄提供便攜式安全邊界，但不宣稱具備 OS 級沙箱。涉及生產環境、敏感資料或高權限指令時，仍應使用容器、專用帳號或隔離主機。
+> Joker code 依賴路徑校驗、指令分析、工具審批和審計記錄提供便攜式安全邊界，但不宣稱具備 OS 級沙箱。涉及生產環境、敏感資料或高權限指令時，仍應使用容器、專用帳號或隔離主機。
 
 ## ◈ 核心能力
 
@@ -52,8 +52,8 @@ Rcode 是一個面向真實開發工作的本地 AI Agent 框架。它透過桌�
 
 ```mermaid
 flowchart LR
-    U[開發者] --> D[Rcode Desktop]
-    U --> M[Rcode Android]
+    U[開發者] --> D[Joker code Desktop]
+    U --> M[Joker code Android]
 
     D --> A[Local Agent Server]
     A --> P[AI Providers]
@@ -75,7 +75,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | **電腦客戶端** | `src/`、`electron/`、`cli/` | `npm run desktop:dev` | `npm run desktop:build` |
 | **本地 Agent 服務** | `server/` | `npm run server:dev` | `npm run server:test` |
-| **Android 客戶端** | `Rcode_apk/` | `npm run mobile:dev` | `npm run mobile:build` / `npm run mobile:apk` |
+| **Android 客戶端** | `Joker_apk/` | `npm run mobile:dev` | `npm run mobile:build` / `npm run mobile:apk` |
 | **雲端帳號與遠端服務** | `Fwq/` | `npm run remote:dev` | `npm run remote:check` / `npm run remote:test` |
 
 ## ▶ 快速開始
@@ -125,11 +125,11 @@ npm run remote:test      # Cloudflare 遠端服務測試
 - **短時記憶**：依 token 預算保留最近完整對話輪次，將較早內容壓縮為本地摘要，並限制超長工具輸出。
 - **長期記憶**：以專案路徑隔離儲存至本機 SQLite，依關鍵字關聯度、重要度和時效召回；支援過期時間、去重和敏感憑證攔截。
 
-內建 `memory-management` Skill 提供統一適配約定。其他開源 Memory Skill 也可將持久化操作委託給 `memory_search`、`memory_store` 和 `memory_forget`，無需直接依賴 Rcode 的資料庫結構。關閉「Skill 適配」後，這三個工具不會暴露給模型。
+內建 `memory-management` Skill 提供統一適配約定。其他開源 Memory Skill 也可將持久化操作委託給 `memory_search`、`memory_store` 和 `memory_forget`，無需直接依賴 Joker code 的資料庫結構。關閉「Skill 適配」後，這三個工具不會暴露給模型。
 
 ## ⚙ 長期行程工作階段
 
-開發伺服器、檔案監聽器等不會自行結束的指令由 Rcode 代管，無需添加 `&` 或 `nohup`：
+開發伺服器、檔案監聽器等不會自行結束的指令由 Joker code 代管，無需添加 `&` 或 `nohup`：
 
 - `start_process`：啟動長期行程並回傳工作階段 ID、PID 和啟動輸出。
 - `read_process`：讀取目前狀態和最近輸出。
@@ -137,11 +137,11 @@ npm run remote:test      # Cloudflare 遠端服務測試
 - `stop_process`：停止行程及其子行程樹。
 - `list_processes`：列出目前專案的代管行程。
 
-聊天輸入框的「終端機」入口可檢視狀態、PID、指令與輸出。Rcode 服務結束時會清理仍在執行的代管行程，不會在重啟後自動恢復舊指令。
+聊天輸入框的「終端機」入口可檢視狀態、PID、指令與輸出。Joker code 服務結束時會清理仍在執行的代管行程，不會在重啟後自動恢復舊指令。
 
 ## ◉ macOS 桌面控制
 
-Rcode 可連接本地 `native-devtools-mcp`，讀取和操作 macOS 應用程式介面：
+Joker code 可連接本地 `native-devtools-mcp`，讀取和操作 macOS 應用程式介面：
 
 ```bash
 npm install -g native-devtools-mcp@0.10.1
@@ -157,7 +157,7 @@ native-devtools-mcp setup
 
 ## 🔐 權限與安全
 
-Rcode 採用「工作區邊界 + 工具審批 + 審計記錄」的分層策略：
+Joker code 採用「工作區邊界 + 工具審批 + 審計記錄」的分層策略：
 
 - 專案內讀取、編輯、搜尋、測試和構建可依策略自動執行。
 - 安裝依賴、聯網、遷移與容器修改會在執行前提示。
@@ -179,7 +179,7 @@ Rcode 採用「工作區邊界 + 工具審批 + 審計記錄」的分層策略�
 - Work 模式在電腦離線時代理聊天與圖片生成。
 - Code 模式僅存取電腦主動公開的專案 ID，不接受手機端傳入任意主機路徑。
 
-詳細 API、部署方式與安全設計見 [`Fwq/README.md`](Fwq/README.md)；Android 能力與構建說明見 [`Rcode_apk/README.md`](Rcode_apk/README.md)。
+詳細 API、部署方式與安全設計見 [`Fwq/README.md`](Fwq/README.md)；Android 能力與構建說明見 [`Joker_apk/README.md`](Joker_apk/README.md)。
 
 ## ⧉ 技術棧
 
@@ -192,14 +192,14 @@ Rcode 採用「工作區邊界 + 工具審批 + 審計記錄」的分層策略�
 ## ◇ 專案目錄
 
 ```text
-Rcode/
+Joker/
 ├── src/                 # 桌面端 React 介面
 ├── electron/            # Electron 主行程與安全儲存
 ├── server/              # 本地 Agent、工具、權限與狀態服務
 ├── cli/                 # 命令列進入點
 ├── config/              # Agent 與模型供應商設定
 ├── docs/                # 能力、權限與設計文件
-├── Rcode_apk/           # Android 客戶端
+├── Joker_apk/           # Android 客戶端
 └── Fwq/                 # Cloudflare 帳號與遠端服務
 ```
 
@@ -207,6 +207,6 @@ Rcode/
 
 <div align="center">
 
-**Rcode · Code locally, approve explicitly, collaborate anywhere.**
+**Joker code · Code locally, approve explicitly, collaborate anywhere.**
 
 </div>

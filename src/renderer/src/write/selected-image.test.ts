@@ -26,7 +26,7 @@ describe('isSelectableRasterImageSrc', () => {
   it('accepts local raster images only', () => {
     expect(isSelectableRasterImageSrc('../../img/mock.png')).toBe(true)
     expect(isSelectableRasterImageSrc('img/a.jpg')).toBe(true)
-    expect(isSelectableRasterImageSrc('Rcode-pending-infographic://abc-123')).toBe(false)
+    expect(isSelectableRasterImageSrc('Joker-pending-infographic://abc-123')).toBe(false)
     expect(isSelectableRasterImageSrc('../../proto/p.html')).toBe(false)
     expect(isSelectableRasterImageSrc('https://example.com/a.png')).toBe(false)
     expect(isSelectableRasterImageSrc('')).toBe(false)

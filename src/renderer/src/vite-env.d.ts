@@ -15,7 +15,7 @@ declare module 'react' {
   }
 }
 
-interface RcodeAuthUser {
+interface JokerAuthUser {
   id: string
   email: string
   username: string
@@ -25,8 +25,8 @@ interface RcodeAuthUser {
   isGuest?: boolean
 }
 
-interface RcodeAuthSession {
-  user: RcodeAuthUser
+interface JokerAuthSession {
+  user: JokerAuthUser
   expiresAt: string
 }
 
@@ -36,9 +36,9 @@ declare global {
       platform: string
       isDesktopClient: boolean
       getLocalApiToken?: () => Promise<string | undefined>
-      authSession?: () => Promise<RcodeAuthSession | undefined>
-      authLogin?: (details: { identifier: string; password: string }) => Promise<RcodeAuthSession>
-      authRegister?: (details: { email: string; username: string; displayName: string; password: string }) => Promise<RcodeAuthSession>
+      authSession?: () => Promise<JokerAuthSession | undefined>
+      authLogin?: (details: { identifier: string; password: string }) => Promise<JokerAuthSession>
+      authRegister?: (details: { email: string; username: string; displayName: string; password: string }) => Promise<JokerAuthSession>
       authLogout?: () => Promise<{ ok: boolean }>
     }
   }

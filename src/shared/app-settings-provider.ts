@@ -20,13 +20,13 @@ import {
   CUSTOM_VIDEO_GENERATION_PROVIDER_ID,
   type AppSettingsV1,
   type ImageGenerationProtocol,
-  type RcodeImageGenerationSettingsV1,
-  type RcodeMusicGenerationSettingsV1,
-  type RcodeRuntimeSettingsV1,
-  type RcodeRuntimeSettingsPatchV1,
-  type RcodeSpeechToTextSettingsV1,
-  type RcodeTextToSpeechSettingsV1,
-  type RcodeVideoGenerationSettingsV1,
+  type JokerImageGenerationSettingsV1,
+  type JokerMusicGenerationSettingsV1,
+  type JokerRuntimeSettingsV1,
+  type JokerRuntimeSettingsPatchV1,
+  type JokerSpeechToTextSettingsV1,
+  type JokerTextToSpeechSettingsV1,
+  type JokerVideoGenerationSettingsV1,
   type MusicGenerationProtocol,
   type ModelProviderImageCapabilityPatchV1,
   type ModelProviderImageCapabilityV1,
@@ -58,8 +58,8 @@ import {
   LOCAL_WHISPER_PROTOCOL,
   LOCAL_WHISPER_DEFAULT_MODEL_ID
 } from './local-whisper'
-import { normalizeModelEndpointFormat, type ModelEndpointFormat } from '../../Rcode/src/contracts/model-endpoint-format.js'
-import { getRcodeRuntimeSettings } from './app-settings-Rcode'
+import { normalizeModelEndpointFormat, type ModelEndpointFormat } from '../../Joker/src/contracts/model-endpoint-format.js'
+import { getJokerRuntimeSettings } from './app-settings-Joker'
 import { normalizeModelProviderBaseUrl as normalizeBaseUrl } from './app-settings-normalizers'
 import { DEFAULT_COMPOSER_MODEL_IDS } from './default-composer-models'
 import {
@@ -459,7 +459,7 @@ type TokenPlanCapabilityWithOptionalBaseUrl = {
   models: readonly string[]
 }
 
-type RcodeMediaSettingCore = Partial<{
+type JokerMediaSettingCore = Partial<{
   enabled: boolean
   providerId: string
   baseUrl: string
@@ -470,14 +470,14 @@ type RcodeMediaSettingCore = Partial<{
 const MINIMAX_PROVIDER_ID = 'minimax'
 const MINIMAX_TOKEN_PLAN_PROVIDER_ID = `${MINIMAX_PROVIDER_ID}${TOKEN_PLAN_PROVIDER_ID_SUFFIX}`
 
-export function defaultMiniMaxMediaGenerationRcodePatch(input: {
+export function defaultMiniMaxMediaGenerationJokerPatch(input: {
   providers: readonly ModelProviderProfileV1[]
-  currentRcode?: Partial<RcodeRuntimeSettingsV1>
-  RcodePatch?: RcodeRuntimeSettingsPatchV1
-}): RcodeRuntimeSettingsPatchV1 | undefined {
-  const patch: RcodeRuntimeSettingsPatchV1 = {}
-  if (!input.RcodePatch?.textToSpeech && isBlankRcodeMediaSetting(input.currentRcode?.textToSpeech)) {
-    const match = configuredMiniMaxMediaCapability(input.providers, 'textToSpeech', input.currentRcode?.providerId)
+  currentJoker?: Partial<JokerRuntimeSettingsV1>
+  JokerPatch?: JokerRuntimeSettingsPatchV1
+}): JokerRuntimeSettingsPatchV1 | undefined {
+  const patch: JokerRuntimeSettingsPatchV1 = {}
+  if (!input.JokerPatch?.textToSpeech && isBlankJokerMediaSetting(input.currentJoker?.textToSpeech)) {
+    const match = configuredMiniMaxMediaCapability(input.providers, 'textToSpeech', input.currentJoker?.providerId)
     if (match) {
       patch.textToSpeech = {
         enabled: true,
@@ -489,8 +489,8 @@ export function defaultMiniMaxMediaGenerationRcodePatch(input: {
       }
     }
   }
-  if (!input.RcodePatch?.musicGeneration && isBlankRcodeMediaSetting(input.currentRcode?.musicGeneration)) {
-    const match = configuredMiniMaxMediaCapability(input.providers, 'music', input.currentRcode?.providerId)
+  if (!input.JokerPatch?.musicGeneration && isBlankJokerMediaSetting(input.currentJoker?.musicGeneration)) {
+    const match = configuredMiniMaxMediaCapability(input.providers, 'music', input.currentJoker?.providerId)
     if (match) {
       patch.musicGeneration = {
         enabled: true,
@@ -502,8 +502,8 @@ export function defaultMiniMaxMediaGenerationRcodePatch(input: {
       }
     }
   }
-  if (!input.RcodePatch?.videoGeneration && isBlankRcodeMediaSetting(input.currentRcode?.videoGeneration)) {
-    const match = configuredMiniMaxMediaCapability(input.providers, 'video', input.currentRcode?.providerId)
+  if (!input.JokerPatch?.videoGeneration && isBlankJokerMediaSetting(input.currentJoker?.videoGeneration)) {
+    const match = configuredMiniMaxMediaCapability(input.providers, 'video', input.currentJoker?.providerId)
     if (match) {
       patch.videoGeneration = {
         enabled: true,
@@ -518,7 +518,7 @@ export function defaultMiniMaxMediaGenerationRcodePatch(input: {
   return Object.keys(patch).length > 0 ? patch : undefined
 }
 
-function isBlankRcodeMediaSetting(setting: RcodeMediaSettingCore | undefined): boolean {
+function isBlankJokerMediaSetting(setting: JokerMediaSettingCore | undefined): boolean {
   return setting?.enabled !== true &&
     !setting?.providerId?.trim() &&
     !setting?.baseUrl?.trim() &&
@@ -595,8 +595,8 @@ function firstCapabilityModel(models: readonly string[]): string {
   return models.map((model) => model.trim()).find(Boolean) ?? ''
 }
 
-export function resolveRcodeSpeechToTextSettings(settings: AppSettingsV1): RcodeSpeechToTextSettingsV1 {
-  const runtime = getRcodeRuntimeSettings(settings)
+export function resolveJokerSpeechToTextSettings(settings: AppSettingsV1): JokerSpeechToTextSettingsV1 {
+  const runtime = getJokerRuntimeSettings(settings)
   const speechToText = runtime.speechToText
   const providerId = normalizeModelProviderId(speechToText.providerId)
   const protocol = normalizeSpeechToTextProtocol(speechToText.protocol)
@@ -778,8 +778,8 @@ function resolveProviderSpeechModel(configuredModel: string, providerModels: rea
   return TEXT_TO_SPEECH_MODEL_PATTERN.test(model) ? providerModels[0] ?? model : (providerModels[0] ?? model)
 }
 
-export function resolveRcodeTextToSpeechSettings(settings: AppSettingsV1): RcodeTextToSpeechSettingsV1 {
-  const runtime = getRcodeRuntimeSettings(settings)
+export function resolveJokerTextToSpeechSettings(settings: AppSettingsV1): JokerTextToSpeechSettingsV1 {
+  const runtime = getJokerRuntimeSettings(settings)
   const textToSpeech = runtime.textToSpeech
   const providerId = normalizeModelProviderId(textToSpeech.providerId)
   if (!providerId || providerId === CUSTOM_TEXT_TO_SPEECH_PROVIDER_ID) {
@@ -808,8 +808,8 @@ export function resolveRcodeTextToSpeechSettings(settings: AppSettingsV1): Rcode
   }
 }
 
-export function resolveRcodeMusicGenerationSettings(settings: AppSettingsV1): RcodeMusicGenerationSettingsV1 {
-  const runtime = getRcodeRuntimeSettings(settings)
+export function resolveJokerMusicGenerationSettings(settings: AppSettingsV1): JokerMusicGenerationSettingsV1 {
+  const runtime = getJokerRuntimeSettings(settings)
   const musicGeneration = runtime.musicGeneration
   const providerId = normalizeModelProviderId(musicGeneration.providerId)
   if (!providerId || providerId === CUSTOM_MUSIC_GENERATION_PROVIDER_ID) {
@@ -838,8 +838,8 @@ export function resolveRcodeMusicGenerationSettings(settings: AppSettingsV1): Rc
   }
 }
 
-export function resolveRcodeVideoGenerationSettings(settings: AppSettingsV1): RcodeVideoGenerationSettingsV1 {
-  const runtime = getRcodeRuntimeSettings(settings)
+export function resolveJokerVideoGenerationSettings(settings: AppSettingsV1): JokerVideoGenerationSettingsV1 {
+  const runtime = getJokerRuntimeSettings(settings)
   const videoGeneration = runtime.videoGeneration
   const providerId = normalizeModelProviderId(videoGeneration.providerId)
   if (!providerId || providerId === CUSTOM_VIDEO_GENERATION_PROVIDER_ID) {
@@ -868,8 +868,8 @@ export function resolveRcodeVideoGenerationSettings(settings: AppSettingsV1): Rc
   }
 }
 
-export function resolveRcodeMemoryEnabled(settings: AppSettingsV1): boolean {
-  const runtime = getRcodeRuntimeSettings(settings)
+export function resolveJokerMemoryEnabled(settings: AppSettingsV1): boolean {
+  const runtime = getJokerRuntimeSettings(settings)
   return runtime.memoryEnabled ?? false
 }
 
@@ -914,8 +914,8 @@ function canonicalBaseUrl(value: string): string {
   return value.trim().replace(/\/+$/, '')
 }
 
-export function resolveRcodeImageGenerationSettings(settings: AppSettingsV1): RcodeImageGenerationSettingsV1 {
-  const runtime = getRcodeRuntimeSettings(settings)
+export function resolveJokerImageGenerationSettings(settings: AppSettingsV1): JokerImageGenerationSettingsV1 {
+  const runtime = getJokerRuntimeSettings(settings)
   const imageGeneration = runtime.imageGeneration
   const providerId = normalizeModelProviderId(imageGeneration.providerId)
   if (!providerId || providerId === CUSTOM_IMAGE_GENERATION_PROVIDER_ID) {
@@ -939,7 +939,7 @@ export function resolveRcodeImageGenerationSettings(settings: AppSettingsV1): Rc
     providerId: provider.id,
     protocol: image.protocol,
     baseUrl: resolveProviderCapabilityBaseUrl(provider, image, 'image'),
-    // Mirror the chat resolution (resolveRcodeRuntimeSettings): a keyless
+    // Mirror the chat resolution (resolveJokerRuntimeSettings): a keyless
     // provider profile must fall back to the agent's runtime.apiKey, otherwise
     // image generation authenticates with an empty Bearer token while chat
     // (which uses the fallback) works. Codex is the canonical case — its
@@ -949,8 +949,8 @@ export function resolveRcodeImageGenerationSettings(settings: AppSettingsV1): Rc
   }
 }
 
-export function resolveRcodeRuntimeSettings(settings: AppSettingsV1): RcodeRuntimeSettingsV1 {
-  const runtime = getRcodeRuntimeSettings(settings)
+export function resolveJokerRuntimeSettings(settings: AppSettingsV1): JokerRuntimeSettingsV1 {
+  const runtime = getJokerRuntimeSettings(settings)
   const provider = getModelProviderProfile(settings, runtime.providerId)
   const providerId = normalizeModelProviderId(runtime.providerId)
   const runtimeApiKey = runtime.apiKey?.trim() ?? ''
@@ -964,7 +964,7 @@ export function resolveRcodeRuntimeSettings(settings: AppSettingsV1): RcodeRunti
     // to the agent's own runtime.apiKey if the profile happens to be keyless.
     // A providerId pointing at a keyless profile must NOT resolve to an empty
     // key (issue #329) — that briefly reads as "no API key" and the
-    // settings-apply gate then stops a perfectly healthy Rcode runtime.
+    // settings-apply gate then stops a perfectly healthy Joker runtime.
     apiKey: useProviderCredentials
       ? provider.apiKey.trim() || runtimeApiKey
       : runtimeApiKey || provider.apiKey.trim(),
@@ -974,13 +974,13 @@ export function resolveRcodeRuntimeSettings(settings: AppSettingsV1): RcodeRunti
         : normalizeModelProviderBaseUrl(providerBaseUrl),
     endpointFormat: provider.endpointFormat,
     retry: provider.retry ?? defaultModelRequestRetrySettings(),
-    imageGeneration: resolveRcodeImageGenerationSettings(settings),
-    speechToText: resolveRcodeSpeechToTextSettings(settings),
-    textToSpeech: resolveRcodeTextToSpeechSettings(settings),
-    musicGeneration: resolveRcodeMusicGenerationSettings(settings),
-    videoGeneration: resolveRcodeVideoGenerationSettings(settings),
+    imageGeneration: resolveJokerImageGenerationSettings(settings),
+    speechToText: resolveJokerSpeechToTextSettings(settings),
+    textToSpeech: resolveJokerTextToSpeechSettings(settings),
+    musicGeneration: resolveJokerMusicGenerationSettings(settings),
+    videoGeneration: resolveJokerVideoGenerationSettings(settings),
     modelProfiles: modelProviderModelProfilesForSettings(settings),
-    memoryEnabled: resolveRcodeMemoryEnabled(settings)
+    memoryEnabled: resolveJokerMemoryEnabled(settings)
   }
 }
 

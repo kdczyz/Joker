@@ -2,10 +2,10 @@
  * GrokBuildProvider - AgentProvider implementation backed by grok-build.
  *
  * This provider communicates with the grok-build ACP runtime through the
- * preload bridge (window.RcodeGui.grok) and maps GrokBuildEvents to the
+ * preload bridge (window.JokerGui.grok) and maps GrokBuildEvents to the
  * ThreadEventSink interface that the chat store expects.
  *
- * All model providers configured in Rcode settings are supported — the grok
+ * All model providers configured in Joker settings are supported — the grok
  * runtime is started with the selected provider's API key, base URL, and model.
  */
 import type {
@@ -16,7 +16,7 @@ import type {
   ThreadListOptions,
   ThreadUsageSnapshot
 } from './types'
-import type { GrokBuildEvent } from '@shared/Rcode-gui-api'
+import type { GrokBuildEvent } from '@shared/Joker-gui-api'
 import type { GrokBuildTurnState } from './grok-build-event-mapper'
 import { mapGrokBuildEvent } from './grok-build-event-mapper'
 
@@ -75,16 +75,16 @@ export class GrokBuildProvider implements AgentProvider {
     }
   }
 
-  /** Resolve the provider config from Rcode settings. */
+  /** Resolve the provider config from Joker settings. */
   private async _resolveProviderConfig(): Promise<{
     apiKey: string
     baseUrl: string
     model: string
     providerId: string
   }> {
-    const settings = await window.RcodeGui.getSettings()
-    const providerId = settings.agents?.Rcode?.providerId || settings.provider?.providers?.[0]?.id || ''
-    const model = settings.agents?.Rcode?.model || ''
+    const settings = await window.JokerGui.getSettings()
+    const providerId = settings.agents?.Joker?.providerId || settings.provider?.providers?.[0]?.id || ''
+    const model = settings.agents?.Joker?.model || ''
 
     // Find the selected provider profile
     const provider = settings.provider?.providers?.find(p => p.id === providerId)
@@ -106,16 +106,16 @@ export class GrokBuildProvider implements AgentProvider {
     // Resolve cwd from settings or home directory
     let cwd = ''
     try {
-      const settings = await window.RcodeGui.getSettings()
-      cwd = settings.workspaceRoot || settings.conversationWorkspaceRoot || window.RcodeGui.homeDir
+      const settings = await window.JokerGui.getSettings()
+      cwd = settings.workspaceRoot || settings.conversationWorkspaceRoot || window.JokerGui.homeDir
     } catch {
-      cwd = window.RcodeGui.homeDir
+      cwd = window.JokerGui.homeDir
     }
 
     this._currentModel = config.model
 
     // Connect to the grok-build ACP runtime with the selected provider config
-    const result = await window.RcodeGui.grok.connect({
+    const result = await window.JokerGui.grok.connect({
       cwd,
       apiKey: config.apiKey,
       baseUrl: config.baseUrl || undefined,
@@ -130,7 +130,7 @@ export class GrokBuildProvider implements AgentProvider {
     this._cwd = cwd
 
     // Set up a global event listener that buffers events until a sink is attached
-    this._globalEventUnsubscribe = window.RcodeGui.grok.onEvent((event: GrokBuildEvent) => {
+    this._globalEventUnsubscribe = window.JokerGui.grok.onEvent((event: GrokBuildEvent) => {
       this._eventBuffer.push(event)
     })
   }
@@ -259,7 +259,7 @@ export class GrokBuildProvider implements AgentProvider {
 
     // Send prompt to grok-build (non-blocking, streaming via events)
     const cwd = record.workspace || this._cwd
-    const result = await window.RcodeGui.grok.sendPrompt({
+    const result = await window.JokerGui.grok.sendPrompt({
       prompt: text,
       sessionId: record.sessionId,
       cwd
@@ -295,7 +295,7 @@ export class GrokBuildProvider implements AgentProvider {
     // If discard is requested, also cancel the grok process. This is a heavy
     // operation (process restart) and should only be used when necessary.
     if (options?.discard) {
-      await window.RcodeGui.grok.cancel().catch(() => undefined)
+      await window.JokerGui.grok.cancel().catch(() => undefined)
     }
   }
 
@@ -354,7 +354,7 @@ export class GrokBuildProvider implements AgentProvider {
     this._globalEventUnsubscribe?.()
     this._globalEventUnsubscribe = null
 
-    const unsubscribe = window.RcodeGui.grok.onEvent((event: GrokBuildEvent) => {
+    const unsubscribe = window.JokerGui.grok.onEvent((event: GrokBuildEvent) => {
       if (signal.aborted) return
 
       const turn = this._activeTurn
@@ -392,7 +392,7 @@ export class GrokBuildProvider implements AgentProvider {
   /** Re-establish the global event buffer for future turns. */
   private _reconnectGlobalBuffer(): void {
     if (this._globalEventUnsubscribe) return
-    this._globalEventUnsubscribe = window.RcodeGui.grok.onEvent((event: GrokBuildEvent) => {
+    this._globalEventUnsubscribe = window.JokerGui.grok.onEvent((event: GrokBuildEvent) => {
       this._eventBuffer.push(event)
     })
   }

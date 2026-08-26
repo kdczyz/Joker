@@ -102,17 +102,17 @@ export function DesignContextPopover({
 
   const importDesignMd = (): void => {
     if (importing) return
-    if (!workspaceRoot || typeof window.RcodeGui?.readWorkspaceFile !== 'function') {
+    if (!workspaceRoot || typeof window.JokerGui?.readWorkspaceFile !== 'function') {
       setFileError(t('designImportDesignMdUnavailable'))
       return
     }
     setImporting(true)
     setFileError(null)
-    void window.RcodeGui
+    void window.JokerGui
       .readWorkspaceFile({ path: STITCH_DESIGN_MD_PATH, workspaceRoot })
       .then((res) => {
         if (!res.ok) {
-          return window.RcodeGui.readWorkspaceFile({ path: LEGACY_PROJECT_DESIGN_SYSTEM_PATH, workspaceRoot }).then(async (legacy) => {
+          return window.JokerGui.readWorkspaceFile({ path: LEGACY_PROJECT_DESIGN_SYSTEM_PATH, workspaceRoot }).then(async (legacy) => {
             const migration = legacy.ok ? createLegacyDesignSystemMigrationDraft(legacy.content) : null
             if (!legacy.ok || !migration) {
               setFileError(res.message || t('designImportDesignMdFailed'))

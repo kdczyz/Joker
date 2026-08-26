@@ -4,12 +4,12 @@ import {
   DEFAULT_LOG_RETENTION_DAYS,
   DEFAULT_GUI_UPDATE_CHANNEL,
   DEFAULT_GIT_BRANCH_PREFIX,
-  MIN_RCODE_LOCAL_PORT,
-  defaultRcodeRuntimeSettings,
-  applyRcodeRuntimePatch,
-  getRcodeRuntimeSettings,
-  RcodeSettingsEnvelope,
-  mergeRcodeRuntimeSettings,
+  MIN_JOKER_LOCAL_PORT,
+  defaultJokerRuntimeSettings,
+  applyJokerRuntimePatch,
+  getJokerRuntimeSettings,
+  JokerSettingsEnvelope,
+  mergeJokerRuntimeSettings,
   mergeAppBehaviorSettings,
   mergeClawSettings,
   mergeDesignSettings,
@@ -51,22 +51,22 @@ const SETTINGS_DIFF_NO_CHANGE = Symbol('settings-diff-no-change')
 // to the main-process patch merger. Emit the same explicit clear values the
 // settings controls use so persisted overrides are actually removed.
 const SETTINGS_CLEAR_SENTINELS: Readonly<Record<string, string>> = {
-  'agents.Rcode.smallModel': '',
-  'agents.Rcode.smallModelProviderId': '',
-  'agents.Rcode.titleModel': '',
-  'agents.Rcode.titleProviderId': '',
-  'agents.Rcode.summaryModel': '',
-  'agents.Rcode.summaryProviderId': '',
-  'agents.Rcode.codeReviewModel': '',
-  'agents.Rcode.codeReviewProviderId': '',
-  'agents.Rcode.titleReasoningEffort': 'off',
-  'agents.Rcode.summaryReasoningEffort': 'off',
-  'agents.Rcode.codeReviewReasoningEffort': 'off',
-  'agents.Rcode.contextCompaction.summaryModel': '',
-  'agents.Rcode.contextCompaction.summaryProviderId': ''
+  'agents.Joker.smallModel': '',
+  'agents.Joker.smallModelProviderId': '',
+  'agents.Joker.titleModel': '',
+  'agents.Joker.titleProviderId': '',
+  'agents.Joker.summaryModel': '',
+  'agents.Joker.summaryProviderId': '',
+  'agents.Joker.codeReviewModel': '',
+  'agents.Joker.codeReviewProviderId': '',
+  'agents.Joker.titleReasoningEffort': 'off',
+  'agents.Joker.summaryReasoningEffort': 'off',
+  'agents.Joker.codeReviewReasoningEffort': 'off',
+  'agents.Joker.contextCompaction.summaryModel': '',
+  'agents.Joker.contextCompaction.summaryProviderId': ''
 }
 
-export const DEFAULT_WORKSPACE_ROOT = '~/.Rcode/default_workspace'
+export const DEFAULT_WORKSPACE_ROOT = '~/.Joker/default_workspace'
 
 export function splitSettingsList(raw: string): string[] {
   return raw
@@ -80,15 +80,15 @@ export function listSettingsText(values: string[]): string {
 }
 
 export function hasValidPort(settings: AppSettingsV1): boolean {
-  const port = getRcodeRuntimeSettings(settings).port
-  return Number.isFinite(port) && port >= MIN_RCODE_LOCAL_PORT && port <= 65535
+  const port = getJokerRuntimeSettings(settings).port
+  return Number.isFinite(port) && port >= MIN_JOKER_LOCAL_PORT && port <= 65535
 }
 
 export function mergeSettings(current: AppSettingsV1, patch: SettingsPatch): AppSettingsV1 {
   const safeCurrent = coerceRendererSettings(current)
   const { agents: agentsPatch, provider: providerPatch, ...restPatch } = patch
   return {
-    ...applyRcodeRuntimePatch(safeCurrent, agentsPatch?.Rcode),
+    ...applyJokerRuntimePatch(safeCurrent, agentsPatch?.Joker),
     ...restPatch,
     provider: mergeModelProviderSettings(safeCurrent.provider, providerPatch),
     log: {
@@ -146,7 +146,7 @@ export function coerceRendererSettings(settings: AppSettingsV1): AppSettingsV1 {
     cursorSpotlight: raw.cursorSpotlight !== false,
     cursorSpotlightColor: normalizeCursorSpotlightColor(raw.cursorSpotlightColor),
     provider: normalizeModelProviderSettings(raw.provider),
-    agents: RcodeSettingsEnvelope(mergeRcodeRuntimeSettings(defaultRcodeRuntimeSettings(), getRcodeRuntimeSettings(settings))),
+    agents: JokerSettingsEnvelope(mergeJokerRuntimeSettings(defaultJokerRuntimeSettings(), getJokerRuntimeSettings(settings))),
     workspaceRoot: typeof raw.workspaceRoot === 'string' ? raw.workspaceRoot : DEFAULT_WORKSPACE_ROOT,
     conversationWorkspaceRoot:
       typeof raw.conversationWorkspaceRoot === 'string' ? raw.conversationWorkspaceRoot : '',

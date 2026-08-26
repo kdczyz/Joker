@@ -43,7 +43,7 @@ function packageEntry(relativePath: string, contents = 'hello'): DataMigrationPa
 
 describe('cross-platform migration import planning', () => {
   it('probes destination semantics without leaving probe files behind', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-import-probe-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-import-probe-'))
     roots.push(root)
     const probe = await probeDestinationFileSystem(root)
     expect(probe.writable).toBe(true)
@@ -52,14 +52,14 @@ describe('cross-platform migration import planning', () => {
   })
 
   it('recommends stable collision-free Keep both destinations', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-import-destination-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-import-destination-'))
     roots.push(root)
     await mkdir(join(root, 'Project (Imported)'))
     expect(await recommendCollisionFreeDestination(root, 'Project')).toBe(join(root, 'Project (Imported 2)'))
   })
 
   it('builds a repeatable plan with disk estimates and default Keep both policy', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-import-plan-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-import-plan-'))
     roots.push(root)
     const input = {
       operationId: 'import_plan',
@@ -85,7 +85,7 @@ describe('cross-platform migration import planning', () => {
   })
 
   it('detects case aliases and differing-content merge conflicts', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-import-conflicts-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-import-conflicts-'))
     roots.push(root)
     await writeFile(join(root, 'README.md'), 'target')
     const baseProbe: DestinationFileSystemProbe = {
@@ -140,7 +140,7 @@ describe('cross-platform migration import planning', () => {
   })
 
   it('blocks planning before staging when logical bytes exceed target free space', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-import-disk-full-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-import-disk-full-'))
     roots.push(root)
     const oversized = packageEntry('huge.bin')
     oversized.logicalBytes = 1_000_000_000_000_000
@@ -155,7 +155,7 @@ describe('cross-platform migration import planning', () => {
 
   it('reports a read-only destination as not writable without leaving a probe directory', async () => {
     if (process.platform === 'win32') return
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-import-read-only-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-import-read-only-'))
     roots.push(root)
     await chmod(root, 0o500)
     try {
@@ -167,7 +167,7 @@ describe('cross-platform migration import planning', () => {
   })
 
   it('fails closed when a network destination disappears before its filesystem probe', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-import-network-disconnect-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-import-network-disconnect-'))
     await rm(root, { recursive: true, force: true })
     await expect(probeDestinationFileSystem(root)).rejects.toMatchObject({ code: 'ENOENT' })
   })

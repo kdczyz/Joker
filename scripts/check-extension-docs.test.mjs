@@ -69,7 +69,7 @@ test('rejects invalid JSON and TypeScript snippets while allowing reasoned skips
 
 test('detects generated API inventory and Changelog public-surface drift', () => {
   const packages = [{
-    name: '@Rcode/example',
+    name: '@joker-code/example',
     version: '1.0.0',
     entryPoints: ['.'],
     surfaceSha256: 'abc123',
@@ -114,16 +114,16 @@ test('detects generated API inventory and Changelog public-surface drift', () =>
 test('contains public SDK declarations across native and mixed Windows separators', () => {
   assert.equal(
     isPathWithinRoot(
-      'D:\\a\\Rcode\\Rcode\\packages\\extension-api\\src',
-      'D:/a/Rcode/Rcode/packages/extension-api/src/accounts.ts',
+      'D:\\a\\Joker\\Joker\\packages\\extension-api\\src',
+      'D:/a/Joker/Joker/packages/extension-api/src/accounts.ts',
       win32
     ),
     true
   )
   assert.equal(
     isPathWithinRoot(
-      'D:\\a\\Rcode\\Rcode\\packages\\extension-api\\src',
-      'D:/a/Rcode/Rcode/packages/extension-api/src-escape/accounts.ts',
+      'D:\\a\\Joker\\Joker\\packages\\extension-api\\src',
+      'D:/a/Joker/Joker/packages/extension-api/src-escape/accounts.ts',
       win32
     ),
     false

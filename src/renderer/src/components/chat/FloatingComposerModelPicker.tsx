@@ -28,7 +28,7 @@ import {
   type ModelReasoningEffort,
   type ModelProviderModelProfileV1
 } from '@shared/app-settings'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 
 export type ComposerReasoningEffort = ModelReasoningEffort
 

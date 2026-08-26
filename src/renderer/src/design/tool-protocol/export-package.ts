@@ -104,7 +104,7 @@ export function buildDesignExportPackage(
   const resources: DesignExportResource[] = [
     { kind: 'project-design-md', path: STITCH_DESIGN_MD_PATH, title: options.title },
     { kind: 'project-theme-design-md', path: options.designSystemPath, title: 'Project theme DESIGN.md' },
-    { kind: 'graph-json', path: '.Rcode-design/design-graph.json', title: 'Design Graph' },
+    { kind: 'graph-json', path: '.Joker-design/design-graph.json', title: 'Design Graph' },
     ...artifactResources(state)
   ]
 

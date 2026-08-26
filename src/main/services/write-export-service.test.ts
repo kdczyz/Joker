@@ -133,14 +133,14 @@ describe('write-export-service helpers', () => {
   })
 
   it('exports content without requiring a source file', async () => {
-    const targetPath = join(workspaceRoot, 'Rcode-answer.html')
+    const targetPath = join(workspaceRoot, 'Joker-answer.html')
     vi.mocked(dialog.showSaveDialog).mockResolvedValue({
       canceled: false,
       filePath: targetPath
     })
 
     const result = await exportWriteDocument({
-      title: 'Rcode answer',
+      title: 'Joker answer',
       workspaceRoot,
       format: 'html',
       content: '# Answer\n\nShareable content'

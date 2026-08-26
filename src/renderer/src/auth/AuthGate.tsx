@@ -100,8 +100,8 @@ function AuthEntry({ onAuthenticated }: { onAuthenticated: (session: AuthSession
 
   return (
     <main className="authScreen">
-      <section className="authIntro" aria-label="Rcode 账号登录">
-        <div className="authBrand"><span>RC</span><strong>Rcode</strong></div>
+      <section className="authIntro" aria-label="Joker 账号登录">
+        <div className="authBrand"><span>RC</span><strong>Joker</strong></div>
         <div className="authIntroCopy">
           <p className="authEyebrow">本机工作区 · Cloudflare 账号</p>
           <h1>安全进入你的<br />Agent 工作区。</h1>
@@ -114,7 +114,7 @@ function AuthEntry({ onAuthenticated }: { onAuthenticated: (session: AuthSession
         <form className="authForm" onSubmit={submit}>
           <div className="authFormHeading">
             <LockKeyhole size={19} />
-            <div><h2>{mode === "login" ? "登录 Rcode" : "创建账号"}</h2><p>{mode === "login" ? "继续上次的工作" : "建立你的云端身份"}</p></div>
+            <div><h2>{mode === "login" ? "登录 Joker" : "创建账号"}</h2><p>{mode === "login" ? "继续上次的工作" : "建立你的云端身份"}</p></div>
           </div>
 
           {mode === "login" ? (

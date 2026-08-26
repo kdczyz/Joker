@@ -108,9 +108,9 @@ export function WorkbenchTopActions({
 
   useEffect(() => {
     let cancelled = false
-    if (typeof window.RcodeGui?.listEditors !== 'function') return
+    if (typeof window.JokerGui?.listEditors !== 'function') return
 
-    void window.RcodeGui.listEditors()
+    void window.JokerGui.listEditors()
       .then((result) => {
         if (cancelled) return
         const available = result.editors.filter((editor) => editor.available)
@@ -142,13 +142,13 @@ export function WorkbenchTopActions({
   }, [editorMenuOpen])
 
   useEffect(() => {
-    if (typeof window.RcodeGui?.onGuiUpdateState !== 'function') return
+    if (typeof window.JokerGui?.onGuiUpdateState !== 'function') return
     const applyState = (state: GuiUpdateState): void => {
       setGuiUpdateState(state)
     }
-    const unsubscribe = window.RcodeGui.onGuiUpdateState(applyState)
-    if (typeof window.RcodeGui?.getGuiUpdateState === 'function') {
-      void window.RcodeGui.getGuiUpdateState().then(applyState).catch(() => undefined)
+    const unsubscribe = window.JokerGui.onGuiUpdateState(applyState)
+    if (typeof window.JokerGui?.getGuiUpdateState === 'function') {
+      void window.JokerGui.getGuiUpdateState().then(applyState).catch(() => undefined)
     }
     return unsubscribe
   }, [])
@@ -235,14 +235,14 @@ export function WorkbenchTopActions({
   const runGuiUpdateAction = async (): Promise<void> => {
     if (!guiUpdateAction || guiUpdateBusy) return
     if (guiUpdateAction.manualOnly) {
-      if (typeof window.RcodeGui?.openExternal === 'function') {
-        await window.RcodeGui.openExternal(guiUpdateAction.releaseUrl)
+      if (typeof window.JokerGui?.openExternal === 'function') {
+        await window.JokerGui.openExternal(guiUpdateAction.releaseUrl)
       }
       return
     }
     if (
-      typeof window.RcodeGui?.downloadGuiUpdate !== 'function' ||
-      typeof window.RcodeGui?.installGuiUpdate !== 'function'
+      typeof window.JokerGui?.downloadGuiUpdate !== 'function' ||
+      typeof window.JokerGui?.installGuiUpdate !== 'function'
     ) {
       return
     }
@@ -250,19 +250,19 @@ export function WorkbenchTopActions({
     setApplyingGuiUpdate(true)
     try {
       if (!guiUpdateAction.downloaded && guiUpdateState.status !== 'downloaded') {
-        const downloadResult = await window.RcodeGui.downloadGuiUpdate(guiUpdateAction.channel)
+        const downloadResult = await window.JokerGui.downloadGuiUpdate(guiUpdateAction.channel)
         if (!downloadResult.ok) return
       }
-      const installResult = await window.RcodeGui.installGuiUpdate()
-      if (!installResult.ok && typeof window.RcodeGui?.logError === 'function') {
-        await window.RcodeGui.logError('gui-update', 'Failed to install GUI update from workbench top bar', {
+      const installResult = await window.JokerGui.installGuiUpdate()
+      if (!installResult.ok && typeof window.JokerGui?.logError === 'function') {
+        await window.JokerGui.logError('gui-update', 'Failed to install GUI update from workbench top bar', {
           version: guiUpdateAction.latestVersion,
           message: installResult.message
         })
       }
     } catch (error) {
-      if (typeof window.RcodeGui?.logError === 'function') {
-        await window.RcodeGui.logError('gui-update', 'Failed to apply GUI update from workbench top bar', {
+      if (typeof window.JokerGui?.logError === 'function') {
+        await window.JokerGui.logError('gui-update', 'Failed to apply GUI update from workbench top bar', {
           version: guiUpdateAction.latestVersion,
           message: error instanceof Error ? error.message : String(error)
         })

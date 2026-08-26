@@ -1,4 +1,4 @@
-# Rcode Desktop Client - 性能审计报告
+# Joker Desktop Client - 性能审计报告
 
 > 审计时间: 2025-07-21 | 范围: 电脑客户端版 (Electron + React/Vite + Node Agent)
 

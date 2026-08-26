@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { ClawImChannelV1 } from '@shared/app-settings'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 import { CLAW_MANAGED_INSTRUCTIONS_HEADING, MODEL_REASONING_EFFORTS } from '@shared/app-settings'
 import {
   MAX_COMPOSER_REASONING_EFFORTS,
@@ -32,9 +32,9 @@ import {
   resolveComposerContextWindowTokens
 } from './chat-store-helpers'
 
-const TURN_MODEL_STORAGE_KEY = 'Rcode.turnModelLabel'
-const THREAD_COMPOSER_SELECTION_STORAGE_KEY = 'Rcode.threadComposerSelection.v1'
-const COMPOSER_REASONING_EFFORT_STORAGE_KEY = 'Rcode.composerReasoningEffortByModel.v1'
+const TURN_MODEL_STORAGE_KEY = 'Joker.turnModelLabel'
+const THREAD_COMPOSER_SELECTION_STORAGE_KEY = 'Joker.threadComposerSelection.v1'
+const COMPOSER_REASONING_EFFORT_STORAGE_KEY = 'Joker.composerReasoningEffortByModel.v1'
 
 function createMemoryStorage(): Storage {
   const items = new Map<string, string>()
@@ -62,7 +62,7 @@ function clawChannel(): ClawImChannelV1 {
     label: 'Feishu Agent',
     enabled: true,
     model: 'auto',
-    threadId: 'Rcode-channel',
+    threadId: 'Joker-channel',
     workspaceRoot: '/Users/zxy/project',
     agentProfile: {
       name: '',
@@ -80,7 +80,7 @@ function clawChannel(): ClawImChannelV1 {
         latestMessageId: 'message-1',
         senderId: 'sender-1',
         senderName: 'Alex',
-        localThreadId: 'Rcode-conversation',
+        localThreadId: 'Joker-conversation',
         workspaceRoot: '/Users/zxy/project',
         createdAt: now,
         updatedAt: now
@@ -146,11 +146,11 @@ describe('chat-store Claw helpers', () => {
     expect(compacted).not.toContain(`/Users/zxy/project-${MAX_CODE_WORKSPACE_ROOTS}`)
   })
 
-  it('drops Rcode branch worktree paths from remembered code workspaces', () => {
+  it('drops Joker branch worktree paths from remembered code workspaces', () => {
     expect(
       compactCodeWorkspaceRoots([
         '/Users/zxy/code/project-a',
-        '/Users/zxy/.Rcode/worktrees/ab12/project-a'
+        '/Users/zxy/.Joker/worktrees/ab12/project-a'
       ])
     ).toEqual(['/Users/zxy/code/project-a'])
   })
@@ -180,8 +180,8 @@ describe('chat-store Claw helpers', () => {
   it('collects channel and conversation thread ids for Claw sessions', () => {
     const ids = clawThreadIdsFromChannels([clawChannel()])
 
-    expect(ids.has('Rcode-channel')).toBe(true)
-    expect(ids.has('Rcode-conversation')).toBe(true)
+    expect(ids.has('Joker-channel')).toBe(true)
+    expect(ids.has('Joker-conversation')).toBe(true)
   })
 
   it('uses product default agent names for new Claw channels', () => {
@@ -198,13 +198,13 @@ describe('chat-store Claw helpers', () => {
     expect(
       clawThreadTitleLooksManaged(`${CLAW_MANAGED_INSTRUCTIONS_HEADING} DeepSeek GUI scheduled-task tools`)
     ).toBe(true)
-    expect(isClawThread({ id: 'Rcode-leaked', title: '[Claw:Feishu Agent]' })).toBe(true)
+    expect(isClawThread({ id: 'Joker-leaked', title: '[Claw:Feishu Agent]' })).toBe(true)
   })
 
   it('recognizes Claw sessions by registered thread id', () => {
     expect(
       isClawThread(
-        { id: 'Rcode-conversation', title: 'hi' },
+        { id: 'Joker-conversation', title: 'hi' },
         [clawChannel()]
       )
     ).toBe(true)

@@ -26,7 +26,7 @@ function normalizeSandboxMode(value: unknown): SandboxMode | undefined {
 
 export function defaultRemoteAgentSettings(): RemoteAgentSettingsV1 {
   // Both fields intentionally omitted: remote-agent turns fall back to the
-  // global agent permission policy (`agents.Rcode.approvalPolicy`/`sandboxMode`)
+  // global agent permission policy (`agents.Joker.approvalPolicy`/`sandboxMode`)
   // until the user explicitly picks a mode in the remote-agent settings panel.
   return {}
 }

@@ -11,7 +11,7 @@ import {
 } from "./verifyTool";
 
 test("verify plan: full scope lists every available quality script", async () => {
-  const cwd = await mkdtemp(path.join(os.tmpdir(), "rcode-verify-full-"));
+  const cwd = await mkdtemp(path.join(os.tmpdir(), "joker-verify-full-"));
   try {
     await writeFile(
       path.join(cwd, "package.json"),
@@ -27,7 +27,7 @@ test("verify plan: full scope lists every available quality script", async () =>
 });
 
 test("verify plan: focused scope adds targeted tests for changed sources", async () => {
-  const cwd = await mkdtemp(path.join(os.tmpdir(), "rcode-verify-focused-"));
+  const cwd = await mkdtemp(path.join(os.tmpdir(), "joker-verify-focused-"));
   try {
     await mkdir(path.join(cwd, "src"), { recursive: true });
     await writeFile(
@@ -66,7 +66,7 @@ test("verify plan: focused scope adds targeted tests for changed sources", async
 });
 
 test("verify plan: no quality scripts yields an explicit note and no steps", async () => {
-  const cwd = await mkdtemp(path.join(os.tmpdir(), "rcode-verify-empty-"));
+  const cwd = await mkdtemp(path.join(os.tmpdir(), "joker-verify-empty-"));
   try {
     await writeFile(path.join(cwd, "package.json"), JSON.stringify({ name: "bare" }));
     const { steps, notes } = await buildVerifyPlan(cwd, "focused");
@@ -101,7 +101,7 @@ test("runVerify passes when every step succeeds", async () => {
   ).catch(() => null);
   // With a fake cwd the plan may be empty; only assert on the success path shape
   // via a controlled plan by using a temp dir with real scripts.
-  const cwd = await mkdtemp(path.join(os.tmpdir(), "rcode-verify-pass-"));
+  const cwd = await mkdtemp(path.join(os.tmpdir(), "joker-verify-pass-"));
   try {
     await writeFile(
       path.join(cwd, "package.json"),

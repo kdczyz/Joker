@@ -84,8 +84,8 @@ export function DesignCodeSyncPanel({ workspaceRoot, onSeedPrompt, canvasDocumen
   const applyLatest = async (): Promise<void> => {
     if (!model.canApply || applyState.status === 'applying') return
     if (
-      typeof window.RcodeGui?.readWorkspaceFile !== 'function' ||
-      typeof window.RcodeGui?.writeWorkspaceFile !== 'function'
+      typeof window.JokerGui?.readWorkspaceFile !== 'function' ||
+      typeof window.JokerGui?.writeWorkspaceFile !== 'function'
     ) {
       setApplyState({ status: 'error', message: t('designCodeSyncUnavailable') })
       return
@@ -97,7 +97,7 @@ export function DesignCodeSyncPanel({ workspaceRoot, onSeedPrompt, canvasDocumen
         workspaceRoot,
         document: useCanvasShapeStore.getState().document,
         adapter: {
-          readWorkspaceFile: window.RcodeGui.readWorkspaceFile,
+          readWorkspaceFile: window.JokerGui.readWorkspaceFile,
           writeWorkspaceFile: (payload) => writeDesignWorkspaceFile(payload)
         }
       })

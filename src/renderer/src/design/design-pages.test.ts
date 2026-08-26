@@ -45,11 +45,11 @@ function htmlArtifact(over: Partial<DesignArtifact> & { id: string }): DesignArt
   return {
     kind: 'html',
     title: over.title ?? over.id,
-    relativePath: over.relativePath ?? `.Rcode-design/${over.id}/v1.html`,
+    relativePath: over.relativePath ?? `.Joker-design/${over.id}/v1.html`,
     createdAt: '2026-06-22T00:00:00.000Z',
     updatedAt: '2026-06-22T00:00:00.000Z',
     versions: over.versions ?? [
-      { id: `${over.id}-v1`, relativePath: `.Rcode-design/${over.id}/v1.html`, createdAt: '2026-06-22T00:00:00.000Z', summary: '' }
+      { id: `${over.id}-v1`, relativePath: `.Joker-design/${over.id}/v1.html`, createdAt: '2026-06-22T00:00:00.000Z', summary: '' }
     ],
     ...over
   }
@@ -62,7 +62,7 @@ describe('buildHtmlSiblingManifest', () => {
         id: 'a',
         title: 'Home',
         node: { x: 0, y: 0, width: 420, height: 340 },
-        versions: [{ id: 'a-v1', relativePath: '.Rcode-design/a/v1.html', createdAt: 'x', summary: 'Landing page' }]
+        versions: [{ id: 'a-v1', relativePath: '.Joker-design/a/v1.html', createdAt: 'x', summary: 'Landing page' }]
       }),
       htmlArtifact({ id: 'b', title: 'Settings' })
     ]
@@ -70,7 +70,7 @@ describe('buildHtmlSiblingManifest', () => {
     expect(manifest).toHaveLength(1)
     expect(manifest[0]).toMatchObject({
       name: 'Home',
-      htmlPath: '.Rcode-design/a/v1.html',
+      htmlPath: '.Joker-design/a/v1.html',
       width: 420,
       height: 340,
       summary: 'Landing page'
@@ -82,16 +82,16 @@ describe('buildHtmlSiblingManifest', () => {
       htmlArtifact({
         id: 'a',
         title: 'Home',
-        relativePath: '.Rcode-design/a/v1.html',
+        relativePath: '.Joker-design/a/v1.html',
         versions: [
-          { id: 'a-v2', relativePath: '.Rcode-design/a/v2.html', createdAt: 'x2', summary: 'Newer experiment' },
-          { id: 'a-v1', relativePath: '.Rcode-design/a/v1.html', createdAt: 'x1', summary: 'Selected stable draft' }
+          { id: 'a-v2', relativePath: '.Joker-design/a/v2.html', createdAt: 'x2', summary: 'Newer experiment' },
+          { id: 'a-v1', relativePath: '.Joker-design/a/v1.html', createdAt: 'x1', summary: 'Selected stable draft' }
         ]
       })
     ]
 
     expect(buildHtmlSiblingManifest(artifacts, null)[0]).toMatchObject({
-      htmlPath: '.Rcode-design/a/v1.html',
+      htmlPath: '.Joker-design/a/v1.html',
       summary: 'Selected stable draft'
     })
   })
@@ -220,10 +220,10 @@ describe('buildPrototypeLinksForPage', () => {
         primaryAction: 'Start trial',
         linksTo: ['Signup', 'Dashboard', 'Signup']
       },
-      '.Rcode-design/doc/home/v1.html',
+      '.Joker-design/doc/home/v1.html',
       [
-        { title: 'Home', artifactId: 'home', relativePath: '.Rcode-design/doc/home/v1.html' },
-        { title: 'Signup', artifactId: 'signup', relativePath: '.Rcode-design/doc/signup/v1.html' }
+        { title: 'Home', artifactId: 'home', relativePath: '.Joker-design/doc/home/v1.html' },
+        { title: 'Signup', artifactId: 'signup', relativePath: '.Joker-design/doc/signup/v1.html' }
       ]
     )
 
@@ -247,11 +247,11 @@ describe('buildPrototypeLinksForPage', () => {
         brief: 'Ops dashboard',
         linksTo: ['Settings']
       },
-      '.Rcode-design/doc/dashboard/v1.html',
+      '.Joker-design/doc/dashboard/v1.html',
       [
-        { title: 'Dashboard', artifactId: 'dashboard', relativePath: '.Rcode-design/doc/dashboard/v1.html' },
-        { title: 'Account Settings', artifactId: 'settings', relativePath: '.Rcode-design/doc/settings/v1.html' },
-        { title: 'Reports', artifactId: 'reports', relativePath: '.Rcode-design/doc/reports/v1.html' }
+        { title: 'Dashboard', artifactId: 'dashboard', relativePath: '.Joker-design/doc/dashboard/v1.html' },
+        { title: 'Account Settings', artifactId: 'settings', relativePath: '.Joker-design/doc/settings/v1.html' },
+        { title: 'Reports', artifactId: 'reports', relativePath: '.Joker-design/doc/reports/v1.html' }
       ]
     )
 
@@ -271,11 +271,11 @@ describe('buildPrototypeLinksForPage', () => {
         brief: 'Ops dashboard',
         linksTo: ['Settings']
       },
-      '.Rcode-design/doc/dashboard/v1.html',
+      '.Joker-design/doc/dashboard/v1.html',
       [
-        { title: 'Dashboard', artifactId: 'dashboard', relativePath: '.Rcode-design/doc/dashboard/v1.html' },
-        { title: 'Account Settings', artifactId: 'account-settings', relativePath: '.Rcode-design/doc/account/v1.html' },
-        { title: 'Team Settings', artifactId: 'team-settings', relativePath: '.Rcode-design/doc/team/v1.html' }
+        { title: 'Dashboard', artifactId: 'dashboard', relativePath: '.Joker-design/doc/dashboard/v1.html' },
+        { title: 'Account Settings', artifactId: 'account-settings', relativePath: '.Joker-design/doc/account/v1.html' },
+        { title: 'Team Settings', artifactId: 'team-settings', relativePath: '.Joker-design/doc/team/v1.html' }
       ]
     )
 
@@ -294,11 +294,11 @@ describe('buildPrototypeLinksForPage', () => {
         primaryAction: 'Review queue',
         linksTo: ['Approvals']
       },
-      '.Rcode-design/doc/dashboard/v1.html',
+      '.Joker-design/doc/dashboard/v1.html',
       [
-        { title: 'Dashboard', artifactId: 'dashboard', relativePath: '.Rcode-design/doc/dashboard/v1.html' },
-        { title: 'Review Queue', artifactId: 'review-queue', relativePath: '.Rcode-design/doc/review/v1.html' },
-        { title: 'Settings', artifactId: 'settings', relativePath: '.Rcode-design/doc/settings/v1.html' }
+        { title: 'Dashboard', artifactId: 'dashboard', relativePath: '.Joker-design/doc/dashboard/v1.html' },
+        { title: 'Review Queue', artifactId: 'review-queue', relativePath: '.Joker-design/doc/review/v1.html' },
+        { title: 'Settings', artifactId: 'settings', relativePath: '.Joker-design/doc/settings/v1.html' }
       ]
     )
 
@@ -322,11 +322,11 @@ describe('buildPrototypeLinksForPage', () => {
         brief: 'Ops dashboard',
         linksTo: ['Settings']
       },
-      '.Rcode-design/doc/dashboard/v1.html',
+      '.Joker-design/doc/dashboard/v1.html',
       [
-        { title: 'Dashboard', artifactId: 'dashboard', relativePath: '.Rcode-design/doc/dashboard/v1.html' },
-        { title: 'Settings', artifactId: 'account-settings', relativePath: '.Rcode-design/doc/account-settings/v1.html' },
-        { title: 'Settings', artifactId: 'project-settings', relativePath: '.Rcode-design/doc/project-settings/v1.html' }
+        { title: 'Dashboard', artifactId: 'dashboard', relativePath: '.Joker-design/doc/dashboard/v1.html' },
+        { title: 'Settings', artifactId: 'account-settings', relativePath: '.Joker-design/doc/account-settings/v1.html' },
+        { title: 'Settings', artifactId: 'project-settings', relativePath: '.Joker-design/doc/project-settings/v1.html' }
       ]
     )
 
@@ -344,10 +344,10 @@ describe('buildPrototypeLinksForPage', () => {
         brief: 'Landing',
         primaryAction: 'Open checkout'
       },
-      '.Rcode-design/doc/home/v1.html',
+      '.Joker-design/doc/home/v1.html',
       [
-        { title: 'Home', artifactId: 'home', relativePath: '.Rcode-design/doc/home/v1.html' },
-        { title: 'Checkout', artifactId: 'checkout', relativePath: '.Rcode-design/doc/checkout/v1.html' }
+        { title: 'Home', artifactId: 'home', relativePath: '.Joker-design/doc/home/v1.html' },
+        { title: 'Checkout', artifactId: 'checkout', relativePath: '.Joker-design/doc/checkout/v1.html' }
       ]
     )
 
@@ -368,7 +368,7 @@ describe('buildDesignPlanPrompt', () => {
       brief: 'A habit tracker app',
       workspaceRoot: '/ws',
       maxPages: 99,
-      existingPages: [{ name: 'Login', htmlPath: '.Rcode-design/x/v1.html', summary: 'auth' }]
+      existingPages: [{ name: 'Login', htmlPath: '.Joker-design/x/v1.html', summary: 'auth' }]
     })
     expect(prompt).toContain('A habit tracker app')
     expect(prompt).toContain(`2-${DESIGN_PAGES_MAX} pages`)
@@ -408,8 +408,8 @@ describe('deriveParallelDesignPageStatesFromBlocks', () => {
       {
         artifactId: 'landing',
         title: 'Landing',
-        relativePath: '.Rcode-design/doc/landing/v1.html',
-        designMdPath: '.Rcode-design/doc/landing/DESIGN.md',
+        relativePath: '.Joker-design/doc/landing/v1.html',
+        designMdPath: '.Joker-design/doc/landing/DESIGN.md',
         brief: 'Landing page',
         screenManifest: []
       }
@@ -421,7 +421,7 @@ describe('deriveParallelDesignPageStatesFromBlocks', () => {
         id: 'tool_call_a',
         summary: 'delegate_task',
         status: 'running',
-        detail: JSON.stringify({ label: 'page:landing', prompt: 'write .Rcode-design/doc/landing/v1.html' }),
+        detail: JSON.stringify({ label: 'page:landing', prompt: 'write .Joker-design/doc/landing/v1.html' }),
         meta: { toolName: 'delegate_task' }
       }
     ]
@@ -462,8 +462,8 @@ describe('deriveParallelDesignPageStatesFromBlocks', () => {
       {
         artifactId: 'community',
         title: 'Community',
-        relativePath: '.Rcode-design/doc/community/v1.html',
-        designMdPath: '.Rcode-design/doc/community/DESIGN.md',
+        relativePath: '.Joker-design/doc/community/v1.html',
+        designMdPath: '.Joker-design/doc/community/DESIGN.md',
         brief: 'Community page',
         screenManifest: []
       }

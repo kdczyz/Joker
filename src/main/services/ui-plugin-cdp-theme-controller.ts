@@ -1,6 +1,6 @@
 import type { WebContents } from 'electron'
 
-const UI_PLUGIN_THEME_STYLE_ID = 'Rcode-ui-plugin-theme-cdp'
+const UI_PLUGIN_THEME_STYLE_ID = 'Joker-ui-plugin-theme-cdp'
 const UI_PLUGIN_THEME_MARKER_ATTRIBUTE = 'data-ui-plugin-cdp'
 const CDP_PROTOCOL_VERSION = '1.3'
 
@@ -146,7 +146,7 @@ export class UiPluginCdpThemeController {
   private requireLiveWebContents(): WebContents {
     const contents = this.options.getWebContents()
     if (!contents || contents.isDestroyed()) {
-      throw new Error('Rcode workbench is unavailable for CDP theme injection.')
+      throw new Error('Joker workbench is unavailable for CDP theme injection.')
     }
     return contents
   }
@@ -209,7 +209,7 @@ export class UiPluginCdpThemeController {
           cdp.detach()
         } catch (error) {
           throw new Error(
-            `Unable to release the previous Rcode UI theme CDP session: ${errorMessage(error)}`
+            `Unable to release the previous Joker UI theme CDP session: ${errorMessage(error)}`
           )
         }
       }
@@ -257,7 +257,7 @@ export class UiPluginCdpThemeController {
         )
       }
     } catch (error) {
-      failure = new Error(`Unable to update the Rcode UI theme through CDP: ${errorMessage(error)}`)
+      failure = new Error(`Unable to update the Joker UI theme through CDP: ${errorMessage(error)}`)
     } finally {
       if (attachedByController && !sessionDetached && cdp.isAttached()) {
         try {
@@ -268,7 +268,7 @@ export class UiPluginCdpThemeController {
         } catch (error) {
           this.options.onBackgroundError?.('detach', error)
           failure ??= new Error(
-            `Unable to detach the Rcode UI theme CDP session: ${errorMessage(error)}`
+            `Unable to detach the Joker UI theme CDP session: ${errorMessage(error)}`
           )
         }
       } else if (attachedByController && !cdp.isAttached()) {

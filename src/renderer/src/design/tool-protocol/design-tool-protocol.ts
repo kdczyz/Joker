@@ -34,8 +34,8 @@ export type DesignToolProtocolTool = {
 
 export type DesignToolProtocolManifest = {
   version: 1
-  kind: 'Rcode.design.tool-protocol'
-  source: 'Rcode-design-mode'
+  kind: 'Joker.design.tool-protocol'
+  source: 'Joker-design-mode'
   tools: DesignToolProtocolTool[]
 }
 
@@ -198,8 +198,8 @@ export const DESIGN_TOOL_PROTOCOL_TOOLS: DesignToolProtocolTool[] = [
 export function buildDesignToolProtocolManifest(): DesignToolProtocolManifest {
   return {
     version: 1,
-    kind: 'Rcode.design.tool-protocol',
-    source: 'Rcode-design-mode',
+    kind: 'Joker.design.tool-protocol',
+    source: 'Joker-design-mode',
     tools: DESIGN_TOOL_PROTOCOL_TOOLS
   }
 }

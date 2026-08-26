@@ -21,24 +21,24 @@ export function RemoteAgentComposerPicker({ disabled = false }: Props): ReactEle
 
   // Load remote-agent permission on mount (falls back to global agent policy)
   useEffect(() => {
-    if (typeof window.RcodeGui?.getSettings !== 'function') return
-    void window.RcodeGui.getSettings().then((settings) => {
+    if (typeof window.JokerGui?.getSettings !== 'function') return
+    void window.JokerGui.getSettings().then((settings) => {
       setApprovalPolicy(
-        settings.remoteAgent?.approvalPolicy ?? settings.agents.Rcode.approvalPolicy
+        settings.remoteAgent?.approvalPolicy ?? settings.agents.Joker.approvalPolicy
       )
       setSandboxMode(
-        settings.remoteAgent?.sandboxMode ?? settings.agents.Rcode.sandboxMode
+        settings.remoteAgent?.sandboxMode ?? settings.agents.Joker.sandboxMode
       )
     })
   }, [])
 
   // Subscribe to remote agent status
   useEffect(() => {
-    if (typeof window.RcodeGui?.remoteAgent?.getStatus !== 'function') return
-    void window.RcodeGui.remoteAgent.getStatus().then((s) => {
+    if (typeof window.JokerGui?.remoteAgent?.getStatus !== 'function') return
+    void window.JokerGui.remoteAgent.getStatus().then((s) => {
       setAgentState(s.state as AgentState)
     })
-    const unsub = window.RcodeGui.remoteAgent.onStatus((payload) => {
+    const unsub = window.JokerGui.remoteAgent.onStatus((payload) => {
       setAgentState(payload.state as AgentState)
     })
     return unsub
@@ -50,7 +50,7 @@ export function RemoteAgentComposerPicker({ disabled = false }: Props): ReactEle
       const nextSandbox = patch.sandboxMode ?? sandboxMode
       if (patch.approvalPolicy) setApprovalPolicy(patch.approvalPolicy)
       if (patch.sandboxMode) setSandboxMode(patch.sandboxMode)
-      void window.RcodeGui?.saveSettingsSilent?.({
+      void window.JokerGui?.saveSettingsSilent?.({
         remoteAgent: {
           approvalPolicy: nextApproval,
           sandboxMode: nextSandbox

@@ -13,9 +13,9 @@ if (arch !== 'arm64' && arch !== 'x64') {
 const root = resolve(__dirname, '..')
 const pkg = require(join(root, 'package.json'))
 const version = (
-  process.env.RCODE_ARTIFACT_VERSION ||
+  process.env.JOKER_ARTIFACT_VERSION ||
   process.env.DEEPSEEK_GUI_ARTIFACT_VERSION ||
-  process.env.RCODE_APP_VERSION ||
+  process.env.JOKER_APP_VERSION ||
   process.env.DEEPSEEK_GUI_APP_VERSION ||
   pkg.version ||
   ''
@@ -25,11 +25,11 @@ if (!version) {
   process.exit(1)
 }
 
-const distDir = resolve(process.env.RCODE_DIST_DIR || process.env.DEEPSEEK_GUI_DIST_DIR || join(root, 'dist'))
+const distDir = resolve(process.env.JOKER_DIST_DIR || process.env.DEEPSEEK_GUI_DIST_DIR || join(root, 'dist'))
 const appOutDir = join(distDir, arch === 'arm64' ? 'mac-arm64' : 'mac')
-const appName = 'Rcode.app'
+const appName = 'Joker.app'
 const appPath = join(appOutDir, appName)
-const zipPath = join(distDir, `Rcode-${version}-mac-${arch}.zip`)
+const zipPath = join(distDir, `Joker-${version}-mac-${arch}.zip`)
 
 if (!existsSync(appPath)) {
   console.error(`[zip-mac-app] App bundle not found: ${appPath}`)

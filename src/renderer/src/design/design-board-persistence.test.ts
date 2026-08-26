@@ -9,7 +9,7 @@ describe('design board persistence', () => {
   it('does not register a board artifact when its initial durable write fails', async () => {
     installDesignDocument([], null)
     const writeWorkspaceFile = vi.fn(async () => ({ ok: false as const, message: 'disk full' }))
-    vi.stubGlobal('window', { RcodeGui: { writeWorkspaceFile } })
+    vi.stubGlobal('window', { JokerGui: { writeWorkspaceFile } })
 
     await expect(ensureDesignBoardArtifact('/workspace')).resolves.toBeNull()
 

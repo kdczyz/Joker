@@ -2,7 +2,7 @@ import type { WorkspaceEntry } from '@shared/workspace-file'
 import { DEFAULT_WRITE_WELCOME_FILE_NAME } from '@shared/app-settings'
 import { browserStorage, type BrowserStorageLike } from '../lib/browser-storage'
 
-const WRITE_ONBOARDING_STORAGE_KEY = 'Rcode.write.onboarding.v1'
+const WRITE_ONBOARDING_STORAGE_KEY = 'Joker.write.onboarding.v1'
 
 export type WriteOnboardingDecision = 'pending' | 'show' | 'complete'
 

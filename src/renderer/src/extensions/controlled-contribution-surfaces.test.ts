@@ -1,4 +1,4 @@
-import { ExtensionContributionsSchema } from '@Rcode/extension-api'
+import { ExtensionContributionsSchema } from '@joker-code/extension-api'
 import { createElement } from 'react'
 import { renderToStaticMarkup } from 'react-dom/server'
 import { act, create as createRenderer } from 'react-test-renderer'
@@ -300,8 +300,8 @@ describe('controlled workbench contribution rendering', () => {
       contributionId: contribution.id,
       extensionId: 'acme.ui',
       extensionVersion: '1.0.0',
-      src: 'Rcode-extension://acme.ui/dist/index.html',
-      partition: 'Rcode-extension-acme-ui-session'
+      src: 'Joker-extension://acme.ui/dist/index.html',
+      partition: 'Joker-extension-acme-ui-session'
     }
     expect(validateExtensionViewSession(validSession, contribution)).toBeNull()
     expect(validateExtensionViewSession({ ...validSession, partition: 'persist:shared' }, contribution)).toContain('non-persistent')
@@ -436,8 +436,8 @@ describe('controlled workbench contribution rendering', () => {
           contributionId: contribution.id,
           extensionId: 'acme.ui',
           extensionVersion: '1.0.0',
-          src: 'Rcode-extension://acme.ui/dist/index.html',
-          partition: 'Rcode-extension-acme-ui-session'
+          src: 'Joker-extension://acme.ui/dist/index.html',
+          partition: 'Joker-extension-acme-ui-session'
         })
         await opening
       })
@@ -464,8 +464,8 @@ describe('controlled workbench contribution rendering', () => {
         contributionId: contribution.id,
         extensionId: 'acme.ui',
         extensionVersion: '1.0.0',
-        src: 'Rcode-extension://acme.ui/dist/next.html',
-        partition: 'Rcode-extension-acme-ui-session-next'
+        src: 'Joker-extension://acme.ui/dist/next.html',
+        partition: 'Joker-extension-acme-ui-session-next'
       })
       await act(async () => {
         renderer.update(createElement(ExtensionViewOutlet, {
@@ -501,8 +501,8 @@ describe('controlled workbench contribution rendering', () => {
         contributionId: contribution.id,
         extensionId: 'acme.ui',
         extensionVersion: '1.0.0',
-        src: 'Rcode-extension://acme.ui/dist/index.html',
-        partition: 'Rcode-extension-acme-ui-session-next'
+        src: 'Joker-extension://acme.ui/dist/index.html',
+        partition: 'Joker-extension-acme-ui-session-next'
       })
     vi.spyOn(extensionWorkbenchClient, 'disposeViewSession').mockResolvedValue(undefined)
     vi.stubGlobal('HTMLElement', class {})
@@ -539,7 +539,7 @@ describe('controlled workbench contribution rendering', () => {
     }
   })
 
-  it('renders Host-owned extension View status in the active Rcode language', async () => {
+  it('renders Host-owned extension View status in the active Joker language', async () => {
     const contribution = registryWithContributions().list('views.rightSidebar')
       .find((item) => item.id === 'extension:acme.ui/dashboard')!
     await i18n.changeLanguage('zh')

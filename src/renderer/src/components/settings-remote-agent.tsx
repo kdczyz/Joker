@@ -41,7 +41,7 @@ const STATE_COLORS: Record<AgentState, string> = {
   waiting: 'text-amber-500'
 }
 
-const AUTH_TOKEN_KEY = 'rcode.auth.session.v1'
+const AUTH_TOKEN_KEY = 'joker.auth.session.v1'
 
 export function RemoteAgentPanel(): ReactElement {
   const { user } = useAuth()
@@ -56,13 +56,13 @@ export function RemoteAgentPanel(): ReactElement {
 
   // Load remote-agent permission override (falls back to global agent policy)
   useEffect(() => {
-    if (typeof window.RcodeGui?.getSettings !== 'function') return
-    void window.RcodeGui.getSettings().then((settings) => {
+    if (typeof window.JokerGui?.getSettings !== 'function') return
+    void window.JokerGui.getSettings().then((settings) => {
       setApprovalPolicy(
-        settings.remoteAgent?.approvalPolicy ?? settings.agents.Rcode.approvalPolicy
+        settings.remoteAgent?.approvalPolicy ?? settings.agents.Joker.approvalPolicy
       )
       setSandboxMode(
-        settings.remoteAgent?.sandboxMode ?? settings.agents.Rcode.sandboxMode
+        settings.remoteAgent?.sandboxMode ?? settings.agents.Joker.sandboxMode
       )
     })
   }, [])
@@ -73,7 +73,7 @@ export function RemoteAgentPanel(): ReactElement {
       const nextSandbox = patch.sandboxMode ?? sandboxMode
       if (patch.approvalPolicy) setApprovalPolicy(patch.approvalPolicy)
       if (patch.sandboxMode) setSandboxMode(patch.sandboxMode)
-      void window.RcodeGui?.saveSettingsSilent?.({
+      void window.JokerGui?.saveSettingsSilent?.({
         remoteAgent: {
           approvalPolicy: nextApproval,
           sandboxMode: nextSandbox
@@ -85,11 +85,11 @@ export function RemoteAgentPanel(): ReactElement {
 
   // Subscribe to IPC events
   useEffect(() => {
-    const unsubStatus = window.RcodeGui.remoteAgent.onStatus((payload) => {
+    const unsubStatus = window.JokerGui.remoteAgent.onStatus((payload) => {
       setState(payload.state as AgentState)
       setMessage(payload.message)
     })
-    const unsubCommand = window.RcodeGui.remoteAgent.onCommand((payload) => {
+    const unsubCommand = window.JokerGui.remoteAgent.onCommand((payload) => {
       const cmd = payload as { id?: string; summary?: string; status?: string; updatedAt?: number }
       const cmdId = cmd.id
       if (!cmdId) return
@@ -105,7 +105,7 @@ export function RemoteAgentPanel(): ReactElement {
         return [entry, ...prev.filter((e) => e.id !== cmdId)].slice(0, 20)
       })
     })
-    const unsubEvent = window.RcodeGui.remoteAgent.onEvent((payload) => {
+    const unsubEvent = window.JokerGui.remoteAgent.onEvent((payload) => {
       const { commandId, event } = payload
       setLogs((prev) =>
         prev.map((entry) =>
@@ -124,7 +124,7 @@ export function RemoteAgentPanel(): ReactElement {
 
   // Poll initial status
   useEffect(() => {
-    void window.RcodeGui.remoteAgent.getStatus().then((s) => setState(s.state as AgentState))
+    void window.JokerGui.remoteAgent.getStatus().then((s) => setState(s.state as AgentState))
   }, [])
 
   const isRunning = state === 'online' || state === 'connecting' || state === 'waiting'
@@ -137,13 +137,13 @@ export function RemoteAgentPanel(): ReactElement {
       const token = localStorage.getItem(AUTH_TOKEN_KEY)
       if (token) {
         setBusy(true)
-        window.RcodeGui.remoteAgent.start(token).then((res: { ok?: boolean; message?: string }) => {
+        window.JokerGui.remoteAgent.start(token).then((res: { ok?: boolean; message?: string }) => {
           if (!res?.ok && res?.message) setMessage(res.message)
         }).finally(() => setBusy(false))
       }
     }
     if (!authenticated && isRunning) {
-      void window.RcodeGui.remoteAgent.stop()
+      void window.JokerGui.remoteAgent.stop()
     }
   }, [authenticated, state, isRunning])
 
@@ -157,8 +157,8 @@ export function RemoteAgentPanel(): ReactElement {
     setBusy(true)
     setMessage(undefined)
     try {
-      await window.RcodeGui.remoteAgent.stop()
-      const res = await window.RcodeGui.remoteAgent.start(token) as { ok?: boolean; message?: string }
+      await window.JokerGui.remoteAgent.stop()
+      const res = await window.JokerGui.remoteAgent.start(token) as { ok?: boolean; message?: string }
       if (!res?.ok && res?.message) setMessage(res.message)
     } catch (err) {
       setMessage(err instanceof Error ? err.message : '重试失败')
@@ -171,7 +171,7 @@ export function RemoteAgentPanel(): ReactElement {
     if (isRunning) {
       setBusy(true)
       try {
-        await window.RcodeGui.remoteAgent.stop()
+        await window.JokerGui.remoteAgent.stop()
         setState('offline')
         setMessage(undefined)
       } finally {
@@ -187,7 +187,7 @@ export function RemoteAgentPanel(): ReactElement {
       setBusy(true)
       setMessage(undefined)
       try {
-        const res = await window.RcodeGui.remoteAgent.start(token) as { ok?: boolean; message?: string }
+        const res = await window.JokerGui.remoteAgent.start(token) as { ok?: boolean; message?: string }
         if (!res?.ok && res?.message) setMessage(res.message)
       } catch (err) {
         setMessage(err instanceof Error ? err.message : '连接失败')

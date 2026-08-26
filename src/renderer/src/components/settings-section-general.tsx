@@ -10,11 +10,11 @@ import {
   DEFAULT_WRITE_INLINE_COMPLETION_MAX_TOKENS,
   DEFAULT_WRITE_INLINE_COMPLETION_MODEL,
   DEFAULT_WRITE_INLINE_LONG_COMPLETION_MAX_TOKENS,
-  DEFAULT_RCODE_DATA_DIR,
+  DEFAULT_JOKER_DATA_DIR,
   UI_FONT_SCALE_MAX,
   UI_FONT_SCALE_MIN,
   WRITE_INLINE_COMPLETION_MODEL_IDS,
-  isRcodeRuntimeInsecure,
+  isJokerRuntimeInsecure,
   normalizeChatContentMaxWidth,
   normalizeUiFontScale
 } from '@shared/app-settings'
@@ -182,9 +182,9 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
     t,
     tCommon,
     form,
-    Rcode,
+    Joker,
     update,
-    updateRcode,
+    updateJoker,
     showRuntimeToken,
     setShowRuntimeToken,
     portError,
@@ -238,7 +238,7 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
     splitSettingsList,
     listSettingsText
   } = ctx
-  const platform = typeof window !== 'undefined' ? window.RcodeGui?.platform ?? '' : ''
+  const platform = typeof window !== 'undefined' ? window.JokerGui?.platform ?? '' : ''
   const openAtLoginSupported = platform === 'win32' || platform === 'darwin'
   const startMinimizedSupported = platform === 'win32'
   const desktopBehavior = form.appBehavior
@@ -694,12 +694,12 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
                       <button
                         type="button"
                         className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border bg-ds-card px-3 py-1.5 text-[13px] font-medium text-ds-ink shadow-sm transition hover:bg-ds-hover disabled:opacity-50"
-                        disabled={typeof window.RcodeGui?.openLogDir !== 'function'}
+                        disabled={typeof window.JokerGui?.openLogDir !== 'function'}
                         onClick={async () => {
-                          if (typeof window.RcodeGui?.openLogDir !== 'function') return
+                          if (typeof window.JokerGui?.openLogDir !== 'function') return
                           setLogDirOpenError(null)
                           try {
-                            const result = await window.RcodeGui.openLogDir()
+                            const result = await window.JokerGui.openLogDir()
                             if (!result.ok) setLogDirOpenError(result.message ?? 'Unknown error')
                           } catch (e) {
                             setLogDirOpenError(e instanceof Error ? e.message : String(e))

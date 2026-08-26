@@ -121,7 +121,7 @@ describe('InitialSessionUsageHeatmap', () => {
     expect(html).toContain('Models')
     expect(html).toContain('All')
     expect(html).toContain('90d')
-    expect(html).toContain('Daily Rcode usage calendar')
+    expect(html).toContain('Daily Joker usage calendar')
     expect(html).toContain('Sessions')
     expect(html).toContain('Messages')
     expect(html).toContain('Current streak')
@@ -135,7 +135,7 @@ describe('InitialSessionUsageHeatmap', () => {
   it('renders the usage panel directly without the animated hero', () => {
     const html = render(state({ usage: usage(), loaded: true }))
 
-    expect(html).toContain('Daily Rcode usage calendar')
+    expect(html).toContain('Daily Joker usage calendar')
     expect(html).toContain('aria-label="2026-05-02')
     expect(html).toContain('Overview')
     expect(html).toContain('Models')
@@ -221,18 +221,18 @@ describe('InitialSessionUsageHeatmap', () => {
 
   it('renders the calendar directly for loading, empty, and error states without warmup transitions', () => {
     const loadingHtml = render(state({ loading: true }))
-    expect(loadingHtml).toContain('Daily Rcode usage calendar')
+    expect(loadingHtml).toContain('Daily Joker usage calendar')
     expect(loadingHtml).toContain('Refresh')
     expect(loadingHtml).not.toContain('Preparing your usage calendar')
     expect(loadingHtml).not.toContain('Explain this project&#x27;s structure')
 
     const emptyHtml = render(state({ usage: usage([bucket('2026-05-01', 0, 0)]), loaded: true }))
-    expect(emptyHtml).toContain('Daily Rcode usage calendar')
+    expect(emptyHtml).toContain('Daily Joker usage calendar')
     expect(emptyHtml).toContain('aria-label="2026-05-01')
     expect(emptyHtml).not.toContain('Explain this project&#x27;s structure')
 
     const errorHtml = render(state({ loaded: true, error: 'boom' }))
-    expect(errorHtml).toContain('Daily Rcode usage calendar')
+    expect(errorHtml).toContain('Daily Joker usage calendar')
     expect(errorHtml).toContain('Refresh')
     expect(errorHtml).not.toContain('Explain this project&#x27;s structure')
   })

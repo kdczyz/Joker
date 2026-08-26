@@ -9,7 +9,7 @@ describe('renderer content security policy', () => {
     const imgSrc = csp.match(/img-src\s+([^;]+)/)?.[1] ?? ''
 
     expect(imgSrc.split(/\s+/)).toContain('blob:')
-    expect(imgSrc.split(/\s+/)).toContain('Rcode-extension:')
+    expect(imgSrc.split(/\s+/)).toContain('Joker-extension:')
     expect(imgSrc.split(/\s+/)).not.toContain('https:')
   })
 })

@@ -1,7 +1,7 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto'
 import { resolve } from 'node:path'
 import type { WebContents, WebFrameMain } from 'electron'
-import { parseRcodeExtensionUrl } from './extension-resource-protocol'
+import { parseJokerExtensionUrl } from './extension-resource-protocol'
 
 export type ExtensionViewSessionRecord = {
   sessionId: string
@@ -43,7 +43,7 @@ export class ExtensionViewSessionError extends Error {
   }
 }
 
-/** Main-owned binding between a Rcode View Session and Electron WebContents. */
+/** Main-owned binding between a Joker View Session and Electron WebContents. */
 export class ExtensionViewSessionRegistry {
   private readonly records = new Map<string, ExtensionViewSessionRecord>()
   private readonly byGuest = new Map<number, string>()
@@ -79,14 +79,14 @@ export class ExtensionViewSessionRegistry {
       .update(`${input.extensionId}\0${input.sessionId}\0${nonce}`)
       .digest('hex')
       .slice(0, 32)
-    const sourceUrl = new URL(`Rcode-extension://${input.extensionId}/${input.entryPath}`)
-    sourceUrl.searchParams.set('RcodeViewSession', input.sessionId)
+    const sourceUrl = new URL(`Joker-extension://${input.extensionId}/${input.entryPath}`)
+    sourceUrl.searchParams.set('JokerViewSession', input.sessionId)
     const record: ExtensionViewSessionRecord = {
       ...input,
       externalWebviewHosts: normalizeExternalHostPatterns(input.externalWebviewHosts ?? []),
       runtimeSessionId: input.runtimeSessionId ?? input.sessionId,
       sourceUrl: sourceUrl.toString(),
-      partition: `temp:Rcode-extension-${partitionDigest}`,
+      partition: `temp:Joker-extension-${partitionDigest}`,
       nonce,
       state: 'pending',
       createdAt: this.now()
@@ -96,7 +96,7 @@ export class ExtensionViewSessionRegistry {
   }
 
   prepareAttach(parentWebContentsId: number, rawUrl: string): ExtensionViewSessionRecord {
-    const parsed = parseRcodeExtensionUrl(rawUrl)
+    const parsed = parseJokerExtensionUrl(rawUrl)
     if (!parsed.viewSessionId) {
       throw new ExtensionViewSessionError(
         'EXTENSION_VIEW_SESSION_REQUIRED',
@@ -215,7 +215,7 @@ export class ExtensionViewSessionRegistry {
       extensionId: parent.extensionId,
       allowedHosts: [...parent.externalWebviewHosts],
       sourceUrl: new URL(rawUrl).toString(),
-      partition: `persist:Rcode-external-${partitionDigest}`,
+      partition: `persist:Joker-external-${partitionDigest}`,
       parentWebContentsId,
       state: 'attaching',
       createdAt: this.now()

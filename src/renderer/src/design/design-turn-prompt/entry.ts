@@ -26,7 +26,7 @@ import { buildSvgTurnPrompt } from './svg'
 export function buildParallelDesignPagesPrompt(options: ParallelDesignPagesPromptOptions): string {
   const jobs = options.jobs.filter((job) => job.artifactId.trim() && job.relativePath.trim())
   const lines = [
-    'Rcode is asking you to fan out a multi-page design build to subagents.',
+    'Joker is asking you to fan out a multi-page design build to subagents.',
     `Workspace: ${options.workspaceRoot}`,
     ...formatDesignTargetFrameLines(options.designContext),
     '',
@@ -104,8 +104,8 @@ export function buildDesignTurnPrompt(options: DesignTurnOptions): string {
     : `\`${options.artifactRelativePath}\``
   const lines = [
     options.basePath
-      ? 'Rcode is asking you to ITERATE on an existing single-file HTML design.'
-      : 'Rcode is asking you to design a single-file interactive HTML artifact.',
+      ? 'Joker is asking you to ITERATE on an existing single-file HTML design.'
+      : 'Joker is asking you to design a single-file interactive HTML artifact.',
     `Workspace: ${options.workspaceRoot}`,
     ...formatProjectDesignSystemLines(options),
     ...formatDesignTargetFrameLines(options.designContext),

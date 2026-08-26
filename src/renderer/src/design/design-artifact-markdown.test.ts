@@ -8,29 +8,29 @@ describe('design artifact markdown', () => {
       id: 'screen',
       kind: 'html',
       title: 'Login screen',
-      relativePath: '.Rcode-design/screen/v2.html',
+      relativePath: '.Joker-design/screen/v2.html',
       createdAt: '2026-06-21T00:00:00.000Z',
       updatedAt: '2026-06-21T00:05:00.000Z',
       versions: [
         {
           id: 'screen-v2',
-          relativePath: '.Rcode-design/screen/v2.html',
+          relativePath: '.Joker-design/screen/v2.html',
           createdAt: '2026-06-21T00:05:00.000Z',
           summary: 'Make this a login screen'
         },
         {
           id: 'screen-v1',
-          relativePath: '.Rcode-design/screen/v1.html',
+          relativePath: '.Joker-design/screen/v1.html',
           createdAt: '2026-06-21T00:00:00.000Z',
           summary: 'Create a hello world page'
         }
       ],
-      designMdPath: '.Rcode-design/screen/DESIGN.md'
+      designMdPath: '.Joker-design/screen/DESIGN.md'
     }
 
     const markdown = buildDesignArtifactMarkdown({
       artifact,
-      designMdPath: '.Rcode-design/screen/DESIGN.md',
+      designMdPath: '.Joker-design/screen/DESIGN.md',
       currentTurn: 'Make this a login screen',
       designContext: { designTarget: 'app' },
       updatedAt: '2026-06-21T00:06:00.000Z',
@@ -38,15 +38,15 @@ describe('design artifact markdown', () => {
         {
           kind: 'html-screen-frame',
           label: 'Login screen',
-          detail: '420 x 340 - .Rcode-design/screen/v2.html'
+          detail: '420 x 340 - .Joker-design/screen/v2.html'
         }
       ]
     })
 
     expect(markdown).toContain('# Design Notes: Login screen')
-    expect(markdown).toContain('Source HTML path: `.Rcode-design/screen/v2.html`')
-    expect(markdown).toContain('Design notes file: `.Rcode-design/screen/DESIGN.md`')
-    expect(markdown).toContain('Current version: v2 (`.Rcode-design/screen/v2.html`)')
+    expect(markdown).toContain('Source HTML path: `.Joker-design/screen/v2.html`')
+    expect(markdown).toContain('Design notes file: `.Joker-design/screen/DESIGN.md`')
+    expect(markdown).toContain('Current version: v2 (`.Joker-design/screen/v2.html`)')
     expect(markdown).toContain('Create a hello world page')
     expect(markdown).toContain('Make this a login screen')
     expect(markdown).toContain('[html-screen-frame] Login screen - 420 x 340')
@@ -61,46 +61,46 @@ describe('design artifact markdown', () => {
       id: 'screen',
       kind: 'html',
       title: 'Login screen',
-      relativePath: '.Rcode-design/screen/v1.html',
+      relativePath: '.Joker-design/screen/v1.html',
       createdAt: '2026-06-21T00:00:00.000Z',
       updatedAt: '2026-06-21T00:00:00.000Z',
       versions: [
         {
           id: 'screen-v2',
-          relativePath: '.Rcode-design/screen/v2.html',
+          relativePath: '.Joker-design/screen/v2.html',
           createdAt: '2026-06-21T00:05:00.000Z',
           summary: 'Make this a login screen'
         },
         {
           id: 'screen-v1',
-          relativePath: '.Rcode-design/screen/v1.html',
+          relativePath: '.Joker-design/screen/v1.html',
           createdAt: '2026-06-21T00:00:00.000Z',
           summary: 'Create a hello world page'
         }
       ],
-      designMdPath: '.Rcode-design/screen/DESIGN.md'
+      designMdPath: '.Joker-design/screen/DESIGN.md'
     }
 
     const markdown = buildDesignArtifactMarkdown({
       artifact,
-      designMdPath: '.Rcode-design/screen/DESIGN.md',
+      designMdPath: '.Joker-design/screen/DESIGN.md',
       currentTurn: 'Restore the first draft',
       updatedAt: '2026-06-21T00:06:00.000Z'
     })
 
-    expect(markdown).toContain('Current version: v1 (`.Rcode-design/screen/v1.html`)')
-    expect(markdown).toContain('- v2: `.Rcode-design/screen/v2.html` - Make this a login screen')
-    expect(markdown).toContain('- v1: `.Rcode-design/screen/v1.html` - Create a hello world page')
+    expect(markdown).toContain('Current version: v1 (`.Joker-design/screen/v1.html`)')
+    expect(markdown).toContain('- v2: `.Joker-design/screen/v2.html` - Make this a login screen')
+    expect(markdown).toContain('- v1: `.Joker-design/screen/v1.html` - Create a hello world page')
   })
 
   it('writes SVG-specific source, motion, accessibility, and handoff guidance', () => {
-    const relativePath = '.Rcode-design/doc/orbit/v1.svg'
+    const relativePath = '.Joker-design/doc/orbit/v1.svg'
     const artifact: DesignArtifact = {
       id: 'orbit',
       kind: 'svg',
       title: 'Orbit loader',
       relativePath,
-      designMdPath: '.Rcode-design/doc/orbit/DESIGN.md',
+      designMdPath: '.Joker-design/doc/orbit/DESIGN.md',
       createdAt: '2026-06-21T00:00:00.000Z',
       updatedAt: '2026-06-21T00:00:00.000Z',
       versions: [{ id: 'orbit-v1', relativePath, createdAt: '2026-06-21T00:00:00.000Z', summary: 'Create a loader' }]
@@ -112,7 +112,7 @@ describe('design artifact markdown', () => {
       currentTurn: 'Make the orbit feel calmer'
     })
 
-    expect(markdown).toContain('Source SVG path: `.Rcode-design/doc/orbit/v1.svg`')
+    expect(markdown).toContain('Source SVG path: `.Joker-design/doc/orbit/v1.svg`')
     expect(markdown).toContain('responsive viewBox')
     expect(markdown).toContain('declarative animation')
     expect(markdown).toContain('Keep the SVG file standalone, script-free, and implementation-ready.')

@@ -594,8 +594,8 @@ export function WriteMarkdownEditor({
       language: 'markdown',
       getModel: () => completionModelRef.current,
       requestCompletion: async (context, mode) => {
-        if (typeof window.RcodeGui?.requestWriteInlineCompletion !== 'function') return null
-        const result = await window.RcodeGui.requestWriteInlineCompletion(
+        if (typeof window.JokerGui?.requestWriteInlineCompletion !== 'function') return null
+        const result = await window.JokerGui.requestWriteInlineCompletion(
           buildInlineCompletionPayload(context, {
             model: completionModelRef.current,
             workspaceRoot: workspaceRootRef.current,
@@ -670,10 +670,10 @@ export function WriteMarkdownEditor({
               event.preventDefault()
               return true
             }
-            if (typeof window.RcodeGui?.saveWorkspaceClipboardImage !== 'function') return false
+            if (typeof window.JokerGui?.saveWorkspaceClipboardImage !== 'function') return false
 
             event.preventDefault()
-            void window.RcodeGui
+            void window.JokerGui
               .saveWorkspaceClipboardImage({
                 workspaceRoot: nextWorkspaceRoot,
                 currentFilePath: nextFilePath,

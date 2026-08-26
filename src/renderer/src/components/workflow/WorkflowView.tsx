@@ -56,9 +56,9 @@ export function WorkflowView({ leftSidebarCollapsed, onToggleLeftSidebar }: Prop
   const [runInputTarget, setRunInputTarget] = useState<WorkflowV1 | null>(null)
 
   const refreshStatus = useCallback(async (): Promise<void> => {
-    if (typeof window.RcodeGui?.getWorkflowStatus !== 'function') return
+    if (typeof window.JokerGui?.getWorkflowStatus !== 'function') return
     try {
-      setStatus(await window.RcodeGui.getWorkflowStatus())
+      setStatus(await window.JokerGui.getWorkflowStatus())
     } catch {
       /* ignore transient status errors */
     }
@@ -68,8 +68,8 @@ export function WorkflowView({ leftSidebarCollapsed, onToggleLeftSidebar }: Prop
     try {
       const [nextSettings, nextStatus] = await Promise.all([
         rendererRuntimeClient.getSettings({ forceRefresh: true }),
-        typeof window.RcodeGui?.getWorkflowStatus === 'function'
-          ? window.RcodeGui.getWorkflowStatus()
+        typeof window.JokerGui?.getWorkflowStatus === 'function'
+          ? window.JokerGui.getWorkflowStatus()
           : Promise.resolve(null)
       ])
       setSettings(nextSettings)
@@ -258,8 +258,8 @@ export function WorkflowView({ leftSidebarCollapsed, onToggleLeftSidebar }: Prop
 
   const handleRun = useCallback(
     async (id: string, input?: Record<string, unknown>): Promise<void> => {
-      if (typeof window.RcodeGui?.runWorkflow !== 'function') return
-      const result = await window.RcodeGui.runWorkflow(id, input)
+      if (typeof window.JokerGui?.runWorkflow !== 'function') return
+      const result = await window.JokerGui.runWorkflow(id, input)
       if (!result.ok) {
         setError(result.message)
         return
@@ -283,8 +283,8 @@ export function WorkflowView({ leftSidebarCollapsed, onToggleLeftSidebar }: Prop
 
   const handleStop = useCallback(
     async (id: string): Promise<void> => {
-      if (typeof window.RcodeGui?.stopWorkflow !== 'function') return
-      await window.RcodeGui.stopWorkflow(id)
+      if (typeof window.JokerGui?.stopWorkflow !== 'function') return
+      await window.JokerGui.stopWorkflow(id)
       void refreshStatus()
     },
     [refreshStatus]
@@ -292,8 +292,8 @@ export function WorkflowView({ leftSidebarCollapsed, onToggleLeftSidebar }: Prop
 
   const handleRunNode = useCallback(
     async (workflowId: string, nodeId: string): Promise<void> => {
-      if (typeof window.RcodeGui?.runWorkflowNode !== 'function') return
-      const result = await window.RcodeGui.runWorkflowNode(workflowId, nodeId)
+      if (typeof window.JokerGui?.runWorkflowNode !== 'function') return
+      const result = await window.JokerGui.runWorkflowNode(workflowId, nodeId)
       if (!result.ok) {
         setError(result.message)
         return

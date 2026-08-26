@@ -407,13 +407,13 @@ describe('normalizeUiPluginManifest', () => {
   })
 
   it('rejects reserved and malformed ids', () => {
-    for (const id of ['default', 'Rcode', 'ON', 'a', 'Has Space', '../x']) {
+    for (const id of ['default', 'Joker', 'ON', 'a', 'Has Space', '../x']) {
       const result = normalizeUiPluginManifest({ ...validManifest, id })
       expect(result.ok).toBe(false)
     }
   })
 
-  it('allows any plugin id matching the slug pattern (iRcode was a regular plugin)', () => {
+  it('allows any plugin id matching the slug pattern (iJoker was a regular plugin)', () => {
     expect(normalizeUiPluginManifest({ ...validManifest, id: 'community-pack' }).ok).toBe(true)
   })
 
@@ -591,9 +591,9 @@ describe('buildUiPluginPresentationCss', () => {
     const css = buildUiPluginPresentationCss(result.manifest)
     expect(css).toBe(
       "html[data-ui-plugin='starlight'] {\n" +
-        '  --Rcode-ui-plugin-character-offset-x: 4%;\n' +
-        '  --Rcode-ui-plugin-character-offset-y: -2%;\n' +
-        '  --Rcode-ui-plugin-character-opacity: 0.94;\n' +
+        '  --Joker-ui-plugin-character-offset-x: 4%;\n' +
+        '  --Joker-ui-plugin-character-offset-y: -2%;\n' +
+        '  --Joker-ui-plugin-character-opacity: 0.94;\n' +
         '}'
     )
     expect(css).not.toContain('hologram')
@@ -647,11 +647,11 @@ describe('buildUiPluginSceneCss', () => {
     if (!result.ok) throw new Error(result.errors.join('\n'))
     const css = buildUiPluginSceneCss(result.manifest)
     expect(css).toContain("html[data-ui-plugin='starlight']")
-    expect(css).toContain('--Rcode-ui-plugin-scene-character-offset-x: 3%;')
-    expect(css).toContain('--Rcode-ui-plugin-scene-character-offset-y: -2%;')
-    expect(css).toContain('--Rcode-ui-plugin-scene-character-opacity: 0.96;')
-    expect(css).toContain('--Rcode-ui-plugin-scene-frame-offset-x: 1%;')
-    expect(css).toContain('--Rcode-ui-plugin-scene-backdrop-opacity: 0.72;')
+    expect(css).toContain('--Joker-ui-plugin-scene-character-offset-x: 3%;')
+    expect(css).toContain('--Joker-ui-plugin-scene-character-offset-y: -2%;')
+    expect(css).toContain('--Joker-ui-plugin-scene-character-opacity: 0.96;')
+    expect(css).toContain('--Joker-ui-plugin-scene-frame-offset-x: 1%;')
+    expect(css).toContain('--Joker-ui-plugin-scene-backdrop-opacity: 0.72;')
     expect(css).not.toContain('scene/frame.png')
     expect(css).not.toContain('rail-left')
     expect(css).not.toContain('sway')
@@ -781,7 +781,7 @@ describe('buildUiPluginBackgroundCss', () => {
       light: { stage: pngDataUrl }
     })
     expect(css).toContain(pngDataUrl)
-    expect(css).toContain('background-image: var(--Rcode-ui-plugin-background-0);')
+    expect(css).toContain('background-image: var(--Joker-ui-plugin-background-0);')
   })
 
   it('rejects non-base64, active, malformed, and unsupported runtime URLs', () => {

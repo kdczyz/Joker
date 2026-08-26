@@ -29,9 +29,9 @@ export interface RegistrationDetails {
 
 type AuthResponse = AuthSession & { token?: string };
 
-const webTokenKey = "rcode.auth.session.v1";
-const guestSessionKey = "rcode.auth.guest-session.v1";
-const githubSessionKey = "rcode.auth.github-session.v1";
+const webTokenKey = "joker.auth.session.v1";
+const guestSessionKey = "joker.auth.guest-session.v1";
+const githubSessionKey = "joker.auth.github-session.v1";
 const defaultAuthApiUrl = "https://lxqandlzy.me";
 
 function authApiUrl() {
@@ -181,10 +181,10 @@ export async function signUp(details: RegistrationDetails): Promise<AuthSession>
 
 export async function signInWithGithub(): Promise<AuthSession> {
   writeGuestSession()
-  if (!window.RcodeGui?.authGithubLogin) {
+  if (!window.JokerGui?.authGithubLogin) {
     throw new Error("当前环境不支持 GitHub 登录")
   }
-  const result = await window.RcodeGui.authGithubLogin()
+  const result = await window.JokerGui.authGithubLogin()
   if (!result.ok || !result.profile) {
     throw new Error(result.message || "GitHub 登录失败")
   }

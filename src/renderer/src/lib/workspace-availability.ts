@@ -4,11 +4,11 @@ export async function workspaceDirectoryExists(workspaceRoot: string): Promise<b
   const normalized = workspaceRoot.trim()
   if (!normalized) return false
   if (typeof window === 'undefined') return true
-  if (typeof window.RcodeGui?.workspaceDirectoryExists !== 'function') {
-    return typeof window.RcodeGui?.platform !== 'string'
+  if (typeof window.JokerGui?.workspaceDirectoryExists !== 'function') {
+    return typeof window.JokerGui?.platform !== 'string'
   }
   try {
-    return await window.RcodeGui.workspaceDirectoryExists(normalized)
+    return await window.JokerGui.workspaceDirectoryExists(normalized)
   } catch {
     return false
   }
@@ -19,9 +19,9 @@ export function workspaceMissingError(): string {
 }
 
 export async function showWorkspaceMissingDialog(workspaceRoot: string): Promise<void> {
-  if (typeof window === 'undefined' || typeof window.RcodeGui?.alertDialog !== 'function') return
+  if (typeof window === 'undefined' || typeof window.JokerGui?.alertDialog !== 'function') return
   try {
-    await window.RcodeGui.alertDialog({
+    await window.JokerGui.alertDialog({
       message: i18n.t('common:workspaceDirectoryMissingTitle'),
       detail: i18n.t('common:workspaceDirectoryMissingDetail', { path: workspaceRoot }),
       buttonLabel: i18n.t('common:confirm')

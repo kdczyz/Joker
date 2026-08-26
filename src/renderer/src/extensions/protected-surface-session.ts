@@ -1,6 +1,6 @@
 export type ProtectedSurfaceRestoreTarget = 'settings' | 'initial-setup'
 
-const PROTECTED_SURFACE_RESTORE_KEY = 'Rcode:protected-surface-restore'
+const PROTECTED_SURFACE_RESTORE_KEY = 'Joker:protected-surface-restore'
 
 type SessionStorageLike = Pick<Storage, 'getItem' | 'setItem' | 'removeItem'>
 

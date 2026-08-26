@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⌁ Rcode
+# ⌁ Joker code
 
 ### ローカル優先・権限制御可能な AI コーディングエージェント
 
@@ -26,12 +26,12 @@
 
 ## ✦ プロジェクト概要
 
-Rcode は、実際の開発現場を想定したローカルファーストの AI エージェントフレームワークです。デスクトップクライアントを介して OpenAI 互換モデルに接続し、プロジェクトのワークスペース内でファイル操作、ターミナル、Git、ブラウザ、デスクトップ自動化ツールを呼び出し、`allow / ask / deny` のきめ細やかな権限ルールで安全に操作範囲を制御します。
+Joker code は、実際の開発現場を想定したローカルファーストの AI エージェントフレームワークです。デスクトップクライアントを介して OpenAI 互換モデルに接続し、プロジェクトのワークスペース内でファイル操作、ターミナル、Git、ブラウザ、デスクトップ自動化ツールを呼び出し、`allow / ask / deny` のきめ細やかな権限ルールで安全に操作範囲を制御します。
 
 本プロジェクトには Android クライアントと Cloudflare ベースのリモートサービスも含まれています。PC がオンラインのときはスマートフォンから公開プロジェクトやセッションに参加してエージェントタスクを継続でき、PC がオフラインのときは Work モードによりクラウド経由でチャットや画像生成を行うことができます。
 
 > [!IMPORTANT]
-> Rcode はパス検証、コマンド解析、ツール承認、監査ログによって実用的なセキュリティ境界を提供しますが、OS レベルの完全なサンドボックスを提供するものではありません。本番環境、機密データ、高権限コマンドを扱う際は、コンテナ、専用アカウント、または分離された環境をご利用ください。
+> Joker code はパス検証、コマンド解析、ツール承認、監査ログによって実用的なセキュリティ境界を提供しますが、OS レベルの完全なサンドボックスを提供するものではありません。本番環境、機密データ、高権限コマンドを扱う際は、コンテナ、専用アカウント、または分離された環境をご利用ください。
 
 ## ◈ コア機能
 
@@ -52,8 +52,8 @@ Rcode は、実際の開発現場を想定したローカルファーストの A
 
 ```mermaid
 flowchart LR
-    U[開発者] --> D[Rcode Desktop]
-    U --> M[Rcode Android]
+    U[開発者] --> D[Joker code Desktop]
+    U --> M[Joker code Android]
 
     D --> A[Local Agent Server]
     A --> P[AI Providers]
@@ -75,7 +75,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | **デスクトップクライアント** | `src/`、`electron/`、`cli/` | `npm run desktop:dev` | `npm run desktop:build` |
 | **ローカル Agent サーバー** | `server/` | `npm run server:dev` | `npm run server:test` |
-| **Android クライアント** | `Rcode_apk/` | `npm run mobile:dev` | `npm run mobile:build` / `npm run mobile:apk` |
+| **Android クライアント** | `Joker_apk/` | `npm run mobile:dev` | `npm run mobile:build` / `npm run mobile:apk` |
 | **クラウド認証 & リモート** | `Fwq/` | `npm run remote:dev` | `npm run remote:check` / `npm run remote:test` |
 
 ## ▶ クイックスタート
@@ -125,11 +125,11 @@ npm run remote:test      # Cloudflare リモートサービスのテスト実行
 - **短期メモリ**：トークン予算内で直近の完全な対話履歴を保持し、過去のやり取りをローカル要約に圧縮してツール出力の肥大化を防止。
 - **長期メモリ**：プロジェクトパスごとに分離してローカル SQLite に保存し、キーワード関連性・重要度・新しさに基づいて検索。有効期限（TTL）、重複排除、機密情報の除外に対応。
 
-内蔵の `memory-management` Skill により標準的な連携インターフェースを提供します。他のオープンソースの Memory Skill も、Rcode のデータベース構造に直接依存することなく、`memory_search`、`memory_store`、`memory_forget` に永続化を委譲できます。「Skill 連携」を無効にすると、これらのツールはモデルに公開されません。
+内蔵の `memory-management` Skill により標準的な連携インターフェースを提供します。他のオープンソースの Memory Skill も、Joker code のデータベース構造に直接依存することなく、`memory_search`、`memory_store`、`memory_forget` に永続化を委譲できます。「Skill 連携」を無効にすると、これらのツールはモデルに公開されません。
 
 ## ⚙ 常駐プロセスセッション
 
-開発サーバーやファイル監視など、自動終了しないコマンドは Rcode が管理するため、`&` や `nohup` を付与する必要はありません：
+開発サーバーやファイル監視など、自動終了しないコマンドは Joker code が管理するため、`&` や `nohup` を付与する必要はありません：
 
 - `start_process`：常駐プロセスを起動し、セッション ID、PID、初期出力を返却。
 - `read_process`：現在のステータスと直近の出力ログを取得。
@@ -137,11 +137,11 @@ npm run remote:test      # Cloudflare リモートサービスのテスト実行
 - `stop_process`：プロセスおよびその子プロセスツリー全体を停止。
 - `list_processes`：現在のアクティブプロジェクトで管理されているプロセス一覧を表示。
 
-チャット入力欄横の「ターミナル」メニューから、プロセスの状態、PID、実行コマンド、出力を確認できます。管理中のプロセスは Rcode サーバー終了時に自動的に安全終了され、再起動時に古いコマンドが意図せず自動実行されることはありません。
+チャット入力欄横の「ターミナル」メニューから、プロセスの状態、PID、実行コマンド、出力を確認できます。管理中のプロセスは Joker code サーバー終了時に自動的に安全終了され、再起動時に古いコマンドが意図せず自動実行されることはありません。
 
 ## ◉ macOS デスクトップ制御
 
-Rcode はローカルの `native-devtools-mcp` サービスと連携し、macOS アプリケーション画面の読み取りと操作を行えます：
+Joker code はローカルの `native-devtools-mcp` サービスと連携し、macOS アプリケーション画面の読み取りと操作を行えます：
 
 ```bash
 npm install -g native-devtools-mcp@0.10.1
@@ -157,7 +157,7 @@ MCP 設定で実行ファイルの絶対パスを使用して stdio サービス
 
 ## 🔐 権限とセキュリティ
 
-Rcode は「ワークスペース境界 ＋ ツール承認 ＋ 監査ログ」の階層的防御戦略を採用しています：
+Joker code は「ワークスペース境界 ＋ ツール承認 ＋ 監査ログ」の階層的防御戦略を採用しています：
 
 - ワークスペース内の読み取り、編集、検索、テスト、ビルドはポリシーに従って自動実行可能。
 - 依存関係のインストール、ネットワーク通信、マイグレーション、コンテナ変更は実行前に確認プロンプトを表示。
@@ -179,7 +179,7 @@ Rcode は「ワークスペース境界 ＋ ツール承認 ＋ 監査ログ」�
 - Work モード：PC オフライン時のチャットおよび画像生成のプロキシ。
 - Code モード：PC 側が明示的に公開したプロジェクト ID のみに限定アクセスし、スマートフォンから任意のローカルパスへのアクセスは拒否。
 
-詳細な API 定義、デプロイ手順、セキュリティ設計については [`Fwq/README.md`](Fwq/README.md) を、Android の機能とビルド手順については [`Rcode_apk/README.md`](Rcode_apk/README.md) を参照してください。
+詳細な API 定義、デプロイ手順、セキュリティ設計については [`Fwq/README.md`](Fwq/README.md) を、Android の機能とビルド手順については [`Joker_apk/README.md`](Joker_apk/README.md) を参照してください。
 
 ## ⧉ 技術スタック
 
@@ -192,14 +192,14 @@ Rcode は「ワークスペース境界 ＋ ツール承認 ＋ 監査ログ」�
 ## ◇ プロジェクト構成
 
 ```text
-Rcode/
+Joker/
 ├── src/                 # デスクトップ React UI
 ├── electron/            # Electron メインプロセス & セキュアストレージ
 ├── server/              # ローカル Agent・ツール・権限・状態管理サーバー
 ├── cli/                 # CLI エントリポイント
 ├── config/              # Agent & モデルプロバイダー設定
 ├── docs/                # 機能・権限・設計ドキュメント
-├── Rcode_apk/           # Android モバイルクライアント
+├── Joker_apk/           # Android モバイルクライアント
 └── Fwq/                 # Cloudflare 認証 & リモートサービス
 ```
 
@@ -207,6 +207,6 @@ Rcode/
 
 <div align="center">
 
-**Rcode · Code locally, approve explicitly, collaborate anywhere.**
+**Joker code · Code locally, approve explicitly, collaborate anywhere.**
 
 </div>

@@ -21,16 +21,16 @@ const TOOLCHAIN = {
   drawtext: true
 }
 const ARTIFACTS = [
-  'Rcode-1.2.3-mac-arm64.dmg',
-  'Rcode-1.2.3-mac-arm64.zip',
-  'Rcode-1.2.3-mac-x64.dmg',
-  'Rcode-1.2.3-mac-x64.zip',
-  'Rcode-1.2.3-win-x64.exe',
-  'Rcode-1.2.3-linux-x86_64.AppImage'
+  'Joker-1.2.3-mac-arm64.dmg',
+  'Joker-1.2.3-mac-arm64.zip',
+  'Joker-1.2.3-mac-x64.dmg',
+  'Joker-1.2.3-mac-x64.zip',
+  'Joker-1.2.3-win-x64.exe',
+  'Joker-1.2.3-linux-x86_64.AppImage'
 ]
 
 async function fixture(t) {
-  const root = await mkdtemp(join(tmpdir(), 'Rcode-manual-release-test-'))
+  const root = await mkdtemp(join(tmpdir(), 'Joker-manual-release-test-'))
   t.after(() => rm(root, { recursive: true, force: true }))
   for (const name of ARTIFACTS) await writeFile(join(root, name), `bytes:${name}`)
   for (const platform of ['darwin', 'win32', 'linux']) {
@@ -46,7 +46,7 @@ async function fixture(t) {
       `${JSON.stringify(evidence, null, 2)}\n`
     )
   }
-  await writeFile(join(root, 'Rcode-video-editor-0.1.0.Rcodex'), 'extension archive')
+  await writeFile(join(root, 'Joker-video-editor-0.1.0.Jokerx'), 'extension archive')
   return root
 }
 

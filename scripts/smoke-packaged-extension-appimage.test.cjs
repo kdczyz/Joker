@@ -25,7 +25,7 @@ const {
   runAppImageSmoke
 } = require('./smoke-packaged-extension-appimage.cjs')
 
-function temporaryDirectory(t, prefix = 'Rcode-appimage-smoke-test-') {
+function temporaryDirectory(t, prefix = 'Joker-appimage-smoke-test-') {
   const root = mkdtempSync(join(tmpdir(), prefix))
   t.after(() => rmSync(root, { recursive: true, force: true }))
   return root
@@ -36,7 +36,7 @@ function writeExtractedBundle(extractionDirectory) {
   const resources = join(root, 'resources')
   mkdirSync(resources, { recursive: true })
   writeFileSync(join(resources, 'app.asar'), 'asar')
-  const executableName = 'Rcode-gui'
+  const executableName = 'Joker-gui'
   writeFileSync(join(root, 'AppRun'), `#!/bin/sh\nBIN="$APPDIR/${executableName}"\n`)
   chmodSync(join(root, 'AppRun'), 0o755)
   writeFileSync(join(root, executableName), linuxElectronLauncherContent(executableName))
@@ -47,7 +47,7 @@ function writeExtractedBundle(extractionDirectory) {
   )
   chmodSync(join(root, linuxRealExecutableName(executableName)), 0o755)
   writeFileSync(
-    join(root, 'Rcode.desktop'),
+    join(root, 'Joker.desktop'),
     '[Desktop Entry]\nExec=AppRun --disable-setuid-sandbox --no-first-run %U\n'
   )
   return root
@@ -57,23 +57,23 @@ test('requires one exact non-symlink final Linux x64 AppImage artifact', (t) => 
   const dist = temporaryDirectory(t)
   assert.throws(() => resolveSingleLinuxAppImage(dist), /exactly one/)
 
-  const appImage = join(dist, 'Rcode-1.2.3-dev-4-linux-x86_64.AppImage')
+  const appImage = join(dist, 'Joker-1.2.3-dev-4-linux-x86_64.AppImage')
   writeFileSync(appImage, 'appimage')
-  writeFileSync(join(dist, 'Rcode-1.2.3-linux-arm64.AppImage'), 'wrong arch')
-  mkdirSync(join(dist, 'Rcode-9.9.9-linux-x86_64.AppImage'))
+  writeFileSync(join(dist, 'Joker-1.2.3-linux-arm64.AppImage'), 'wrong arch')
+  mkdirSync(join(dist, 'Joker-9.9.9-linux-x86_64.AppImage'))
   if (process.platform !== 'win32') {
-    symlinkSync(appImage, join(dist, 'Rcode-8.8.8-linux-x86_64.AppImage'))
+    symlinkSync(appImage, join(dist, 'Joker-8.8.8-linux-x86_64.AppImage'))
   }
   assert.equal(resolveSingleLinuxAppImage(dist), appImage)
 
-  writeFileSync(join(dist, 'Rcode-2.0.0-linux-x86_64.AppImage'), 'stale artifact')
+  writeFileSync(join(dist, 'Joker-2.0.0-linux-x86_64.AppImage'), 'stale artifact')
   assert.throws(() => resolveSingleLinuxAppImage(dist), /found 2/)
 })
 
 test('builds FUSE-free validation and direct-AppImage desktop invocations', () => {
   const extraction = createAppImageExtractionInvocation({
-    appImage: '/release/Rcode-1.2.3-linux-x86_64.AppImage',
-    extractionDirectory: '/tmp/Rcode-appimage-extract',
+    appImage: '/release/Joker-1.2.3-linux-x86_64.AppImage',
+    extractionDirectory: '/tmp/Joker-appimage-extract',
     environment: {
       APPIMAGE_EXTRACT_AND_RUN: '1',
       ELECTRON_RUN_AS_NODE: '1',
@@ -82,9 +82,9 @@ test('builds FUSE-free validation and direct-AppImage desktop invocations', () =
       OWD: '/untrusted-owd'
     }
   })
-  assert.equal(extraction.command, resolve('/release/Rcode-1.2.3-linux-x86_64.AppImage'))
+  assert.equal(extraction.command, resolve('/release/Joker-1.2.3-linux-x86_64.AppImage'))
   assert.deepEqual(extraction.args, ['--appimage-extract'])
-  assert.equal(extraction.options.cwd, resolve('/tmp/Rcode-appimage-extract'))
+  assert.equal(extraction.options.cwd, resolve('/tmp/Joker-appimage-extract'))
   assert.equal(extraction.options.shell, false)
   assert.equal(extraction.options.timeout, 120_000)
   assert.equal(extraction.options.killSignal, 'SIGKILL')
@@ -95,8 +95,8 @@ test('builds FUSE-free validation and direct-AppImage desktop invocations', () =
   assert.equal(extraction.options.env.OWD, undefined)
 
   const smoke = createAppImageSmokeInvocation({
-    appImage: '/release/Rcode-1.2.3-linux-x86_64.AppImage',
-    resourcesDir: '/tmp/Rcode-appimage-extract/squashfs-root/resources',
+    appImage: '/release/Joker-1.2.3-linux-x86_64.AppImage',
+    resourcesDir: '/tmp/Joker-appimage-extract/squashfs-root/resources',
     desktopSmokePath: '/repo/scripts/smoke-packaged-extension-desktop.cjs',
     environment: { ELECTRON_RUN_AS_NODE: '1' }
   })
@@ -104,9 +104,9 @@ test('builds FUSE-free validation and direct-AppImage desktop invocations', () =
   assert.deepEqual(smoke.args, [
     resolve('/repo/scripts/smoke-packaged-extension-desktop.cjs'),
     '--resources',
-    resolve('/tmp/Rcode-appimage-extract/squashfs-root/resources'),
+    resolve('/tmp/Joker-appimage-extract/squashfs-root/resources'),
     '--desktop-executable',
-    resolve('/release/Rcode-1.2.3-linux-x86_64.AppImage')
+    resolve('/release/Joker-1.2.3-linux-x86_64.AppImage')
   ])
   assert.equal(smoke.options.shell, false)
   assert.equal(smoke.options.timeout, undefined)
@@ -126,8 +126,8 @@ test('extracts and validates before launching the final AppImage itself', {
   assert.throws(() => assertLinuxX64('linux', 'arm64'), /native linux\/x64/)
 
   const dist = temporaryDirectory(t)
-  const extractionDirectory = temporaryDirectory(t, 'Rcode-appimage-extraction-test-')
-  const appImage = join(dist, 'Rcode-1.2.3-linux-x86_64.AppImage')
+  const extractionDirectory = temporaryDirectory(t, 'Joker-appimage-extraction-test-')
+  const appImage = join(dist, 'Joker-1.2.3-linux-x86_64.AppImage')
   writeFileSync(appImage, 'appimage')
   chmodSync(appImage, 0o644)
   let desktopInvocation
@@ -167,8 +167,8 @@ test('extracts and validates before launching the final AppImage itself', {
 test('rejects a symlinked extracted AppRun before desktop launch', (t) => {
   if (process.platform === 'win32') return
   const dist = temporaryDirectory(t)
-  const extractionDirectory = temporaryDirectory(t, 'Rcode-appimage-symlink-test-')
-  const appImage = join(dist, 'Rcode-1.2.3-linux-x86_64.AppImage')
+  const extractionDirectory = temporaryDirectory(t, 'Joker-appimage-symlink-test-')
+  const appImage = join(dist, 'Joker-1.2.3-linux-x86_64.AppImage')
   writeFileSync(appImage, 'appimage')
   let desktopLaunched = false
 
@@ -208,9 +208,9 @@ test('rejects symlinked extracted resources, app.asar, launcher, payload, and de
   for (const target of [
     'resources',
     'app.asar',
-    'Rcode-gui',
-    'Rcode-gui.electron-bin',
-    'Rcode.desktop'
+    'Joker-gui',
+    'Joker-gui.electron-bin',
+    'Joker.desktop'
   ]) {
     await t.test(target, (subtest) => {
       const extraction = temporaryDirectory(subtest)
@@ -260,8 +260,8 @@ test('requires executable AppRun and exact sandbox-safe desktop entry', {
   await t.test('approved product launcher', (subtest) => {
     const extraction = temporaryDirectory(subtest)
     const root = writeExtractedBundle(extraction)
-    writeFileSync(join(root, 'Rcode-gui'), '#!/bin/sh\nexec ./Rcode-gui.electron-bin "$@"\n')
-    chmodSync(join(root, 'Rcode-gui'), 0o755)
+    writeFileSync(join(root, 'Joker-gui'), '#!/bin/sh\nexec ./Joker-gui.electron-bin "$@"\n')
+    chmodSync(join(root, 'Joker-gui'), 0o755)
     assert.throws(
       () => inspectExtractedAppImageBundle(root, { trustedRoot: extraction }),
       /not the approved sandbox wrapper/
@@ -277,7 +277,7 @@ test('requires executable AppRun and exact sandbox-safe desktop entry', {
     await t.test(exec, (subtest) => {
       const extraction = temporaryDirectory(subtest)
       const root = writeExtractedBundle(extraction)
-      writeFileSync(join(root, 'Rcode.desktop'), `[Desktop Entry]\n${exec}\n`)
+      writeFileSync(join(root, 'Joker.desktop'), `[Desktop Entry]\n${exec}\n`)
       assert.throws(
         () => inspectExtractedAppImageBundle(root, { trustedRoot: extraction }),
         /must use exactly/

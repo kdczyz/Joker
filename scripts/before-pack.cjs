@@ -45,9 +45,9 @@ const BUILD_FRESHNESS_PAIRS = [
     label: 'preload'
   },
   {
-    output: join(__dirname, '..', 'Rcode', 'dist', 'cli', 'serve-entry.js'),
-    source: join(__dirname, '..', 'Rcode', 'src'),
-    label: 'Rcode runtime'
+    output: join(__dirname, '..', 'Joker', 'dist', 'cli', 'serve-entry.js'),
+    source: join(__dirname, '..', 'Joker', 'src'),
+    label: 'Joker runtime'
   }
 ]
 
@@ -107,7 +107,7 @@ async function beforePack(context) {
   assertBuildFreshness()
   const platform = normalizePlatform(context.electronPlatformName)
   const arch = normalizeArch(context.arch)
-  if (process.env.RCODE_SKIP_WHISPER_RUNNER === '1') {
+  if (process.env.JOKER_SKIP_WHISPER_RUNNER === '1') {
     console.warn(`[before-pack] Skipping bundled Whisper runner for ${platform}-${arch}.`)
     return
   }

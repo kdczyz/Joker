@@ -12,8 +12,8 @@ afterEach(async () => {
 
 describe('IM attachment pipeline', () => {
   it('authorizes readable workspace files, deduplicates them, and rejects escapes', async () => {
-    const workspace = await mkdtemp(join(tmpdir(), 'Rcode-im-workspace-'))
-    const outside = await mkdtemp(join(tmpdir(), 'Rcode-im-outside-'))
+    const workspace = await mkdtemp(join(tmpdir(), 'Joker-im-workspace-'))
+    const outside = await mkdtemp(join(tmpdir(), 'Joker-im-outside-'))
     roots.push(workspace, outside)
     const allowedPath = join(workspace, 'report.txt')
     const outsidePath = join(outside, 'secret.txt')

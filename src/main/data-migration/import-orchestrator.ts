@@ -28,9 +28,9 @@ import {
   type RestoredRendererState
 } from './application-state-migration'
 import {
-  DEFAULT_RCODEPACK_INSPECTION_BUDGET,
-  validateRcodepackArchiveDirectory,
-  validateRcodepackLinkMetadata
+  DEFAULT_JOKERPACK_INSPECTION_BUDGET,
+  validateJokerpackArchiveDirectory,
+  validateJokerpackLinkMetadata
 } from './archive-security'
 import { portableSettingsForMigration } from './export-inventory'
 import { buildDataMigrationImportPlan, probeDestinationFileSystem } from './import-planner'
@@ -41,12 +41,12 @@ import {
   type RuntimeMigrationTransactionClient,
   type StagedWorkspaceCommit
 } from './import-transaction'
-import { verifyRcodepackPackage } from './Rcodepack-container'
-import { extractZip64ArchiveEntries, readZip64Directory, readZip64EntryBuffer } from './Rcodepack-zip'
+import { verifyJokerpackPackage } from './Jokerpack-container'
+import { extractZip64ArchiveEntries, readZip64Directory, readZip64EntryBuffer } from './Jokerpack-zip'
 import type { MigrationJournalStore } from './transaction-journal'
 import { stageWorkspaceImport } from './workspace-staging'
 
-export type RcodepackCatalogs = {
+export type JokerpackCatalogs = {
   workspaces: DataMigrationWorkspaceCatalogEntry[]
   threads: DataMigrationThreadCatalogEntry[]
   portableSettings?: unknown
@@ -59,14 +59,14 @@ export type DataMigrationPackageInspection = {
   packagePath: string
   manifest: DataMigrationManifestV1
   entries: DataMigrationPackageEntry[]
-  catalogs: RcodepackCatalogs
+  catalogs: JokerpackCatalogs
   encrypted: boolean
   expandedBytes: number
   compressedBytes: number
   warnings: string[]
 }
 
-export interface RcodeRuntimeMigrationImportClient extends RuntimeMigrationTransactionClient {
+export interface JokerRuntimeMigrationImportClient extends RuntimeMigrationTransactionClient {
   preflight(input: {
     operationId: string
     snapshotPath: string
@@ -97,7 +97,7 @@ export type DataMigrationImportRequest = {
   plan: DataMigrationImportPlan
   passphrase?: string
   settingsStore: JsonSettingsStore
-  runtime?: RcodeRuntimeMigrationImportClient
+  runtime?: JokerRuntimeMigrationImportClient
   renderer?: RendererMigrationStateAdapter
   signal?: AbortSignal
   onProgress?: (progress: DataMigrationProgress) => void
@@ -121,15 +121,15 @@ export class DataMigrationImportOrchestrator {
     const zipPath = join(root, 'payload.zip')
     await mkdir(root, { recursive: true, mode: 0o700 })
     try {
-      const verified = await verifyRcodepackPackage({
+      const verified = await verifyJokerpackPackage({
         packagePath: input.packagePath,
         materializedZipPath: zipPath,
         cleanupMaterialized: false,
         ...(input.passphrase ? { passphrase: input.passphrase } : {})
       })
       const directory = await readZip64Directory(zipPath)
-      validateRcodepackArchiveDirectory(directory, verified.entries, DEFAULT_RCODEPACK_INSPECTION_BUDGET)
-      validateRcodepackLinkMetadata(verified.entries)
+      validateJokerpackArchiveDirectory(directory, verified.entries, DEFAULT_JOKERPACK_INSPECTION_BUDGET)
+      validateJokerpackLinkMetadata(verified.entries)
       const catalogs = await readCatalogs(zipPath, verified.entries)
       assertNoImportedTrustOrSecrets({
         portableSettings: catalogs.portableSettings,
@@ -189,10 +189,10 @@ export class DataMigrationImportOrchestrator {
     const zipPath = join(operationRoot, 'payload.zip')
     const stagedWorkspaces: StagedWorkspaceCommit[] = []
     let runtimeImport: { importId: string; client: RuntimeMigrationTransactionClient } | undefined
-    let runtimePreflight: Awaited<ReturnType<RcodeRuntimeMigrationImportClient['preflight']>> | undefined
+    let runtimePreflight: Awaited<ReturnType<JokerRuntimeMigrationImportClient['preflight']>> | undefined
     try {
       this.progress(input, 'staging', 0, 0, true)
-      const verified = await verifyRcodepackPackage({
+      const verified = await verifyJokerpackPackage({
         packagePath: input.inspection.packagePath,
         materializedZipPath: zipPath,
         cleanupMaterialized: false,
@@ -255,7 +255,7 @@ export class DataMigrationImportOrchestrator {
           preflight: runtimePreflight
         })
       } else if (runtimeEntry) {
-        throw new Error('Rcode runtime import client is unavailable for this package')
+        throw new Error('Joker runtime import client is unavailable for this package')
       }
 
       const applicationSteps = await this.applicationSteps({
@@ -492,7 +492,7 @@ export class DataMigrationImportOrchestrator {
   }
 }
 
-async function readCatalogs(zipPath: string, entries: readonly DataMigrationPackageEntry[]): Promise<RcodepackCatalogs> {
+async function readCatalogs(zipPath: string, entries: readonly DataMigrationPackageEntry[]): Promise<JokerpackCatalogs> {
   const has = (path: string) => entries.some((entry) => entry.path === path)
   const read = async (path: string) => JSON.parse((await readZip64EntryBuffer(
     zipPath,
@@ -523,8 +523,8 @@ function renamedConflictPaths(plan: DataMigrationImportPlan, workspaceId: string
 }
 
 function withPreflightResult(
-  client: RcodeRuntimeMigrationImportClient,
-  preflight: Awaited<ReturnType<RcodeRuntimeMigrationImportClient['preflight']>>
+  client: JokerRuntimeMigrationImportClient,
+  preflight: Awaited<ReturnType<JokerRuntimeMigrationImportClient['preflight']>>
 ): RuntimeMigrationTransactionClient {
   const enrich = (result: RuntimeMigrationCommitResult): RuntimeMigrationCommitResult => ({
     ...result,

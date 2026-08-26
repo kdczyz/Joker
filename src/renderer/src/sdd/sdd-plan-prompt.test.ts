@@ -7,7 +7,7 @@ function image(partial: Partial<SddDraftImageReference> = {}): SddDraftImageRefe
     index: 1,
     alt: 'wireframe',
     markdownPath: '../../img/wireframe.png',
-    relativePath: '.Rcodesdd/img/wireframe.png',
+    relativePath: '.Jokersdd/img/wireframe.png',
     mimeType: 'image/png',
     dataBase64: 'ZmFrZS1pbWFnZQ==',
     byteSize: 10,
@@ -21,8 +21,8 @@ describe('buildSddDraftToPlanPrompt', () => {
   it('keeps Markdown image syntax and maps visual attachments by image number', () => {
     const prompt = buildSddDraftToPlanPrompt({
       workspaceRoot: '/tmp/ws',
-      draftRelativePath: '.Rcodesdd/draft/draft-1/requirement.md',
-      planRelativePath: '.Rcodesdd/plan/sdd-draft-1.md',
+      draftRelativePath: '.Jokersdd/draft/draft-1/requirement.md',
+      planRelativePath: '.Jokersdd/plan/sdd-draft-1.md',
       draftMarkdown: '# Need login\n\n![wireframe](../../img/wireframe.png)',
       imageMode: 'attachments',
       images: [image({ attachmentId: 'att_1' })]
@@ -33,15 +33,15 @@ describe('buildSddDraftToPlanPrompt', () => {
     expect(prompt).toContain('Image 1: ../../img/wireframe.png')
     expect(prompt).toContain('Attachment: att_1')
     expect(prompt).toContain('You MUST use the `create_plan` tool exactly once')
-    expect(prompt).toContain('Reserved plan file: .Rcodesdd/plan/sdd-draft-1.md')
-    expect(prompt).toContain('`plan_relative_path` to `.Rcodesdd/plan/sdd-draft-1.md`')
+    expect(prompt).toContain('Reserved plan file: .Jokersdd/plan/sdd-draft-1.md')
+    expect(prompt).toContain('`plan_relative_path` to `.Jokersdd/plan/sdd-draft-1.md`')
   })
 
   it('includes base64 fallback when visual attachments are unavailable', () => {
     const prompt = buildSddDraftToPlanPrompt({
       workspaceRoot: '/tmp/ws',
-      draftRelativePath: '.Rcodesdd/draft/draft-1/requirement.md',
-      planRelativePath: '.Rcodesdd/plan/sdd-draft-1.md',
+      draftRelativePath: '.Jokersdd/draft/draft-1/requirement.md',
+      planRelativePath: '.Jokersdd/plan/sdd-draft-1.md',
       draftMarkdown: '# Need login\n\n![wireframe](../../img/wireframe.png)',
       imageMode: 'base64',
       images: [image()]
@@ -56,8 +56,8 @@ describe('buildSddDraftToPlanPrompt', () => {
   it('includes sidebar Requirement AI conversation context when provided', () => {
     const prompt = buildSddDraftToPlanPrompt({
       workspaceRoot: '/tmp/ws',
-      draftRelativePath: '.Rcodesdd/draft/draft-1/requirement.md',
-      planRelativePath: '.Rcodesdd/plan/sdd-draft-1.md',
+      draftRelativePath: '.Jokersdd/draft/draft-1/requirement.md',
+      planRelativePath: '.Jokersdd/plan/sdd-draft-1.md',
       draftMarkdown: '# Need login',
       assistantContext: 'Requirement AI:\nConfirm OAuth edge cases.',
       imageMode: 'none',
@@ -71,8 +71,8 @@ describe('buildSddDraftToPlanPrompt', () => {
   it('injects pre-mortem and prioritization framework guidance', () => {
     const prompt = buildSddDraftToPlanPrompt({
       workspaceRoot: '/tmp/ws',
-      draftRelativePath: '.Rcodesdd/draft/draft-1/requirement.md',
-      planRelativePath: '.Rcodesdd/plan/sdd-draft-1.md',
+      draftRelativePath: '.Jokersdd/draft/draft-1/requirement.md',
+      planRelativePath: '.Jokersdd/plan/sdd-draft-1.md',
       draftMarkdown: '# Need login',
       imageMode: 'none',
       images: []

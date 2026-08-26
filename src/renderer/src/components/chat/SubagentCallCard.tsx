@@ -6,11 +6,11 @@ import type { ChatBlock, ToolBlock } from '../../agent/types'
 import { useChatStore } from '../../store/chat-store'
 
 /**
- * "Rcode Crew" — the subagent (`delegate_task`) visualization for the chat
+ * "Joker Crew" — the subagent (`delegate_task`) visualization for the chat
  * timeline. A single delegation renders as one {@link SubagentCallCard}; sibling
  * delegations of one turn coalesce under a {@link SwarmHeader} (only N >= 2).
  *
- * Three independent visual channels: AgentRcode **pose** = role, **motion** =
+ * Three independent visual channels: AgentJoker **pose** = role, **motion** =
  * liveness, **disc ring + status dot** = status. Bound only to fields that
  * exist today (`block.meta.child` + guarded parse of the tool `detail` JSON);
  * every read degrades gracefully so a contract change never blanks the card.

@@ -3,18 +3,18 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useTranslation } from 'react-i18next'
 import {
   DEFAULT_WRITE_INLINE_COMPLETION_BASE_URL,
-  RcodeSettingsPatch,
+  JokerSettingsPatch,
   DEFAULT_WRITE_WORKSPACE_ROOT,
   type AppSettingsPatch,
   getActiveAgentApiKey,
-  getRcodeRuntimeSettings,
+  getJokerRuntimeSettings,
   getModelProviderSettings,
-  isRcodeRuntimeInsecure,
+  isJokerRuntimeInsecure,
   resolveWriteInlineCompletionApiKey,
   resolveWriteInlineCompletionBaseUrl,
   resolveWriteInlineCompletionModel,
   type AppSettingsV1,
-  type RcodeRuntimeSettingsPatchV1,
+  type JokerRuntimeSettingsPatchV1,
 } from '@shared/app-settings'
 import { rendererRuntimeClient } from '../agent/runtime-client'
 import { getProvider } from '../agent/registry'
@@ -23,7 +23,7 @@ import type {
   CoreMemoryRecordJson,
   CoreRuntimeInfoJson,
   CoreRuntimeToolDiagnosticsJson
-} from '../agent/Rcode-contract'
+} from '../agent/Joker-contract'
 import type { WriteInlineCompletionDebugEntry } from '@shared/write-inline-completion'
 import {
   applyChatContentMaxWidth,
@@ -34,7 +34,7 @@ import {
   applyWriteTypography
 } from '../lib/apply-theme'
 import { formatWorkspacePickerError } from '../lib/format-workspace-picker-error'
-import type { RcodeProjectConfigFileResult, SkillRootListItem } from '@shared/Rcode-gui-api'
+import type { JokerProjectConfigFileResult, SkillRootListItem } from '@shared/Joker-gui-api'
 import { defaultConversationWorkspaceRoot, normalizeWorkspaceRoot } from '../lib/workspace-path'
 import {
   compactHomePathForSettingsDisplay,
@@ -55,7 +55,7 @@ import {
   mergeSettings,
   splitSettingsList
 } from './settings-utils'
-import { loadRcodeDiagnostics } from '../lib/load-Rcode-diagnostics'
+import { loadJokerDiagnostics } from '../lib/load-Joker-diagnostics'
 import { SETTINGS_CHANGED_EVENT, emitRendererSettingsChanged } from '../lib/keyboard-shortcut-settings'
 import { confirmDialog } from '../lib/confirm-dialog'
 import { GeneralSettingsSection } from './settings-section-general'
@@ -202,14 +202,14 @@ export function SettingsView(): ReactElement {
   const [skillRoots, setSkillRoots] = useState<SkillRootListItem[]>([])
   const [skillRootsLoading, setSkillRootsLoading] = useState(false)
   const [skillNotice, setSkillNotice] = useState<InlineNotice | null>(null)
-  const [mcpConfigPath, setMcpConfigPath] = useState('~/.Rcode/mcp.json')
+  const [mcpConfigPath, setMcpConfigPath] = useState('~/.Joker/mcp.json')
   const [mcpConfigText, setMcpConfigText] = useState('')
   const [mcpConfigExists, setMcpConfigExists] = useState(false)
   const [mcpLoading, setMcpLoading] = useState(false)
   const [mcpLoaded, setMcpLoaded] = useState(false)
   const [mcpBusy, setMcpBusy] = useState(false)
   const [mcpNotice, setMcpNotice] = useState<InlineNotice | null>(null)
-  const [projectConfig, setProjectConfig] = useState<RcodeProjectConfigFileResult | null>(null)
+  const [projectConfig, setProjectConfig] = useState<JokerProjectConfigFileResult | null>(null)
   const [projectConfigText, setProjectConfigText] = useState(DEFAULT_PROJECT_CONFIG_TEXT)
   const [projectConfigLoading, setProjectConfigLoading] = useState(false)
   const [projectConfigBusy, setProjectConfigBusy] = useState(false)
@@ -262,14 +262,14 @@ export function SettingsView(): ReactElement {
   const formUiFontScale = form?.uiFontScale
   const formChatContentMaxWidthPx = form?.chatContentMaxWidthPx
   const writeTypography = form?.write?.typography
-  const formRcode = form ? getRcodeRuntimeSettings(form) : null
-  const formPort = formRcode?.port
+  const formJoker = form ? getJokerRuntimeSettings(form) : null
+  const formPort = formJoker?.port
   const formGuiUpdateChannel = form?.guiUpdate?.channel
   const formCursorSpotlight = form?.cursorSpotlight
   const formCursorSpotlightColor = form?.cursorSpotlightColor
   const markAgentsSectionReady = useCallback(() => setAgentsSectionReady(true), [])
-  const settingsPlatform = typeof window !== 'undefined' ? window.RcodeGui?.platform ?? '' : ''
-  const settingsHomeDir = typeof window !== 'undefined' ? window.RcodeGui?.homeDir ?? '' : ''
+  const settingsPlatform = typeof window !== 'undefined' ? window.JokerGui?.platform ?? '' : ''
+  const settingsHomeDir = typeof window !== 'undefined' ? window.JokerGui?.homeDir ?? '' : ''
   const compactHomePath = useCallback((value: string): string =>
     compactHomePathForSettingsDisplay(value, settingsHomeDir, settingsPlatform), [settingsHomeDir, settingsPlatform])
   const expandHomePath = useCallback((value: string): string =>
@@ -283,8 +283,8 @@ export function SettingsView(): ReactElement {
     [expandHomePath, form?.workspaceRoot, workspaceRoot]
   )
   const projectConfigGrantFingerprint = useMemo(
-    () => JSON.stringify(formRcode?.projectConfig.grants ?? []),
-    [formRcode?.projectConfig.grants]
+    () => JSON.stringify(formJoker?.projectConfig.grants ?? []),
+    [formJoker?.projectConfig.grants]
   )
   const {
     checkingGuiUpdate,
@@ -315,7 +315,7 @@ export function SettingsView(): ReactElement {
 
   useEffect(() => {
     let cancelled = false
-    if (typeof window.RcodeGui === 'undefined') {
+    if (typeof window.JokerGui === 'undefined') {
       setLoadError('PRELOAD_BRIDGE')
       return
     }
@@ -370,16 +370,16 @@ export function SettingsView(): ReactElement {
   }, [])
 
   useEffect(() => {
-    if (typeof window.RcodeGui?.getLogPath !== 'function') return
-    void window.RcodeGui.getLogPath().then((p) => setLogPath(p)).catch(() => undefined)
+    if (typeof window.JokerGui?.getLogPath !== 'function') return
+    void window.JokerGui.getLogPath().then((p) => setLogPath(p)).catch(() => undefined)
   }, [category])
 
   const loadWriteDebugEntries = useCallback(async (): Promise<void> => {
     setWriteDebugLoading(true)
     setWriteDebugError(null)
     try {
-      const completionEntries = typeof window.RcodeGui?.listWriteInlineCompletionDebugEntries === 'function'
-        ? await window.RcodeGui.listWriteInlineCompletionDebugEntries()
+      const completionEntries = typeof window.JokerGui?.listWriteInlineCompletionDebugEntries === 'function'
+        ? await window.JokerGui.listWriteInlineCompletionDebugEntries()
         : []
       setWriteCompletionDebugEntries(completionEntries)
       setWriteCompletionDebugSelectedId((current) =>
@@ -516,12 +516,12 @@ export function SettingsView(): ReactElement {
   }, [form, formPort, t])
 
   const refreshSkillRoots = useCallback(async (): Promise<void> => {
-    if (typeof window.RcodeGui?.listSkillRoots !== 'function') return
+    if (typeof window.JokerGui?.listSkillRoots !== 'function') return
     setSkillRootsLoading(true)
     try {
       // Settings is global: list every configured skill root from persisted
       // settings, not the sidebar's currently selected project workspace.
-      const result = await window.RcodeGui.listSkillRoots()
+      const result = await window.JokerGui.listSkillRoots()
       if (result.ok) setSkillRoots(result.roots)
     } catch {
       /* listing skill roots is best-effort; keep the last known list */
@@ -536,11 +536,11 @@ export function SettingsView(): ReactElement {
   }, [category, refreshSkillRoots])
 
   const loadMcpConfig = async (): Promise<void> => {
-    if (typeof window.RcodeGui?.getRcodeConfigFile !== 'function') return
+    if (typeof window.JokerGui?.getJokerConfigFile !== 'function') return
     setMcpLoading(true)
     setMcpNotice(null)
     try {
-      const config = await window.RcodeGui.getRcodeConfigFile()
+      const config = await window.JokerGui.getJokerConfigFile()
       setMcpConfigPath(config.path)
       setMcpConfigText(config.content)
       setMcpConfigExists(config.exists)
@@ -565,9 +565,9 @@ export function SettingsView(): ReactElement {
       setSkillNotice({ tone: 'error', message: t('skillsRootUnavailable') })
       return
     }
-    if (typeof window.RcodeGui?.openSkillRoot !== 'function') return
+    if (typeof window.JokerGui?.openSkillRoot !== 'function') return
     setSkillNotice(null)
-    const result = await window.RcodeGui.openSkillRoot(path)
+    const result = await window.JokerGui.openSkillRoot(path)
     if (!result.ok) {
       setSkillNotice({ tone: 'error', message: result.message ?? t('applyFailed') })
     }
@@ -590,11 +590,11 @@ export function SettingsView(): ReactElement {
   }
 
   const saveMcpConfig = async (): Promise<void> => {
-    if (typeof window.RcodeGui?.setRcodeConfigFile !== 'function') return
+    if (typeof window.JokerGui?.setJokerConfigFile !== 'function') return
     setMcpBusy(true)
     setMcpNotice(null)
     try {
-      const result = await window.RcodeGui.setRcodeConfigFile(mcpConfigText)
+      const result = await window.JokerGui.setJokerConfigFile(mcpConfigText)
       setMcpConfigPath(result.path)
       setMcpConfigExists(true)
       setMcpNotice({
@@ -612,15 +612,15 @@ export function SettingsView(): ReactElement {
   }
 
   const openMcpConfigDir = async (): Promise<void> => {
-    if (typeof window.RcodeGui?.openRcodeConfigDir !== 'function') return
-    const result = await window.RcodeGui.openRcodeConfigDir()
+    if (typeof window.JokerGui?.openJokerConfigDir !== 'function') return
+    const result = await window.JokerGui.openJokerConfigDir()
     if (!result.ok) {
       setMcpNotice({ tone: 'error', message: result.message ?? t('applyFailed') })
     }
   }
 
   const loadProjectConfig = useCallback(async (): Promise<void> => {
-    if (!activeProjectWorkspaceRoot || typeof window.RcodeGui?.getRcodeProjectConfigFile !== 'function') {
+    if (!activeProjectWorkspaceRoot || typeof window.JokerGui?.getJokerProjectConfigFile !== 'function') {
       setProjectConfig(null)
       setProjectConfigText(DEFAULT_PROJECT_CONFIG_TEXT)
       return
@@ -628,7 +628,7 @@ export function SettingsView(): ReactElement {
     setProjectConfigLoading(true)
     setProjectConfigNotice(null)
     try {
-      const result = await window.RcodeGui.getRcodeProjectConfigFile(activeProjectWorkspaceRoot)
+      const result = await window.JokerGui.getJokerProjectConfigFile(activeProjectWorkspaceRoot)
       setProjectConfig(result)
       setProjectConfigText(result.exists ? result.content : DEFAULT_PROJECT_CONFIG_TEXT)
     } catch (error) {
@@ -647,11 +647,11 @@ export function SettingsView(): ReactElement {
   }, [category, loadProjectConfig, projectConfigGrantFingerprint])
 
   const saveProjectConfig = async (): Promise<void> => {
-    if (!activeProjectWorkspaceRoot || typeof window.RcodeGui?.setRcodeProjectConfigFile !== 'function') return
+    if (!activeProjectWorkspaceRoot || typeof window.JokerGui?.setJokerProjectConfigFile !== 'function') return
     setProjectConfigBusy(true)
     setProjectConfigNotice(null)
     try {
-      const result = await window.RcodeGui.setRcodeProjectConfigFile(
+      const result = await window.JokerGui.setJokerProjectConfigFile(
         activeProjectWorkspaceRoot,
         projectConfigText
       )
@@ -682,12 +682,12 @@ export function SettingsView(): ReactElement {
   }
 
   const setProjectConfigTrust = async (trusted: boolean): Promise<void> => {
-    if (!activeProjectWorkspaceRoot || typeof window.RcodeGui?.setRcodeProjectConfigTrust !== 'function') return
+    if (!activeProjectWorkspaceRoot || typeof window.JokerGui?.setJokerProjectConfigTrust !== 'function') return
     if (trusted && projectConfig?.status !== 'valid') return
     setProjectConfigBusy(true)
     setProjectConfigNotice(null)
     try {
-      const result = await window.RcodeGui.setRcodeProjectConfigTrust(
+      const result = await window.JokerGui.setJokerProjectConfigTrust(
         activeProjectWorkspaceRoot,
         trusted,
         trusted ? projectConfig?.digest : undefined
@@ -711,19 +711,19 @@ export function SettingsView(): ReactElement {
   }
 
   const openProjectConfigDir = async (): Promise<void> => {
-    if (!activeProjectWorkspaceRoot || typeof window.RcodeGui?.openRcodeProjectConfigDir !== 'function') return
-    const result = await window.RcodeGui.openRcodeProjectConfigDir(activeProjectWorkspaceRoot)
+    if (!activeProjectWorkspaceRoot || typeof window.JokerGui?.openJokerProjectConfigDir !== 'function') return
+    const result = await window.JokerGui.openJokerProjectConfigDir(activeProjectWorkspaceRoot)
     if (!result.ok) {
       setProjectConfigNotice({ tone: 'error', message: result.message ?? t('applyFailed') })
     }
   }
 
-  const refreshRcodeDiagnostics = useCallback(async (): Promise<void> => {
+  const refreshJokerDiagnostics = useCallback(async (): Promise<void> => {
     const provider = getProvider()
     setRuntimeDiagnosticsBusy(true)
     setRuntimeDiagnosticsNotice(null)
     try {
-      const loaded = await loadRcodeDiagnostics(provider, { listAllMemories: true })
+      const loaded = await loadJokerDiagnostics(provider, { listAllMemories: true })
       if (loaded.runtimeInfo !== undefined) setRuntimeInfo(loaded.runtimeInfo)
       if (loaded.toolDiagnostics !== undefined) setToolDiagnostics(loaded.toolDiagnostics)
       if (loaded.memoryRecords !== undefined) setMemoryRecords(loaded.memoryRecords)
@@ -745,8 +745,8 @@ export function SettingsView(): ReactElement {
 
   useEffect(() => {
     if (category !== 'agents' && category !== 'memory') return
-    void refreshRcodeDiagnostics()
-  }, [category, refreshRcodeDiagnostics])
+    void refreshJokerDiagnostics()
+  }, [category, refreshJokerDiagnostics])
 
   const refreshMemoryDiagnostics = async (): Promise<void> => {
     const provider = getProvider()
@@ -925,7 +925,7 @@ export function SettingsView(): ReactElement {
       const message = e instanceof Error ? e.message : String(e)
       setSaveError(message)
       setSaveStatus('error')
-      void window.RcodeGui?.logError?.('settings', 'Failed to apply settings', { message }).catch(() => undefined)
+      void window.JokerGui?.logError?.('settings', 'Failed to apply settings', { message }).catch(() => undefined)
     }
   }
 
@@ -999,7 +999,7 @@ export function SettingsView(): ReactElement {
       })
       .catch((e) => {
         const message = e instanceof Error ? e.message : String(e)
-        void window.RcodeGui?.logError?.('settings', 'Failed to flush settings on unmount', { message }).catch(
+        void window.JokerGui?.logError?.('settings', 'Failed to flush settings on unmount', { message }).catch(
           () => undefined
         )
       })
@@ -1057,7 +1057,7 @@ export function SettingsView(): ReactElement {
     )
   }
 
-  const Rcode = getRcodeRuntimeSettings(form)
+  const Joker = getJokerRuntimeSettings(form)
   const provider = getModelProviderSettings(form)
   const activeApiKey = getActiveAgentApiKey(form)
 
@@ -1085,17 +1085,17 @@ export function SettingsView(): ReactElement {
     update({ provider: patch })
   }
 
-  const updateRcode = (patch: RcodeRuntimeSettingsPatchV1): void => {
-    update({ agents: RcodeSettingsPatch(patch) })
+  const updateJoker = (patch: JokerRuntimeSettingsPatchV1): void => {
+    update({ agents: JokerSettingsPatch(patch) })
   }
 
   const pickWorkspace = async (): Promise<void> => {
     try {
       setWorkspacePickerError(null)
-      if (typeof window.RcodeGui?.pickWorkspaceDirectory !== 'function') {
+      if (typeof window.JokerGui?.pickWorkspaceDirectory !== 'function') {
         throw new Error('workspace:pick-directory unavailable')
       }
-      const picked = await window.RcodeGui.pickWorkspaceDirectory(expandHomePath(form.workspaceRoot) || undefined)
+      const picked = await window.JokerGui.pickWorkspaceDirectory(expandHomePath(form.workspaceRoot) || undefined)
       if (!picked.canceled && picked.path) {
         update({ workspaceRoot: picked.path })
       }
@@ -1112,10 +1112,10 @@ export function SettingsView(): ReactElement {
   const pickConversationWorkspace = async (): Promise<void> => {
     try {
       setConversationWorkspacePickerError(null)
-      if (typeof window.RcodeGui?.pickWorkspaceDirectory !== 'function') {
+      if (typeof window.JokerGui?.pickWorkspaceDirectory !== 'function') {
         throw new Error('workspace:pick-directory unavailable')
       }
-      const picked = await window.RcodeGui.pickWorkspaceDirectory(
+      const picked = await window.JokerGui.pickWorkspaceDirectory(
         expandHomePath(form.conversationWorkspaceRoot || defaultConversationWorkspaceRoot())
       )
       if (!picked.canceled && picked.path) {
@@ -1134,10 +1134,10 @@ export function SettingsView(): ReactElement {
   const pickWriteWorkspace = async (): Promise<void> => {
     try {
       setWriteWorkspacePickerError(null)
-      if (typeof window.RcodeGui?.pickWorkspaceDirectory !== 'function') {
+      if (typeof window.JokerGui?.pickWorkspaceDirectory !== 'function') {
         throw new Error('workspace:pick-directory unavailable')
       }
-      const picked = await window.RcodeGui.pickWorkspaceDirectory(
+      const picked = await window.JokerGui.pickWorkspaceDirectory(
         expandHomePath(form.write.defaultWorkspaceRoot || DEFAULT_WRITE_WORKSPACE_ROOT)
       )
       if (!picked.canceled && picked.path) {
@@ -1174,10 +1174,10 @@ export function SettingsView(): ReactElement {
   const pickClawWorkspace = async (): Promise<void> => {
     try {
       setClawWorkspacePickerError(null)
-      if (typeof window.RcodeGui?.pickWorkspaceDirectory !== 'function') {
+      if (typeof window.JokerGui?.pickWorkspaceDirectory !== 'function') {
         throw new Error('workspace:pick-directory unavailable')
       }
-      const picked = await window.RcodeGui.pickWorkspaceDirectory(
+      const picked = await window.JokerGui.pickWorkspaceDirectory(
         expandHomePath(form.claw.im.workspaceRoot || form.workspaceRoot) || undefined
       )
       if (!picked.canceled && picked.path) {
@@ -1197,8 +1197,8 @@ export function SettingsView(): ReactElement {
     setWriteDebugLoading(true)
     setWriteDebugError(null)
     try {
-      if (typeof window.RcodeGui?.clearWriteInlineCompletionDebugEntries === 'function') {
-        await window.RcodeGui.clearWriteInlineCompletionDebugEntries()
+      if (typeof window.JokerGui?.clearWriteInlineCompletionDebugEntries === 'function') {
+        await window.JokerGui.clearWriteInlineCompletionDebugEntries()
       }
       setWriteCompletionDebugEntries([])
       setWriteCompletionDebugSelectedId(null)
@@ -1217,10 +1217,10 @@ export function SettingsView(): ReactElement {
     tCommon,
     form,
     provider,
-    Rcode,
+    Joker,
     activeApiKey,
     update,
-    updateRcode,
+    updateJoker,
     updateSharedCredential,
     sharedApiKey,
     sharedBaseUrl,
@@ -1303,7 +1303,7 @@ export function SettingsView(): ReactElement {
     memoryDiagnostics,
     runtimeDiagnosticsBusy,
     runtimeDiagnosticsNotice,
-    refreshRcodeDiagnostics,
+    refreshJokerDiagnostics,
     createMemoryRecord,
     updateMemoryRecord,
     disableMemoryRecord,

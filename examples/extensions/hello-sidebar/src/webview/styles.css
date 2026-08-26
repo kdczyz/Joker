@@ -5,8 +5,8 @@
 
 body {
   margin: 0;
-  color: var(--Rcode-foreground, CanvasText);
-  background: var(--Rcode-background, Canvas);
+  color: var(--Joker-foreground, CanvasText);
+  background: var(--Joker-background, Canvas);
 }
 
 main {
@@ -17,7 +17,7 @@ main {
 
 .eyebrow {
   margin: 0;
-  color: var(--Rcode-mutedForeground, GrayText);
+  color: var(--Joker-mutedForeground, GrayText);
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;

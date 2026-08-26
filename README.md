@@ -1,6 +1,6 @@
 <div align="center">
 
-# ⌁ Rcode
+# ⌁ Joker code
 
 ### Local-first, Permission-Controlled AI Coding Agent
 
@@ -26,12 +26,12 @@ Empowering AI to understand code, edit files, test & build, manage Git workflows
 
 ## ✦ Introduction
 
-Rcode is a local-first AI Agent framework designed for real-world software engineering workflows. Through its desktop client, it connects to any OpenAI-compatible model, invoking tools across files, terminal, Git, browser, and desktop automation within project workspaces, governed by granular `allow / ask / deny` permission rules.
+Joker code is a local-first AI Agent framework designed for real-world software engineering workflows. Through its desktop client, it connects to any OpenAI-compatible model, invoking tools across files, terminal, Git, browser, and desktop automation within project workspaces, governed by granular `allow / ask / deny` permission rules.
 
 The project also includes an Android mobile client and Cloudflare-backed remote services: when your computer is online, you can access public projects and sessions from your phone to continue running Agent tasks; when your computer is offline, Work mode allows chat interactions and image generation via cloud proxy.
 
 > [!IMPORTANT]
-> Rcode relies on path validation, command analysis, tool approvals, and audit logging to provide a portable security perimeter. It does not claim an OS-level sandbox. For production environments, sensitive data, or high-privilege commands, containers, dedicated user accounts, or isolated machines should still be used.
+> Joker code relies on path validation, command analysis, tool approvals, and audit logging to provide a portable security perimeter. It does not claim an OS-level sandbox. For production environments, sensitive data, or high-privilege commands, containers, dedicated user accounts, or isolated machines should still be used.
 
 ## ◈ Core Capabilities
 
@@ -52,8 +52,8 @@ The project also includes an Android mobile client and Cloudflare-backed remote 
 
 ```mermaid
 flowchart LR
-    U[Developer] --> D[Rcode Desktop]
-    U --> M[Rcode Android]
+    U[Developer] --> D[Joker code Desktop]
+    U --> M[Joker code Android]
 
     D --> A[Local Agent Server]
     A --> P[AI Providers]
@@ -75,7 +75,7 @@ flowchart LR
 | --- | --- | --- | --- |
 | **Desktop Client** | `src/`, `electron/`, `cli/` | `npm run desktop:dev` | `npm run desktop:build` |
 | **Local Agent Server** | `server/` | `npm run server:dev` | `npm run server:test` |
-| **Android Client** | `Rcode_apk/` | `npm run mobile:dev` | `npm run mobile:build` / `npm run mobile:apk` |
+| **Android Client** | `Joker_apk/` | `npm run mobile:dev` | `npm run mobile:build` / `npm run mobile:apk` |
 | **Cloud Auth & Remote Services** | `Fwq/` | `npm run remote:dev` | `npm run remote:check` / `npm run remote:test` |
 
 ## ▶ Quick Start
@@ -125,11 +125,11 @@ In **Settings → Memory**, you can configure two context tiers:
 - **Short-term Memory**: Retains the most recent full dialogue turns within a token budget, compresses earlier turns into local summaries, and caps oversized tool outputs.
 - **Long-term Memory**: Isolated by project path and persisted to local SQLite; recalled based on keyword relevance, importance, and recency. Supports TTL expiration, deduplication, and credential redaction.
 
-The built-in `memory-management` Skill provides standard adaptation contracts. Other open-source Memory Skills can delegate persistence to `memory_search`, `memory_store`, and `memory_forget` without direct dependencies on Rcode's database schema. When "Skill Adaptation" is disabled, these three tools will not be exposed to models.
+The built-in `memory-management` Skill provides standard adaptation contracts. Other open-source Memory Skills can delegate persistence to `memory_search`, `memory_store`, and `memory_forget` without direct dependencies on Joker code's database schema. When "Skill Adaptation" is disabled, these three tools will not be exposed to models.
 
 ## ⚙ Long-Running Process Sessions
 
-Commands that do not terminate on their own (e.g., dev servers, file watchers) are managed by Rcode without needing `&` or `nohup`:
+Commands that do not terminate on their own (e.g., dev servers, file watchers) are managed by Joker code without needing `&` or `nohup`:
 
 - `start_process`: Starts a background process and returns its session ID, PID, and initial output.
 - `read_process`: Reads current status and recent output logs.
@@ -137,11 +137,11 @@ Commands that do not terminate on their own (e.g., dev servers, file watchers) a
 - `stop_process`: Stops the process and its entire child process tree.
 - `list_processes`: Lists all managed processes for the active project.
 
-Access the "Terminal" entry next to the chat input to inspect process status, PIDs, commands, and output logs. Managed processes are gracefully terminated when the Rcode server exits and are not automatically resumed upon restart.
+Access the "Terminal" entry next to the chat input to inspect process status, PIDs, commands, and output logs. Managed processes are gracefully terminated when the Joker code server exits and are not automatically resumed upon restart.
 
 ## ◉ macOS Desktop Control
 
-Rcode can connect to a local `native-devtools-mcp` service to inspect and interact with macOS application windows:
+Joker code can connect to a local `native-devtools-mcp` service to inspect and interact with macOS application windows:
 
 ```bash
 npm install -g native-devtools-mcp@0.10.1
@@ -157,7 +157,7 @@ It is recommended to set UI-modifying actions to `ask`. The Agent prioritizes Ac
 
 ## 🔐 Permissions & Security
 
-Rcode adopts a tiered defense strategy: **Workspace Boundaries + Tool Approvals + Audit Logs**:
+Joker code adopts a tiered defense strategy: **Workspace Boundaries + Tool Approvals + Audit Logs**:
 
 - In-workspace read, edit, search, test, and build tasks can execute automatically based on policy.
 - Dependency installation, network requests, migrations, and container modifications prompt before execution.
@@ -179,7 +179,7 @@ For complete rules and security boundaries, refer to [Capabilities and Permissio
 - Work mode proxies chat and image generation when the host computer is offline.
 - Code mode strictly accesses projects explicitly published by the host computer; it does not accept arbitrary arbitrary host paths from mobile clients.
 
-For detailed API definitions, deployment guides, and security designs, see [`Fwq/README.md`](Fwq/README.md); for Android capabilities and build steps, see [`Rcode_apk/README.md`](Rcode_apk/README.md).
+For detailed API definitions, deployment guides, and security designs, see [`Fwq/README.md`](Fwq/README.md); for Android capabilities and build steps, see [`Joker_apk/README.md`](Joker_apk/README.md).
 
 ## ⧉ Tech Stack
 
@@ -192,14 +192,14 @@ For detailed API definitions, deployment guides, and security designs, see [`Fwq
 ## ◇ Project Structure
 
 ```text
-Rcode/
+Joker/
 ├── src/                 # Desktop React UI
 ├── electron/            # Electron main process & secure storage
 ├── server/              # Local Agent, tools, permissions & state services
 ├── cli/                 # CLI entry point
 ├── config/              # Agent & model provider configuration
 ├── docs/                # Capabilities, permissions, and architectural docs
-├── Rcode_apk/           # Android mobile client
+├── Joker_apk/           # Android mobile client
 └── Fwq/                 # Cloudflare authentication & remote services
 ```
 
@@ -207,6 +207,6 @@ Rcode/
 
 <div align="center">
 
-**Rcode · Code locally, approve explicitly, collaborate anywhere.**
+**Joker code · Code locally, approve explicitly, collaborate anywhere.**
 
 </div>

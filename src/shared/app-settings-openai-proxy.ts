@@ -1,5 +1,5 @@
 import {
-  MIN_RCODE_LOCAL_PORT,
+  MIN_JOKER_LOCAL_PORT,
   type OpenAiProxySettingsPatchV1,
   type OpenAiProxySettingsV1
 } from './app-settings-types'
@@ -23,7 +23,7 @@ export function normalizeOpenAiProxySettings(
 ): OpenAiProxySettingsV1 {
   const defaults = defaultOpenAiProxySettings()
   const source = input ?? {}
-  const port = normalizePositiveInteger(source.port, defaults.port, MIN_RCODE_LOCAL_PORT, 65_535)
+  const port = normalizePositiveInteger(source.port, defaults.port, MIN_JOKER_LOCAL_PORT, 65_535)
   return {
     enabled: normalizeBoolean(source.enabled, defaults.enabled),
     // Avoid colliding with common local ports by forcing a sane ceiling.

@@ -1,10 +1,10 @@
 import type { ReactElement } from 'react'
-import type { RcodeRuntimeSettingsPatchV1, RcodeRuntimeSettingsV1 } from '@shared/app-settings'
+import type { JokerRuntimeSettingsPatchV1, JokerRuntimeSettingsV1 } from '@shared/app-settings'
 import { SubagentSettingsEditor } from './subagents/SubagentSettingsEditor'
 
 type SubagentsSettingsContext = {
-  Rcode: RcodeRuntimeSettingsV1
-  updateRcode: (patch: RcodeRuntimeSettingsPatchV1) => void | Promise<void>
+  Joker: JokerRuntimeSettingsV1
+  updateJoker: (patch: JokerRuntimeSettingsPatchV1) => void | Promise<void>
 }
 
 export function SubagentsSettingsSection({
@@ -13,6 +13,6 @@ export function SubagentsSettingsSection({
   ctx: SubagentsSettingsContext
 }): ReactElement {
   return (
-    <SubagentSettingsEditor Rcode={ctx.Rcode} onPatch={ctx.updateRcode} variant="settings" />
+    <SubagentSettingsEditor Joker={ctx.Joker} onPatch={ctx.updateJoker} variant="settings" />
   )
 }

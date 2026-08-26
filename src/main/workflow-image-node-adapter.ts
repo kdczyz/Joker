@@ -2,11 +2,11 @@ import { randomBytes } from 'node:crypto'
 import { mkdir, writeFile } from 'node:fs/promises'
 import { isAbsolute, join, resolve } from 'node:path'
 import type { AppSettingsV1, WorkflowNodeV1 } from '../shared/app-settings'
-import { resolveRcodeImageGenerationSettings } from '../shared/app-settings'
+import { resolveJokerImageGenerationSettings } from '../shared/app-settings'
 import {
   createImageGenClient,
   mapImageSize
-} from '../../Rcode/src/adapters/tool/image-gen-tool-provider.js'
+} from '../../Joker/src/adapters/tool/image-gen-tool-provider.js'
 import { resolveCodexOAuthApiKey } from './codex-auth'
 import { interpolate, type InterpScope, type WorkflowPayload } from './workflow-expression'
 import type { WorkflowNodeOutcome } from './workflow-core-node-adapter'
@@ -16,15 +16,15 @@ type ImageNode = Extract<WorkflowNodeV1, { type: 'generate-image' }>
 function resolveImageSettings(settings: AppSettingsV1, providerRaw: string, modelRaw: string) {
   const providerId = providerRaw.trim()
   const model = modelRaw.trim()
-  if (!providerId && !model) return resolveRcodeImageGenerationSettings(settings)
-  return resolveRcodeImageGenerationSettings({
+  if (!providerId && !model) return resolveJokerImageGenerationSettings(settings)
+  return resolveJokerImageGenerationSettings({
     ...settings,
     agents: {
       ...settings.agents,
-      Rcode: {
-        ...settings.agents.Rcode,
+      Joker: {
+        ...settings.agents.Joker,
         imageGeneration: {
-          ...settings.agents.Rcode.imageGeneration,
+          ...settings.agents.Joker.imageGeneration,
           ...(providerId ? { providerId } : {}),
           ...(model ? { model } : {})
         }

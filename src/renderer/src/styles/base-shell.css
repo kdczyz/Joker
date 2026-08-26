@@ -245,7 +245,7 @@
 }
 
 /* Retroma 羊皮纸浅色主题(仅浅色生效):底色 #faf9f6 / 卡片 #f5f4ef / 主色青 #0f7887 / 点缀紫红 #6e3a66 / 边框 #d8d4c8。
-   :not([data-theme='dark']) 守卫确保暗色模式下回退 Rcode 默认暗色。 */
+   :not([data-theme='dark']) 守卫确保暗色模式下回退 Joker 默认暗色。 */
 [data-retroma-mode='on']:not([data-theme='dark']) {
   --bg-app: #faf9f6;
   --bg-sidebar: #f5f4ef;
@@ -1657,7 +1657,7 @@ pre {
   }
 }
 
-/* ---------- Rcode Crew · subagent call card ---------- */
+/* ---------- Joker Crew · subagent call card ---------- */
 .ds-subagent-mount {
   animation: ds-subagent-mount 0.3s cubic-bezier(0.2, 0.7, 0.2, 1);
 }
@@ -1697,8 +1697,8 @@ pre {
     left: 100%;
   }
 }
-/* Freeze the AgentRcode pose motion inside a frozen disc (done/failed/off-screen). */
-.ds-subagent-frozen .ds-agent-Rcode img {
+/* Freeze the AgentJoker pose motion inside a frozen disc (done/failed/off-screen). */
+.ds-subagent-frozen .ds-agent-Joker img {
   animation: none !important;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -3479,20 +3479,20 @@ body.ds-workbench-resizing webview {
 /* ---------- 唤醒加载特效(.is-waking):睡息 Zzz、声纳涟漪、气泡上浮、草稿打字 ---------- */
 /* 仅运行时连接页启用;就绪后的空状态与报错态沿用安静版舞台(#78:错误不该像还在加载) */
 
-.ds-runtime-wake-Rcode-bob {
+.ds-runtime-wake-Joker-bob {
   display: inline-flex;
   line-height: 0;
   position: relative;
   z-index: 2;
 }
 
-/* 小 Rcode 每隔几秒翻个身,其余时间交给形象自带的呼吸动画 */
-.is-waking .ds-runtime-wake-Rcode-bob {
+/* 小 Joker 每隔几秒翻个身,其余时间交给形象自带的呼吸动画 */
+.is-waking .ds-runtime-wake-Joker-bob {
   animation: ds-runtime-wake-stir 8.4s ease-in-out infinite;
   transform-origin: 50% 100%;
 }
 
-/* Zzz 从头顶冒出,边升边飘散;锚点在小 Rcode 头部上方 */
+/* Zzz 从头顶冒出,边升边飘散;锚点在小 Joker 头部上方 */
 .ds-runtime-wake-zzz {
   pointer-events: none;
   position: absolute;
@@ -3587,7 +3587,7 @@ body.ds-workbench-resizing webview {
   width: 4px;
 }
 
-/* 模拟输入框:小 Rcode 梦里打草稿,写一段、停一停、清掉重来;光标常亮闪烁 */
+/* 模拟输入框:小 Joker 梦里打草稿,写一段、停一停、清掉重来;光标常亮闪烁 */
 .ds-runtime-wake-caret {
   animation: ds-runtime-wake-caret-blink 1.05s step-end infinite;
   background: var(--ds-accent);
@@ -3883,9 +3883,9 @@ body.ds-workbench-resizing webview {
   }
 }
 
-/* ---------- Rcode 形象状态:打招呼(欢迎) / 睡觉(待唤醒) / 坐着(空状态) ---------- */
+/* ---------- Joker 形象状态:打招呼(欢迎) / 睡觉(待唤醒) / 坐着(空状态) ---------- */
 
-.ds-Rcode-state {
+.ds-Joker-state {
   position: relative;
   display: inline-flex;
   align-items: center;
@@ -3894,12 +3894,12 @@ body.ds-workbench-resizing webview {
   transition: transform 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.ds-Rcode-state:hover {
+.ds-Joker-state:hover {
   z-index: 5;
   transform: scale(1.5);
 }
 
-.ds-Rcode-state .ds-Rcode-state-figure {
+.ds-Joker-state .ds-Joker-state-figure {
   display: block;
   height: 100%;
   width: 100%;
@@ -3908,23 +3908,23 @@ body.ds-workbench-resizing webview {
   user-select: none;
 }
 
-.ds-Rcode-state-greet .ds-Rcode-state-figure {
-  animation: ds-Rcode-greet-wave 2.6s ease-in-out infinite;
+.ds-Joker-state-greet .ds-Joker-state-figure {
+  animation: ds-Joker-greet-wave 2.6s ease-in-out infinite;
   transform-origin: 50% 88%;
 }
 
-.ds-Rcode-state-sleep .ds-Rcode-state-figure {
-  animation: ds-Rcode-sleep-breathe 3.6s ease-in-out infinite;
+.ds-Joker-state-sleep .ds-Joker-state-figure {
+  animation: ds-Joker-sleep-breathe 3.6s ease-in-out infinite;
   transform-origin: 50% 100%;
 }
 
-.ds-Rcode-state-sit .ds-Rcode-state-figure {
-  animation: ds-Rcode-sit-sway 4.2s ease-in-out infinite;
+.ds-Joker-state-sit .ds-Joker-state-figure {
+  animation: ds-Joker-sit-sway 4.2s ease-in-out infinite;
   transform-origin: 50% 92%;
 }
 
 /* 挥手一阵,歇半拍再挥 */
-@keyframes ds-Rcode-greet-wave {
+@keyframes ds-Joker-greet-wave {
   0%,
   48%,
   100% {
@@ -3941,7 +3941,7 @@ body.ds-workbench-resizing webview {
   }
 }
 
-@keyframes ds-Rcode-sleep-breathe {
+@keyframes ds-Joker-sleep-breathe {
   0%,
   100% {
     transform: scale(1, 1);
@@ -3951,7 +3951,7 @@ body.ds-workbench-resizing webview {
   }
 }
 
-@keyframes ds-Rcode-sit-sway {
+@keyframes ds-Joker-sit-sway {
   0%,
   100% {
     transform: rotate(-1.6deg);
@@ -3963,7 +3963,7 @@ body.ds-workbench-resizing webview {
 
 /* 蹦一下打招呼,歇半拍再蹦 */
 
-.ds-runtime-wake-Rcode {
+.ds-runtime-wake-Joker {
   z-index: 2;
   height: 46px;
   width: 60px;
@@ -3974,10 +3974,10 @@ body.ds-workbench-resizing webview {
   height: 46px;
   width: 56px;
   opacity: 0.92;
-  animation: ds-Rcode-mascot-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+  animation: ds-Joker-mascot-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-@keyframes ds-Rcode-mascot-pop {
+@keyframes ds-Joker-mascot-pop {
   0% {
     opacity: 0;
     transform: translateY(5px) scale(0.7);
@@ -4004,7 +4004,7 @@ body.ds-workbench-resizing webview {
 
 /* 打盹:角落淡入睡一觉再溜走 */
 
-.ds-Rcode-celebration-layer {
+.ds-Joker-celebration-layer {
   position: absolute;
   inset: 0;
   z-index: 5;
@@ -4012,20 +4012,20 @@ body.ds-workbench-resizing webview {
   pointer-events: none;
 }
 
-.ds-Rcode-celebration {
+.ds-Joker-celebration {
   position: absolute;
   opacity: 0;
   line-height: 0;
   will-change: transform, opacity;
 }
 
-.ds-Rcode-celebration-figure-wrap {
+.ds-Joker-celebration-figure-wrap {
   position: relative;
   display: block;
   height: 100%;
 }
 
-.ds-Rcode-celebration-figure {
+.ds-Joker-celebration-figure {
   display: block;
   height: 100%;
   width: auto;
@@ -4036,36 +4036,36 @@ body.ds-workbench-resizing webview {
 }
 
 /* 跃起欢呼:底部中央蹦出来,双跳挥手 */
-.ds-Rcode-celebration-cheer {
+.ds-Joker-celebration-cheer {
   bottom: 10px;
   left: 50%;
   height: 84px;
-  animation: ds-Rcode-celebrate-cheer 3.2s ease-in-out forwards;
+  animation: ds-Joker-celebrate-cheer 3.2s ease-in-out forwards;
 }
 
 /* 胜利冲浪 / 快攻冲刺:贴底横穿,彩屑一路跟着 */
-.ds-Rcode-celebration-lap {
+.ds-Joker-celebration-lap {
   right: -110px;
   bottom: 6px;
   height: 62px;
-  animation: ds-Rcode-celebrate-lap 3.6s linear forwards;
+  animation: ds-Joker-celebrate-lap 3.6s linear forwards;
 }
 
-.ds-Rcode-celebration-lap .ds-Rcode-celebration-figure {
-  animation: ds-Rcode-celebrate-lap 0.5s ease-in-out infinite;
+.ds-Joker-celebration-lap .ds-Joker-celebration-figure {
+  animation: ds-Joker-celebrate-lap 0.5s ease-in-out infinite;
   transform-origin: 50% 92%;
 }
 
 /* 举杯庆功:右下角升起,举着贝壳/奶茶碰两下杯 */
-.ds-Rcode-celebration-toast {
+.ds-Joker-celebration-toast {
   right: 18px;
   bottom: 8px;
   height: 74px;
   transform-origin: 50% 100%;
-  animation: ds-Rcode-celebrate-toast 3.4s ease-in-out forwards;
+  animation: ds-Joker-celebrate-toast 3.4s ease-in-out forwards;
 }
 
-@keyframes ds-Rcode-celebrate-cheer {
+@keyframes ds-Joker-celebrate-cheer {
   0% {
     opacity: 0;
     transform: translate(-50%, 100%);
@@ -4091,7 +4091,7 @@ body.ds-workbench-resizing webview {
   }
 }
 
-@keyframes ds-Rcode-celebrate-lap {
+@keyframes ds-Joker-celebrate-lap {
   0% {
     opacity: 0;
     transform: translateX(0);
@@ -4106,7 +4106,7 @@ body.ds-workbench-resizing webview {
   }
 }
 
-@keyframes ds-Rcode-celebrate-toast {
+@keyframes ds-Joker-celebrate-toast {
   0% {
     opacity: 0;
     transform: translateY(112%) rotate(0deg);
@@ -4136,7 +4136,7 @@ body.ds-workbench-resizing webview {
 }
 
 /* 彩屑:吉祥物色板,向上炸开后飘散 */
-.ds-Rcode-confetti {
+.ds-Joker-confetti {
   position: absolute;
   top: 6%;
   left: 50%;
@@ -4144,34 +4144,34 @@ body.ds-workbench-resizing webview {
   height: 0;
 }
 
-.ds-Rcode-confetti i {
+.ds-Joker-confetti i {
   position: absolute;
   width: 6px;
   height: 9px;
   border-radius: 2px;
   opacity: 0;
-  animation: ds-Rcode-confetti-burst 1.6s ease-out forwards;
+  animation: ds-Joker-confetti-burst 1.6s ease-out forwards;
   animation-delay: 0.4s;
 }
 
-.ds-Rcode-confetti i:nth-child(5n + 1) { background: #6ca2dd; }
-.ds-Rcode-confetti i:nth-child(5n + 2) { background: #f47464; }
-.ds-Rcode-confetti i:nth-child(5n + 3) { background: #f0c46e; }
-.ds-Rcode-confetti i:nth-child(5n + 4) { background: #85c1f1; }
-.ds-Rcode-confetti i:nth-child(5n + 5) { background: #fff2db; }
+.ds-Joker-confetti i:nth-child(5n + 1) { background: #6ca2dd; }
+.ds-Joker-confetti i:nth-child(5n + 2) { background: #f47464; }
+.ds-Joker-confetti i:nth-child(5n + 3) { background: #f0c46e; }
+.ds-Joker-confetti i:nth-child(5n + 4) { background: #85c1f1; }
+.ds-Joker-confetti i:nth-child(5n + 5) { background: #fff2db; }
 
-.ds-Rcode-confetti i:nth-child(1) { --cx: -64px; --cy: -58px; --cr: -190deg; }
-.ds-Rcode-confetti i:nth-child(2) { --cx: -42px; --cy: -86px; --cr: 160deg; }
-.ds-Rcode-confetti i:nth-child(3) { --cx: -20px; --cy: -64px; --cr: -120deg; animation-delay: 0.5s; }
-.ds-Rcode-confetti i:nth-child(4) { --cx: -8px; --cy: -96px; --cr: 200deg; }
-.ds-Rcode-confetti i:nth-child(5) { --cx: 10px; --cy: -70px; --cr: -160deg; animation-delay: 0.48s; }
-.ds-Rcode-confetti i:nth-child(6) { --cx: 24px; --cy: -92px; --cr: 140deg; }
-.ds-Rcode-confetti i:nth-child(7) { --cx: 40px; --cy: -60px; --cr: -210deg; animation-delay: 0.52s; }
-.ds-Rcode-confetti i:nth-child(8) { --cx: 58px; --cy: -84px; --cr: 180deg; }
-.ds-Rcode-confetti i:nth-child(9) { --cx: 72px; --cy: -52px; --cr: -140deg; animation-delay: 0.46s; }
-.ds-Rcode-confetti i:nth-child(10) { --cx: 0px; --cy: -110px; --cr: 220deg; animation-delay: 0.56s; }
+.ds-Joker-confetti i:nth-child(1) { --cx: -64px; --cy: -58px; --cr: -190deg; }
+.ds-Joker-confetti i:nth-child(2) { --cx: -42px; --cy: -86px; --cr: 160deg; }
+.ds-Joker-confetti i:nth-child(3) { --cx: -20px; --cy: -64px; --cr: -120deg; animation-delay: 0.5s; }
+.ds-Joker-confetti i:nth-child(4) { --cx: -8px; --cy: -96px; --cr: 200deg; }
+.ds-Joker-confetti i:nth-child(5) { --cx: 10px; --cy: -70px; --cr: -160deg; animation-delay: 0.48s; }
+.ds-Joker-confetti i:nth-child(6) { --cx: 24px; --cy: -92px; --cr: 140deg; }
+.ds-Joker-confetti i:nth-child(7) { --cx: 40px; --cy: -60px; --cr: -210deg; animation-delay: 0.52s; }
+.ds-Joker-confetti i:nth-child(8) { --cx: 58px; --cy: -84px; --cr: 180deg; }
+.ds-Joker-confetti i:nth-child(9) { --cx: 72px; --cy: -52px; --cr: -140deg; animation-delay: 0.46s; }
+.ds-Joker-confetti i:nth-child(10) { --cx: 0px; --cy: -110px; --cr: 220deg; animation-delay: 0.56s; }
 
-@keyframes ds-Rcode-confetti-burst {
+@keyframes ds-Joker-confetti-burst {
   0% {
     opacity: 0;
     transform: translate(0, 0) rotate(0deg) scale(0.5);
@@ -4189,9 +4189,9 @@ body.ds-workbench-resizing webview {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ds-Rcode-celebration,
-  .ds-Rcode-celebration .ds-Rcode-celebration-figure,
-  .ds-Rcode-confetti i {
+  .ds-Joker-celebration,
+  .ds-Joker-celebration .ds-Joker-celebration-figure,
+  .ds-Joker-confetti i {
     animation: none;
     opacity: 0;
   }
@@ -4436,7 +4436,7 @@ body.ds-workbench-resizing webview {
   .ds-runtime-wake-core,
   .ds-runtime-wake-core::before,
   .ds-runtime-wake-ring,
-  .ds-runtime-wake-Rcode-bob,
+  .ds-runtime-wake-Joker-bob,
   .ds-runtime-wake-zzz i,
   .ds-runtime-wake-sonar,
   .ds-runtime-wake-bubbles i,

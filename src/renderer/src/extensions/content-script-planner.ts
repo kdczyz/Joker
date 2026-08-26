@@ -1,4 +1,4 @@
-import type { HostSurfaceMatcher } from '@Rcode/extension-api'
+import type { HostSurfaceMatcher } from '@joker-code/extension-api'
 import type { AppRoute } from '../store/chat-store-types'
 import type { ChatBlock } from '../agent/types'
 import {
@@ -32,9 +32,9 @@ export type HostContentScriptInjectionDescriptor = {
   cleanupKey: string
   api: {
     version: 1
-    globalName: 'RcodeHost'
+    globalName: 'JokerHost'
     methods: readonly ['getContext', 'reportDiagnostic', 'dispose']
-    excludes: readonly ['window.RcodeGui', 'electron', 'node', 'reactInternals']
+    excludes: readonly ['window.JokerGui', 'electron', 'node', 'reactInternals']
   }
   compatibility: {
     stable: false
@@ -62,7 +62,7 @@ export type HostContentScriptPlan = {
 }
 
 const UNSUPPORTED_DOM_WARNING =
-  'Direct host DOM selectors and layout are unsupported compatibility dependencies and may change in any Rcode release.'
+  'Direct host DOM selectors and layout are unsupported compatibility dependencies and may change in any Joker release.'
 const CONTENT_SCRIPT_CSP =
   "default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'"
 
@@ -165,7 +165,7 @@ export function buildHostContentScriptPlan({
       ...base,
       surface,
       worldId,
-      worldName: `Rcode-extension:${contribution.owner.extensionId}`,
+      worldName: `Joker-extension:${contribution.owner.extensionId}`,
       isolatedWorld: true,
       runAt: contribution.payload.runAt,
       scripts: contribution.payload.scripts.map(resource),
@@ -174,9 +174,9 @@ export function buildHostContentScriptPlan({
       cleanupKey: `${contribution.owner.extensionId}:${contribution.id}:${surface}`,
       api: {
         version: 1,
-        globalName: 'RcodeHost',
+        globalName: 'JokerHost',
         methods: ['getContext', 'reportDiagnostic', 'dispose'],
-        excludes: ['window.RcodeGui', 'electron', 'node', 'reactInternals']
+        excludes: ['window.JokerGui', 'electron', 'node', 'reactInternals']
       },
       compatibility: {
         stable: false,
@@ -204,7 +204,7 @@ export async function syncHostContentScriptPlan(
   plan: HostContentScriptPlan,
   workspaceRoot?: string
 ): Promise<boolean> {
-  const result = await window.RcodeGui.extensionSyncHostContentScripts({
+  const result = await window.JokerGui.extensionSyncHostContentScripts({
     surface: plan.surface,
     ...(plan.protectedSurface ? { protectedSurface: plan.protectedSurface } : {}),
     ...(workspaceRoot ? { workspaceRoot } : {}),

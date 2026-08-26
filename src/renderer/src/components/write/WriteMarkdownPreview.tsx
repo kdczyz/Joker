@@ -65,7 +65,7 @@ type CodeProps = DetailedHTMLProps<HTMLAttributes<HTMLElement>, HTMLElement> & {
 }
 
 export const writeMarkdownHardenOptions = {
-  defaultOrigin: 'https://Rcode.local',
+  defaultOrigin: 'https://Joker.local',
   allowedLinkPrefixes: ['*'],
   allowedImagePrefixes: ['*']
 }
@@ -499,7 +499,7 @@ function WriteMarkdownPreviewContent({ content, isMarkdown, filePath, workspaceR
               onClick={(event) => {
                 if (!href) return
                 event.preventDefault()
-                void window.RcodeGui?.openExternal?.(href)?.catch(() => undefined)
+                void window.JokerGui?.openExternal?.(href)?.catch(() => undefined)
               }}
             >
               {children}

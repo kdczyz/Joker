@@ -1,7 +1,7 @@
 import type { Dispatch, SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { AttachmentReference } from '../../agent/types'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 import { providerIdForComposerModel } from '../../store/chat-store-helpers'
 import type { ComposerAttachmentScope } from '../workbench-composer-attachments'
 import {

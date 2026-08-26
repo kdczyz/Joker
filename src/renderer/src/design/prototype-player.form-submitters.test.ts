@@ -24,7 +24,7 @@ import type { DesignArtifact } from './design-types'
 const now = '2026-06-29T00:00:00.000Z'
 
 function artifact(id: string, title: string, extra: Partial<DesignArtifact> = {}): DesignArtifact {
-  const relativePath = `.Rcode-design/doc/${id}/v1.html`
+  const relativePath = `.Joker-design/doc/${id}/v1.html`
   return {
     id,
     kind: 'html',
@@ -112,7 +112,7 @@ function withInjectedPrototypeCapture<T>(
 
 describe("prototype-player form submitter capture", () => {
     it('prefers submitter prototype targets over the form target', () => {
-      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Joker-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const draft = artifact('draft', 'Draft')
       const checkout = artifact('checkout', 'Checkout')
@@ -147,7 +147,7 @@ describe("prototype-player form submitter capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=Checkout')
+          expect(fakeWindow.location.hash).toBe('Joker-proto-nav=Checkout')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,
@@ -159,7 +159,7 @@ describe("prototype-player form submitter capture", () => {
       )
     })
     it('captures submitter prototype targets even when the form has no action', () => {
-      const currentFileUrl = 'file:///workspace/.Rcode-design/doc/home/v1.html'
+      const currentFileUrl = 'file:///workspace/.Joker-design/doc/home/v1.html'
       const home = artifact('home', 'Home')
       const checkout = artifact('checkout', 'Checkout')
       const links = resolvePrototypeLinks(home, [home, checkout])
@@ -194,7 +194,7 @@ describe("prototype-player form submitter capture", () => {
   
           expect(event.preventDefault).toHaveBeenCalled()
           expect(event.stopPropagation).toHaveBeenCalled()
-          expect(fakeWindow.location.hash).toBe('Rcode-proto-nav=Checkout')
+          expect(fakeWindow.location.hash).toBe('Joker-proto-nav=Checkout')
           expect(
             resolvePrototypeNavigationTarget(
               `${currentFileUrl}#${fakeWindow.location.hash}`,

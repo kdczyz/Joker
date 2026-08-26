@@ -6,7 +6,7 @@ import {
   DEFAULT_APPROVAL_POLICY,
   DEFAULT_CHECKPOINT_CLEANUP_ENABLED,
   DEFAULT_CHECKPOINT_CLEANUP_INTERVAL_DAYS,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings
 } from '../shared/app-settings'
 import { DEFAULT_GUI_UPDATE_CHANNEL } from '../shared/gui-update'
@@ -40,7 +40,7 @@ describe('JsonSettingsStore', () => {
     const loaded = await store.load()
 
     expect(loaded.guiUpdate.channel).toBe(DEFAULT_GUI_UPDATE_CHANNEL)
-    expect(loaded.agents.Rcode.approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
+    expect(loaded.agents.Joker.approvalPolicy).toBe(DEFAULT_APPROVAL_POLICY)
     expect(loaded.checkpointCleanup.intervalDays).toBe(DEFAULT_CHECKPOINT_CLEANUP_INTERVAL_DAYS)
     // Checkpoint cleanup is enabled by default to keep stale checkpoints from accumulating.
     expect(loaded.checkpointCleanup.enabled).toBe(DEFAULT_CHECKPOINT_CLEANUP_ENABLED)
@@ -73,16 +73,16 @@ describe('JsonSettingsStore', () => {
       const store = new Store(userDataDir)
       const loaded = await store.load()
 
-      expect(loaded.write.defaultWorkspaceRoot).toContain('.Rcode')
+      expect(loaded.write.defaultWorkspaceRoot).toContain('.Joker')
       expect(loaded.write.workspaces).toContain(loaded.write.defaultWorkspaceRoot)
       expect(loaded.write.inlineCompletion.enabled).toBe(true)
       expect(loaded.write.inlineCompletion.retrievalEnabled).toBe(true)
       expect(loaded.write.inlineCompletion.longCompletionEnabled).toBe(true)
-      expect(loaded.provider.baseUrl).toBe('https://api.deepseek.com')
+      expect(loaded.provider.baseUrl).toBe('')
       expect(loaded.write.inlineCompletion.apiKey).toBe('')
       expect(loaded.write.inlineCompletion.baseUrl).toBe('')
       expect(loaded.write.inlineCompletion.inheritModel).toBe(true)
-      expect(loaded.write.inlineCompletion.model).toBe('deepseek-v4-flash')
+      expect(loaded.write.inlineCompletion.model).toBe('')
       expect(loaded.write.inlineCompletion.longMaxTokens).toBe(256)
       expect((await stat(loaded.workspaceRoot)).isDirectory()).toBe(true)
       expect((await stat(loaded.write.defaultWorkspaceRoot)).isDirectory()).toBe(true)
@@ -152,11 +152,11 @@ describe('JsonSettingsStore', () => {
     const store = new JsonSettingsStore(userDataDir)
     const loaded = await store.load()
 
-    expect(loaded.write.inlineCompletion.inheritModel).toBe(true)
+    expect(loaded.write.inlineCompletion.inheritModel).toBe(false)
     expect(loaded.write.inlineCompletion.model).toBe('deepseek-v4-flash')
   })
 
-  it('migrates legacy deepseek.autoStart=false into Rcode', async () => {
+  it('migrates legacy deepseek.autoStart=false into Joker', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
     const workspaceRoot = join(userDataDir, 'workspace')
     await mkdir(workspaceRoot, { recursive: true })
@@ -176,10 +176,10 @@ describe('JsonSettingsStore', () => {
     const store = new JsonSettingsStore(userDataDir)
     const loaded = await store.load()
 
-    expect(loaded.agents.Rcode.autoStart).toBe(false)
+    expect(loaded.agents.Joker.autoStart).toBe(false)
   })
 
-  it('migrates existing Rcode credentials into General provider settings', async () => {
+  it('migrates existing Joker credentials into General provider settings', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
 
     await writeFile(
@@ -187,7 +187,7 @@ describe('JsonSettingsStore', () => {
       JSON.stringify({
         version: 1,
         agents: {
-          Rcode: {
+          Joker: {
             apiKey: 'sk-existing',
             baseUrl: 'https://runtime.example/v1'
           }
@@ -201,8 +201,8 @@ describe('JsonSettingsStore', () => {
 
     expect(loaded.provider.apiKey).toBe('sk-existing')
     expect(loaded.provider.baseUrl).toBe('https://runtime.example/v1')
-    expect(loaded.agents.Rcode.apiKey).toBe('')
-    expect(loaded.agents.Rcode.baseUrl).toBe('')
+    expect(loaded.agents.Joker.apiKey).toBe('')
+    expect(loaded.agents.Joker.baseUrl).toBe('')
   })
 
   it('keeps custom model providers when migrated settings are reloaded', async () => {
@@ -231,8 +231,8 @@ describe('JsonSettingsStore', () => {
           ]
         },
         agents: {
-          Rcode: {
-            ...defaultRcodeRuntimeSettings(),
+          Joker: {
+            ...defaultJokerRuntimeSettings(),
             providerId: 'custom-provider-2',
             model: 'custom-model'
           }
@@ -255,7 +255,7 @@ describe('JsonSettingsStore', () => {
         })
       ])
     )
-    expect(firstLoaded.agents.Rcode.providerId).toBe('custom-provider-2')
+    expect(firstLoaded.agents.Joker.providerId).toBe('custom-provider-2')
     await firstStore.save(firstLoaded)
 
     const secondStore = new JsonSettingsStore(userDataDir)
@@ -272,14 +272,14 @@ describe('JsonSettingsStore', () => {
         })
       ])
     )
-    expect(secondLoaded.agents.Rcode.providerId).toBe('custom-provider-2')
+    expect(secondLoaded.agents.Joker.providerId).toBe('custom-provider-2')
   })
 
   it('loads settings from the legacy lowercase userData directory and writes them into the current path', async () => {
     const supportRoot = await mkdtemp(join(tmpdir(), 'ds-gui-settings-compat-'))
     const legacyUserDataDir = join(supportRoot, 'deepseek-gui')
-    const currentUserDataDir = join(supportRoot, 'Rcode')
-    const currentSettingsPath = join(currentUserDataDir, 'Rcode-settings.json')
+    const currentUserDataDir = join(supportRoot, 'Joker')
+    const currentSettingsPath = join(currentUserDataDir, 'Joker-settings.json')
 
     await mkdir(legacyUserDataDir, { recursive: true })
     await writeFile(
@@ -351,8 +351,8 @@ describe('JsonSettingsStore', () => {
       await expect(stat(conversationWorkspaceRoot)).rejects.toMatchObject({ code: 'ENOENT' })
       await expect(stat(clawChannelWorkspaceRoot)).rejects.toMatchObject({ code: 'ENOENT' })
       await expect(stat(clawConversationWorkspaceRoot)).rejects.toMatchObject({ code: 'ENOENT' })
-      expect((await stat(join(homeDir, '.Rcode', 'default_workspace'))).isDirectory()).toBe(true)
-      expect((await stat(join(homeDir, '.Rcode', 'write_workspace'))).isDirectory()).toBe(true)
+      expect((await stat(join(homeDir, '.Joker', 'default_workspace'))).isDirectory()).toBe(true)
+      expect((await stat(join(homeDir, '.Joker', 'write_workspace'))).isDirectory()).toBe(true)
     })
   })
 
@@ -360,7 +360,7 @@ describe('JsonSettingsStore', () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
     const blockedParent = join(userDataDir, 'disconnected-drive')
     const unavailableWorkspaceRoot = join(blockedParent, 'project')
-    const settingsPath = join(userDataDir, 'Rcode-settings.json')
+    const settingsPath = join(userDataDir, 'Joker-settings.json')
 
     await writeFile(blockedParent, 'not a directory', 'utf8')
     await writeFile(
@@ -393,7 +393,7 @@ describe('JsonSettingsStore', () => {
     })
   })
 
-  it('migrates legacy deepseek-runtime agentProvider to Rcode', async () => {
+  it('migrates legacy deepseek-runtime agentProvider to Joker', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
 
     await writeFile(
@@ -409,7 +409,7 @@ describe('JsonSettingsStore', () => {
     const store = new JsonSettingsStore(userDataDir)
     const loaded = await store.load()
 
-    expect(loaded.agents.Rcode.port).toBe(18787)
+    expect(loaded.agents.Joker.port).toBe(18787)
   })
 
   it('backs up invalid JSON and replaces it with defaults', async () => {
@@ -426,19 +426,19 @@ describe('JsonSettingsStore', () => {
     expect(backupName).toBeTruthy()
     expect(await readFile(join(userDataDir, backupName ?? ''), 'utf8')).toBe('{ invalid json')
     // 兜底默认值写进新文件名;旧文件保留原状(已经另有 invalid 备份)。
-    const replaced = await readFile(join(userDataDir, 'Rcode-settings.json'), 'utf8')
+    const replaced = await readFile(join(userDataDir, 'Joker-settings.json'), 'utf8')
     expect(() => JSON.parse(replaced)).not.toThrow()
   })
 
   it('backs up non-object settings JSON and replaces it with defaults', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
-    const settingsPath = join(userDataDir, 'Rcode-settings.json')
+    const settingsPath = join(userDataDir, 'Joker-settings.json')
     await writeFile(settingsPath, 'null', 'utf8')
 
     const store = new JsonSettingsStore(userDataDir)
     const loaded = await store.load()
     const files = await readdir(userDataDir)
-    const backupName = files.find((file) => file.startsWith('Rcode-settings.invalid-'))
+    const backupName = files.find((file) => file.startsWith('Joker-settings.invalid-'))
 
     expect(loaded.workspaceRoot.length).toBeGreaterThan(0)
     expect(backupName).toBeTruthy()
@@ -451,7 +451,7 @@ describe('JsonSettingsStore', () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
 
     await writeFile(
-      join(userDataDir, 'Rcode-settings.json'),
+      join(userDataDir, 'Joker-settings.json'),
       JSON.stringify({
         version: 1,
         claw: {
@@ -472,7 +472,7 @@ describe('JsonSettingsStore', () => {
   })
 
   it('loads the legacy file name inside the current userData dir and re-saves it under the new name', async () => {
-    // userData 整目录迁移后的常见形态:目录已经叫 Rcode,里面还是旧文件名。
+    // userData 整目录迁移后的常见形态:目录已经叫 Joker,里面还是旧文件名。
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
     await writeFile(
       join(userDataDir, 'deepseek-gui-settings.json'),
@@ -484,7 +484,7 @@ describe('JsonSettingsStore', () => {
     const loaded = await store.load()
 
     expect(loaded.provider.apiKey).toBe('sk-migrated')
-    const rewritten = await readFile(join(userDataDir, 'Rcode-settings.json'), 'utf8')
+    const rewritten = await readFile(join(userDataDir, 'Joker-settings.json'), 'utf8')
     expect(rewritten).toContain('sk-migrated')
     // 旧文件保留,回滚老版本时仍可读。
     expect(await readFile(join(userDataDir, 'deepseek-gui-settings.json'), 'utf8')).toContain('sk-migrated')
@@ -500,22 +500,22 @@ describe('JsonSettingsStore', () => {
     await expect(store.load()).rejects.toThrow(/Failed to read settings file/)
   })
 
-  it('merges Rcode settings patches', async () => {
+  it('merges Joker settings patches', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
     const store = new JsonSettingsStore(userDataDir)
     await store.load()
 
     const saved = await store.patch({
       agents: {
-        Rcode: {
+        Joker: {
           model: 'deepseek-reasoner',
           approvalPolicy: 'on-request'
         }
       }
     })
 
-    expect(saved.agents.Rcode.model).toBe('deepseek-reasoner')
-    expect(saved.agents.Rcode.approvalPolicy).toBe('on-request')
+    expect(saved.agents.Joker.model).toBe('deepseek-reasoner')
+    expect(saved.agents.Joker.approvalPolicy).toBe('on-request')
   })
 
   it('merges desktop behavior patches without keeping invalid startup state', async () => {
@@ -553,12 +553,12 @@ describe('JsonSettingsStore', () => {
 
   it('omits agentProvider when writing normalized settings to disk', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
-    const settingsPath = join(userDataDir, 'Rcode-settings.json')
+    const settingsPath = join(userDataDir, 'Joker-settings.json')
     const store = new JsonSettingsStore(userDataDir)
     await store.load()
     await store.patch({
       agents: {
-        Rcode: {
+        Joker: {
           model: 'deepseek-chat'
         }
       }
@@ -569,12 +569,12 @@ describe('JsonSettingsStore', () => {
     expect('agentProvider' in persisted).toBe(false)
     expect(persisted.agents).toEqual(
       expect.objectContaining({
-        Rcode: expect.objectContaining({ model: 'deepseek-chat' })
+        Joker: expect.objectContaining({ model: 'deepseek-chat' })
       })
     )
   })
 
-  it('folds legacy Claw thread ids into the single Rcode mapping', async () => {
+  it('folds legacy Claw thread ids into the single Joker mapping', async () => {
     const userDataDir = await mkdtemp(join(tmpdir(), 'ds-gui-settings-'))
 
     await writeFile(
@@ -663,7 +663,7 @@ describe('JsonSettingsStore', () => {
 
       // Final file is present and non-empty.
       const finalContents = await readFile(
-        join(userDataDir, 'Rcode-settings.json'),
+        join(userDataDir, 'Joker-settings.json'),
         'utf8'
       )
       expect(finalContents.length).toBeGreaterThan(0)

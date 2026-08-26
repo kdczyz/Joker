@@ -65,7 +65,7 @@ export const localPdfTextTargetPayloadSchema = z
 export const deepseekConfigContentSchema = z.string().max(MAX_CONFIG_FILE_BYTES)
 
 export const workspaceRootSchema = trimmedString(MAX_PATH_LENGTH)
-export const RcodeProjectConfigWorkspacePayloadSchema = z
+export const JokerProjectConfigWorkspacePayloadSchema = z
   .object({
     workspaceRoot: workspaceRootSchema.refine(isAbsolutePath, {
       message: 'workspaceRoot must be an absolute path'
@@ -73,16 +73,16 @@ export const RcodeProjectConfigWorkspacePayloadSchema = z
   })
   .strict()
 
-export const RcodeProjectConfigWritePayloadSchema = RcodeProjectConfigWorkspacePayloadSchema.extend({
+export const JokerProjectConfigWritePayloadSchema = JokerProjectConfigWorkspacePayloadSchema.extend({
   content: deepseekConfigContentSchema
 }).strict()
 
-export const RcodeProjectConfigTrustPayloadSchema = z.discriminatedUnion('trusted', [
-  RcodeProjectConfigWorkspacePayloadSchema.extend({
+export const JokerProjectConfigTrustPayloadSchema = z.discriminatedUnion('trusted', [
+  JokerProjectConfigWorkspacePayloadSchema.extend({
     trusted: z.literal(true),
     expectedDigest: z.string().trim().regex(/^[a-fA-F0-9]{64}$/)
   }).strict(),
-  RcodeProjectConfigWorkspacePayloadSchema.extend({
+  JokerProjectConfigWorkspacePayloadSchema.extend({
     trusted: z.literal(false)
   }).strict()
 ])

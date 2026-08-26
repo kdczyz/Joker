@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, type ReactElement, type ReactNode } from 'react'
 import type {
   AppSettingsV1,
-  RcodeToolPermissionMode,
+  JokerToolPermissionMode,
   ModelProviderProfileV1
 } from '@shared/app-settings'
 import {
@@ -11,15 +11,15 @@ import {
   DEFAULT_WRITE_INLINE_COMPLETION_MAX_TOKENS,
   DEFAULT_WRITE_INLINE_COMPLETION_MODEL,
   DEFAULT_WRITE_INLINE_LONG_COMPLETION_MAX_TOKENS,
-  DEFAULT_RCODE_DATA_DIR,
+  DEFAULT_JOKER_DATA_DIR,
   DEFAULT_TOOL_OUTPUT_MAX_BYTES,
   DEFAULT_TOOL_OUTPUT_MAX_LINES,
-  MIN_RCODE_LOCAL_PORT,
+  MIN_JOKER_LOCAL_PORT,
   WRITE_INLINE_COMPLETION_MODEL_IDS,
   defaultModelProviderSettings,
-  isRcodeRuntimeInsecure,
-  RcodeToolPermissionModeFromSettings,
-  RcodeToolPermissionModeSettings
+  isJokerRuntimeInsecure,
+  JokerToolPermissionModeFromSettings,
+  JokerToolPermissionModeSettings
 } from '@shared/app-settings'
 import type { GuiUpdateChannel } from '@shared/gui-update'
 import type {
@@ -27,7 +27,7 @@ import type {
   ComputerUsePermissions,
   ComputerUsePermissionState,
   SkillRootListItem
-} from '@shared/Rcode-gui-api'
+} from '@shared/Joker-gui-api'
 import {
   Ban,
   Check,
@@ -73,7 +73,7 @@ import { ComputerUseSettingsPanel, DesignQualitySettingsPanel } from './settings
 export { modelProvidersSettingsPatch } from './settings-section-providers'
 
 const TOOL_PERMISSION_OPTIONS: Array<{
-  value: RcodeToolPermissionMode
+  value: JokerToolPermissionMode
   labelKey: string
   descriptionKey: string
   Icon: typeof Hand
@@ -128,9 +128,9 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     t,
     tCommon,
     form,
-    Rcode,
+    Joker,
     update,
-    updateRcode,
+    updateJoker,
     showRuntimeToken,
     setShowRuntimeToken,
     portError,
@@ -202,7 +202,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     memoryRecords,
     runtimeDiagnosticsBusy,
     runtimeDiagnosticsNotice,
-    refreshRcodeDiagnostics,
+    refreshJokerDiagnostics,
     disableMemoryRecord,
     restoreMemoryRecord,
     deleteMemoryRecord,
@@ -212,7 +212,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     splitSettingsList,
     listSettingsText
   } = ctx
-  const mcpSearch = Rcode.mcpSearch ?? {
+  const mcpSearch = Joker.mcpSearch ?? {
     enabled: false,
     mode: 'auto',
     autoThresholdToolCount: 24,
@@ -236,11 +236,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   }
   const tokenEconomy = {
     ...tokenEconomyDefaults,
-    ...(Rcode.tokenEconomy ?? {}),
-    enabled: Rcode.tokenEconomy?.enabled ?? Rcode.tokenEconomyMode ?? false,
+    ...(Joker.tokenEconomy ?? {}),
+    enabled: Joker.tokenEconomy?.enabled ?? Joker.tokenEconomyMode ?? false,
     historyHygiene: {
       ...tokenEconomyDefaults.historyHygiene,
-      ...(Rcode.tokenEconomy?.historyHygiene ?? {})
+      ...(Joker.tokenEconomy?.historyHygiene ?? {})
     }
   }
   const [tokenEconomySavingsState, setTokenEconomySavingsState] =
@@ -270,11 +270,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     }
   }, [tokenEconomy.enabled])
   const tokenEconomySavings = tokenEconomySavingsState.summary
-  const storage = Rcode.storage ?? {
+  const storage = Joker.storage ?? {
     backend: 'hybrid',
     sqlitePath: ''
   }
-  const contextCompaction = Rcode.contextCompaction ?? {
+  const contextCompaction = Joker.contextCompaction ?? {
     defaultSoftThreshold: 16000,
     defaultHardThreshold: 24000,
     summaryMode: 'model',
@@ -283,11 +283,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     summaryInputMaxBytes: 98304
   }
   const modelContext = modelContextProfileSummary({
-    model: Rcode.model,
+    model: Joker.model,
     fallbackSoftThreshold: contextCompaction.defaultSoftThreshold,
     fallbackHardThreshold: contextCompaction.defaultHardThreshold
   })
-  const runtimeTuning = Rcode.runtimeTuning ?? {
+  const runtimeTuning = Joker.runtimeTuning ?? {
     maxWallTimeMs: 86400000,
     streamIdleTimeoutMs: 300000,
     toolStorm: {
@@ -299,12 +299,12 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
       maxStringBytes: 524288
     }
   }
-  const toolOutputLimits = Rcode.toolOutputLimits ?? {
+  const toolOutputLimits = Joker.toolOutputLimits ?? {
     maxLines: DEFAULT_TOOL_OUTPUT_MAX_LINES,
     maxBytes: DEFAULT_TOOL_OUTPUT_MAX_BYTES
   }
   const updateMcpSearch = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       mcpSearch: {
         ...mcpSearch,
         ...patch
@@ -313,7 +313,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   }
   const updateTokenEconomy = (patch: Record<string, unknown>): void => {
     const enabled = typeof patch.enabled === 'boolean' ? patch.enabled : tokenEconomy.enabled
-    updateRcode({
+    updateJoker({
       tokenEconomyMode: enabled,
       tokenEconomy: {
         ...tokenEconomy,
@@ -331,7 +331,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateStorage = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       storage: {
         ...storage,
         ...patch
@@ -339,7 +339,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateContextCompaction = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       contextCompaction: {
         ...contextCompaction,
         ...patch
@@ -347,7 +347,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateRuntimeTuning = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       runtimeTuning: {
         ...runtimeTuning,
         ...patch
@@ -355,7 +355,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateToolOutputLimits = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       toolOutputLimits: {
         ...toolOutputLimits,
         ...patch
@@ -380,17 +380,17 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   }
   const provider = form.provider ?? defaultModelProviderSettings()
   const modelProviders = provider.providers as ModelProviderProfileV1[]
-  const computerUse = Rcode.computerUse ?? {
+  const computerUse = Joker.computerUse ?? {
     enabled: false,
     mode: 'auto' as const,
     maxImageDimension: 1280,
     maxActionsPerTurn: 40
   }
-  const instructions = Rcode.instructions ?? {
+  const instructions = Joker.instructions ?? {
     enabled: true
   }
   const updateInstructions = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       instructions: {
         ...instructions,
         ...patch
@@ -398,14 +398,14 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     })
   }
   const updateComputerUse = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       computerUse: {
         ...computerUse,
         ...patch
       }
     })
   }
-  const quality = Rcode.quality ?? {
+  const quality = Joker.quality ?? {
     enabled: true,
     strictness: 'standard' as const,
     ignoreRules: [],
@@ -413,14 +413,14 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     maxFindings: 12
   }
   const updateQuality = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       quality: {
         ...quality,
         ...patch
       }
     })
   }
-  const activeProviderId = Rcode.providerId?.trim() || modelProviders[0]?.id || ''
+  const activeProviderId = Joker.providerId?.trim() || modelProviders[0]?.id || ''
   const activeProvider = modelProviders.find((item) => item.id === activeProviderId) ?? modelProviders[0]
   const activeProviderModels = activeProvider?.models ?? []
   const promptOptimization = {
@@ -429,7 +429,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     model: '',
     prompt: '',
     timeoutMs: 60000,
-    ...(Rcode.promptOptimization ?? {})
+    ...(Joker.promptOptimization ?? {})
   }
   const promptOptimizationProviderId = promptOptimization.providerId?.trim() || activeProviderId
   const promptOptimizationProvider =
@@ -437,29 +437,29 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
   const promptOptimizationModels = promptOptimizationProvider?.models ?? []
   const promptOptimizationDefaultModel = (() => {
     const providerId = promptOptimizationProvider?.id ?? promptOptimizationProviderId
-    const smallModel = Rcode.smallModel?.trim() ?? ''
-    const smallProviderId = Rcode.smallModelProviderId?.trim() || activeProviderId
+    const smallModel = Joker.smallModel?.trim() ?? ''
+    const smallProviderId = Joker.smallModelProviderId?.trim() || activeProviderId
     if (smallModel && smallProviderId === providerId) return smallModel
-    const mainModel = Rcode.model?.trim() ?? ''
+    const mainModel = Joker.model?.trim() ?? ''
     if (mainModel && activeProviderId === providerId) return mainModel
     return promptOptimizationModels[0] ?? mainModel
   })()
   const updatePromptOptimization = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       promptOptimization: {
         ...promptOptimization,
         ...patch
       }
     })
   }
-  const selectRcodeProvider = (providerId: string): void => {
+  const selectJokerProvider = (providerId: string): void => {
     const nextProvider = modelProviders.find((item) => item.id === providerId) ?? activeProvider
-    const nextModel = nextProvider?.models.includes(Rcode.model)
-      ? Rcode.model
-      : nextProvider?.models[0] ?? Rcode.model
-    updateRcode({ providerId, model: nextModel, apiKey: '', baseUrl: '' })
+    const nextModel = nextProvider?.models.includes(Joker.model)
+      ? Joker.model
+      : nextProvider?.models[0] ?? Joker.model
+    updateJoker({ providerId, model: nextModel, apiKey: '', baseUrl: '' })
   }
-  const toolPermissionMode = RcodeToolPermissionModeFromSettings(Rcode)
+  const toolPermissionMode = JokerToolPermissionModeFromSettings(Joker)
 
   return (
             <>
@@ -480,19 +480,19 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     description={t('autoStartDesc')}
                     control={
                       <Toggle
-                        checked={Rcode.autoStart}
-                        onChange={(v) => updateRcode({ autoStart: v })}
+                        checked={Joker.autoStart}
+                        onChange={(v) => updateJoker({ autoStart: v })}
                       />
                     }
                   />
                   <SettingRow
-                    title={t('RcodeProvider')}
-                    description={t('RcodeProviderSelectDesc')}
+                    title={t('JokerProvider')}
+                    description={t('JokerProviderSelectDesc')}
                     control={
                       <select
                         className={selectControlClass}
                         value={activeProvider?.id ?? ''}
-                        onChange={(e) => selectRcodeProvider(e.target.value)}
+                        onChange={(e) => selectJokerProvider(e.target.value)}
                       >
                         {modelProviders.map((item) => (
                           <option key={item.id} value={item.id}>{item.name}</option>
@@ -501,11 +501,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeModel')}
-                    description={t('RcodeModelDesc')}
+                    title={t('JokerModel')}
+                    description={t('JokerModelDesc')}
                     control={
                       <ModelSelect
-                        value={Rcode.model}
+                        value={Joker.model}
                         options={activeProviderModels}
                         optionLabel={(model) =>
                           model === activeProviderModels[0]
@@ -517,7 +517,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         selectClassName={selectControlClass}
                         onChange={(model) => {
                           const next = model.trim()
-                          updateRcode({ model: next || (activeProviderModels[0] ?? Rcode.model) })
+                          updateJoker({ model: next || (activeProviderModels[0] ?? Joker.model) })
                         }}
                       />
                     }
@@ -536,8 +536,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodePromptOptimization')}
-                    description={t('RcodePromptOptimizationDesc')}
+                    title={t('JokerPromptOptimization')}
+                    description={t('JokerPromptOptimizationDesc')}
                     control={
                       <Toggle
                         checked={promptOptimization.enabled}
@@ -547,13 +547,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                   />
                   {promptOptimization.enabled ? (
                     <SettingRow
-                      title={t('RcodePromptOptimizationConfig')}
-                      description={t('RcodePromptOptimizationConfigDesc')}
+                      title={t('JokerPromptOptimizationConfig')}
+                      description={t('JokerPromptOptimizationConfigDesc')}
                       wideControl
                       control={
                         <div className="grid gap-3 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(120px,160px)]">
                           <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                            {t('RcodePromptOptimizationProvider')}
+                            {t('JokerPromptOptimizationProvider')}
                             <select
                               className={selectControlClass}
                               value={promptOptimization.providerId?.trim() || ''}
@@ -576,11 +576,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                             </select>
                           </label>
                           <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                            {t('RcodePromptOptimizationModel')}
+                            {t('JokerPromptOptimizationModel')}
                             <ModelSelect
                               value={promptOptimization.model}
                               options={promptOptimizationModels}
-                              defaultLabel={t('RcodePromptOptimizationModelDefault', {
+                              defaultLabel={t('JokerPromptOptimizationModelDefault', {
                                 model: promptOptimizationDefaultModel
                               })}
                               optionLabel={(model) => model}
@@ -592,7 +592,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                             />
                           </label>
                           <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                            {t('RcodePromptOptimizationTimeout')}
+                            {t('JokerPromptOptimizationTimeout')}
                             <input
                               type="number"
                               min={1000}
@@ -604,7 +604,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                             />
                           </label>
                           <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted lg:col-span-3">
-                            {t('RcodePromptOptimizationPrompt')}
+                            {t('JokerPromptOptimizationPrompt')}
                             <textarea
                               value={promptOptimization.prompt}
                               onChange={(e) => updatePromptOptimization({ prompt: e.target.value })}
@@ -618,8 +618,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                   ) : null}
                   <div className="px-3 py-4">
                     <AdvancedSettingsDisclosure
-                      title={t('RcodeAssistantAdvanced')}
-                      description={t('RcodeAssistantAdvancedDesc')}
+                      title={t('JokerAssistantAdvanced')}
+                      description={t('JokerAssistantAdvancedDesc')}
                     >
                       <div className="divide-y divide-ds-border-muted">
                   <SettingRow
@@ -629,15 +629,15 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                       <div>
                         <input
                           type="number"
-                          min={MIN_RCODE_LOCAL_PORT}
+                          min={MIN_JOKER_LOCAL_PORT}
                           max={65535}
                           className={`w-28 rounded-xl border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:outline-none focus:ring-1 ${
                             portError
                               ? 'border-red-400 focus:ring-red-300'
                               : 'border-ds-border focus:border-accent/40 focus:ring-accent/30'
                           }`}
-                          value={Rcode.port}
-                          onChange={(e) => updateRcode({ port: Number(e.target.value) })}
+                          value={Joker.port}
+                          onChange={(e) => updateJoker({ port: Number(e.target.value) })}
                         />
                         {portError ? (
                           <p className="mt-1 text-[12px] text-red-700 dark:text-red-300">{portError}</p>
@@ -646,26 +646,26 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeBinary')}
-                    description={t('RcodeBinaryDesc')}
+                    title={t('JokerBinary')}
+                    description={t('JokerBinaryDesc')}
                     control={
                       <input
                         className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
-                        placeholder={t('RcodeBinaryPlaceholder')}
-                        value={compactHomePath(Rcode.binaryPath)}
-                        onChange={(e) => updateRcode({ binaryPath: expandHomePath(e.target.value) })}
+                        placeholder={t('JokerBinaryPlaceholder')}
+                        value={compactHomePath(Joker.binaryPath)}
+                        onChange={(e) => updateJoker({ binaryPath: expandHomePath(e.target.value) })}
                       />
                     }
                   />
                   <SettingRow
-                    title={t('RcodeDataDir')}
-                    description={t('RcodeDataDirDesc')}
+                    title={t('JokerDataDir')}
+                    description={t('JokerDataDirDesc')}
                     control={
                       <input
                         className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
-                        placeholder={DEFAULT_RCODE_DATA_DIR}
-                        value={compactHomePath(Rcode.dataDir)}
-                        onChange={(e) => updateRcode({ dataDir: expandHomePath(e.target.value) })}
+                        placeholder={DEFAULT_JOKER_DATA_DIR}
+                        value={compactHomePath(Joker.dataDir)}
+                        onChange={(e) => updateJoker({ dataDir: expandHomePath(e.target.value) })}
                       />
                     }
                   />
@@ -674,8 +674,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     description={t('runtimeTokenDesc')}
                     control={
                       <SecretInput
-                        value={Rcode.runtimeToken}
-                        onChange={(value) => updateRcode({ runtimeToken: value })}
+                        value={Joker.runtimeToken}
+                        onChange={(value) => updateJoker({ runtimeToken: value })}
                         visible={showRuntimeToken}
                         onToggleVisibility={() => setShowRuntimeToken((value: boolean) => !value)}
                         showLabel={t('showSecret')}
@@ -685,12 +685,12 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeInsecure')}
-                    description={t('RcodeInsecureDesc')}
+                    title={t('JokerInsecure')}
+                    description={t('JokerInsecureDesc')}
                     control={
                       <Toggle
-                        checked={isRcodeRuntimeInsecure(Rcode)}
-                        onChange={(v) => updateRcode({ insecure: v })}
+                        checked={isJokerRuntimeInsecure(Joker)}
+                        onChange={(v) => updateJoker({ insecure: v })}
                       />
                     }
                   />
@@ -698,8 +698,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     </AdvancedSettingsDisclosure>
                   </div>
                   <SettingRow
-                    title={t('RcodeTokenEconomy')}
-                    description={t('RcodeTokenEconomyDesc')}
+                    title={t('JokerTokenEconomy')}
+                    description={t('JokerTokenEconomyDesc')}
                     control={
                       <div className="flex min-w-0 flex-col items-start gap-2 sm:items-end">
                         <Toggle
@@ -710,14 +710,14 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           <div className="max-w-full rounded-lg border border-emerald-400/25 bg-emerald-500/10 px-2.5 py-1.5 text-[12px] font-medium leading-5 text-emerald-700 dark:text-emerald-200">
                             {tokenEconomySavings ? (
                               <span>
-                                {t('RcodeTokenEconomySavings', {
+                                {t('JokerTokenEconomySavings', {
                                   tokens: formatCompactNumber(tokenEconomySavings.tokens)
                                 })}
                               </span>
                             ) : tokenEconomySavingsState.loading ? (
-                              <span>{t('RcodeTokenEconomySavingsLoading')}</span>
+                              <span>{t('JokerTokenEconomySavingsLoading')}</span>
                             ) : (
-                              <span>{t('RcodeTokenEconomySavingsEmpty')}</span>
+                              <span>{t('JokerTokenEconomySavingsEmpty')}</span>
                             )}
                           </div>
                         ) : null}
@@ -725,8 +725,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeInstructions')}
-                    description={t('RcodeInstructionsDesc')}
+                    title={t('JokerInstructions')}
+                    description={t('JokerInstructionsDesc')}
                     control={
                       <div className="flex min-w-0 flex-col items-start gap-2 sm:items-end">
                         <Toggle
@@ -734,7 +734,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           onChange={(enabled) => updateInstructions({ enabled })}
                         />
                         <div className="max-w-full rounded-lg border border-ds-border-muted bg-ds-main/40 px-2.5 py-1.5 text-[12px] leading-5 text-ds-muted">
-                          {t('RcodeInstructionsDiagnostics', {
+                          {t('JokerInstructionsDiagnostics', {
                             count: toolDiagnostics?.instructions?.lastInjection?.sources?.length ?? runtimeInfo?.capabilities?.instructions?.lastSourceCount ?? 0
                           })}
                         </div>
@@ -746,8 +746,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     description={t('webSearchAutoModeDesc')}
                     control={
                       <Toggle
-                        checked={Rcode.webSearchAutoMode !== false}
-                        onChange={(value) => updateRcode({ webSearchAutoMode: value })}
+                        checked={Joker.webSearchAutoMode !== false}
+                        onChange={(value) => updateJoker({ webSearchAutoMode: value })}
                       />
                     }
                   />
@@ -778,7 +778,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                               type="button"
                               role="radio"
                               aria-checked={selected}
-                              onClick={() => updateRcode(RcodeToolPermissionModeSettings(option.value))}
+                              onClick={() => updateJoker(JokerToolPermissionModeSettings(option.value))}
                               className={`min-h-[72px] rounded-lg border px-3 py-2.5 text-left transition ${
                                 selected
                                   ? 'border-accent/55 bg-accent/10 text-ds-ink'
@@ -846,7 +846,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           <div className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 font-mono text-[12px] text-ds-ink shadow-sm">
                             <div className="break-all">{compactHomePath(activeProjectWorkspaceRoot)}</div>
                             <div className="mt-1 break-all text-ds-muted">
-                              {compactHomePath(projectConfig?.path ?? `${activeProjectWorkspaceRoot}/.Rcode/project.json`)}
+                              {compactHomePath(projectConfig?.path ?? `${activeProjectWorkspaceRoot}/.Joker/project.json`)}
                             </div>
                           </div>
                         }
@@ -1367,21 +1367,21 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
 
 
               <div className="mt-6">
-                <SettingsCard title={t('RcodeAdvanced')}>
+                <SettingsCard title={t('JokerAdvanced')}>
                   <div className="px-3 py-4">
                     <AdvancedSettingsDisclosure
-                      title={t('RcodeAdvancedDetails')}
-                      description={t('RcodeAdvancedDetailsDesc')}
+                      title={t('JokerAdvancedDetails')}
+                      description={t('JokerAdvancedDetailsDesc')}
                     >
                       <div className="divide-y divide-ds-border-muted">
                   <SettingRow
-                    title={t('RcodeTokenEconomyOptions')}
-                    description={t('RcodeTokenEconomyOptionsDesc')}
+                    title={t('JokerTokenEconomyOptions')}
+                    description={t('JokerTokenEconomyOptionsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-3">
                         <label className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-muted">
-                          <span>{t('RcodeCompressToolDescriptions')}</span>
+                          <span>{t('JokerCompressToolDescriptions')}</span>
                           <Toggle
                             checked={tokenEconomy.compressToolDescriptions}
                             disabled={!tokenEconomy.enabled}
@@ -1390,7 +1390,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-muted">
-                          <span>{t('RcodeCompressToolResults')}</span>
+                          <span>{t('JokerCompressToolResults')}</span>
                           <Toggle
                             checked={tokenEconomy.compressToolResults}
                             disabled={!tokenEconomy.enabled}
@@ -1399,7 +1399,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-muted">
-                          <span>{t('RcodeConciseResponses')}</span>
+                          <span>{t('JokerConciseResponses')}</span>
                           <Toggle
                             checked={tokenEconomy.conciseResponses}
                             disabled={!tokenEconomy.enabled}
@@ -1411,13 +1411,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeHistoryHygiene')}
-                    description={t('RcodeHistoryHygieneDesc')}
+                    title={t('JokerHistoryHygiene')}
+                    description={t('JokerHistoryHygieneDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-3">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeHistoryMaxResultLines')}
+                          {t('JokerHistoryMaxResultLines')}
                           <input
                             type="number"
                             min={1}
@@ -1428,7 +1428,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeHistoryMaxResultBytes')}
+                          {t('JokerHistoryMaxResultBytes')}
                           <input
                             type="number"
                             min={512}
@@ -1440,7 +1440,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeHistoryMaxResultTokens')}
+                          {t('JokerHistoryMaxResultTokens')}
                           <input
                             type="number"
                             min={128}
@@ -1452,7 +1452,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeHistoryMaxArgumentBytes')}
+                          {t('JokerHistoryMaxArgumentBytes')}
                           <input
                             type="number"
                             min={512}
@@ -1465,7 +1465,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeHistoryMaxArgumentTokens')}
+                          {t('JokerHistoryMaxArgumentTokens')}
                           <input
                             type="number"
                             min={128}
@@ -1478,7 +1478,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeHistoryMaxArrayItems')}
+                          {t('JokerHistoryMaxArrayItems')}
                           <input
                             type="number"
                             min={1}
@@ -1492,14 +1492,14 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeModelContextProfile')}
-                    description={t('RcodeModelContextProfileDesc')}
+                    title={t('JokerModelContextProfile')}
+                    description={t('JokerModelContextProfileDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-4">
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('RcodeModelContextModel')}
+                            {t('JokerModelContextModel')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.modelLabel}
@@ -1510,7 +1510,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('RcodeModelContextWindow')}
+                            {t('JokerModelContextWindow')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.contextWindowLabel}
@@ -1518,7 +1518,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('RcodeModelContextSoft')}
+                            {t('JokerModelContextSoft')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.softThresholdLabel}
@@ -1526,7 +1526,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="min-w-0 rounded-xl border border-ds-border-muted bg-ds-card px-3 py-2">
                           <div className="text-[11px] font-medium uppercase text-ds-faint">
-                            {t('RcodeModelContextHard')}
+                            {t('JokerModelContextHard')}
                           </div>
                           <div className="mt-1 truncate text-[13px] font-semibold text-ds-ink">
                             {modelContext.hardThresholdLabel}
@@ -1536,40 +1536,40 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeStorageBackend')}
-                    description={t('RcodeStorageBackendDesc')}
+                    title={t('JokerStorageBackend')}
+                    description={t('JokerStorageBackendDesc')}
                     control={
                       <select
                         className={selectControlClass}
                         value={storage.backend}
                         onChange={(e) => updateStorage({ backend: e.target.value })}
                       >
-                        <option value="hybrid">{t('RcodeStorageHybrid')}</option>
-                        <option value="file">{t('RcodeStorageFile')}</option>
+                        <option value="hybrid">{t('JokerStorageHybrid')}</option>
+                        <option value="file">{t('JokerStorageFile')}</option>
                       </select>
                     }
                   />
                   <SettingRow
-                    title={t('RcodeStorageSqlitePath')}
-                    description={t('RcodeStorageSqlitePathDesc')}
+                    title={t('JokerStorageSqlitePath')}
+                    description={t('JokerStorageSqlitePathDesc')}
                     control={
                       <input
                         className="w-full min-w-0 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30 md:max-w-md"
                         value={compactHomePath(storage.sqlitePath)}
                         disabled={storage.backend !== 'hybrid'}
-                        placeholder={t('RcodeStorageSqlitePathPlaceholder')}
+                        placeholder={t('JokerStorageSqlitePathPlaceholder')}
                         onChange={(e) => updateStorage({ sqlitePath: expandHomePath(e.target.value) })}
                       />
                     }
                   />
                   <SettingRow
-                    title={t('RcodeCompactionThresholds')}
-                    description={t('RcodeCompactionThresholdsDesc')}
+                    title={t('JokerCompactionThresholds')}
+                    description={t('JokerCompactionThresholdsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeCompactionSoftThreshold')}
+                          {t('JokerCompactionSoftThreshold')}
                           <input
                             type="number"
                             min={1024}
@@ -1580,7 +1580,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeCompactionHardThreshold')}
+                          {t('JokerCompactionHardThreshold')}
                           <input
                             type="number"
                             min={1024}
@@ -1594,13 +1594,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeCompactionSummary')}
-                    description={t('RcodeCompactionSummaryDesc')}
+                    title={t('JokerCompactionSummary')}
+                    description={t('JokerCompactionSummaryDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-3">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeCompactionSummaryTimeout')}
+                          {t('JokerCompactionSummaryTimeout')}
                           <input
                             type="number"
                             min={1000}
@@ -1612,7 +1612,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeCompactionSummaryMaxTokens')}
+                          {t('JokerCompactionSummaryMaxTokens')}
                           <input
                             type="number"
                             min={64}
@@ -1624,7 +1624,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeCompactionSummaryInputBytes')}
+                          {t('JokerCompactionSummaryInputBytes')}
                           <input
                             type="number"
                             min={1024}
@@ -1639,8 +1639,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeMaxWallTime')}
-                    description={t('RcodeMaxWallTimeDesc')}
+                    title={t('JokerMaxWallTime')}
+                    description={t('JokerMaxWallTimeDesc')}
                     control={
                       <input
                         type="number"
@@ -1656,8 +1656,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeStreamIdleTimeout')}
-                    description={t('RcodeStreamIdleTimeoutDesc')}
+                    title={t('JokerStreamIdleTimeout')}
+                    description={t('JokerStreamIdleTimeoutDesc')}
                     control={
                       <input
                         type="number"
@@ -1673,8 +1673,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeToolStorm')}
-                    description={t('RcodeToolStormDesc')}
+                    title={t('JokerToolStorm')}
+                    description={t('JokerToolStormDesc')}
                     control={
                       <Toggle
                         checked={runtimeTuning.toolStorm.enabled}
@@ -1683,13 +1683,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeToolStormLimits')}
-                    description={t('RcodeToolStormLimitsDesc')}
+                    title={t('JokerToolStormLimits')}
+                    description={t('JokerToolStormLimitsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeToolStormWindowSize')}
+                          {t('JokerToolStormWindowSize')}
                           <input
                             type="number"
                             min={1}
@@ -1701,7 +1701,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeToolStormThreshold')}
+                          {t('JokerToolStormThreshold')}
                           <input
                             type="number"
                             min={2}
@@ -1716,13 +1716,13 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeToolOutputLimits')}
-                    description={t('RcodeToolOutputLimitsDesc')}
+                    title={t('JokerToolOutputLimits')}
+                    description={t('JokerToolOutputLimitsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-3 sm:grid-cols-2">
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeToolOutputMaxLines')}
+                          {t('JokerToolOutputMaxLines')}
                           <input
                             type="number"
                             min={1}
@@ -1734,7 +1734,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                           />
                         </label>
                         <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                          {t('RcodeToolOutputMaxBytes')}
+                          {t('JokerToolOutputMaxBytes')}
                           <input
                             type="number"
                             min={1}
@@ -1749,8 +1749,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeToolArgumentRepair')}
-                    description={t('RcodeToolArgumentRepairDesc')}
+                    title={t('JokerToolArgumentRepair')}
+                    description={t('JokerToolArgumentRepairDesc')}
                     control={
                       <input
                         type="number"
@@ -1770,16 +1770,16 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
               </div>
 
               <div className="mt-6">
-                <SettingsCard title={t('RcodeDiagnostics')}>
+                <SettingsCard title={t('JokerDiagnostics')}>
                   <div className="px-3 py-4">
                     <AdvancedSettingsDisclosure
-                      title={t('RcodeDiagnosticsAdvanced')}
-                      description={t('RcodeDiagnosticsAdvancedDesc')}
+                      title={t('JokerDiagnosticsAdvanced')}
+                      description={t('JokerDiagnosticsAdvancedDesc')}
                     >
                       <div className="divide-y divide-ds-border-muted">
                   <SettingRow
-                    title={t('RcodeRuntimeCapabilities')}
-                    description={t('RcodeRuntimeCapabilitiesDesc')}
+                    title={t('JokerRuntimeCapabilities')}
+                    description={t('JokerRuntimeCapabilitiesDesc')}
                     wideControl
                     control={
                       <div className="flex w-full flex-col gap-3">
@@ -1804,10 +1804,10 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         </div>
                         <div className="grid gap-2 text-[12.5px] text-ds-muted sm:grid-cols-2">
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                            {t('RcodeRuntimeModel')}: <span className="font-mono text-ds-ink">{runtimeInfo?.capabilities?.model?.id ?? 'unknown'}</span>
+                            {t('JokerRuntimeModel')}: <span className="font-mono text-ds-ink">{runtimeInfo?.capabilities?.model?.id ?? 'unknown'}</span>
                           </div>
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                            {t('RcodeRuntimePid')}: <span className="font-mono text-ds-ink">{runtimeInfo?.pid ?? 'unknown'}</span>
+                            {t('JokerRuntimePid')}: <span className="font-mono text-ds-ink">{runtimeInfo?.pid ?? 'unknown'}</span>
                           </div>
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
                             MCP: <span className="font-mono text-ds-ink">{runtimeInfo?.capabilities?.mcp?.connectedServers ?? 0}/{runtimeInfo?.capabilities?.mcp?.configuredServers ?? 0}</span>
@@ -1831,12 +1831,12 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                         <div className="flex flex-wrap items-center gap-2">
                           <button
                             type="button"
-                            onClick={() => void refreshRcodeDiagnostics()}
+                            onClick={() => void refreshJokerDiagnostics()}
                             disabled={runtimeDiagnosticsBusy}
                             className="inline-flex items-center gap-1.5 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13px] font-medium text-ds-ink shadow-sm transition hover:bg-ds-hover disabled:cursor-not-allowed disabled:opacity-55"
                           >
                             <RefreshCw className={`h-3.5 w-3.5 ${runtimeDiagnosticsBusy ? 'animate-spin' : ''}`} strokeWidth={1.75} />
-                            {t('RcodeDiagnosticsRefresh')}
+                            {t('JokerDiagnosticsRefresh')}
                           </button>
                           {runtimeDiagnosticsNotice ? <InlineNoticeView notice={runtimeDiagnosticsNotice} /> : null}
                         </div>
@@ -1844,35 +1844,35 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                     }
                   />
                   <SettingRow
-                    title={t('RcodeToolDiagnostics')}
-                    description={t('RcodeToolDiagnosticsDesc')}
+                    title={t('JokerToolDiagnostics')}
+                    description={t('JokerToolDiagnosticsDesc')}
                     wideControl
                     control={
                       <div className="grid gap-2 text-[12.5px] text-ds-muted sm:grid-cols-2">
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('RcodeDiagnosticsProviders')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.providers?.length ?? 0}</span>
+                          {t('JokerDiagnosticsProviders')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.providers?.length ?? 0}</span>
                         </div>
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('RcodeDiagnosticsMcpServers')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.mcpServers?.length ?? 0}</span>
+                          {t('JokerDiagnosticsMcpServers')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.mcpServers?.length ?? 0}</span>
                         </div>
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('RcodeDiagnosticsSkills')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.skills?.skills?.length ?? 0}</span>
+                          {t('JokerDiagnosticsSkills')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.skills?.skills?.length ?? 0}</span>
                         </div>
                         <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-2">
-                          {t('RcodeDiagnosticsAttachments')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.attachments?.count ?? 0}</span>
+                          {t('JokerDiagnosticsAttachments')}: <span className="font-mono text-ds-ink">{toolDiagnostics?.attachments?.count ?? 0}</span>
                         </div>
                       </div>
                     }
                   />
                   <SettingRow
-                    title={t('RcodeMemoryRecords')}
-                    description={t('RcodeMemoryRecordsDesc')}
+                    title={t('JokerMemoryRecords')}
+                    description={t('JokerMemoryRecordsDesc')}
                     wideControl
                     control={
                       <div className="flex flex-col gap-2">
                         {memoryRecords.length === 0 ? (
                           <div className="rounded-xl border border-ds-border-muted bg-ds-main/40 px-3 py-3 text-[13px] text-ds-faint">
-                            {t('RcodeMemoryEmpty')}
+                            {t('JokerMemoryEmpty')}
                           </div>
                         ) : (
                           memoryRecords.slice(0, 8).map((memory: any) => (
@@ -1883,7 +1883,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                   <div className="mt-1 flex flex-wrap gap-1.5 text-[11px] text-ds-faint">
                                     <span className="font-mono">{memory.scope}</span>
                                     <span className="font-mono">{memory.id}</span>
-                                    {memory.disabledAt ? <span>{t('RcodeMemoryDisabled')}</span> : null}
+                                    {memory.disabledAt ? <span>{t('JokerMemoryDisabled')}</span> : null}
                                     {memory.tags?.length ? <span>{compactList(memory.tags, '')}</span> : null}
                                   </div>
                                 </div>
@@ -1903,8 +1903,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                       type="button"
                                       onClick={() => void disableMemoryRecord(memory.id)}
                                       className="rounded-lg p-1.5 text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
-                                      aria-label={t('RcodeMemoryDisable')}
-                                      title={t('RcodeMemoryDisable')}
+                                      aria-label={t('JokerMemoryDisable')}
+                                      title={t('JokerMemoryDisable')}
                                     >
                                       <Ban className="h-3.5 w-3.5" strokeWidth={1.8} />
                                     </button>
@@ -1913,8 +1913,8 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                                     type="button"
                                     onClick={() => void deleteMemoryRecord(memory.id)}
                                     className="rounded-lg p-1.5 text-ds-muted transition hover:bg-red-500/10 hover:text-red-600"
-                                    aria-label={t('RcodeMemoryDelete')}
-                                    title={t('RcodeMemoryDelete')}
+                                    aria-label={t('JokerMemoryDelete')}
+                                    title={t('JokerMemoryDelete')}
                                   >
                                     <Trash2 className="h-3.5 w-3.5" strokeWidth={1.8} />
                                   </button>
@@ -1949,7 +1949,7 @@ function ComputerUsePermissionRow({ t }: { t: (key: string) => string }): ReactE
   const [permissions, setPermissions] = useState<ComputerUsePermissions | null>(null)
 
   const refresh = (): void => {
-    void window.RcodeGui?.getComputerUsePermissions?.().then(setPermissions).catch(() => undefined)
+    void window.JokerGui?.getComputerUsePermissions?.().then(setPermissions).catch(() => undefined)
   }
   useEffect(() => {
     refresh()
@@ -1959,7 +1959,7 @@ function ComputerUsePermissionRow({ t }: { t: (key: string) => string }): ReactE
   if (permissions && !permissions.needsPermission) return null
 
   const request = (kind: ComputerUsePermissionKind): void => {
-    void window.RcodeGui
+    void window.JokerGui
       ?.requestComputerUsePermission?.(kind)
       .then(setPermissions)
       .catch(() => undefined)

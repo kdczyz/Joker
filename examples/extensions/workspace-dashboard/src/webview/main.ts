@@ -1,12 +1,12 @@
-import { ExtensionHostClient, type HostTransport, type JsonObject } from '@Rcode/extension-api'
+import { ExtensionHostClient, type HostTransport, type JsonObject } from '@joker-code/extension-api'
 
 declare global {
   interface Window {
-    readonly RcodeExtension: HostTransport
+    readonly JokerExtension: HostTransport
   }
 }
 
-const client = new ExtensionHostClient(window.RcodeExtension)
+const client = new ExtensionHostClient(window.JokerExtension)
 const refreshButton = document.querySelector<HTMLButtonElement>('#refresh')
 const status = document.querySelector<HTMLElement>('#status')
 const entryList = document.querySelector<HTMLOListElement>('#entries')

@@ -7,7 +7,7 @@ import {
   type JsonObject,
   type JsonValue,
   type ResultPreviewSource
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import type { ExtensionWorkbenchNotification } from '@shared/extension-ipc'
 import {
   extensionHostIconUrl,
@@ -590,7 +590,7 @@ export function ExtensionViewOutlet({
   onClose?: () => void
 }): ReactElement {
   if (contribution.owner.kind !== 'extension') {
-    return <div role="alert">Built-in Views are rendered by their owning Rcode component.</div>
+    return <div role="alert">Built-in Views are rendered by their owning Joker component.</div>
   }
   if (
     contribution.point !== 'message.resultPreviews' &&

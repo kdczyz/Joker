@@ -4,8 +4,8 @@ import {
   DEFAULT_DEEPSEEK_BASE_URL,
   defaultClawSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
-  defaultMiniMaxMediaGenerationRcodePatch,
+  defaultJokerRuntimeSettings,
+  defaultMiniMaxMediaGenerationJokerPatch,
   defaultModelProviderSettings,
   findPresetModelProfile,
   getModelProviderPreset,
@@ -34,14 +34,14 @@ import {
   modelSupportsImageInput,
   defaultDesignSettings,
   normalizeModelProviderSettings,
-  resolveRcodeImageGenerationSettings,
-  resolveRcodeMusicGenerationSettings,
+  resolveJokerImageGenerationSettings,
+  resolveJokerMusicGenerationSettings,
   resolveModelProviderBaseUrl,
   resolveModelProviderProxyUrl,
-  resolveRcodeRuntimeSettings,
-  resolveRcodeSpeechToTextSettings,
-  resolveRcodeTextToSpeechSettings,
-  resolveRcodeVideoGenerationSettings,
+  resolveJokerRuntimeSettings,
+  resolveJokerSpeechToTextSettings,
+  resolveJokerTextToSpeechSettings,
+  resolveJokerVideoGenerationSettings,
   type AppSettingsV1,
   type ModelProviderModelProfileV1
 } from './app-settings'
@@ -153,14 +153,14 @@ function settings(): AppSettingsV1 {
       ]
     },
     agents: {
-      Rcode: {
-        ...defaultRcodeRuntimeSettings(),
+      Joker: {
+        ...defaultJokerRuntimeSettings(),
         providerId: 'custom',
         model: 'custom-model'
       }
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -179,11 +179,11 @@ function settings(): AppSettingsV1 {
 }
 
 describe('model provider settings', () => {
-  it('resolves Rcode runtime credentials from the selected provider', () => {
+  it('resolves Joker runtime credentials from the selected provider', () => {
     const state = settings()
-    state.agents.Rcode.apiKey = 'sk-stale-runtime'
-    state.agents.Rcode.baseUrl = 'https://stale-runtime.example/v1'
-    const runtime = resolveRcodeRuntimeSettings(state)
+    state.agents.Joker.apiKey = 'sk-stale-runtime'
+    state.agents.Joker.baseUrl = 'https://stale-runtime.example/v1'
+    const runtime = resolveJokerRuntimeSettings(state)
 
     expect(runtime.apiKey).toBe('sk-custom')
     expect(runtime.baseUrl).toBe('https://custom.example/v1')
@@ -251,12 +251,12 @@ describe('model provider settings', () => {
     expect(resolveModelProviderProxyUrl(noPort)).toBe('http://proxy.lan/')
   })
 
-  it('keeps legacy Rcode runtime credential overrides only when no provider is selected', () => {
+  it('keeps legacy Joker runtime credential overrides only when no provider is selected', () => {
     const state = settings()
-    state.agents.Rcode.providerId = ''
-    state.agents.Rcode.apiKey = 'sk-legacy-runtime'
-    state.agents.Rcode.baseUrl = 'https://legacy-runtime.example/v1'
-    const runtime = resolveRcodeRuntimeSettings(state)
+    state.agents.Joker.providerId = ''
+    state.agents.Joker.apiKey = 'sk-legacy-runtime'
+    state.agents.Joker.baseUrl = 'https://legacy-runtime.example/v1'
+    const runtime = resolveJokerRuntimeSettings(state)
 
     expect(runtime.apiKey).toBe('sk-legacy-runtime')
     expect(runtime.baseUrl).toBe('https://legacy-runtime.example/v1')
@@ -267,9 +267,9 @@ describe('model provider settings', () => {
     state.provider.providers = state.provider.providers.map((provider) =>
       provider.id === 'custom' ? { ...provider, apiKey: '' } : provider
     )
-    state.agents.Rcode.providerId = 'custom'
-    state.agents.Rcode.apiKey = 'sk-runtime-fallback'
-    const runtime = resolveRcodeRuntimeSettings(state)
+    state.agents.Joker.providerId = 'custom'
+    state.agents.Joker.apiKey = 'sk-runtime-fallback'
+    const runtime = resolveJokerRuntimeSettings(state)
 
     // The keyless provider must not erase a configured key — otherwise the
     // settings-apply gate reads "no API key" and strands a healthy runtime.
@@ -323,7 +323,7 @@ describe('model provider settings', () => {
     expect(custom?.modelProfiles.writer.maxOutputTokens).toBe(32_000)
   })
 
-  it('creates Xiaomi and MiniMax provider presets for Rcode runtime profiles', () => {
+  it('creates Xiaomi and MiniMax provider presets for Joker runtime profiles', () => {
     const xiaomi = getModelProviderPreset('xiaomi')
     const minimax = getModelProviderPreset('minimax')
 
@@ -400,7 +400,7 @@ describe('model provider settings', () => {
     const minimax = getModelProviderPreset('minimax')
     expect(minimax).not.toBeNull()
     const minimaxProfile = modelProviderPresetProfile(minimax!, 'sk-minimax')
-    const resolved = resolveRcodeRuntimeSettings({
+    const resolved = resolveJokerRuntimeSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -410,8 +410,8 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           providerId: minimaxProfile.id,
           model: minimaxProfile.models[0]
         }
@@ -440,12 +440,12 @@ describe('model provider settings', () => {
     const minimax = getModelProviderPreset('minimax')
     expect(minimax).not.toBeNull()
     const minimaxProfile = modelProviderPresetProfile(minimax!, 'sk-minimax')
-    const patch = defaultMiniMaxMediaGenerationRcodePatch({
+    const patch = defaultMiniMaxMediaGenerationJokerPatch({
       providers: [
         ...defaultModelProviderSettings().providers,
         minimaxProfile
       ],
-      currentRcode: defaultRcodeRuntimeSettings()
+      currentJoker: defaultJokerRuntimeSettings()
     })
 
     expect(patch).toEqual(expect.objectContaining({
@@ -476,14 +476,14 @@ describe('model provider settings', () => {
     const minimaxProfile = modelProviderPresetProfile(minimax!, 'sk-minimax')
     const tokenPlanProfile = modelProviderTokenPlanProfile(minimax!, 'sk-cp-minimax')
     expect(tokenPlanProfile).not.toBeNull()
-    const patch = defaultMiniMaxMediaGenerationRcodePatch({
+    const patch = defaultMiniMaxMediaGenerationJokerPatch({
       providers: [
         ...defaultModelProviderSettings().providers,
         minimaxProfile,
         tokenPlanProfile!
       ],
-      currentRcode: {
-        ...defaultRcodeRuntimeSettings(),
+      currentJoker: {
+        ...defaultJokerRuntimeSettings(),
         providerId: tokenPlanProfile!.id
       }
     })
@@ -505,19 +505,19 @@ describe('model provider settings', () => {
       models: ['MiniMax-M3'],
       modelProfiles: {}
     }
-    const patch = defaultMiniMaxMediaGenerationRcodePatch({
+    const patch = defaultMiniMaxMediaGenerationJokerPatch({
       providers: [
         ...defaultModelProviderSettings().providers,
         staleMiniMax
       ],
-      currentRcode: {
-        ...defaultRcodeRuntimeSettings(),
+      currentJoker: {
+        ...defaultJokerRuntimeSettings(),
         textToSpeech: {
-          ...defaultRcodeRuntimeSettings().textToSpeech,
+          ...defaultJokerRuntimeSettings().textToSpeech,
           providerId: 'voice-lab'
         }
       },
-      RcodePatch: {
+      JokerPatch: {
         musicGeneration: { enabled: false }
       }
     })
@@ -552,20 +552,20 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           textToSpeech: {
-            ...defaultRcodeRuntimeSettings().textToSpeech,
+            ...defaultJokerRuntimeSettings().textToSpeech,
             enabled: true,
             providerId: 'minimax'
           },
           musicGeneration: {
-            ...defaultRcodeRuntimeSettings().musicGeneration,
+            ...defaultJokerRuntimeSettings().musicGeneration,
             enabled: true,
             providerId: 'minimax'
           },
           videoGeneration: {
-            ...defaultRcodeRuntimeSettings().videoGeneration,
+            ...defaultJokerRuntimeSettings().videoGeneration,
             enabled: true,
             providerId: 'minimax'
           }
@@ -574,17 +574,17 @@ describe('model provider settings', () => {
     }
 
     expect(listTextToSpeechProviderProfiles(state).map((profile) => profile.id)).toContain('minimax')
-    expect(resolveRcodeTextToSpeechSettings(state)).toEqual(expect.objectContaining({
+    expect(resolveJokerTextToSpeechSettings(state)).toEqual(expect.objectContaining({
       baseUrl: 'https://api.minimax.io',
       apiKey: 'sk-minimax',
       model: 'speech-2.8-hd'
     }))
-    expect(resolveRcodeMusicGenerationSettings(state)).toEqual(expect.objectContaining({
+    expect(resolveJokerMusicGenerationSettings(state)).toEqual(expect.objectContaining({
       baseUrl: 'https://api.minimax.io',
       apiKey: 'sk-minimax',
       model: 'music-2.6'
     }))
-    expect(resolveRcodeVideoGenerationSettings(state)).toEqual(expect.objectContaining({
+    expect(resolveJokerVideoGenerationSettings(state)).toEqual(expect.objectContaining({
       baseUrl: 'https://api.minimax.io',
       apiKey: 'sk-minimax',
       model: 'MiniMax-Hailuo-2.3'
@@ -595,7 +595,7 @@ describe('model provider settings', () => {
     const minimax = getModelProviderPreset('minimax')
     expect(minimax).not.toBeNull()
     const minimaxProfile = modelProviderPresetProfile(minimax!, 'sk-minimax')
-    const resolved = resolveRcodeImageGenerationSettings({
+    const resolved = resolveJokerImageGenerationSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -605,10 +605,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           imageGeneration: {
-            ...defaultRcodeRuntimeSettings().imageGeneration,
+            ...defaultJokerRuntimeSettings().imageGeneration,
             enabled: true,
             providerId: minimaxProfile.id,
             baseUrl: 'https://stale-image.example/v1',
@@ -641,7 +641,7 @@ describe('model provider settings', () => {
         models: ['image-01', 'image-01-live']
       }
     })
-    const resolved = resolveRcodeImageGenerationSettings({
+    const resolved = resolveJokerImageGenerationSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -651,10 +651,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           imageGeneration: {
-            ...defaultRcodeRuntimeSettings().imageGeneration,
+            ...defaultJokerRuntimeSettings().imageGeneration,
             enabled: true,
             providerId: minimaxTokenPlanProfile!.id
           }
@@ -693,7 +693,7 @@ describe('model provider settings', () => {
       }
     })
 
-    const resolved = resolveRcodeImageGenerationSettings({
+    const resolved = resolveJokerImageGenerationSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -703,10 +703,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           imageGeneration: {
-            ...defaultRcodeRuntimeSettings().imageGeneration,
+            ...defaultJokerRuntimeSettings().imageGeneration,
             enabled: true,
             providerId: codexProfile.id
           }
@@ -734,7 +734,7 @@ describe('model provider settings', () => {
       }))
     }
 
-    const resolved = resolveRcodeRuntimeSettings({
+    const resolved = resolveJokerRuntimeSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -744,8 +744,8 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           providerId: codexProfile.id,
           model: 'gpt-5.5'
         }
@@ -790,25 +790,25 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           imageGeneration: {
-            ...defaultRcodeRuntimeSettings().imageGeneration,
+            ...defaultJokerRuntimeSettings().imageGeneration,
             enabled: true,
             providerId: staleGlobalCapabilityOnCnProfile.id
           },
           textToSpeech: {
-            ...defaultRcodeRuntimeSettings().textToSpeech,
+            ...defaultJokerRuntimeSettings().textToSpeech,
             enabled: true,
             providerId: staleGlobalCapabilityOnCnProfile.id
           },
           musicGeneration: {
-            ...defaultRcodeRuntimeSettings().musicGeneration,
+            ...defaultJokerRuntimeSettings().musicGeneration,
             enabled: true,
             providerId: staleGlobalCapabilityOnCnProfile.id
           },
           videoGeneration: {
-            ...defaultRcodeRuntimeSettings().videoGeneration,
+            ...defaultJokerRuntimeSettings().videoGeneration,
             enabled: true,
             providerId: staleGlobalCapabilityOnCnProfile.id
           }
@@ -816,10 +816,10 @@ describe('model provider settings', () => {
       }
     }
 
-    expect(resolveRcodeImageGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
-    expect(resolveRcodeTextToSpeechSettings(state).baseUrl).toBe('https://api.minimaxi.com')
-    expect(resolveRcodeMusicGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
-    expect(resolveRcodeVideoGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
+    expect(resolveJokerImageGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
+    expect(resolveJokerTextToSpeechSettings(state).baseUrl).toBe('https://api.minimaxi.com')
+    expect(resolveJokerMusicGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
+    expect(resolveJokerVideoGenerationSettings(state).baseUrl).toBe('https://api.minimaxi.com')
   })
 
   it('exposes the Xiaomi preset speech capability', () => {
@@ -935,7 +935,7 @@ describe('model provider settings', () => {
 
   it('backfills preset model capabilities for stale stored providers', () => {
     const base = settings()
-    const resolved = resolveRcodeRuntimeSettings({
+    const resolved = resolveJokerRuntimeSettings({
       ...base,
       provider: {
         ...base.provider,
@@ -1004,7 +1004,7 @@ describe('model provider settings', () => {
       supportsToolCalling: false,
       messageParts: ['text']
     }
-    const resolved = resolveRcodeRuntimeSettings({
+    const resolved = resolveJokerRuntimeSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -1020,8 +1020,8 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           providerId: codexProfile.id,
           model: 'gpt-5.5'
         }
@@ -1045,10 +1045,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           speechToText: {
-            ...defaultRcodeRuntimeSettings().speechToText,
+            ...defaultJokerRuntimeSettings().speechToText,
             enabled: true,
             providerId: xiaomiProfile.id
           }
@@ -1057,7 +1057,7 @@ describe('model provider settings', () => {
     }
 
     expect(listSpeechToTextProviderProfiles(base).map((profile) => profile.id)).toEqual(['xiaomi'])
-    expect(resolveRcodeSpeechToTextSettings(base)).toEqual(expect.objectContaining({
+    expect(resolveJokerSpeechToTextSettings(base)).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'xiaomi',
       protocol: 'mimo-asr',
@@ -1085,10 +1085,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           textToSpeech: {
-            ...defaultRcodeRuntimeSettings().textToSpeech,
+            ...defaultJokerRuntimeSettings().textToSpeech,
             enabled: true,
             providerId: minimaxProfile.id,
             baseUrl: 'https://stale-tts.example/v1',
@@ -1096,7 +1096,7 @@ describe('model provider settings', () => {
             model: 'stale-voice-model'
           },
           musicGeneration: {
-            ...defaultRcodeRuntimeSettings().musicGeneration,
+            ...defaultJokerRuntimeSettings().musicGeneration,
             enabled: true,
             providerId: minimaxProfile.id,
             baseUrl: 'https://stale-music.example/v1',
@@ -1104,7 +1104,7 @@ describe('model provider settings', () => {
             model: 'stale-music-model'
           },
           videoGeneration: {
-            ...defaultRcodeRuntimeSettings().videoGeneration,
+            ...defaultJokerRuntimeSettings().videoGeneration,
             enabled: true,
             providerId: minimaxProfile.id,
             baseUrl: 'https://stale-video.example/v1',
@@ -1118,7 +1118,7 @@ describe('model provider settings', () => {
     expect(listTextToSpeechProviderProfiles(base).map((profile) => profile.id)).toEqual(['minimax', 'xiaomi'])
     expect(listMusicGenerationProviderProfiles(base).map((profile) => profile.id)).toEqual(['minimax'])
     expect(listVideoGenerationProviderProfiles(base).map((profile) => profile.id)).toEqual(['minimax'])
-    expect(resolveRcodeTextToSpeechSettings(base)).toEqual(expect.objectContaining({
+    expect(resolveJokerTextToSpeechSettings(base)).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-t2a',
@@ -1126,7 +1126,7 @@ describe('model provider settings', () => {
       apiKey: 'sk-minimax',
       model: 'speech-2.8-hd'
     }))
-    expect(resolveRcodeMusicGenerationSettings(base)).toEqual(expect.objectContaining({
+    expect(resolveJokerMusicGenerationSettings(base)).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-music',
@@ -1134,7 +1134,7 @@ describe('model provider settings', () => {
       apiKey: 'sk-minimax',
       model: 'music-2.6'
     }))
-    expect(resolveRcodeVideoGenerationSettings(base)).toEqual(expect.objectContaining({
+    expect(resolveJokerVideoGenerationSettings(base)).toEqual(expect.objectContaining({
       enabled: true,
       providerId: 'minimax',
       protocol: 'minimax-video',
@@ -1156,7 +1156,7 @@ describe('model provider settings', () => {
         baseUrl: 'https://api.xiaomimimo.com/v1'
       }
     }
-    const resolved = resolveRcodeSpeechToTextSettings({
+    const resolved = resolveJokerSpeechToTextSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
@@ -1166,10 +1166,10 @@ describe('model provider settings', () => {
         ]
       },
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           speechToText: {
-            ...defaultRcodeRuntimeSettings().speechToText,
+            ...defaultJokerRuntimeSettings().speechToText,
             enabled: true,
             providerId: staleTokenPlanProfile.id,
             model: 'mimo-v2.5-tts'
@@ -1189,13 +1189,13 @@ describe('model provider settings', () => {
   })
 
   it('keeps custom speech-to-text settings when no provider is selected', () => {
-    const resolved = resolveRcodeSpeechToTextSettings({
+    const resolved = resolveJokerSpeechToTextSettings({
       ...settings(),
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           speechToText: {
-            ...defaultRcodeRuntimeSettings().speechToText,
+            ...defaultJokerRuntimeSettings().speechToText,
             enabled: true,
             providerId: '',
             protocol: 'openai-transcriptions',
@@ -1221,14 +1221,14 @@ describe('model provider settings', () => {
   })
 
   it('keeps the local-whisper provider self-contained and never routes to a remote provider', () => {
-    const resolved = resolveRcodeSpeechToTextSettings({
+    const resolved = resolveJokerSpeechToTextSettings({
       ...settings(),
       provider: defaultModelProviderSettings(),
       agents: {
-        Rcode: {
-          ...defaultRcodeRuntimeSettings(),
+        Joker: {
+          ...defaultJokerRuntimeSettings(),
           speechToText: {
-            ...defaultRcodeRuntimeSettings().speechToText,
+            ...defaultJokerRuntimeSettings().speechToText,
             enabled: true,
             providerId: 'local-whisper',
             protocol: 'local-whisper',
@@ -1251,7 +1251,7 @@ describe('model provider settings', () => {
   })
 
   it('resolves the default speech-to-text settings to the bundled local-whisper model', () => {
-    const resolved = resolveRcodeSpeechToTextSettings(settings())
+    const resolved = resolveJokerSpeechToTextSettings(settings())
     expect(resolved.protocol).toBe('local-whisper')
     expect(resolved.providerId).toBe('local-whisper')
     expect(resolved.baseUrl).toBe('')
@@ -1449,7 +1449,7 @@ describe('provider presets', () => {
       const preset = getModelProviderPreset(presetId)
       expect(preset).not.toBeNull()
       const profile = modelProviderPresetProfile(preset!, `sk-${presetId}`)
-      const resolved = resolveRcodeRuntimeSettings({
+      const resolved = resolveJokerRuntimeSettings({
         ...settings(),
         provider: {
           ...defaultModelProviderSettings(),
@@ -1459,8 +1459,8 @@ describe('provider presets', () => {
           ]
         },
         agents: {
-          Rcode: {
-            ...defaultRcodeRuntimeSettings(),
+          Joker: {
+            ...defaultJokerRuntimeSettings(),
             providerId: profile.id,
             model
           }
@@ -1491,14 +1491,14 @@ describe('provider presets', () => {
     expect(profile.modelProfiles['kimi-k2.7'].endpointFormat).toBeUndefined()
 
     // The override survives the full settings normalization round-trip.
-    const resolved = resolveRcodeRuntimeSettings({
+    const resolved = resolveJokerRuntimeSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
         providers: [...defaultModelProviderSettings().providers, profile]
       },
       agents: {
-        Rcode: { ...defaultRcodeRuntimeSettings(), providerId: profile.id, model: 'minimax-m3' }
+        Joker: { ...defaultJokerRuntimeSettings(), providerId: profile.id, model: 'minimax-m3' }
       }
     })
     expect(resolved.modelProfiles['minimax-m3'].endpointFormat).toBe('messages')
@@ -1521,14 +1521,14 @@ describe('provider presets', () => {
       })
     }
 
-    const resolved = resolveRcodeRuntimeSettings({
+    const resolved = resolveJokerRuntimeSettings({
       ...settings(),
       provider: {
         ...defaultModelProviderSettings(),
         providers: [...defaultModelProviderSettings().providers, profile]
       },
       agents: {
-        Rcode: { ...defaultRcodeRuntimeSettings(), providerId: profile.id, model: 'deepseek-v4-pro' }
+        Joker: { ...defaultJokerRuntimeSettings(), providerId: profile.id, model: 'deepseek-v4-pro' }
       }
     })
     expect(resolved.modelProfiles['deepseek-v4-pro']).toEqual(profile.modelProfiles['deepseek-v4-pro'])
@@ -1681,7 +1681,7 @@ describe('provider presets', () => {
   it('exposes opencode-zen preset with free models and correct capabilities', () => {
     const preset = getModelProviderPreset('opencode-zen')
     expect(preset).toBeDefined()
-    expect(preset!.name).toBe('Rcode-free')
+    expect(preset!.name).toBe('Joker-free')
     expect(preset!.baseUrl).toBe('https://opencode.ai/zen/v1')
     expect(preset!.endpointFormat).toBe('chat_completions')
     expect(preset!.models).toContain('nemotron-3.5-lightning-free')

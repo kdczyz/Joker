@@ -32,7 +32,7 @@ export function executeDesignExportInvocation(invocation: DesignToolInvocation):
   }
 
   const state = readDesignToolState()
-  const title = maybeString(record?.title) ?? state.document?.title ?? 'Rcode design project'
+  const title = maybeString(record?.title) ?? state.document?.title ?? 'Joker design project'
   const updatedAt = new Date().toISOString()
   const designSystemPath = PROJECT_DESIGN_MD_PATH
   const projectBriefPath = maybeString(record?.projectBriefPath)

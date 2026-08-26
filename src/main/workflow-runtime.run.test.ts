@@ -6,7 +6,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -55,9 +55,9 @@ function settingsWithWorkflows(workflows: WorkflowV1[], modules: WorkflowCustomM
     uiFontScale: 0.82,
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
-    agents: { Rcode: { ...defaultRcodeRuntimeSettings(), model: 'test-model', apiKey: 'test-key' } },
+    agents: { Joker: { ...defaultJokerRuntimeSettings(), model: 'test-model', apiKey: 'test-key' } },
     workspaceRoot: workflowWorkspaceRoot,
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: { enabled: true, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -107,7 +107,7 @@ function requireOk(result: WorkflowRunResult): string {
 
 describe('WorkflowRuntime end-to-end execution', () => {
   beforeEach(() => {
-    workflowWorkspaceRoot = mkdtempSync(join(tmpdir(), 'Rcode-workflow-run-'))
+    workflowWorkspaceRoot = mkdtempSync(join(tmpdir(), 'Joker-workflow-run-'))
   })
 
   afterEach(() => {
@@ -560,7 +560,7 @@ describe('WorkflowRuntime end-to-end execution', () => {
       await new Promise((resolve) => setTimeout(resolve, 250))
       const response = await fetch(`http://127.0.0.1:${port}/hook`, {
         method: 'POST',
-        body: JSON.stringify({ name: 'Rcode' })
+        body: JSON.stringify({ name: 'Joker' })
       })
       const body = (await response.json()) as { ok: boolean; runId: string }
       expect(response.status).toBe(200)
@@ -572,7 +572,7 @@ describe('WorkflowRuntime end-to-end execution', () => {
       const run = store.read().workflow.workflows[0].runs.find((entry) => entry.id === body.runId)!
       expect(run.status).toBe('success')
       const setResult = run.nodeResults.find((result) => result.nodeId === 's')!
-      expect(JSON.parse(setResult.outputJson)).toEqual({ echo: 'Rcode' })
+      expect(JSON.parse(setResult.outputJson)).toEqual({ echo: 'Joker' })
     } finally {
       runtime.stop()
     }
@@ -1098,7 +1098,7 @@ describe('WorkflowRuntime end-to-end execution', () => {
             enabled: true,
             nodes: [
               { id: 'm', type: 'manual-trigger', config: {} },
-              { id: 'c', type: 'custom', config: { moduleId: 'mod-greet', values: { who: 'Rcode' } } }
+              { id: 'c', type: 'custom', config: { moduleId: 'mod-greet', values: { who: 'Joker' } } }
             ],
             connections: [{ id: 'e1', source: 'm', sourceHandle: 'out', target: 'c', targetHandle: 'in' }]
           })
@@ -1115,7 +1115,7 @@ describe('WorkflowRuntime end-to-end execution', () => {
     const run = store.read().workflow.workflows[0].runs.find((entry) => entry.id === runId)!
     expect(run.status).toBe('success')
     const custom = run.nodeResults.find((result) => result.nodeId === 'c')!
-    expect(JSON.parse(custom.outputJson)).toEqual({ greeting: 'hi Rcode' })
+    expect(JSON.parse(custom.outputJson)).toEqual({ greeting: 'hi Joker' })
     runtime.stop()
   }, 15_000)
 
@@ -1274,7 +1274,7 @@ describe('WorkflowRuntime end-to-end execution', () => {
   it('ai-agent node forwards the picked providerId on POST /v1/threads', async () => {
     // The workflow node UI lets the user pick a non-runtime provider per
     // request. The runtime helper must put that providerId on the body so
-    // Rcode's MultiProviderModelClient routes the turn to the matching
+    // Joker's MultiProviderModelClient routes the turn to the matching
     // per-provider HTTP client. Without this the runtime would silently
     // fall back to its bound provider — the bug behind the original
     // "Not supported model MiniMax-M3" report.

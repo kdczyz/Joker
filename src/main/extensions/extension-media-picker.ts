@@ -7,7 +7,7 @@ import {
   type MediaPickSaveTargetResult,
   type MediaPickerFilter,
   type Locale
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import { dialog, type BrowserWindow, type IpcMainInvokeEvent } from 'electron'
 import { randomBytes } from 'node:crypto'
 import { basename, join } from 'node:path'
@@ -60,7 +60,7 @@ export type ExtensionMediaPickerContext = ExtensionMediaBindingContext & {
 
 /**
  * Runs the import picker entirely in Electron Main. Paths and the protected
- * operation token only cross the authenticated Main-to-Rcode route.
+ * operation token only cross the authenticated Main-to-Joker route.
  */
 export async function pickExtensionMediaFiles(
   context: ExtensionMediaPickerContext,
@@ -142,7 +142,7 @@ export async function pickExtensionMediaSaveTarget(
   if (!target) {
     throw new ExtensionMediaPickerError(
       'MEDIA_REGISTRATION_FAILED',
-      'Rcode did not register the selected export destination.'
+      'Joker did not register the selected export destination.'
     )
   }
   return MediaPickSaveTargetResultSchema.parse({ outcome: 'selected', target })
@@ -306,7 +306,7 @@ async function registerSelections(
   } catch {
     throw new ExtensionMediaPickerError(
       'MEDIA_REGISTRATION_FAILED',
-      'Rcode returned an invalid protected media registration response.'
+      'Joker returned an invalid protected media registration response.'
     )
   }
   return ExtensionMediaSelectionRegistrationResultSchema.parse(payload).selections
@@ -329,8 +329,8 @@ async function releaseRegisteredSelections(
         timeoutMs: 10_000
       }),
       {
-        'x-Rcode-extension-session-id': binding.runtimeSessionId,
-        'x-Rcode-extension-session-nonce': binding.sessionNonce
+        'x-Joker-extension-session-id': binding.runtimeSessionId,
+        'x-Joker-extension-session-nonce': binding.sessionNonce
       }
     )))
     pending = pending.filter((_selection, index) => {
@@ -358,7 +358,7 @@ function cleanupFailure(
   context.onCleanupFailure?.({ selectionCount })
   return new ExtensionMediaPickerError(
     'MEDIA_REGISTRATION_FAILED',
-    'Rcode could not confirm rollback of a protected media selection.'
+    'Joker could not confirm rollback of a protected media selection.'
   )
 }
 
@@ -366,10 +366,10 @@ function safeRuntimeFailure(result: RuntimeRequestResult): string {
   try {
     const payload = JSON.parse(result.body) as { code?: unknown }
     if (typeof payload.code === 'string' && /^[a-z0-9_-]{1,128}$/i.test(payload.code)) {
-      return `Rcode rejected protected media registration (${payload.code}).`
+      return `Joker rejected protected media registration (${payload.code}).`
     }
   } catch {
     // Fall through to an intentionally path-free status message.
   }
-  return `Rcode rejected protected media registration (HTTP ${result.status}).`
+  return `Joker rejected protected media registration (HTTP ${result.status}).`
 }

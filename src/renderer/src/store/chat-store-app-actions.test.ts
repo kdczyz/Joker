@@ -13,11 +13,11 @@ import {
 } from './chat-store-helpers'
 import { createAppActions } from './chat-store-app-actions'
 
-const COMPOSER_MODEL_STORAGE_KEY = 'Rcode.composerModel'
-const COMPOSER_PROVIDER_STORAGE_KEY = 'Rcode.composerProviderId'
-const THREAD_COMPOSER_SELECTION_STORAGE_KEY = 'Rcode.threadComposerSelection.v1'
-const THREAD_COMPOSER_MODE_STORAGE_KEY = 'Rcode.threadComposerMode.v1'
-const COMPOSER_MODE_STORAGE_KEY = 'Rcode.composerMode'
+const COMPOSER_MODEL_STORAGE_KEY = 'Joker.composerModel'
+const COMPOSER_PROVIDER_STORAGE_KEY = 'Joker.composerProviderId'
+const THREAD_COMPOSER_SELECTION_STORAGE_KEY = 'Joker.threadComposerSelection.v1'
+const THREAD_COMPOSER_MODE_STORAGE_KEY = 'Joker.threadComposerMode.v1'
+const COMPOSER_MODE_STORAGE_KEY = 'Joker.composerMode'
 
 function createMemoryStorage(): Storage {
   const items = new Map<string, string>()
@@ -63,7 +63,7 @@ function buildHarness(fetchModelsResult: FetchModelsResult): {
   const get: ChatStoreGet = () => state
 
   vi.stubGlobal('window', {
-    RcodeGui: {
+    JokerGui: {
       fetchUpstreamModels: vi.fn(async () => fetchModelsResult),
       saveSettingsSilent: vi.fn(async () => state)
     }
@@ -150,8 +150,8 @@ describe('chat-store app actions composer model loading', () => {
     expect(state.composerModel).toBe('MiniMax-M2')
     expect(state.composerProviderId).toBe('minimax')
     expect(localStorage.getItem(COMPOSER_PROVIDER_STORAGE_KEY)).toBe('minimax')
-    expect(window.RcodeGui.saveSettingsSilent).toHaveBeenCalledWith({
-      agents: { Rcode: { model: 'MiniMax-M2', providerId: 'minimax' } }
+    expect(window.JokerGui.saveSettingsSilent).toHaveBeenCalledWith({
+      agents: { Joker: { model: 'MiniMax-M2', providerId: 'minimax' } }
     })
   })
 
@@ -208,7 +208,7 @@ describe('chat-store app actions composer model loading', () => {
     })
   })
 
-  it('keeps active-thread model changes out of the global Rcode default', () => {
+  it('keeps active-thread model changes out of the global Joker default', () => {
     const { actions, state } = buildHarness({
       ok: true,
       modelIds: ['MiniMax-M2'],
@@ -244,7 +244,7 @@ describe('chat-store app actions composer model loading', () => {
     expect(JSON.parse(localStorage.getItem(THREAD_COMPOSER_SELECTION_STORAGE_KEY) ?? '{}')).toEqual({
       'thread-a': { model: 'MiniMax-M2', providerId: 'minimax' }
     })
-    expect(window.RcodeGui.saveSettingsSilent).not.toHaveBeenCalled()
+    expect(window.JokerGui.saveSettingsSilent).not.toHaveBeenCalled()
   })
 
   it('restores a model selection from the active thread instead of the global picker', async () => {
@@ -409,7 +409,7 @@ describe('chat-store app actions composer model loading', () => {
     expect(JSON.parse(localStorage.getItem(THREAD_COMPOSER_SELECTION_STORAGE_KEY) ?? '{}')).toEqual({
       'thread-a': { model: 'text-model', providerId: 'test-provider' }
     })
-    expect(window.RcodeGui.saveSettingsSilent).not.toHaveBeenCalled()
+    expect(window.JokerGui.saveSettingsSilent).not.toHaveBeenCalled()
   })
 
   it('allows switching a text-only chat from vision to text-only (issue #579)', () => {
@@ -531,8 +531,8 @@ describe('chat-store app actions composer model loading', () => {
     expect(state.composerModel).toBe('text-model')
     expect(state.composerProviderId).toBe('test-provider')
     expect(localStorage.getItem(COMPOSER_MODEL_STORAGE_KEY)).toBe('text-model')
-    expect(window.RcodeGui.saveSettingsSilent).toHaveBeenCalledWith({
-      agents: { Rcode: { model: 'text-model', providerId: 'test-provider' } }
+    expect(window.JokerGui.saveSettingsSilent).toHaveBeenCalledWith({
+      agents: { Joker: { model: 'text-model', providerId: 'test-provider' } }
     })
   })
 
@@ -561,7 +561,7 @@ describe('chat-store app actions composer model loading', () => {
 
     expect(state.composerModel).toBe('extension-model')
     expect(state.composerProviderId).toBe('ext-provider-runtime-id')
-    expect(window.RcodeGui.saveSettingsSilent).not.toHaveBeenCalled()
+    expect(window.JokerGui.saveSettingsSilent).not.toHaveBeenCalled()
   })
 
   it('allows switching an active chat from text-only to vision', () => {

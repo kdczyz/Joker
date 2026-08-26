@@ -9,10 +9,10 @@ function artifact(patch: Partial<DesignArtifact> = {}): DesignArtifact {
     id: 'screen',
     kind: 'html',
     title: 'Screen',
-    relativePath: '.Rcode-design/screen/v1.html',
+    relativePath: '.Joker-design/screen/v1.html',
     createdAt,
     updatedAt: createdAt,
-    versions: [{ id: 'screen-v1', relativePath: '.Rcode-design/screen/v1.html', createdAt, summary: '' }],
+    versions: [{ id: 'screen-v1', relativePath: '.Joker-design/screen/v1.html', createdAt, summary: '' }],
     ...patch
   }
 }

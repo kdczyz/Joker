@@ -1,6 +1,6 @@
-# Rcode 成熟化补齐计划
+# Joker 成熟化补齐计划
 
-本文档把当前项目与 Codex、Claude Code 等主流 coding agent 的差距转成可执行路线。目标不是一次性堆功能，而是把 Rcode 补成一个可信、可扩展、可持续演进的本地 agent 平台。
+本文档把当前项目与 Codex、Claude Code 等主流 coding agent 的差距转成可执行路线。目标不是一次性堆功能，而是把 Joker 补成一个可信、可扩展、可持续演进的本地 agent 平台。
 
 ## 当前状态
 
@@ -11,7 +11,7 @@
 - 内置工具注册表：文件读取、目录检查、搜索、patch、shell、web fetch、git status/diff。
 - SQLite 保存会话、审批、审计、MCP 配置和 memory。
 - `AGENTS.md`、`.agent/rules/*.md`、memory 注入。
-- MCP 配置管理、Skills 扫描、`rcode` 终端入口。
+- MCP 配置管理、Skills 扫描、`joker` 终端入口。
 
 主要缺口：
 
@@ -89,8 +89,8 @@
   - 每个 MCP tool 都有 source、risk、defaultApproval、inputSchema。
   - 权限规则支持 server 级和 tool 级匹配。
 - CLI/UI 能力：
-  - `rcode mcp test <id>`。
-  - `rcode mcp tools <id>`。
+  - `joker mcp test <id>`。
+  - `joker mcp tools <id>`。
   - 设置页显示连接状态、instructions、tools/resources/prompts。
 - 安全：
   - MCP server 第一次连接需要信任确认。
@@ -148,7 +148,7 @@
 - Memory：
   - 自动保存构建命令、测试命令、用户偏好、项目约定、失败修复经验。
   - 按 recency + importance + current task relevance 排序召回。
-  - 支持 `rcode memory list/add/remove` 和桌面设置页。
+  - 支持 `joker memory list/add/remove` 和桌面设置页。
 - Artifacts：
   - 保存完整 stdout/stderr、大 diff、MCP resource 内容。
   - UI/CLI 可按 audit id 查看。
@@ -158,7 +158,7 @@
 - 100+ turn 会话不会无限增长请求上下文。
 - 大 shell 输出不会完整塞回模型。
 - 用户说“记住本项目用 pnpm”后，后续任务能自动采用。
-- `rcode memory list` 能查看当前项目 memory。
+- `joker memory list` 能查看当前项目 memory。
 - summary 生成失败时不丢原始记录，最多退回更保守上下文。
 
 ## 阶段 5：Subagents 与工程闭环
@@ -186,8 +186,8 @@
   - 自动定位失败测试。
   - 可运行“修复 -> 测试 -> diff -> 总结”的闭环。
 - CLI/TUI：
-  - `rcode review`。
-  - `rcode task` 长任务模式。
+  - `joker review`。
+  - `joker task` 长任务模式。
   - `/agents`、`/git`、`/memory`、`/hooks`。
 
 验收标准：
@@ -225,7 +225,7 @@
 
 验收标准：
 
-- `rcode doctor` 能定位 90% 常见环境问题。
+- `joker doctor` 能定位 90% 常见环境问题。
 - release 包不包含 `.env.local` 或敏感配置。
 - 所有新增模块有测试覆盖。
 - Electron smoke test 能启动 app、进入本机模式、发送一次只读任务。
@@ -263,7 +263,7 @@
 - 新增 stdio client。
 - 实现 initialize、tools/list、tools/call。
 - 将 MCP tools 暴露到 `/api/tools`。
-- CLI 增加 `rcode mcp test/tools`。
+- CLI 增加 `joker mcp test/tools`。
 
 ### Task C：Hooks v1
 

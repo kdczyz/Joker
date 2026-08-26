@@ -1,4 +1,4 @@
-import { ExtensionManifestSchema } from '@Rcode/extension-api'
+import { ExtensionManifestSchema } from '@joker-code/extension-api'
 import { createHash } from 'node:crypto'
 import { join, resolve } from 'node:path'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
@@ -79,7 +79,7 @@ function fixture() {
     createLease: vi.fn(async (input: { handleId: string; mimeType?: string }) => ({
       leaseId: 'lease_123456789012',
       handleId: input.handleId,
-      url: 'Rcode-media://lease/opaque-lease-token',
+      url: 'Joker-media://lease/opaque-lease-token',
       mimeType: input.mimeType ?? 'application/octet-stream',
       expiresAt: '2026-07-13T00:05:00.000Z'
     })),
@@ -220,7 +220,7 @@ describe('extension IPC security bridge', () => {
       publisher: 'acme',
       name: 'example',
       version: '1.2.3',
-      engines: { Rcode: '*' },
+      engines: { Joker: '*' },
       main: 'dist/main.mjs',
       activationEvents: ['onStartup'],
       contributes: {
@@ -251,7 +251,7 @@ describe('extension IPC security bridge', () => {
 
     await electronMock.handlers.get('extension:install')!(state.trustedEvent, {
       source: 'archive',
-      path: '/tmp/example.Rcodex'
+      path: '/tmp/example.Jokerx'
     })
 
     expect(state.protectedActions.authorizeAndPerform).toHaveBeenCalledWith(
@@ -261,7 +261,7 @@ describe('extension IPC security bridge', () => {
         operationKind: 'extension.install'
       }),
       expect.objectContaining({
-        detail: expect.stringMatching(/Local \.Rcodex archive[\s\S]*a{64}[\s\S]*not verified[\s\S]*Direct DOM/i)
+        detail: expect.stringMatching(/Local \.Jokerx archive[\s\S]*a{64}[\s\S]*not verified[\s\S]*Direct DOM/i)
       }),
       expect.any(Function)
     )
@@ -539,8 +539,8 @@ describe('extension IPC security bridge', () => {
       'POST',
       expect.stringContaining('ui.getViewState'),
       {
-        'x-Rcode-extension-session-id': record.runtimeSessionId,
-        'x-Rcode-extension-session-nonce': record.nonce
+        'x-Joker-extension-session-id': record.runtimeSessionId,
+        'x-Joker-extension-session-nonce': record.nonce
       }
     )
   })
@@ -752,7 +752,7 @@ describe('extension IPC security bridge', () => {
     expect(registration.operationToken).toMatch(/^[A-Za-z0-9_-]{32,}$/)
   })
 
-  it('mints and releases sender-bound Rcode-media leases without returning a path', async () => {
+  it('mints and releases sender-bound Joker-media leases without returning a path', async () => {
     const state = fixture()
     const record = state.viewSessions.create({
       sessionId: 'view_12345678-1234-1234-1234-123456789abc',
@@ -808,7 +808,7 @@ describe('extension IPC security bridge', () => {
     expect(opened).toEqual({
       leaseId: 'lease_123456789012',
       handleId: 'media_handle_0000000001',
-      url: 'Rcode-media://lease/opaque-lease-token',
+      url: 'Joker-media://lease/opaque-lease-token',
       mimeType: 'video/mp4',
       expiresAt: '2026-07-13T00:05:00.000Z'
     })
@@ -924,7 +924,7 @@ describe('extension IPC security bridge', () => {
       return {
         leaseId: 'lease_123456789012',
         handleId: 'media_handle_0000000001',
-        url: 'Rcode-media://lease/opaque-lease-token',
+        url: 'Joker-media://lease/opaque-lease-token',
         mimeType: 'video/mp4',
         expiresAt: '2026-07-13T00:05:00.000Z'
       }
@@ -1339,8 +1339,8 @@ describe('extension IPC security bridge', () => {
       params: { resource: 'handle', handleId: 'media_handle_0000000001' }
     })
     expect(cleanupHeaders).toEqual({
-      'x-Rcode-extension-session-id': record.runtimeSessionId,
-      'x-Rcode-extension-session-nonce': record.nonce
+      'x-Joker-extension-session-id': record.runtimeSessionId,
+      'x-Joker-extension-session-nonce': record.nonce
     })
 
     guest.mainFrame = mainFrame
@@ -1851,7 +1851,7 @@ describe('extension IPC security bridge', () => {
       sessionId: created.sessionId,
       method: 'ui.message',
       params: {
-        channel: 'Rcode.extension.view.overflow',
+        channel: 'Joker.extension.view.overflow',
         payload: { code: 'cursor_expired', oldestAvailableCursor: 4 }
       }
     })
@@ -2514,8 +2514,8 @@ describe('extension IPC security bridge', () => {
       'POST',
       expect.stringMatching(/"requestId":"view-notify-[^"]+".*"method":"ui\.setViewState"/),
       {
-        'x-Rcode-extension-session-id': record.runtimeSessionId,
-        'x-Rcode-extension-session-nonce': record.nonce
+        'x-Joker-extension-session-id': record.runtimeSessionId,
+        'x-Joker-extension-session-nonce': record.nonce
       }
     )
   })

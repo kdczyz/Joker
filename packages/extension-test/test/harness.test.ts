@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ExtensionApiError } from '@Rcode/extension-api'
+import { ExtensionApiError } from '@joker-code/extension-api'
 import { createExtensionTestHarness, createGeneratedArtifactFixture } from '../src/index.js'
 
 const permissions = [

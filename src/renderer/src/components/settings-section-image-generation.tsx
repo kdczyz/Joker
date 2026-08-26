@@ -6,7 +6,7 @@ import {
   IMAGE_GENERATION_QUALITIES,
   IMAGE_GENERATION_PROTOCOLS,
   IMAGE_GENERATION_RESOLUTIONS,
-  resolveRcodeImageGenerationSettings
+  resolveJokerImageGenerationSettings
 } from '@shared/app-settings'
 import { InlineNoticeView, ModelSelect, SecretInput, SettingsCard, SettingRow, Toggle } from './settings-controls'
 
@@ -39,16 +39,16 @@ export function ImageGenerationSettingsSection({ ctx }: { ctx: Record<string, an
     t,
     form,
     provider,
-    Rcode,
+    Joker,
     selectControlClass,
-    updateRcode
+    updateJoker
   } = ctx
   const imageGeneration = {
     ...DEFAULT_IMAGE_GENERATION,
-    ...(Rcode.imageGeneration ?? {})
+    ...(Joker.imageGeneration ?? {})
   }
   const effectiveImageGeneration = form
-    ? resolveRcodeImageGenerationSettings(form)
+    ? resolveJokerImageGenerationSettings(form)
     : imageGeneration
   const imageProviders = (provider?.providers ?? []).filter((item: {
     image?: unknown
@@ -66,7 +66,7 @@ export function ImageGenerationSettingsSection({ ctx }: { ctx: Record<string, an
     setDefaultSizeInput(imageGeneration.defaultSize)
   }, [imageGeneration.defaultSize])
   const updateImageGeneration = (patch: Record<string, unknown>): void => {
-    updateRcode({
+    updateJoker({
       imageGeneration: {
         ...imageGeneration,
         ...patch
@@ -102,7 +102,7 @@ export function ImageGenerationSettingsSection({ ctx }: { ctx: Record<string, an
                     updateImageGeneration({
                       providerId,
                       // 不要清空自定义 baseUrl/apiKey:选中供应商时运行时由
-                      // resolveRcodeImageGenerationSettings 用供应商凭据覆盖,切回“自定义图片 API”
+                      // resolveJokerImageGenerationSettings 用供应商凭据覆盖,切回“自定义图片 API”
                       // 时需原样保留这里的自定义值。此前这里把它们清成空串,一旦选过供应商,
                       // 自定义密钥就被永久写空丢失。
                       protocol: providerId === CUSTOM_IMAGE_GENERATION_PROVIDER_ID

@@ -79,7 +79,7 @@ describe('extension media IPC contracts', () => {
     const result = ExtensionMediaLeaseCreationResultSchema.parse({
       leaseId: 'media_lease_0000000001',
       handleId: registration.handleId,
-      url: 'Rcode-media://lease/media_lease_0000000001',
+      url: 'Joker-media://lease/media_lease_0000000001',
       mimeType: registration.mimeType,
       expiresAt: registration.expiresAt
     })
@@ -92,7 +92,7 @@ describe('extension media IPC contracts', () => {
 
   it('keeps diagnostics count-only and schema bounded', () => {
     const diagnostics = ExtensionMediaDiagnosticsSchema.parse({
-      scheme: 'Rcode-media',
+      scheme: 'Joker-media',
       preparedViewCount: 1,
       activeLeaseCount: 2,
       activeStreamCount: 0,

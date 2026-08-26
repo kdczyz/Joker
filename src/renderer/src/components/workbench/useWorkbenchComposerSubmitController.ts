@@ -1,6 +1,6 @@
 import { useCallback, type Dispatch, type SetStateAction } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 import {
   isComposerChatModelId,
   modelProfileSupportsTextChat
@@ -157,14 +157,14 @@ export function useWorkbenchComposerSubmitController({
   const { t } = useTranslation('common')
 
   const mirrorClawCommand = useCallback(async (userText: string, replyText: string): Promise<void> => {
-    if (!activeThreadId || typeof window.RcodeGui?.mirrorClawChannelMessage !== 'function') return
-    const userResult = await window.RcodeGui.mirrorClawChannelMessage(
+    if (!activeThreadId || typeof window.JokerGui?.mirrorClawChannelMessage !== 'function') return
+    const userResult = await window.JokerGui.mirrorClawChannelMessage(
       activeThreadId,
       userText,
       'user'
     )
     if (!userResult.ok) return
-    await window.RcodeGui.mirrorClawChannelMessage(
+    await window.JokerGui.mirrorClawChannelMessage(
       activeThreadId,
       replyText,
       'assistant'
@@ -223,7 +223,7 @@ export function useWorkbenchComposerSubmitController({
       if (remainingChars <= 0) return
       const key = contextKey(reference.relativePath || reference.path)
       if (seen.has(key)) return
-      const result = await window.RcodeGui.readWorkspaceFile({
+      const result = await window.JokerGui.readWorkspaceFile({
         ...(reference.workspaceRoot === null
           ? {}
           : { workspaceRoot: reference.workspaceRoot || workspace }),
@@ -415,8 +415,8 @@ export function useWorkbenchComposerSubmitController({
         }
         setInput('')
         void (async () => {
-          const taskResult = typeof window.RcodeGui?.createClawTaskFromText === 'function'
-            ? await window.RcodeGui.createClawTaskFromText(v, {
+          const taskResult = typeof window.JokerGui?.createClawTaskFromText === 'function'
+            ? await window.JokerGui.createClawTaskFromText(v, {
                 channelId: activeClawChannelId,
                 modelHint: activeClawChannelModel,
                 ...(reasoningEffort ? { reasoningEffort } : {}),

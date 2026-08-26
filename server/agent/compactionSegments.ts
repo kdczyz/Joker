@@ -3,7 +3,7 @@
  *
  * 借鉴 xai-org/grok-build `xai-chat-state::compaction_mode` 与 `compaction_transcript`:
  *
- *   Summary     只保留摘要,被压缩的内容彻底丢弃(Rcode 现状)。
+ *   Summary     只保留摘要,被压缩的内容彻底丢弃(Joker 现状)。
  *   Transcript  摘要 + 在摘要末尾附上完整原始 transcript 的文件路径,
  *               模型发现摘要不够时可自行 read_file 回看。
  *   Segments    摘要 + 把被省略的消息按"段"渲染成独立 markdown 文件

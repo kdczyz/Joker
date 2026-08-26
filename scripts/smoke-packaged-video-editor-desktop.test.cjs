@@ -19,23 +19,23 @@ const {
   resolveVideoEditorArchive
 } = require('./smoke-packaged-video-editor-desktop.cjs')
 
-test('resolves only the catalogued bundled video editor archive or an explicit .Rcodex', async (t) => {
-  const root = await mkdtemp(join(tmpdir(), 'Rcode-video-editor-desktop-archive-test-'))
+test('resolves only the catalogued bundled video editor archive or an explicit .Jokerx', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'Joker-video-editor-desktop-archive-test-'))
   t.after(() => rm(root, { recursive: true, force: true }))
   const bundled = join(root, 'bundled-extensions')
   await mkdir(bundled, { recursive: true })
-  const archive = join(bundled, 'Rcode-video-editor-0.4.4.Rcodex')
+  const archive = join(bundled, 'Joker-video-editor-0.4.4.Jokerx')
   await writeFile(archive, 'archive bytes')
   await writeFile(join(bundled, 'catalog.json'), `${JSON.stringify({
     schemaVersion: 1,
-    extensions: [{ id: EXTENSION_ID, archive: 'Rcode-video-editor-0.4.4.Rcodex' }]
+    extensions: [{ id: EXTENSION_ID, archive: 'Joker-video-editor-0.4.4.Jokerx' }]
   })}\n`)
 
   assert.equal(await resolveVideoEditorArchive(root), archive)
   assert.equal(await resolveVideoEditorArchive(root, archive), archive)
-  const notRcodex = join(root, 'archive.zip')
-  await writeFile(notRcodex, 'wrong extension')
-  await assert.rejects(resolveVideoEditorArchive(root, notRcodex), /must end with \.Rcodex/)
+  const notJokerx = join(root, 'archive.zip')
+  await writeFile(notJokerx, 'wrong extension')
+  await assert.rejects(resolveVideoEditorArchive(root, notJokerx), /must end with \.Jokerx/)
 
   await writeFile(join(bundled, 'catalog.json'), `${JSON.stringify({
     schemaVersion: 1,
@@ -48,19 +48,19 @@ test('seeds a Chinese light desktop profile against an offline OpenAI-compatible
   const settings = desktopVideoEditorSettings({
     runtimePort: 43123,
     workspaceRoot: '/isolated/workspace',
-    dataDir: '/isolated/home/.Rcode/data',
+    dataDir: '/isolated/home/.Joker/data',
     modelBaseUrl: 'http://127.0.0.1:43124/v1'
   })
   assert.equal(settings.locale, 'zh')
   assert.equal(settings.theme, 'light')
   assert.equal(settings.workspaceRoot, '/isolated/workspace')
-  assert.equal(settings.agents.Rcode.dataDir, '/isolated/home/.Rcode/data')
-  assert.equal(settings.agents.Rcode.port, 43123)
-  assert.equal(settings.agents.Rcode.baseUrl, 'http://127.0.0.1:43124/v1')
-  assert.equal(settings.agents.Rcode.model, MODEL_NAME)
-  assert.equal(settings.agents.Rcode.endpointFormat, 'openai-chat-completions')
-  assert.equal(settings.agents.Rcode.approvalPolicy, 'auto')
-  assert.equal(settings.agents.Rcode.sandboxMode, 'danger-full-access')
+  assert.equal(settings.agents.Joker.dataDir, '/isolated/home/.Joker/data')
+  assert.equal(settings.agents.Joker.port, 43123)
+  assert.equal(settings.agents.Joker.baseUrl, 'http://127.0.0.1:43124/v1')
+  assert.equal(settings.agents.Joker.model, MODEL_NAME)
+  assert.equal(settings.agents.Joker.endpointFormat, 'openai-chat-completions')
+  assert.equal(settings.agents.Joker.approvalPolicy, 'auto')
+  assert.equal(settings.agents.Joker.sandboxMode, 'danger-full-access')
 })
 
 test('emits bounded OpenAI SSE frames for the Agent extension-tool round trip', () => {
@@ -89,14 +89,14 @@ test('requires the first-launch protected prompt to expose localized permissions
     '此次权限变更仅适用于所选工作区。',
     '变更后的 Broker 权限：',
     ...VIDEO_EDITOR_PERMISSIONS.map((permission) => `• ${permission}`),
-    'Rcode 生成的风险摘要：',
+    'Joker 生成的风险摘要：',
     'Node 代码使用当前操作系统用户的权限运行。',
     '工作区读取权限可访问已批准工作区中的文件和扩展状态。',
     '工作区写入权限可在已批准的工作区中创建或修改文件。',
     '媒体读取权限可通过不透明授权检查用户选择的本地媒体。',
     '媒体处理和任务权限可运行并管理持久化的本地任务。',
     '媒体导出权限可写入用户批准的输出位置。',
-    'Agent 和工具权限可启动私有 Agent 运行，并向 Rcode 提供声明的工具。',
+    'Agent 和工具权限可启动私有 Agent 运行，并向 Joker 提供声明的工具。',
     '扩展 Node Host 本身并不是操作系统沙箱。'
   ].join('\n')
   const prompt = {
@@ -152,7 +152,7 @@ test('requires the first-launch protected prompt to expose localized permissions
 })
 
 test('source smoke keeps the editor hidden from the rail and opens it from Extension management', async () => {
-  assert.equal(CONTRIBUTION_ID, 'extension:Rcode-examples.Rcode-video-editor/editor')
+  assert.equal(CONTRIBUTION_ID, 'extension:Joker-examples.Joker-video-editor/editor')
   assert.match(SUCCESS_MARKER, /desktop E2E OK/)
   const source = await readFile(join(__dirname, 'smoke-packaged-video-editor-desktop.cjs'), 'utf8')
   for (const marker of [
@@ -167,7 +167,7 @@ test('source smoke keeps the editor hidden from the rail and opens it from Exten
     'openVideoEditorManagementCard',
     'extensionGetWorkbench',
     'showInRightRail === false',
-    'Authorize to open Rcode Video Editor',
+    'Authorize to open Joker Video Editor',
     'Review and apply in protected window',
     "'更改扩展权限'",
     "操作: 'extension.permissions'",
@@ -202,7 +202,7 @@ test('source smoke keeps the editor hidden from the rail and opens it from Exten
     'relaunch reused the original PID',
     'desktop PID ${firstDesktopPid} -> ${relaunchedDesktopPid}',
     'Install FFmpeg with libx264 and AAC',
-    'RCODE_FFMPEG_PATH/RCODE_FFPROBE_PATH',
+    'JOKER_FFMPEG_PATH/JOKER_FFPROBE_PATH',
     'jobStates.includes(\'completed\')'
   ]) assert.ok(source.includes(marker), `desktop video E2E omits source marker: ${marker}`)
   assert.doesNotMatch(source, /grantVideoEditorWorkspaceTrust/u)

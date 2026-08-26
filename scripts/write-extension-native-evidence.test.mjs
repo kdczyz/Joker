@@ -20,7 +20,7 @@ const MEDIA_TOOLCHAIN = {
 }
 
 async function temporaryDist(t) {
-  const root = await mkdtemp(join(tmpdir(), 'Rcode-native-evidence-test-'))
+  const root = await mkdtemp(join(tmpdir(), 'Joker-native-evidence-test-'))
   t.after(() => rm(root, { recursive: true, force: true }))
   return root
 }
@@ -28,21 +28,21 @@ async function temporaryDist(t) {
 test('collects exactly the final two-architecture macOS artifacts', async (t) => {
   const dist = await temporaryDist(t)
   for (const name of [
-    'Rcode-1.2.3-dev-4-mac-arm64.dmg',
-    'Rcode-1.2.3-dev-4-mac-arm64.zip',
-    'Rcode-1.2.3-dev-4-mac-x64.dmg',
-    'Rcode-1.2.3-dev-4-mac-x64.zip'
+    'Joker-1.2.3-dev-4-mac-arm64.dmg',
+    'Joker-1.2.3-dev-4-mac-arm64.zip',
+    'Joker-1.2.3-dev-4-mac-x64.dmg',
+    'Joker-1.2.3-dev-4-mac-x64.zip'
   ]) await writeFile(join(dist, name), name)
-  await writeFile(join(dist, 'Rcode-1.2.3-dev-4-mac-arm64.zip.blockmap'), 'ignored')
+  await writeFile(join(dist, 'Joker-1.2.3-dev-4-mac-arm64.zip.blockmap'), 'ignored')
 
   assert.deepEqual(
     (await collectNativeArtifacts({ distDirectory: dist, platform: 'darwin' }))
       .map((path) => path.slice(dist.length + 1)),
     [
-      'Rcode-1.2.3-dev-4-mac-arm64.dmg',
-      'Rcode-1.2.3-dev-4-mac-arm64.zip',
-      'Rcode-1.2.3-dev-4-mac-x64.dmg',
-      'Rcode-1.2.3-dev-4-mac-x64.zip'
+      'Joker-1.2.3-dev-4-mac-arm64.dmg',
+      'Joker-1.2.3-dev-4-mac-arm64.zip',
+      'Joker-1.2.3-dev-4-mac-x64.dmg',
+      'Joker-1.2.3-dev-4-mac-x64.zip'
     ]
   )
 })
@@ -54,9 +54,9 @@ test('fails closed for missing, duplicate, wrong-architecture, and non-file arti
     /exactly one/
   )
 
-  const first = join(dist, 'Rcode-1.2.3-linux-x86_64.AppImage')
+  const first = join(dist, 'Joker-1.2.3-linux-x86_64.AppImage')
   await writeFile(first, 'first')
-  const wrongArchitecture = join(dist, 'Rcode-1.2.3-linux-arm64.AppImage')
+  const wrongArchitecture = join(dist, 'Joker-1.2.3-linux-arm64.AppImage')
   await writeFile(wrongArchitecture, 'wrong architecture')
   await assert.rejects(
     collectNativeArtifacts({ distDirectory: dist, platform: 'linux' }),
@@ -65,13 +65,13 @@ test('fails closed for missing, duplicate, wrong-architecture, and non-file arti
   await rm(wrongArchitecture)
   assert.deepEqual(await collectNativeArtifacts({ distDirectory: dist, platform: 'linux' }), [first])
 
-  await writeFile(join(dist, 'Rcode-2.0.0-linux-x86_64.AppImage'), 'duplicate')
+  await writeFile(join(dist, 'Joker-2.0.0-linux-x86_64.AppImage'), 'duplicate')
   await assert.rejects(
     collectNativeArtifacts({ distDirectory: dist, platform: 'linux' }),
     /found 2/
   )
 
-  await rm(join(dist, 'Rcode-2.0.0-linux-x86_64.AppImage'))
+  await rm(join(dist, 'Joker-2.0.0-linux-x86_64.AppImage'))
   await rm(first)
   await mkdir(first)
   await assert.rejects(
@@ -89,7 +89,7 @@ test('fails closed for missing, duplicate, wrong-architecture, and non-file arti
   )
 
   const windowsDist = await temporaryDist(t)
-  await writeFile(join(windowsDist, 'Rcode-1.2.3-win-x64.EXE'), 'wrong case')
+  await writeFile(join(windowsDist, 'Joker-1.2.3-win-x64.EXE'), 'wrong case')
   await assert.rejects(
     collectNativeArtifacts({ distDirectory: windowsDist, platform: 'win32' }),
     /Unexpected native win32 artifact.*\.EXE/
@@ -98,7 +98,7 @@ test('fails closed for missing, duplicate, wrong-architecture, and non-file arti
 
 test('writes deterministic commit-bound hashes without leaking environment data', async (t) => {
   const dist = await temporaryDist(t)
-  const artifact = join(dist, 'Rcode-1.2.3-win-x64.exe')
+  const artifact = join(dist, 'Joker-1.2.3-win-x64.exe')
   await writeFile(artifact, 'native artifact')
   const evidence = await createNativeEvidence({
     distDirectory: dist,
@@ -106,7 +106,7 @@ test('writes deterministic commit-bound hashes without leaking environment data'
     commit: COMMIT,
     mediaToolchain: MEDIA_TOOLCHAIN,
     environment: {
-      GITHUB_REPOSITORY: 'kdczyz/Rcode',
+      GITHUB_REPOSITORY: 'kdczyz/Joker',
       GITHUB_RUN_ID: '1234',
       GITHUB_RUN_ATTEMPT: '2',
       SECRET_VALUE: 'must-not-appear'
@@ -118,12 +118,12 @@ test('writes deterministic commit-bound hashes without leaking environment data'
     commit: COMMIT,
     mediaToolchain: MEDIA_TOOLCHAIN,
     run: {
-      repository: 'kdczyz/Rcode',
+      repository: 'kdczyz/Joker',
       runId: '1234',
       runAttempt: '2'
     },
     artifacts: [{
-      file: 'Rcode-1.2.3-win-x64.exe',
+      file: 'Joker-1.2.3-win-x64.exe',
       bytes: 15,
       sha256: '9eaa01bd3b56258e0e41821a383e1e6282090e0f355fdf6c10883b38c612e8a8'
     }]
@@ -179,7 +179,7 @@ test('records bounded path-free tool versions and fails closed without required 
     return ' T.C drawtext V->V Draw text\n'
   }
   assert.deepEqual(inspectMediaToolchain({
-    environment: { RCODE_FFMPEG_PATH: '/private/bin/ffmpeg', RCODE_FFPROBE_PATH: '/private/bin/ffprobe' },
+    environment: { JOKER_FFMPEG_PATH: '/private/bin/ffmpeg', JOKER_FFPROBE_PATH: '/private/bin/ffprobe' },
     execute
   }), MEDIA_TOOLCHAIN)
   assert.equal(JSON.stringify(inspectMediaToolchain({ environment: {}, execute })).includes('/private'), false)
@@ -202,7 +202,7 @@ test('records bounded path-free tool versions and fails closed without required 
 test('binds evidence to the checked-out commit and rejects stale workflow SHA metadata', () => {
   assert.equal(resolveEvidenceCommit({
     checkedOutCommit: COMMIT,
-    environment: { RCODE_EVIDENCE_COMMIT: COMMIT.toUpperCase() }
+    environment: { JOKER_EVIDENCE_COMMIT: COMMIT.toUpperCase() }
   }), COMMIT)
   assert.throws(() => resolveEvidenceCommit({
     checkedOutCommit: COMMIT,

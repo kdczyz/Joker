@@ -12,7 +12,7 @@ import {
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const require = createRequire(import.meta.url)
-const requireRcode = createRequire(join(root, 'Rcode', 'package.json'))
+const requireJoker = createRequire(join(root, 'Joker', 'package.json'))
 const problems = []
 const LINUX_USER_NAMESPACE_STEP_NAME = 'Prepare and verify Linux user namespace sandbox'
 const LINUX_USER_NAMESPACE_SETUP = [
@@ -249,23 +249,23 @@ function requireSourceMarkersAfter(source, label, priorMarker, markers) {
 }
 
 // The public platform must not be hidden by an internal build/runtime feature flag.
-// RCODE_EXTENSION_HOST_RUNNER is intentionally not a gate: it marks the dedicated
+// JOKER_EXTENSION_HOST_RUNNER is intentionally not a gate: it marks the dedicated
 // child entrypoint and remains allowed.
 const implementationRoots = [
-  'Rcode/src',
+  'Joker/src',
   'src/main',
   'src/preload',
   'src/renderer/src',
   'packages/extension-api/src',
   'packages/extension-react/src',
   'packages/extension-test/src',
-  'packages/create-Rcode-extension/src'
+  'packages/create-Joker-extension/src'
 ]
 const forbiddenGatePatterns = [
-  /\bRCODE_(?:ENABLE|DISABLE)_EXTENSIONS?\b/,
-  /\bRCODE_EXTENSION_PLATFORM_(?:ENABLED|DISABLED|GATE)\b/,
-  /\bENABLE_RCODE_EXTENSION_PLATFORM\b/,
-  /\bVITE_RCODE_EXTENSIONS?(?:_ENABLED)?\b/,
+  /\bJOKER_(?:ENABLE|DISABLE)_EXTENSIONS?\b/,
+  /\bJOKER_EXTENSION_PLATFORM_(?:ENABLED|DISABLED|GATE)\b/,
+  /\bENABLE_JOKER_EXTENSION_PLATFORM\b/,
+  /\bVITE_JOKER_EXTENSIONS?(?:_ENABLED)?\b/,
   /\bextensionPlatform(?:Enabled|Gate)\b/,
   /\benableExtensionPlatform\b/
 ]
@@ -281,23 +281,23 @@ for (const sourceRoot of implementationRoots) {
   }
 }
 
-const runtimeFactory = await text('Rcode/src/server/runtime-factory.ts')
+const runtimeFactory = await text('Joker/src/server/runtime-factory.ts')
 check(
   /extensions\s*:\s*\{[\s\S]{0,240}?enabled\s*:\s*true/.test(runtimeFactory),
-  'Rcode runtime info does not expose the Extension Platform as unconditionally enabled'
+  'Joker runtime info does not expose the Extension Platform as unconditionally enabled'
 )
 check(
   runtimeFactory.includes('SUPPORTED_EXTENSION_API_VERSIONS'),
-  'Rcode runtime does not derive reported Extension API versions from the canonical SDK contract'
+  'Joker runtime does not derive reported Extension API versions from the canonical SDK contract'
 )
-const serveEntry = await text('Rcode/src/cli/serve-entry.ts')
+const serveEntry = await text('Joker/src/cli/serve-entry.ts')
 check(
   serveEntry.includes("argv[0] === 'extension'") && serveEntry.includes('runExtensionCommand'),
-  'The public `Rcode extension` CLI dispatch is absent or gated'
+  'The public `Joker extension` CLI dispatch is absent or gated'
 )
 const mainEntry = await text('src/main/index.ts')
 check(
-  mainEntry.includes('registerRcodeExtensionPlatformSchemesAsPrivileged') &&
+  mainEntry.includes('registerJokerExtensionPlatformSchemesAsPrivileged') &&
     mainEntry.includes('registerExtensionIpcHandlers'),
   'Electron does not register the public Extension/media protocols and IPC bridge'
 )
@@ -314,7 +314,7 @@ try {
   api = await import(pathToFileURL(apiDistPath).href)
 } catch (error) {
   problems.push(
-    `Cannot load built @Rcode/extension-api for compatibility checks; run its build first (${error instanceof Error ? error.message : String(error)})`
+    `Cannot load built @joker-code/extension-api for compatibility checks; run its build first (${error instanceof Error ? error.message : String(error)})`
   )
 }
 
@@ -347,7 +347,7 @@ if (api) {
   const sdkPackage = await json('packages/extension-api/package.json')
   check(
     major(sdkPackage.version) === currentMajor,
-    `@Rcode/extension-api package major ${sdkPackage.version} does not match API major ${currentMajor}`
+    `@joker-code/extension-api package major ${sdkPackage.version} does not match API major ${currentMajor}`
   )
 
   const fixture = await json('packages/extension-api/fixtures/api-major-negotiation.json')
@@ -435,7 +435,7 @@ if (api) {
     requiredCapabilities: [],
     capabilitiesByVersion: {}
   })
-  check(actualCurrent.compatible, `Published current API ${currentVersion} cannot negotiate with Rcode`)
+  check(actualCurrent.compatible, `Published current API ${currentVersion} cannot negotiate with Joker`)
   const actualFuture = api.negotiateApiVersion({
     declaredApiVersion: `${currentMajor + 1}.0.0`,
     supportedApiVersions: supportedVersions,
@@ -462,10 +462,10 @@ if (api) {
 // The current media reference extension is part of the release surface. Keep its
 // deterministic, local-only fixture and every example lifecycle command in the
 // fail-closed gate; native packaged evidence is still recorded per host.
-const videoExampleRoot = 'examples/extensions/Rcode-video-editor'
+const videoExampleRoot = 'examples/extensions/Joker-video-editor'
 for (const path of [
   `${videoExampleRoot}/README.md`,
-  `${videoExampleRoot}/Rcode-extension.json`,
+  `${videoExampleRoot}/Joker-extension.json`,
   `${videoExampleRoot}/package.json`,
   `${videoExampleRoot}/fixtures/generate-local-fixture.mjs`,
   `${videoExampleRoot}/fixtures/talking-head.srt`,
@@ -474,8 +474,8 @@ for (const path of [
   `${videoExampleRoot}/tests/local-fixtures.test.ts`,
   'packages/extension-api/fixtures/api-minor-negotiation.json',
   'src/main/extensions/extension-media-protocol.test.ts',
-  'Rcode/src/services/extension-media-process-service.test.ts',
-  'Rcode/src/services/extension-media-native-smoke.test.ts'
+  'Joker/src/services/extension-media-process-service.test.ts',
+  'Joker/src/services/extension-media-native-smoke.test.ts'
 ]) {
   await requirePath(path, 'video editor release/security surface')
 }
@@ -492,18 +492,18 @@ for (const command of [
   check(
     typeof videoExamplePackage.scripts?.[command] === 'string' &&
       videoExamplePackage.scripts[command].trim().length > 0,
-    `Rcode video editor example is missing runnable ${command} coverage`
+    `Joker video editor example is missing runnable ${command} coverage`
   )
 }
-const videoExampleManifest = await json(`${videoExampleRoot}/Rcode-extension.json`)
-check(videoExampleManifest.apiVersion === '1.2.0', 'Rcode video editor must exercise Extension API v1.2')
+const videoExampleManifest = await json(`${videoExampleRoot}/Joker-extension.json`)
+check(videoExampleManifest.apiVersion === '1.2.0', 'Joker video editor must exercise Extension API v1.2')
 check(
   !videoExampleManifest.permissions.some((permission) => permission.startsWith('network:')),
-  'Rcode video editor deterministic release fixture must not require remote ASR or generative services'
+  'Joker video editor deterministic release fixture must not require remote ASR or generative services'
 )
 const exampleGateSource = await text('scripts/check-extension-examples.mjs')
 for (const marker of [
-  "'Rcode-video-editor'",
+  "'Joker-video-editor'",
   "'typecheck'",
   "'build'",
   "'test'",
@@ -515,25 +515,25 @@ for (const marker of [
 const videoExampleReadme = await text(`${videoExampleRoot}/README.md`)
 for (const marker of [
   '## Install the release package',
-  'Rcode-video-editor-0.4.4.Rcodex',
-  'Rcode extension validate',
-  'Rcode extension install',
-  'npm run pack:Rcode-video-editor',
-  'npm run verify:Rcode-video-editor-package'
+  'Joker-video-editor-0.4.4.Jokerx',
+  'Joker extension validate',
+  'Joker extension install',
+  'npm run pack:Joker-video-editor',
+  'npm run verify:Joker-video-editor-package'
 ]) {
-  check(videoExampleReadme.includes(marker), `Rcode Video Editor install guide omits: ${marker}`)
+  check(videoExampleReadme.includes(marker), `Joker Video Editor install guide omits: ${marker}`)
 }
 
 const mediaProtocolSource = await text('src/main/extensions/extension-media-protocol.ts')
 const mediaProtocolTests = await text('src/main/extensions/extension-media-protocol.test.ts')
 for (const marker of [
-  "scheme: RCODE_MEDIA_SCHEME",
+  "scheme: JOKER_MEDIA_SCHEME",
   'bypassCSP: false',
   'maxConcurrentStreamsPerLease',
   'fileIdentity',
   'viewSessionId'
 ]) {
-  check(mediaProtocolSource.includes(marker), `Rcode-media protocol omits isolation marker: ${marker}`)
+  check(mediaProtocolSource.includes(marker), `Joker-media protocol omits isolation marker: ${marker}`)
 }
 for (const marker of [
   'rejects copied URLs in another isolated View and stale sessions',
@@ -541,10 +541,10 @@ for (const marker of [
   'uses a bounded stream window and enforces concurrent-reader quotas',
   'aborts active streams and revokes URLs on View and extension lifecycle cleanup'
 ]) {
-  check(mediaProtocolTests.includes(marker), `Rcode-media protocol tests omit security case: ${marker}`)
+  check(mediaProtocolTests.includes(marker), `Joker-media protocol tests omit security case: ${marker}`)
 }
-const mediaProcessSource = await text('Rcode/src/services/extension-media-process-service.ts')
-const mediaProcessTests = await text('Rcode/src/services/extension-media-process-service.test.ts')
+const mediaProcessSource = await text('Joker/src/services/extension-media-process-service.ts')
+const mediaProcessTests = await text('Joker/src/services/extension-media-process-service.test.ts')
 for (const marker of ['shell: false', "detached: process.platform !== 'win32'", 'terminateSpawnTree(child)']) {
   check(mediaProcessSource.includes(marker), `Native media process supervision omits marker: ${marker}`)
 }
@@ -555,18 +555,18 @@ check(
 
 // Appearance packs, MCP, Skills, and existing HTTP/SSE runtime paths remain
 // independent public surfaces. The full test suites exercise their behavior;
-// this gate prevents accidental deletion, absorption into .Rcodex, or CI omission.
+// this gate prevents accidental deletion, absorption into .Jokerx, or CI omission.
 const legacyPaths = [
   'src/main/services/ui-plugin-service.ts',
   'src/renderer/src/components/PluginMarketplaceView.tsx',
   'src/renderer/src/store/ui-plugin-store.ts',
-  'Rcode/src/adapters/tool/mcp-tool-provider.ts',
-  'Rcode/src/server/routes/mcp-oauth.ts',
-  'Rcode/src/skills/skill-runtime.ts',
-  'Rcode/src/server/routes/skills.ts',
+  'Joker/src/adapters/tool/mcp-tool-provider.ts',
+  'Joker/src/server/routes/mcp-oauth.ts',
+  'Joker/src/skills/skill-runtime.ts',
+  'Joker/src/server/routes/skills.ts',
   'src/main/services/ui-plugin-service.test.ts',
   'src/renderer/src/components/PluginMarketplaceView.test.ts',
-  'Rcode/src/adapters/tool/mcp-tool-provider.test.ts',
+  'Joker/src/adapters/tool/mcp-tool-provider.test.ts',
   'src/main/services/skill-service.test.ts'
 ]
 await Promise.all(legacyPaths.map((path) => requirePath(path, 'legacy non-regression surface')))
@@ -577,7 +577,7 @@ for (const path of [
   'scripts/fixtures/external-extension-project/LICENSE',
   'scripts/fixtures/external-extension-project/README.md',
   'scripts/fixtures/external-extension-project/package.template.json',
-  'scripts/fixtures/external-extension-project/Rcode-extension.json',
+  'scripts/fixtures/external-extension-project/Joker-extension.json',
   'scripts/fixtures/external-extension-project/src/extension.ts',
   'scripts/fixtures/external-extension-project/tsconfig.json',
   'scripts/fixtures/external-extension-project/view/index.html',
@@ -599,7 +599,7 @@ check(
     managementCenter.includes('Those systems remain separate'),
   'Extension management no longer tells users that UI appearance packs, MCP, and Skills remain separate'
 )
-const routeIndex = await text('Rcode/src/server/routes/index.ts')
+const routeIndex = await text('Joker/src/server/routes/index.ts')
 for (const route of [
   "'/v1/mcp/oauth'",
   "'/v1/skills'",
@@ -609,63 +609,63 @@ for (const route of [
   "'/v1/user-inputs/:id'",
   "'/v1/usage'"
 ]) {
-  check(routeIndex.includes(route), `Legacy Rcode runtime route disappeared: ${route}`)
+  check(routeIndex.includes(route), `Legacy Joker runtime route disappeared: ${route}`)
 }
 for (const marker of ['mcpProviders.providers', 'buildSkillToolProviders(skillRuntime)', 'mcpServers:', 'skills:']) {
-  check(runtimeFactory.includes(marker), `Legacy Rcode runtime composition disappeared: ${marker}`)
+  check(runtimeFactory.includes(marker), `Legacy Joker runtime composition disappeared: ${marker}`)
 }
 const extensionBackendSources = await Promise.all(
-  (await collectSourceFiles(join(root, 'Rcode/src/extensions'))).map(async (path) => [path, await readFile(path, 'utf8')])
+  (await collectSourceFiles(join(root, 'Joker/src/extensions'))).map(async (path) => [path, await readFile(path, 'utf8')])
 )
 for (const [path, source] of extensionBackendSources) {
   check(
     !/from\s+['"][^'"]*(?:ui-plugin|\/mcp|\/skills?)[^'"]*['"]/.test(source),
-    `.Rcodex backend imports a legacy Plugin/MCP/Skill lifecycle: ${relative(root, path)}`
+    `.Jokerx backend imports a legacy Plugin/MCP/Skill lifecycle: ${relative(root, path)}`
   )
   check(
-    !source.includes('.Rcode/ui-plugins'),
-    `.Rcodex backend reuses the legacy appearance-pack directory: ${relative(root, path)}`
+    !source.includes('.Joker/ui-plugins'),
+    `.Jokerx backend reuses the legacy appearance-pack directory: ${relative(root, path)}`
   )
 }
 
-// A clean npm ci must build the public API before Rcode resolves its file-linked
-// package. Keep postinstall on the canonical build:Rcode sequence so release
-// runners cannot accidentally compile Rcode against a missing SDK dist directory.
+// A clean npm ci must build the public API before Joker resolves its file-linked
+// package. Keep postinstall on the canonical build:Joker sequence so release
+// runners cannot accidentally compile Joker against a missing SDK dist directory.
 const rootPackage = await json('package.json')
-const buildRcodeBootstrap = rootPackage.scripts?.['build:Rcode'] ?? ''
-requireOrderedSourceMarkers(buildRcodeBootstrap, 'package.json build:Rcode bootstrap', [
-  'npm run build --workspace @Rcode/extension-api',
-  'node ./scripts/ensure-Rcode-install.cjs',
-  'npm --prefix Rcode run build'
+const buildJokerBootstrap = rootPackage.scripts?.['build:Joker'] ?? ''
+requireOrderedSourceMarkers(buildJokerBootstrap, 'package.json build:Joker bootstrap', [
+  'npm run build --workspace @joker-code/extension-api',
+  'node ./scripts/ensure-Joker-install.cjs',
+  'npm --prefix Joker run build'
 ])
 const postinstallSource = await text('scripts/postinstall.cjs')
-const canonicalPostinstallBuild = "run('npm', ['run', 'build:Rcode'])"
+const canonicalPostinstallBuild = "run('npm', ['run', 'build:Joker'])"
 check(
   postinstallSource.includes(canonicalPostinstallBuild),
-  'Root postinstall must delegate to the canonical build:Rcode bootstrap'
+  'Root postinstall must delegate to the canonical build:Joker bootstrap'
 )
 check(
-  !/require\(['"]\.\/ensure-Rcode-install\.cjs['"]\)/.test(postinstallSource),
-  'Root postinstall must not install/build Rcode before Extension API dist exists'
+  !/require\(['"]\.\/ensure-Joker-install\.cjs['"]\)/.test(postinstallSource),
+  'Root postinstall must not install/build Joker before Extension API dist exists'
 )
 check(
   postinstallSource.indexOf(canonicalPostinstallBuild) <
     postinstallSource.indexOf("require('electron/package.json')"),
-  'Root postinstall must complete the Extension API/Rcode bootstrap before native rebuilds'
+  'Root postinstall must complete the Extension API/Joker bootstrap before native rebuilds'
 )
-const RcodeLock = await json('Rcode/package-lock.json')
-const semver = requireRcode('semver')
-const wasmRuntimeLock = RcodeLock.packages?.['node_modules/@napi-rs/wasm-runtime']
+const JokerLock = await json('Joker/package-lock.json')
+const semver = requireJoker('semver')
+const wasmRuntimeLock = JokerLock.packages?.['node_modules/@napi-rs/wasm-runtime']
 for (const dependency of ['@emnapi/core', '@emnapi/runtime']) {
-  const version = RcodeLock.packages?.[`node_modules/${dependency}`]?.version
+  const version = JokerLock.packages?.[`node_modules/${dependency}`]?.version
   const peerRange = wasmRuntimeLock?.peerDependencies?.[dependency]
   check(
     semver.valid(version) !== null,
-    `Rcode npm 10 lock is missing a top-level ${dependency} node with a valid SemVer`
+    `Joker npm 10 lock is missing a top-level ${dependency} node with a valid SemVer`
   )
   check(
     typeof peerRange === 'string' && semver.satisfies(version ?? '', peerRange),
-    `Rcode npm 10 lock top-level ${dependency}@${String(version)} does not satisfy @napi-rs/wasm-runtime ${String(peerRange)}`
+    `Joker npm 10 lock top-level ${dependency}@${String(version)} does not satisfy @napi-rs/wasm-runtime ${String(peerRange)}`
   )
 }
 
@@ -675,25 +675,25 @@ const afterPack = require(join(root, 'scripts/after-pack.cjs'))
 const afterPackSource = await text('scripts/after-pack.cjs')
 check(
   typeof afterPack._internals?.materializePackedWorkspaceDependencies === 'function',
-  'afterPack does not materialize workspace packages inside the packed Rcode dependency tree'
+  'afterPack does not materialize workspace packages inside the packed Joker dependency tree'
 )
 check(
-  /async function afterPack\(context\)\s*\{[\s\S]*?materializePackedWorkspaceDependencies\(context\)[\s\S]*?validateBundledRcodeRuntime\(context\)/.test(
+  /async function afterPack\(context\)\s*\{[\s\S]*?materializePackedWorkspaceDependencies\(context\)[\s\S]*?validateBundledJokerRuntime\(context\)/.test(
     afterPackSource
   ),
-  'afterPack does not materialize workspace packages before validating the bundled Rcode runtime'
+  'afterPack does not materialize workspace packages before validating the bundled Joker runtime'
 )
 check(
   typeof afterPack._internals?.validateBundledExtensionResources === 'function' &&
-    /async function afterPack\(context\)\s*\{[\s\S]*?validateBundledRcodeRuntime\(context\)[\s\S]*?validateBundledExtensionResources\(context\)/.test(
+    /async function afterPack\(context\)\s*\{[\s\S]*?validateBundledJokerRuntime\(context\)[\s\S]*?validateBundledExtensionResources\(context\)/.test(
       afterPackSource
     ),
-  'afterPack does not validate bundled .Rcodex catalog bytes before release artifacts are created'
+  'afterPack does not validate bundled .Jokerx catalog bytes before release artifacts are created'
 )
 for (const id of [
-  'Rcode-examples.Rcode-video-editor',
-  'Rcode-examples.presentation-studio',
-  'Rcode-examples.social-media-sidebar'
+  'Joker-examples.Joker-video-editor',
+  'Joker-examples.presentation-studio',
+  'Joker-examples.social-media-sidebar'
 ]) {
   check(
     afterPack.REQUIRED_BUNDLED_EXTENSION_IDS.includes(id),
@@ -705,9 +705,9 @@ for (const pattern of [
   'packages/extension-api/dist/**/*',
   'packages/extension-api/schema/**/*',
   'packages/extension-api/fixtures/**/*',
-  'packages/create-Rcode-extension/package.json',
-  'packages/create-Rcode-extension/src/**/*',
-  'packages/create-Rcode-extension/templates/**/*'
+  'packages/create-Joker-extension/package.json',
+  'packages/create-Joker-extension/src/**/*',
+  'packages/create-Joker-extension/templates/**/*'
 ]) {
   check(builderConfig.files.includes(pattern), `electron-builder files omit Extension resource: ${pattern}`)
 }
@@ -717,15 +717,15 @@ check(
     resource?.to === 'bundled-extensions' &&
     Array.isArray(resource?.filter) &&
     resource.filter.includes('catalog.json') &&
-    resource.filter.includes('*.Rcodex')
+    resource.filter.includes('*.Jokerx')
   ),
-  'electron-builder extraResources omit the default bundled .Rcodex catalog'
+  'electron-builder extraResources omit the default bundled .Jokerx catalog'
 )
 for (const pattern of [
-  '**/Rcode/dist/**/*',
-  '**/Rcode/node_modules/**/*',
+  '**/Joker/dist/**/*',
+  '**/Joker/node_modules/**/*',
   '**/packages/extension-api/**/*',
-  '**/packages/create-Rcode-extension/**/*',
+  '**/packages/create-Joker-extension/**/*',
   '**/node_modules/sharp/**/*',
   '**/node_modules/@img/**/*'
 ]) {
@@ -735,23 +735,23 @@ for (const pattern of [
   )
 }
 for (const path of [
-  'Rcode/dist/cli/extension-cli.js',
-  'Rcode/dist/extensions/host-runner.js',
-  'Rcode/node_modules/@Rcode/extension-api/dist/index.js',
-  'Rcode/node_modules/create-Rcode-extension/src/cli.mjs',
+  'Joker/dist/cli/extension-cli.js',
+  'Joker/dist/extensions/host-runner.js',
+  'Joker/node_modules/@joker-code/extension-api/dist/index.js',
+  'Joker/node_modules/create-Joker-extension/src/cli.mjs',
   'node_modules/better-sqlite3/package.json',
   'node_modules/bindings/package.json',
   'node_modules/file-uri-to-path/package.json',
-  'packages/extension-api/schema/Rcode-extension.schema.json',
+  'packages/extension-api/schema/Joker-extension.schema.json',
   'packages/extension-api/fixtures/api-major-negotiation.json',
   'packages/extension-api/fixtures/api-minor-negotiation.json',
-  'packages/create-Rcode-extension/src/cli.mjs',
-  'packages/create-Rcode-extension/templates/node/src/extension.ts',
-  'packages/create-Rcode-extension/templates/react/src/host/extension.ts',
-  'packages/create-Rcode-extension/templates/react/src/webview/main.tsx',
-  'packages/create-Rcode-extension/templates/webview/src/webview/main.ts'
+  'packages/create-Joker-extension/src/cli.mjs',
+  'packages/create-Joker-extension/templates/node/src/extension.ts',
+  'packages/create-Joker-extension/templates/react/src/host/extension.ts',
+  'packages/create-Joker-extension/templates/react/src/webview/main.tsx',
+  'packages/create-Joker-extension/templates/webview/src/webview/main.ts'
 ]) {
-  check(afterPack.RCODE_RUNTIME_REQUIRED_PATHS.includes(path), `afterPack does not assert Extension resource: ${path}`)
+  check(afterPack.JOKER_RUNTIME_REQUIRED_PATHS.includes(path), `afterPack does not assert Extension resource: ${path}`)
 }
 
 const viteConfig = await text('electron.vite.config.ts')
@@ -765,7 +765,7 @@ for (const entry of [
 const packagedExtensionSmoke = await text('scripts/smoke-packaged-extensions.cjs')
 for (const marker of [
   'resolvePackagedRuntimeExecutable',
-  'RCODE_PACKAGED_EXTENSION_SMOKE_REEXEC',
+  'JOKER_PACKAGED_EXTENSION_SMOKE_REEXEC',
   "ELECTRON_RUN_AS_NODE: '1'",
   'smokeAgentTool',
   'smokeHeadlessTool',
@@ -792,8 +792,8 @@ for (const marker of [
   'Target.attachToTarget',
   'Input.dispatchMouseEvent',
   'data-contribution-id',
-  "url.protocol === 'Rcode-extension:'",
-  'globalThis.RcodeExtension',
+  "url.protocol === 'Joker-extension:'",
+  'globalThis.JokerExtension',
   'Reflect.ownKeys',
   "request('ui.getTheme'",
   "'ui.setViewState'",
@@ -802,7 +802,7 @@ for (const marker of [
   'webviewConnectUrls',
   'Page.setBypassCSP',
   'networkCanary.requestCount()',
-  "'RcodeGui' in globalThis",
+  "'JokerGui' in globalThis",
   "'ipcRenderer' in globalThis",
   "'Buffer' in globalThis",
   'globalThis.require',
@@ -817,7 +817,7 @@ for (const marker of [
   'seedDesktopMediaPlaybackFixture',
   "'media.openViewResource'",
   "scheme: new URL(lease.url).protocol",
-  "result.mediaPlayback?.scheme !== 'Rcode-media:'",
+  "result.mediaPlayback?.scheme !== 'Joker-media:'",
   'result.mediaPlayback.currentTime < 0.4'
 ]) {
   check(packagedDesktopSmoke.includes(marker), `Packaged desktop Chromium smoke omits assertion: ${marker}`)
@@ -844,23 +844,23 @@ check(
   'Packaged Linux desktop smoke must not inject sandbox flags that hide launcher defects'
 )
 check(
-  packagedDesktopSmokeModule.CONTRIBUTION_ID === 'extension:Rcode-smoke.packaged/smoke',
+  packagedDesktopSmokeModule.CONTRIBUTION_ID === 'extension:Joker-smoke.packaged/smoke',
   'Packaged desktop Chromium smoke does not click the canonical smoke contribution'
 )
 if (typeof packagedDesktopSmokeModule.createDesktopLaunchPlan === 'function') {
   const desktopLaunch = packagedDesktopSmokeModule.createDesktopLaunchPlan({
-    executable: '/packaged/Rcode',
+    executable: '/packaged/Joker',
     applicationArguments: ['--remote-debugging-port=12345'],
     environment: { ELECTRON_RUN_AS_NODE: '1' },
     platform: 'darwin',
     hasDisplay: false
   })
   check(
-    desktopLaunch.command === '/packaged/Rcode' && desktopLaunch.env.ELECTRON_RUN_AS_NODE === undefined,
+    desktopLaunch.command === '/packaged/Joker' && desktopLaunch.env.ELECTRON_RUN_AS_NODE === undefined,
     'Packaged desktop Chromium smoke must launch normal Electron without ELECTRON_RUN_AS_NODE'
   )
   const linuxDesktopLaunch = packagedDesktopSmokeModule.createDesktopLaunchPlan({
-    executable: '/packaged/Rcode',
+    executable: '/packaged/Joker',
     applicationArguments: ['--remote-debugging-port=12345'],
     environment: {},
     platform: 'linux',
@@ -868,7 +868,7 @@ if (typeof packagedDesktopSmokeModule.createDesktopLaunchPlan === 'function') {
     xvfbExecutable: 'xvfb-run'
   })
   check(
-    linuxDesktopLaunch.command === 'xvfb-run' && linuxDesktopLaunch.args.includes('/packaged/Rcode'),
+    linuxDesktopLaunch.command === 'xvfb-run' && linuxDesktopLaunch.args.includes('/packaged/Joker'),
     'Packaged desktop Chromium smoke must support a Linux xvfb-run launch'
   )
 }
@@ -876,7 +876,7 @@ if (typeof packagedDesktopSmokeModule.createIsolatedEnvironment === 'function') 
   const isolatedDesktopEnvironment = packagedDesktopSmokeModule.createIsolatedEnvironment(
     {
       ELECTRON_RENDERER_URL: 'http://localhost:5173',
-      RCODE_RUNTIME_TOKEN: 'inherited',
+      JOKER_RUNTIME_TOKEN: 'inherited',
       DEEPSEEK_API_KEY: 'inherited'
     },
     {
@@ -888,7 +888,7 @@ if (typeof packagedDesktopSmokeModule.createIsolatedEnvironment === 'function') 
   )
   check(
     isolatedDesktopEnvironment.ELECTRON_RENDERER_URL === undefined &&
-      isolatedDesktopEnvironment.RCODE_RUNTIME_TOKEN === undefined &&
+      isolatedDesktopEnvironment.JOKER_RUNTIME_TOKEN === undefined &&
       isolatedDesktopEnvironment.DEEPSEEK_API_KEY === undefined,
     'Packaged desktop Chromium smoke must scrub inherited renderer and runtime/model overrides'
   )
@@ -933,7 +933,7 @@ for (const marker of [
   'exec "$real_executable" "$@"',
   'exec "$real_executable" ${LINUX_SANDBOX_LAUNCHER_FLAG} "$@"'
 ]) check(afterPackSource.includes(marker), `Linux product launcher omits release contract: ${marker}`)
-const approvedLinuxLauncher = afterPack._internals.linuxElectronLauncherContent('Rcode-gui')
+const approvedLinuxLauncher = afterPack._internals.linuxElectronLauncherContent('Joker-gui')
 check(
   approvedLinuxLauncher.includes('launcher_path=$PWD/$0') &&
     approvedLinuxLauncher.includes('pwd -P') &&
@@ -965,16 +965,16 @@ for (const marker of [
 ]) check(packagedAppImageSmoke.includes(marker), `AppImage extraction validation omits: ${marker}`)
 check(
   packagedAppImageSmokeModule.APPIMAGE_FILE_PATTERN?.test(
-    'Rcode-1.2.3-linux-x86_64.AppImage'
+    'Joker-1.2.3-linux-x86_64.AppImage'
   ) === true &&
     packagedAppImageSmokeModule.APPIMAGE_FILE_PATTERN?.test(
-      'Rcode-1.2.3-linux-arm64.AppImage'
+      'Joker-1.2.3-linux-arm64.AppImage'
     ) === false,
   'Final Linux AppImage smoke must select only the canonical x86_64 artifact'
 )
 if (typeof packagedAppImageSmokeModule.createAppImageSmokeInvocation === 'function') {
   const invocation = packagedAppImageSmokeModule.createAppImageSmokeInvocation({
-    appImage: '/release/Rcode-1.2.3-linux-x86_64.AppImage',
+    appImage: '/release/Joker-1.2.3-linux-x86_64.AppImage',
     resourcesDir: '/extract/squashfs-root/resources',
     desktopSmokePath: '/repo/scripts/smoke-packaged-extension-desktop.cjs',
     environment: { APPDIR: '/untrusted', APPIMAGE: '/untrusted', ELECTRON_RUN_AS_NODE: '1' }
@@ -986,7 +986,7 @@ if (typeof packagedAppImageSmokeModule.createAppImageSmokeInvocation === 'functi
       invocation.options.env.APPDIR === undefined &&
       invocation.options.env.APPIMAGE === undefined &&
       invocation.args.includes('--desktop-executable') &&
-      invocation.args.includes(resolve('/release/Rcode-1.2.3-linux-x86_64.AppImage')) &&
+      invocation.args.includes(resolve('/release/Joker-1.2.3-linux-x86_64.AppImage')) &&
       invocation.args.includes(resolve('/extract/squashfs-root/resources')) &&
       invocation.options.timeout === undefined &&
       invocation.options.killSignal === undefined &&
@@ -1012,38 +1012,38 @@ const appImageDesktopCommand = 'npm run smoke:packaged-extension-appimage'
 const nativeMediaSmokeCommand = 'npm run smoke:extension-native-media'
 const packagedVideoNativeCommand = 'npm run smoke:packaged-video-editor-native'
 const packagedVideoReleaseCommand =
-  'npm run smoke:packaged-video-editor-native -- --archive dist/Rcode-video-editor-0.4.4.Rcodex'
+  'npm run smoke:packaged-video-editor-native -- --archive dist/Joker-video-editor-0.4.4.Jokerx'
 const nativeEvidenceCommand = 'npm run evidence:extension-native'
 const nativeEvidenceVerifierCommand = 'npm run verify:extension-native-evidence'
-const videoEditorPackCommand = 'npm run pack:Rcode-video-editor'
-const videoEditorVerifyCommand = 'npm run verify:Rcode-video-editor-package'
+const videoEditorPackCommand = 'npm run pack:Joker-video-editor'
+const videoEditorVerifyCommand = 'npm run verify:Joker-video-editor-package'
 const verifyMacX64Command =
-  'npm run verify:packaged-macos-native -- --resources dist/mac-x64-verified/Rcode.app/Contents/Resources --arch x64'
+  'npm run verify:packaged-macos-native -- --resources dist/mac-x64-verified/Joker.app/Contents/Resources --arch x64'
 const smokeMacX64ExtensionsCommand =
-  'npm run smoke:packaged-extensions -- --resources dist/mac-x64-verified/Rcode.app/Contents/Resources'
+  'npm run smoke:packaged-extensions -- --resources dist/mac-x64-verified/Joker.app/Contents/Resources'
 const smokeMacX64DesktopCommand =
-  'npm run smoke:packaged-extension-desktop -- --resources dist/mac-x64-verified/Rcode.app/Contents/Resources'
+  'npm run smoke:packaged-extension-desktop -- --resources dist/mac-x64-verified/Joker.app/Contents/Resources'
 const smokePackagedOcrCommand = 'node scripts/smoke-packaged-ocr.cjs'
 const nativeEvidenceSource = await text('scripts/write-extension-native-evidence.mjs')
 const nativeEvidenceVerifierSource = await text('scripts/verify-extension-native-evidence.mjs')
 const manualReleaseVerifierSource = await text('scripts/verify-manual-extension-release.mjs')
 const nativeMediaSmokeSource = await text('scripts/run-extension-native-media-smoke.cjs')
 const packagedVideoNativeSource = await text('scripts/smoke-packaged-video-editor-native.cjs')
-const videoEditorPackSource = await text('scripts/pack-Rcode-video-editor.mjs')
+const videoEditorPackSource = await text('scripts/pack-Joker-video-editor.mjs')
 const bundledExtensionsPackSource = await text('scripts/pack-bundled-extensions.mjs')
 check(
   rootPackage.scripts?.['build:bundled-extensions'] ===
     'node ./scripts/pack-bundled-extensions.mjs --output ./resources/bundled-extensions' &&
     rootPackage.scripts?.build?.includes('npm run build:bundled-extensions') &&
     rootPackage.scripts?.dev?.includes('npm run build:bundled-extensions'),
-  'Rcode build and dev must generate the canonical default extension catalog before launch'
+  'Joker build and dev must generate the canonical default extension catalog before launch'
 )
 for (const marker of [
   'BUNDLED_EXTENSION_DEFINITIONS',
   'BUNDLED_EXTENSION_CATALOG_FILE',
-  'Rcode-examples.Rcode-video-editor',
-  'Rcode-examples.presentation-studio',
-  'Rcode-examples.social-media-sidebar',
+  'Joker-examples.Joker-video-editor',
+  'Joker-examples.presentation-studio',
+  'Joker-examples.social-media-sidebar',
   'bundledExtensionCatalog',
   'removeStaleBundledArchives'
 ]) {
@@ -1066,7 +1066,7 @@ check(
 check(
   rootPackage.scripts?.['smoke:packaged-video-editor-native'] ===
     'node ./scripts/smoke-packaged-video-editor-native.cjs',
-  'package.json must expose the packaged Rcode Video Editor native smoke'
+  'package.json must expose the packaged Joker Video Editor native smoke'
 )
 check(
   rootPackage.scripts?.['check:extension-release-gate']?.includes(
@@ -1099,7 +1099,7 @@ check(
   'Extension release gate must expose and test macOS native architecture verification'
 )
 for (const marker of [
-  "RCODE_RUN_MEDIA_SMOKE: '1'",
+  "JOKER_RUN_MEDIA_SMOKE: '1'",
   'resolveHostMediaExecutables',
   'extension-media-native-smoke.test.ts',
   'shell: false',
@@ -1108,7 +1108,7 @@ for (const marker of [
   check(nativeMediaSmokeSource.includes(marker), `Host-native media smoke omits fail-closed marker: ${marker}`)
 }
 for (const marker of [
-  'RCODE_PACKAGED_VIDEO_EDITOR_NATIVE_SMOKE_REEXEC',
+  'JOKER_PACKAGED_VIDEO_EDITOR_NATIVE_SMOKE_REEXEC',
   "ELECTRON_RUN_AS_NODE: '1'",
   'timeout: DEFAULT_SMOKE_TIMEOUT_MS',
   "'extension', 'validate'",
@@ -1181,14 +1181,14 @@ for (const marker of [
   )
 }
 check(
-  rootPackage.scripts?.['pack:Rcode-video-editor'] ===
-    'npm run build:Rcode && npm run build:bundled-extensions && node ./scripts/pack-Rcode-video-editor.mjs --require-bundled-identity' &&
-    rootPackage.scripts?.['verify:Rcode-video-editor-package'] ===
-    'npm run build:Rcode && npm run build:bundled-extensions && node ./scripts/pack-Rcode-video-editor.mjs --verify --require-bundled-identity' &&
+  rootPackage.scripts?.['pack:Joker-video-editor'] ===
+    'npm run build:Joker && npm run build:bundled-extensions && node ./scripts/pack-Joker-video-editor.mjs --require-bundled-identity' &&
+    rootPackage.scripts?.['verify:Joker-video-editor-package'] ===
+    'npm run build:Joker && npm run build:bundled-extensions && node ./scripts/pack-Joker-video-editor.mjs --verify --require-bundled-identity' &&
     rootPackage.scripts?.['check:extension-release-gate']?.includes(
-      './scripts/pack-Rcode-video-editor.test.mjs'
+      './scripts/pack-Joker-video-editor.test.mjs'
     ),
-  'package.json must expose and test deterministic Rcode Video Editor release packing'
+  'package.json must expose and test deterministic Joker Video Editor release packing'
 )
 for (const marker of [
   'GITHUB_SHA',
@@ -1197,8 +1197,8 @@ for (const marker of [
   'details.isSymbolicLink()',
   "flag: 'wx'",
   'mediaToolchain',
-  'RCODE_FFMPEG_PATH',
-  'RCODE_FFPROBE_PATH',
+  'JOKER_FFMPEG_PATH',
+  'JOKER_FFPROBE_PATH',
   'libx264',
   'drawtext',
   'platformLike',
@@ -1239,9 +1239,9 @@ for (const marker of [
   'mediaToolchain',
   'libx264',
   'drawtext',
-  'RCODE_NAMED_RELEASE_ASSET',
+  'JOKER_NAMED_RELEASE_ASSET',
   'ancillaryPattern',
-  'unexpected Rcode-named asset'
+  'unexpected Joker-named asset'
 ]) {
   check(
     nativeEvidenceVerifierSource.includes(marker),
@@ -1249,8 +1249,8 @@ for (const marker of [
   )
 }
 for (const marker of [
-  'first.Rcodex',
-  'second.Rcodex',
+  'first.Jokerx',
+  'second.Jokerx',
   'assertDeterministicArchives',
   "'extension'",
   "'validate'",
@@ -1260,7 +1260,7 @@ for (const marker of [
 ]) {
   check(videoEditorPackSource.includes(marker), `Video editor release pack omits marker: ${marker}`)
 }
-for (const command of ['npm run check:extensions', 'npm run test', 'npm --prefix Rcode run test', 'npm run dist:linux']) {
+for (const command of ['npm run check:extensions', 'npm run test', 'npm --prefix Joker run test', 'npm run dist:linux']) {
   check(prWorkflow.includes(command), `PR checks omit release prerequisite: ${command}`)
 }
 const releaseWorkflow = await text('.github/workflows/release.yml')
@@ -1295,7 +1295,7 @@ for (const [label, source] of [
   check(
     (source.match(/npm run smoke:extension-native-media/g) ?? []).length >= 3 &&
       (source.match(/npm run smoke:packaged-video-editor-native/g) ?? []).length >= 3 &&
-      (source.match(/RCODE_RUN_MEDIA_SMOKE: '1'/g) ?? []).length >= 3,
+      (source.match(/JOKER_RUN_MEDIA_SMOKE: '1'/g) ?? []).length >= 3,
     `${label} workflow must fail closed on both native media smokes for macOS, Windows, and Linux`
   )
   check(
@@ -1304,8 +1304,8 @@ for (const [label, source] of [
   )
   check(
     source.includes(videoEditorPackCommand) &&
-      source.includes('dist/Rcode-video-editor-*.Rcodex'),
-    `${label} workflow must build and upload the deterministic Rcode Video Editor .Rcodex`
+      source.includes('dist/Joker-video-editor-*.Jokerx'),
+    `${label} workflow must build and upload the deterministic Joker Video Editor .Jokerx`
   )
 }
 check(
@@ -1330,7 +1330,7 @@ check(
   'Release and PR jobs must record commit-bound native evidence on macOS, Windows, and Linux'
 )
 check(
-  (releaseWorkflow.match(/RCODE_EVIDENCE_COMMIT: \$\{\{ github\.event\.pull_request\.merge_commit_sha \}\}/g) ?? [])
+  (releaseWorkflow.match(/JOKER_EVIDENCE_COMMIT: \$\{\{ github\.event\.pull_request\.merge_commit_sha \}\}/g) ?? [])
     .length === 3,
   'Closed-PR release evidence must bind all platforms to the explicitly checked-out merge commit'
 )
@@ -1345,11 +1345,11 @@ requireBoundedJobTimeout(releaseMacJob, 'build-macos', 90)
 requireOrderedCommands(releaseMacJob, 'build-macos', [
   'npm run check:extension-release-gate',
   'npm run dist:mac:signed',
-  'npm run verify:packaged-macos-native -- --resources dist/mac/Rcode.app/Contents/Resources --arch x64',
-  'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Rcode.app/Contents/Resources --arch arm64',
+  'npm run verify:packaged-macos-native -- --resources dist/mac/Joker.app/Contents/Resources --arch x64',
+  'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Joker.app/Contents/Resources --arch arm64',
   smokePackagedOcrCommand,
-  'npm run smoke:packaged-extensions -- --resources dist/mac/Rcode.app/Contents/Resources',
-  'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Rcode.app/Contents/Resources',
+  'npm run smoke:packaged-extensions -- --resources dist/mac/Joker.app/Contents/Resources',
+  'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Joker.app/Contents/Resources',
   nativeMediaSmokeCommand,
   packagedVideoNativeCommand,
   'npm run smoke:packaged-extension-desktop',
@@ -1424,7 +1424,7 @@ requireNamedStepsInOrder(releasePublishJob, 'release publish', [
   'Download release artifacts',
   'Ensure release tag',
   'Verify three-platform native evidence bundle',
-  'Verify downloadable Rcode Video Editor extension package',
+  'Verify downloadable Joker Video Editor extension package',
   'Upload GitHub Release assets'
 ])
 requireStepRunMarkers(
@@ -1436,12 +1436,12 @@ requireStepRunMarkers(
 requireStepRunMarkers(
   releasePublishJob,
   'release publish',
-  'Verify downloadable Rcode Video Editor extension package',
+  'Verify downloadable Joker Video Editor extension package',
   [videoEditorVerifyCommand, '--input release-artifacts']
 )
 requireStepRunMarkers(releasePublishJob, 'release publish', 'Upload GitHub Release assets', [
   'extension-native-evidence-*.json',
-  'Rcode-video-editor-*.Rcodex',
+  'Joker-video-editor-*.Jokerx',
   'gh release upload'
 ])
 
@@ -1453,11 +1453,11 @@ requireBoundedJobTimeout(dailyMacJob, 'daily build-macos', 90)
 requireOrderedCommands(dailyMacJob, 'daily build-macos', [
   'npm run check:extension-release-gate',
   'npm run dist:mac',
-  'npm run verify:packaged-macos-native -- --resources dist/mac/Rcode.app/Contents/Resources --arch x64',
-  'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Rcode.app/Contents/Resources --arch arm64',
+  'npm run verify:packaged-macos-native -- --resources dist/mac/Joker.app/Contents/Resources --arch x64',
+  'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Joker.app/Contents/Resources --arch arm64',
   smokePackagedOcrCommand,
-  'npm run smoke:packaged-extensions -- --resources dist/mac/Rcode.app/Contents/Resources',
-  'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Rcode.app/Contents/Resources',
+  'npm run smoke:packaged-extensions -- --resources dist/mac/Joker.app/Contents/Resources',
+  'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Joker.app/Contents/Resources',
   nativeMediaSmokeCommand,
   packagedVideoNativeCommand,
   'npm run smoke:packaged-extension-desktop',
@@ -1537,14 +1537,14 @@ check(
 check(
   (dailyWorkflow.match(/npm run smoke:extension-native-media/g) ?? []).length >= 3 &&
     (dailyWorkflow.match(/npm run smoke:packaged-video-editor-native/g) ?? []).length >= 3 &&
-    (dailyWorkflow.match(/RCODE_RUN_MEDIA_SMOKE: '1'/g) ?? []).length >= 3 &&
+    (dailyWorkflow.match(/JOKER_RUN_MEDIA_SMOKE: '1'/g) ?? []).length >= 3 &&
     (dailyWorkflow.match(/Install host-native FFmpeg/g) ?? []).length >= 2,
   'Daily workflow must provision FFmpeg and fail closed on both native media smokes on every host'
 )
 check(
   dailyWorkflow.includes(videoEditorPackCommand) &&
-    dailyWorkflow.includes('dist/Rcode-video-editor-*.Rcodex'),
-  'Daily workflow must build and upload the deterministic Rcode Video Editor .Rcodex'
+    dailyWorkflow.includes('dist/Joker-video-editor-*.Jokerx'),
+  'Daily workflow must build and upload the deterministic Joker Video Editor .Jokerx'
 )
 check(
   !dailyWorkflow.includes('--no-sandbox'),
@@ -1555,7 +1555,7 @@ requireNamedStepsInOrder(dailyPublishJob, 'daily publish', [
   'Download daily dev artifacts',
   'Ensure prerelease tag',
   'Verify three-platform native evidence bundle',
-  'Verify downloadable Rcode Video Editor extension package',
+  'Verify downloadable Joker Video Editor extension package',
   'Upload GitHub prerelease assets'
 ])
 requireStepRunMarkers(
@@ -1567,12 +1567,12 @@ requireStepRunMarkers(
 requireStepRunMarkers(
   dailyPublishJob,
   'daily publish',
-  'Verify downloadable Rcode Video Editor extension package',
+  'Verify downloadable Joker Video Editor extension package',
   [videoEditorVerifyCommand, '--input release-artifacts']
 )
 requireStepRunMarkers(dailyPublishJob, 'daily publish', 'Upload GitHub prerelease assets', [
   'extension-native-evidence-*.json',
-  'Rcode-video-editor-*.Rcodex',
+  'Joker-video-editor-*.Jokerx',
   'gh release upload'
 ])
 
@@ -1581,7 +1581,7 @@ requireOrderedSourceMarkers(releaseMacScript, 'scripts/release-mac.sh execution 
   '-- --clean-only',
   'npm run check:extension-release-gate || die "Extension public release gate failed"',
   '\nbuild_macos\n',
-  'npm run pack:Rcode-video-editor || die "Rcode Video Editor extension package failed"',
+  'npm run pack:Joker-video-editor || die "Joker Video Editor extension package failed"',
   '\nsmoke_macos_extensions\n',
   '\nrelease_write_meta_file\n',
   'gh release create "${TAG_NAME}"',
@@ -1598,9 +1598,9 @@ requireOrderedSourceMarkers(releaseMacScript, 'scripts/release-mac.sh packaged s
   'npm run verify:packaged-macos-native -- --resources "${arm64_resources}" --arch arm64',
   'npm run smoke:packaged-extensions -- --resources "${x64_resources}"',
   'npm run smoke:packaged-extensions -- --resources "${arm64_resources}"',
-  'RCODE_PACKAGED_RESOURCES_DIR="${host_resources}" node scripts/smoke-packaged-ocr.cjs',
+  'JOKER_PACKAGED_RESOURCES_DIR="${host_resources}" node scripts/smoke-packaged-ocr.cjs',
   'npm run smoke:packaged-extension-desktop -- --resources "${host_resources}"',
-  '--archive "${ROOT}/dist/Rcode-video-editor-0.4.4.Rcodex"'
+  '--archive "${ROOT}/dist/Joker-video-editor-0.4.4.Jokerx"'
 ])
 for (const marker of [
   '|| die "macOS x64 packaged Extension Node runtime smoke failed"',
@@ -1609,9 +1609,9 @@ for (const marker of [
   '|| die "macOS arm64 packaged native architecture verification failed"',
   '|| die "macOS packaged OCR dependency smoke failed"',
   '|| die "macOS packaged Extension desktop Chromium smoke failed"',
-  '--archive "${ROOT}/dist/Rcode-video-editor-0.4.4.Rcodex"',
+  '--archive "${ROOT}/dist/Joker-video-editor-0.4.4.Jokerx"',
   'verify:manual-extension-release',
-  'collect "Rcode Video Editor extension" "dist/Rcode-video-editor-*.Rcodex"',
+  'collect "Joker Video Editor extension" "dist/Joker-video-editor-*.Jokerx"',
   '--r2) R2_UPLOAD=true; R2_PROMOTE=false',
   'macOS release only uploads single-platform R2 metadata'
 ]) {
@@ -1709,7 +1709,7 @@ for (const marker of [
 const releaseCommonSource = await text('scripts/lib/release-common.sh')
 for (const marker of [
   'dist/extension-native-evidence-*.json',
-  'dist/Rcode-video-editor-*.Rcodex'
+  'dist/Joker-video-editor-*.Jokerx'
 ]) {
   check(releaseCommonSource.includes(marker), `Manual release cleanup omits stale generated asset: ${marker}`)
   check(releaseWinPowerShell.includes(marker.replaceAll('/', '\\')), `PowerShell cleanup omits stale generated asset: ${marker}`)
@@ -1727,7 +1727,7 @@ for (const wrapper of ['scripts/release.sh', 'scripts/release-all-mac.sh']) {
   )
 }
 const prTestJob = workflowJob(prWorkflowDocument, 'test', 'ubuntu-latest')
-requireOrderedCommands(prTestJob, 'test', ['npm run check:extensions', 'npm run test', 'npm --prefix Rcode run test'])
+requireOrderedCommands(prTestJob, 'test', ['npm run check:extensions', 'npm run test', 'npm --prefix Joker run test'])
 const prPackageJob = workflowJob(prWorkflowDocument, 'package', 'ubuntu-latest')
 requireBoundedJobTimeout(prPackageJob, 'package', 60)
 requireJobDependencies(prPackageJob, 'package', ['test'])
@@ -1761,11 +1761,11 @@ requireBoundedJobTimeout(prMacJob, 'package-macos', 90)
 requireJobDependencies(prMacJob, 'package-macos', ['test'])
 requireOrderedCommands(prMacJob, 'package-macos', [
   'npm run dist:mac',
-  'npm run verify:packaged-macos-native -- --resources dist/mac/Rcode.app/Contents/Resources --arch x64',
-  'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Rcode.app/Contents/Resources --arch arm64',
+  'npm run verify:packaged-macos-native -- --resources dist/mac/Joker.app/Contents/Resources --arch x64',
+  'npm run verify:packaged-macos-native -- --resources dist/mac-arm64/Joker.app/Contents/Resources --arch arm64',
   smokePackagedOcrCommand,
-  'npm run smoke:packaged-extensions -- --resources dist/mac/Rcode.app/Contents/Resources',
-  'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Rcode.app/Contents/Resources',
+  'npm run smoke:packaged-extensions -- --resources dist/mac/Joker.app/Contents/Resources',
+  'npm run smoke:packaged-extensions -- --resources dist/mac-arm64/Joker.app/Contents/Resources',
   nativeMediaSmokeCommand,
   packagedVideoNativeCommand,
   'npm run smoke:packaged-extension-desktop',
@@ -1820,7 +1820,7 @@ const checklistPairs = [
   [
     'docs/extensions/release-troubleshooting-changelog.md',
     [
-      '### 0. Rcode 平台公开发布门禁',
+      '### 0. Joker 平台公开发布门禁',
       '内部平台 gate',
       'UI 外观包、MCP、Skill',
       'macOS、Windows、Linux',
@@ -1835,7 +1835,7 @@ const checklistPairs = [
   [
     'docs/extensions/release-troubleshooting-changelog.en.md',
     [
-      '### 0. Rcode public platform release gate',
+      '### 0. Joker public platform release gate',
       'internal platform gate',
       'UI appearance packs, MCP, and Skills',
       'macOS, Windows, and Linux',
@@ -1930,7 +1930,7 @@ runRequiredCommand({
     'src/services/extension-media-job-service.test.ts',
     'src/services/extension-media-native-smoke.test.ts'
   ],
-  cwd: join(root, 'Rcode')
+  cwd: join(root, 'Joker')
 })
 runRequiredCommand({
   label: 'legacy desktop Plugin, Skill, and provider behavior regression suite',
@@ -1960,7 +1960,7 @@ runRequiredCommand({
     'src/adapters/model/multi-provider-model-client.test.ts',
     'src/services/legacy-provider-credential-migration.test.ts'
   ],
-  cwd: join(root, 'Rcode')
+  cwd: join(root, 'Joker')
 })
 
 process.stdout.write(

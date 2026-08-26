@@ -107,7 +107,7 @@ type ActivityState = {
 
 type WebSearchSettingsCtx = {
   t: (key: string) => string
-  Rcode: {
+  Joker: {
     webSearchEnabled: boolean
     openWebSearchEnabled?: boolean
     openWebSearchEngine?: string
@@ -116,7 +116,7 @@ type WebSearchSettingsCtx = {
     tavilySearchApiKey?: string
     baiduSearchApiKey?: string
   }
-  updateRcode: (patch: Record<string, unknown>) => void
+  updateJoker: (patch: Record<string, unknown>) => void
   mcpConfigText: string
   setMcpConfigText: (text: string) => void
   showApiKey: boolean
@@ -176,7 +176,7 @@ function formatTime(iso: string | undefined): string {
 
 export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }): ReactElement {
   const {
-    t, Rcode, updateRcode, mcpConfigText, setMcpConfigText
+    t, Joker, updateJoker, mcpConfigText, setMcpConfigText
   } = ctx as WebSearchSettingsCtx
   const [tavilyVisible, setTavilyVisible] = useState(false)
   const [baiduVisible, setBaiduVisible] = useState(false)
@@ -184,19 +184,19 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
   const [notice, setNotice] = useState<LocalNotice>(null)
   const [activity, setActivity] = useState<ActivityState>({ loading: false, servers: [], calls: [] })
 
-  const openWebSearchEnabled = Rcode.openWebSearchEnabled !== false
-  const openWebSearchEngine = Rcode.openWebSearchEngine || 'duckduckgo'
-  const openWebSearchProxyEnabled = Rcode.openWebSearchProxyEnabled === true
-  const openWebSearchProxyUrl = Rcode.openWebSearchProxyUrl ?? ''
+  const openWebSearchEnabled = Joker.openWebSearchEnabled !== false
+  const openWebSearchEngine = Joker.openWebSearchEngine || 'duckduckgo'
+  const openWebSearchProxyEnabled = Joker.openWebSearchProxyEnabled === true
+  const openWebSearchProxyUrl = Joker.openWebSearchProxyUrl ?? ''
 
-  const tavilyKey = Rcode.tavilySearchApiKey ?? ''
-  const baiduKey = Rcode.baiduSearchApiKey ?? ''
+  const tavilyKey = Joker.tavilySearchApiKey ?? ''
+  const baiduKey = Joker.baiduSearchApiKey ?? ''
 
   // Load MCP config when entering this tab
   useEffect(() => {
     if (mcpConfigText) return
-    if (typeof window.RcodeGui?.getRcodeConfigFile !== 'function') return
-    void window.RcodeGui.getRcodeConfigFile().then((config) => {
+    if (typeof window.JokerGui?.getJokerConfigFile !== 'function') return
+    void window.JokerGui.getJokerConfigFile().then((config) => {
       setMcpConfigText(config.content)
     }).catch(() => undefined)
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
@@ -331,8 +331,8 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
       // Load current config if not already loaded
       let current: Record<string, unknown> = {}
       try { current = JSON.parse(mcpConfigText || '{}') } catch { /* use empty */ }
-      if (Object.keys(current).length === 0 && typeof window.RcodeGui?.getRcodeConfigFile === 'function') {
-        const config = await window.RcodeGui.getRcodeConfigFile()
+      if (Object.keys(current).length === 0 && typeof window.JokerGui?.getJokerConfigFile === 'function') {
+        const config = await window.JokerGui.getJokerConfigFile()
         try { current = JSON.parse(config.content || '{}') } catch { /* use empty */ }
       }
       const existingServers = (current.servers || {}) as Record<string, unknown>
@@ -347,8 +347,8 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
       setMcpConfigText(nextText)
 
       // Save to disk
-      if (typeof window.RcodeGui?.setRcodeConfigFile === 'function') {
-        await window.RcodeGui.setRcodeConfigFile(nextText)
+      if (typeof window.JokerGui?.setJokerConfigFile === 'function') {
+        await window.JokerGui.setJokerConfigFile(nextText)
       }
       setNotice({ tone: 'success', message: t('webSearchMcpGenerated') })
     } catch (e) {
@@ -556,8 +556,8 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
           description={t('webSearchEnableDesc')}
           control={
             <Toggle
-              checked={Rcode.webSearchEnabled}
-              onChange={(v) => updateRcode({ webSearchEnabled: v })}
+              checked={Joker.webSearchEnabled}
+              onChange={(v) => updateJoker({ webSearchEnabled: v })}
             />
           }
         />
@@ -570,8 +570,8 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
           <button
             type="button"
             onClick={() => {
-              if (typeof window.RcodeGui?.openExternal === 'function') {
-                void window.RcodeGui.openExternal(OPEN_WEB_SEARCH_REPO_URL).catch(() => undefined)
+              if (typeof window.JokerGui?.openExternal === 'function') {
+                void window.JokerGui.openExternal(OPEN_WEB_SEARCH_REPO_URL).catch(() => undefined)
               } else {
                 window.open(OPEN_WEB_SEARCH_REPO_URL, '_blank', 'noopener,noreferrer')
               }
@@ -597,7 +597,7 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
           control={
             <Toggle
               checked={openWebSearchEnabled}
-              onChange={(v) => updateRcode({ openWebSearchEnabled: v })}
+              onChange={(v) => updateJoker({ openWebSearchEnabled: v })}
             />
           }
         />
@@ -612,7 +612,7 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
               control={
                 <select
                   value={openWebSearchEngine}
-                  onChange={(e) => updateRcode({ openWebSearchEngine: e.target.value })}
+                  onChange={(e) => updateJoker({ openWebSearchEngine: e.target.value })}
                   className="rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13.5px] font-medium text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
                 >
                   {OPEN_WEB_SEARCH_ENGINES.map((engine) => (
@@ -632,7 +632,7 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
               control={
                 <Toggle
                   checked={openWebSearchProxyEnabled}
-                  onChange={(v) => updateRcode({ openWebSearchProxyEnabled: v })}
+                  onChange={(v) => updateJoker({ openWebSearchProxyEnabled: v })}
                 />
               }
             />
@@ -648,7 +648,7 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
                     <input
                       type="text"
                       value={openWebSearchProxyUrl}
-                      onChange={(e) => updateRcode({ openWebSearchProxyUrl: e.target.value })}
+                      onChange={(e) => updateJoker({ openWebSearchProxyUrl: e.target.value })}
                       placeholder={t('webSearchProxyUrlPlaceholder')}
                       className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[13.5px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
                     />
@@ -674,7 +674,7 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
             <div className="flex w-full flex-col gap-2">
               <SecretInput
                 value={tavilyKey}
-                onChange={(v) => updateRcode({ tavilySearchApiKey: v })}
+                onChange={(v) => updateJoker({ tavilySearchApiKey: v })}
                 visible={tavilyVisible}
                 onToggleVisibility={() => setTavilyVisible(!tavilyVisible)}
                 placeholder={t('webSearchTavilyKeyPlaceholder')}
@@ -684,8 +684,8 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
               <button
                 type="button"
                 onClick={() => {
-                  if (typeof window.RcodeGui?.openExternal === 'function') {
-                    void window.RcodeGui.openExternal(TAVILY_KEY_URL).catch(() => undefined)
+                  if (typeof window.JokerGui?.openExternal === 'function') {
+                    void window.JokerGui.openExternal(TAVILY_KEY_URL).catch(() => undefined)
                   } else {
                     window.open(TAVILY_KEY_URL, '_blank', 'noopener,noreferrer')
                   }
@@ -709,7 +709,7 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
             <div className="flex w-full flex-col gap-2">
               <SecretInput
                 value={baiduKey}
-                onChange={(v) => updateRcode({ baiduSearchApiKey: v })}
+                onChange={(v) => updateJoker({ baiduSearchApiKey: v })}
                 visible={baiduVisible}
                 onToggleVisibility={() => setBaiduVisible(!baiduVisible)}
                 placeholder={t('webSearchBaiduKeyPlaceholder')}
@@ -719,8 +719,8 @@ export function WebSearchSettingsSection({ ctx }: { ctx: Record<string, any> }):
               <button
                 type="button"
                 onClick={() => {
-                  if (typeof window.RcodeGui?.openExternal === 'function') {
-                    void window.RcodeGui.openExternal(BAIDU_KEY_URL).catch(() => undefined)
+                  if (typeof window.JokerGui?.openExternal === 'function') {
+                    void window.JokerGui.openExternal(BAIDU_KEY_URL).catch(() => undefined)
                   } else {
                     window.open(BAIDU_KEY_URL, '_blank', 'noopener,noreferrer')
                   }

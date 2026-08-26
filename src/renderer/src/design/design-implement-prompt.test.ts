@@ -4,7 +4,7 @@ import { buildImplementDesignPrompt } from './design-implement-prompt'
 describe('buildImplementDesignPrompt', () => {
   const base = {
     artifactTitle: 'Landing page',
-    artifactRelativePath: '.Rcode-design/doc/abc/v1.html',
+    artifactRelativePath: '.Joker-design/doc/abc/v1.html',
     workspaceRoot: '/ws'
   }
 
@@ -17,9 +17,9 @@ describe('buildImplementDesignPrompt', () => {
   it('references the design notes path only when provided', () => {
     const withNotes = buildImplementDesignPrompt({
       ...base,
-      designNotesRelativePath: '.Rcode-design/doc/abc/DESIGN.md'
+      designNotesRelativePath: '.Joker-design/doc/abc/DESIGN.md'
     })
-    expect(withNotes).toContain('.Rcode-design/doc/abc/DESIGN.md')
+    expect(withNotes).toContain('.Joker-design/doc/abc/DESIGN.md')
     expect(withNotes).toContain('design notes')
 
     const without = buildImplementDesignPrompt(base)

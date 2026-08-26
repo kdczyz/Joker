@@ -132,8 +132,8 @@ test('standalone projection safely escapes text and round-trips the embedded mod
   const repeated = serializePresentationHtml(project)
   assert.equal(html, repeated)
   assert.match(html, /script-src 'none'/)
-  assert.match(html, /data-Rcode-slide-id="slide-cover"/)
-  assert.match(html, /data-Rcode-element-id="element-title"/)
+  assert.match(html, /data-Joker-slide-id="slide-cover"/)
+  assert.match(html, /data-Joker-element-id="element-title"/)
   assert.ok(!html.includes('</script><img src=x'))
   assert.ok(html.includes('&lt;/script&gt;&lt;img src=x onerror=alert(1)&gt;'))
   assert.equal(stableStringify(parsePresentationHtml(html)), stableStringify(normalizePresentationProject(project)))
@@ -242,10 +242,10 @@ test('safe CSS editor rejects selectors, injection syntax, unknown properties, a
 test('HTML extraction rejects missing, duplicate, and malformed model markers', () => {
   assert.throws(() => parsePresentationHtml('<!doctype html><title>Not a deck</title>'), PresentationParseError)
   const html = serializePresentationHtml(sampleProject())
-  const marker = '<script id="Rcode-presentation-model" type="application/json">{}</script>'
+  const marker = '<script id="Joker-presentation-model" type="application/json">{}</script>'
   assert.throws(() => parsePresentationHtml(`${html}${marker}`), PresentationParseError)
   assert.throws(
-    () => parsePresentationHtml('<script id="Rcode-presentation-model" type="application/json">{bad}</script>'),
+    () => parsePresentationHtml('<script id="Joker-presentation-model" type="application/json">{bad}</script>'),
     PresentationParseError
   )
 })

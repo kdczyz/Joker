@@ -24,7 +24,7 @@ describe('AppErrorBoundary', () => {
 
   it('writes render errors to the app log API when available', () => {
     const logError = vi.fn().mockResolvedValue(undefined)
-    vi.stubGlobal('window', { RcodeGui: { logError } })
+    vi.stubGlobal('window', { JokerGui: { logError } })
     const boundary = new AppErrorBoundary({ children: null })
     const error = new Error('boom')
 
@@ -43,7 +43,7 @@ describe('AppErrorBoundary', () => {
     const fallbackReload = vi.fn()
 
     requestApplicationReload({
-      RcodeGui: { runDesktopCommand },
+      JokerGui: { runDesktopCommand },
       location: { reload: fallbackReload }
     })
 

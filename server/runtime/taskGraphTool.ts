@@ -3,7 +3,7 @@
  *
  * Per-thread in-memory graphs so a multi-step plan persists across turns
  * within the conversation, with optional JSON persistence under
- * <workspace>/.rcode/tasks/<threadId>.json (atomic rename writes).
+ * <workspace>/.joker/tasks/<threadId>.json (atomic rename writes).
  */
 
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
@@ -14,7 +14,7 @@ import { TaskGraph, type TaskNode } from "../tasks/task-graph.js";
 const graphs = new Map<string, TaskGraph>();
 
 function tasksDir(workspaceRoot?: string): string | undefined {
-  return workspaceRoot ? join(workspaceRoot, ".rcode", "tasks") : undefined;
+  return workspaceRoot ? join(workspaceRoot, ".joker", "tasks") : undefined;
 }
 
 async function loadGraph(dir: string, threadId: string): Promise<TaskGraph | null> {

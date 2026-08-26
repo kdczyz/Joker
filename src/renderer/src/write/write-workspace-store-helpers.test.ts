@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest'
-import { DEFAULT_RCODE_MODEL } from '@shared/app-settings'
+import { DEFAULT_JOKER_MODEL } from '@shared/app-settings'
 import {
   WRITE_ASSISTANT_MODEL_KEY,
   normalizeWriteAssistantModel,
@@ -42,10 +42,10 @@ afterEach(() => {
 })
 
 describe('write workspace assistant model helpers', () => {
-  it('normalizes empty and legacy auto assistant models to the default Rcode model', () => {
-    expect(normalizeWriteAssistantModel('')).toBe(DEFAULT_RCODE_MODEL)
-    expect(normalizeWriteAssistantModel('auto')).toBe(DEFAULT_RCODE_MODEL)
-    expect(normalizeWriteAssistantModel(' AUTO ')).toBe(DEFAULT_RCODE_MODEL)
+  it('normalizes empty and legacy auto assistant models to the default Joker model', () => {
+    expect(normalizeWriteAssistantModel('')).toBe(DEFAULT_JOKER_MODEL)
+    expect(normalizeWriteAssistantModel('auto')).toBe(DEFAULT_JOKER_MODEL)
+    expect(normalizeWriteAssistantModel(' AUTO ')).toBe(DEFAULT_JOKER_MODEL)
     expect(normalizeWriteAssistantModel('custom-model')).toBe('custom-model')
   })
 
@@ -53,7 +53,7 @@ describe('write workspace assistant model helpers', () => {
     const storage = installStorage()
     storage.setItem(WRITE_ASSISTANT_MODEL_KEY, 'auto')
 
-    expect(readStoredAssistantModel()).toBe(DEFAULT_RCODE_MODEL)
-    expect(storage.getItem(WRITE_ASSISTANT_MODEL_KEY)).toBe(DEFAULT_RCODE_MODEL)
+    expect(readStoredAssistantModel()).toBe(DEFAULT_JOKER_MODEL)
+    expect(storage.getItem(WRITE_ASSISTANT_MODEL_KEY)).toBe(DEFAULT_JOKER_MODEL)
   })
 })

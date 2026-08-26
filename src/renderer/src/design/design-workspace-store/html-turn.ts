@@ -172,7 +172,7 @@ export async function duplicateHtmlArtifact(
     source.kind !== 'html' ||
     !workspaceRoot ||
     !documentId ||
-    typeof window.RcodeGui?.readWorkspaceFile !== 'function'
+    typeof window.JokerGui?.readWorkspaceFile !== 'function'
   ) {
     return
   }
@@ -181,7 +181,7 @@ export async function duplicateHtmlArtifact(
     return current.workspaceRoot === workspaceRoot && current.activeDocumentId === documentId
   }
 
-  const read = await window.RcodeGui
+  const read = await window.JokerGui
     .readWorkspaceFile({ path: source.relativePath, workspaceRoot })
     .catch(() => null)
   if (!read || !read.ok || !contextMatches()) return
@@ -204,7 +204,7 @@ export async function duplicateHtmlArtifact(
   }
 
   const sourceDesignMdPath = source.designMdPath ?? artifactDesignMdPathOf(source.relativePath)
-  const designNotes = await window.RcodeGui
+  const designNotes = await window.JokerGui
     .readWorkspaceFile({ path: sourceDesignMdPath, workspaceRoot })
     .catch(() => null)
   if (designNotes?.ok) {

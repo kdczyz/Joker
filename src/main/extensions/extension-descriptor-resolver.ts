@@ -1,4 +1,4 @@
-import { ExtensionManifestSchema, type ExtensionManifest } from '@Rcode/extension-api'
+import { ExtensionManifestSchema, type ExtensionManifest } from '@joker-code/extension-api'
 import { createHash } from 'node:crypto'
 import { readFile } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
@@ -67,7 +67,7 @@ export class ExtensionDescriptorResolver {
       ? extension.development
       : extension.versions.find((version) => version.version === extension.selectedVersion)
     if (!active) throw new Error('Extension has no selected package.')
-    const manifestValue = JSON.parse(await readFile(join(active.path, 'Rcode-extension.json'), 'utf8')) as unknown
+    const manifestValue = JSON.parse(await readFile(join(active.path, 'Joker-extension.json'), 'utf8')) as unknown
     const manifest = ExtensionManifestSchema.parse(manifestValue)
     if (`${manifest.publisher}.${manifest.name}` !== extensionId || manifest.version !== active.version) {
       throw new Error('Selected extension manifest does not match the registry.')

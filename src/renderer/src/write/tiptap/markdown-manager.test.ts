@@ -62,7 +62,7 @@ describe('write markdown round-trip', () => {
   })
 
   it('keeps pending infographic tokens intact across the round trip', () => {
-    const token = '![信息图](Rcode-pending-infographic://0a1b2c3d-e4f5-6789-abcd-ef0123456789)'
+    const token = '![信息图](Joker-pending-infographic://0a1b2c3d-e4f5-6789-abcd-ef0123456789)'
     const doc = `第一段。\n\n${token}\n\n第二段。\n`
     const firstPass = serializeWriteMarkdown(parseWriteMarkdown(doc))
     expect(firstPass).toContain(token)
@@ -124,9 +124,9 @@ describe('auditWriteMarkdownFidelity', () => {
 
   it('rejects ordered-list hard-wrapped continuations that lose characters', () => {
     const doc = [
-      '1. Add protocol fields in `Rcode/src/contracts/`.',
-      '2. Add agent behavior in `Rcode/src/loop/`, or a',
-      '   new port/adapter under `Rcode/src/ports/`.',
+      '1. Add protocol fields in `Joker/src/contracts/`.',
+      '2. Add agent behavior in `Joker/src/loop/`, or a',
+      '   new port/adapter under `Joker/src/ports/`.',
       ''
     ].join('\n')
     const fidelity = auditWriteMarkdownFidelity(doc)

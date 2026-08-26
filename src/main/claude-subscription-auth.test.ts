@@ -79,13 +79,13 @@ describe('resolveBundledClaudeBinary', () => {
 
   test.runIf(arch && plat)('finds the per-platform bundled binary; undefined when absent', () => {
     const bin = plat === 'win32' ? 'claude.exe' : 'claude'
-    const root = join(tmpdir(), `Rcode-sub-bin-${process.pid}`)
+    const root = join(tmpdir(), `Joker-sub-bin-${process.pid}`)
     const dir = join(root, 'node_modules', `@anthropic-ai/claude-agent-sdk-${plat}-${arch}`)
     mkdirSync(dir, { recursive: true })
     writeFileSync(join(dir, bin), '')
     try {
       expect(resolveBundledClaudeBinary([root])).toBe(join(dir, bin))
-      expect(resolveBundledClaudeBinary([join(tmpdir(), 'Rcode-sub-none')])).toBeUndefined()
+      expect(resolveBundledClaudeBinary([join(tmpdir(), 'Joker-sub-none')])).toBeUndefined()
     } finally {
       rmSync(root, { recursive: true, force: true })
     }

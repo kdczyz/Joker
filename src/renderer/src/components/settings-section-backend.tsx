@@ -23,8 +23,8 @@ export function BackendSettingsSection() {
   // Resolve provider display name from settings
   useEffect(() => {
     if (!isGrok) return
-    window.RcodeGui.getSettings().then(settings => {
-      const pid = settings.agents?.Rcode?.providerId || settings.provider?.providers?.[0]?.id || ''
+    window.JokerGui.getSettings().then(settings => {
+      const pid = settings.agents?.Joker?.providerId || settings.provider?.providers?.[0]?.id || ''
       const provider = settings.provider?.providers?.find(p => p.id === pid)
       setProviderName(provider?.name ?? pid)
     }).catch(() => {})
@@ -33,7 +33,7 @@ export function BackendSettingsSection() {
   const handleToggle = () => {
     if (isGrok) {
       disconnectGrok()
-      setBackend('Rcode')
+      setBackend('Joker')
     } else {
       setBackend('grok-build')
     }

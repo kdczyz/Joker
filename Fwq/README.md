@@ -1,12 +1,12 @@
-# Rcode Remote Server
+# Joker Remote Server
 
-Rcode 安卓端与电脑 Agent 的 Cloudflare 服务端。HTTP API 运行在 Workers，账号、会话、设备和任务保存在 D1，每个账号由独立 Durable Object 协调实时 WebSocket 连接。
+Joker 安卓端与电脑 Agent 的 Cloudflare 服务端。HTTP API 运行在 Workers，账号、会话、设备和任务保存在 D1，每个账号由独立 Durable Object 协调实时 WebSocket 连接。
 
 ## 已部署环境
 
 - API：`https://lxqandlzy.me`
 - 健康检查：`GET /health`
-- D1：`rcode-remote-db`（APAC）
+- D1：`joker-remote-db`（APAC）
 - Durable Object：`RemoteRoom`
 
 安卓端使用：
@@ -57,14 +57,14 @@ openssl rand -base64 48 | npx wrangler secret put AI_CONFIG_SECRET
     "name": "MacBook Pro",
     "platform": "darwin",
     "appVersion": "1.0.0",
-    "projectName": "Rcode",
+    "projectName": "Joker",
     "workspace": {
       "activeProjectId": "project-id",
       "defaultModel": "gpt-5.6-codex",
       "models": ["gpt-5.6-codex"],
       "projects": [{
         "id": "project-id",
-        "name": "Rcode",
+        "name": "Joker",
         "sessions": [{ "id": "session-id", "title": "新会话", "updatedAt": "2026-07-18T00:00:00.000Z" }]
       }]
     },

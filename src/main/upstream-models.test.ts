@@ -7,7 +7,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultModelProviderProfile,
   defaultScheduleSettings,
@@ -16,7 +16,7 @@ import {
   defaultTerminalSettings,
   type AppSettingsV1
 } from '../shared/app-settings'
-import { fetchUpstreamModelIds, isOpenCodeZenFreeModelId, readConfiguredRcodeModelIds } from './upstream-models'
+import { fetchUpstreamModelIds, isOpenCodeZenFreeModelId, readConfiguredJokerModelIds } from './upstream-models'
 
 function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
   const provider = defaultModelProviderSettings()
@@ -49,15 +49,15 @@ function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
       ]
     },
     agents: {
-      Rcode: {
-        ...defaultRcodeRuntimeSettings(),
+      Joker: {
+        ...defaultJokerRuntimeSettings(),
         dataDir,
         model,
         providerId: 'custom-provider'
       }
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -76,7 +76,7 @@ function settings(dataDir: string, model = 'settings-model'): AppSettingsV1 {
 }
 
 describe('upstream model picker list', () => {
-  it('includes Rcode config model profiles, aliases, and the configured agent model', async () => {
+  it('includes Joker config model profiles, aliases, and the configured agent model', async () => {
     const dataDir = mkdtempSync(join(tmpdir(), 'deepseek-gui-models-'))
     await mkdir(dataDir, { recursive: true })
     await writeFile(
@@ -98,7 +98,7 @@ describe('upstream model picker list', () => {
       'utf8'
     )
 
-    const ids = await readConfiguredRcodeModelIds(settings(dataDir))
+    const ids = await readConfiguredJokerModelIds(settings(dataDir))
 
     expect(ids).toEqual(expect.arrayContaining([
       'deepseek-v4-pro',
@@ -268,5 +268,42 @@ describe('upstream model picker list', () => {
     expect(isOpenCodeZenFreeModelId('deepseek-v4-flash-free')).toBe(true)
     expect(isOpenCodeZenFreeModelId('deepseek-v4-pro')).toBe(false)
     expect(isOpenCodeZenFreeModelId('claude-sonnet-4-6')).toBe(false)
+  })
+
+  it('keeps built-in free models in the picker when no custom provider is configured', async () => {
+    // Regression: every free model id lives in DEFAULT_COMPOSER_MODEL_IDS, so
+    // `hasCustomModelId` alone rejected a pure-free-model setup and the picker
+    // lost the OpenCode Zen group entirely.
+    const dataDir = mkdtempSync(join(tmpdir(), 'deepseek-gui-models-'))
+    await mkdir(dataDir, { recursive: true })
+    const base = settings(dataDir, 'deepseek-v4-flash-free')
+    const freeOnlySettings: AppSettingsV1 = {
+      ...base,
+      provider: {
+        ...base.provider,
+        providers: []
+      }
+    }
+    const fetchMock = vi.fn()
+    vi.stubGlobal('fetch', fetchMock)
+
+    try {
+      const result = await fetchUpstreamModelIds(freeOnlySettings, '')
+
+      expect(result).toMatchObject({ ok: true })
+      if (result.ok) {
+        expect(result.defaultModelId).toBe('deepseek-v4-flash-free')
+        expect(result.modelIds).toContain('deepseek-v4-flash-free')
+        expect(result.modelIds).toContain('big-pickle')
+        const zenGroup = result.modelGroups?.find((group) => group.providerId === 'opencode-zen')
+        expect(zenGroup?.modelIds).toEqual(expect.arrayContaining([
+          'big-pickle',
+          'deepseek-v4-flash-free'
+        ]))
+      }
+      expect(fetchMock).not.toHaveBeenCalled()
+    } finally {
+      vi.unstubAllGlobals()
+    }
   })
 })

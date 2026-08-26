@@ -559,13 +559,13 @@ html[data-ui-plugin-presentation='on'] {
   /* Plugins can override only --ds-* tokens. These aliases deliberately use
    * host-owned color primitives so gradient-valued --ds-bg-main or
    * --ds-surface-elevated tokens never invalidate color-mix()/gradient stops. */
-  --Rcode-ui-plugin-host-bg-color: var(--bg-app, #f3f5fc);
-  --Rcode-ui-plugin-host-surface-color: var(--surface-2, #ffffff);
+  --Joker-ui-plugin-host-bg-color: var(--bg-app, #f3f5fc);
+  --Joker-ui-plugin-host-surface-color: var(--surface-2, #ffffff);
 }
 
 html[data-ui-plugin-presentation='on'] .ds-chat-stage {
   /* Keep host-drawn portraits and opaque frame ornaments out of the composer. */
-  --Rcode-ui-plugin-composer-safe-inset: 12rem;
+  --Joker-ui-plugin-composer-safe-inset: 12rem;
 }
 
 .ds-ui-plugin-decor-layer,
@@ -581,7 +581,7 @@ html[data-ui-plugin-presentation='on'] .ds-chat-stage {
 }
 
 html[data-ui-plugin-presentation='on'] .ds-ui-plugin-decor-layer {
-  /* Every plugin-owned visual stays below Rcode's z-3 content layer. */
+  /* Every plugin-owned visual stays below Joker's z-3 content layer. */
   z-index: 1;
   display: block;
 }
@@ -592,14 +592,14 @@ html[data-ui-plugin-presentation='on'] .ds-ui-plugin-character-layer {
   inset:
     4.75rem
     clamp(0.75rem, 3cqw, 3rem)
-    var(--Rcode-ui-plugin-composer-safe-inset, 12rem)
+    var(--Joker-ui-plugin-composer-safe-inset, 12rem)
     clamp(0.75rem, 3cqw, 3rem);
   align-items: center;
   justify-content: flex-end;
-  opacity: var(--Rcode-ui-plugin-character-opacity, 1);
+  opacity: var(--Joker-ui-plugin-character-opacity, 1);
   transform: translate(
-    var(--Rcode-ui-plugin-character-offset-x, 0%),
-    var(--Rcode-ui-plugin-character-offset-y, 0%)
+    var(--Joker-ui-plugin-character-offset-x, 0%),
+    var(--Joker-ui-plugin-character-offset-y, 0%)
   );
 }
 
@@ -647,7 +647,7 @@ html[data-ui-plugin-character-frame='soft-card'] .ds-ui-plugin-character {
   padding: 0.45rem;
   border: 1px solid color-mix(in srgb, var(--ds-accent) 30%, white 70%);
   border-radius: 2.4rem;
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 68%, transparent);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 68%, transparent);
   box-shadow:
     0 30px 80px color-mix(in srgb, var(--ds-accent) 18%, transparent),
     inset 0 1px 0 rgba(255, 255, 255, 0.72);
@@ -657,7 +657,7 @@ html[data-ui-plugin-character-frame='paper'] .ds-ui-plugin-character {
   padding: 0.72rem;
   border: 1px solid color-mix(in srgb, var(--ds-border-strong) 74%, #a57b45 26%);
   border-radius: 1.1rem 2rem 1.25rem 1.8rem;
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 82%, #f0d9a8 18%);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 82%, #f0d9a8 18%);
   box-shadow:
     10px 16px 0 color-mix(in srgb, var(--ds-accent) 8%, transparent),
     0 28px 55px rgba(44, 31, 21, 0.18);
@@ -681,7 +681,7 @@ html[data-ui-plugin-character-frame='hologram'] .ds-ui-plugin-character {
   padding: 0.38rem;
   border: 1px solid color-mix(in srgb, var(--ds-accent) 52%, #81f8ff 48%);
   border-radius: 1.5rem;
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 62%, transparent);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 62%, transparent);
   box-shadow:
     0 0 0 1px rgba(141, 247, 255, 0.4),
     0 0 34px color-mix(in srgb, var(--ds-accent) 32%, transparent),
@@ -692,7 +692,7 @@ html[data-ui-plugin-character-frame='backstage'] .ds-ui-plugin-character {
   padding: 0.62rem;
   border: 2px solid color-mix(in srgb, var(--ds-accent) 45%, #e7bd68 55%);
   border-radius: 0.65rem 2.4rem 0.65rem 2.4rem;
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 78%, #3d213a 22%);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 78%, #3d213a 22%);
   box-shadow:
     0 0 0 5px color-mix(in srgb, var(--ds-accent) 10%, transparent),
     -18px 24px 58px rgba(33, 16, 37, 0.3);
@@ -704,8 +704,8 @@ html[data-ui-plugin-character-frame='portal'] .ds-ui-plugin-character {
   border-radius: 46% 46% 42% 42% / 36% 36% 50% 50%;
   background: radial-gradient(
     ellipse at center,
-    color-mix(in srgb, var(--ds-accent) 7%, var(--Rcode-ui-plugin-host-surface-color)),
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 82%, transparent)
+    color-mix(in srgb, var(--ds-accent) 7%, var(--Joker-ui-plugin-host-surface-color)),
+    color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 82%, transparent)
   );
   box-shadow:
     0 0 0 8px color-mix(in srgb, var(--ds-accent) 9%, transparent),
@@ -726,9 +726,9 @@ html[data-ui-plugin-character-frame='ticket'] .ds-ui-plugin-character {
   padding: 0.72rem;
   border: 2px dashed color-mix(in srgb, var(--ds-accent) 52%, #9d7140 48%);
   border-radius: 0.7rem 2.2rem 0.7rem 2.2rem;
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 80%, #f1d89b 20%);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 80%, #f1d89b 20%);
   box-shadow:
-    0 0 0 6px color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 84%, transparent),
+    0 0 0 6px color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 84%, transparent),
     0 26px 64px rgba(44, 35, 20, 0.2);
 }
 
@@ -736,7 +736,7 @@ html[data-ui-plugin-character-frame='seal'] .ds-ui-plugin-character {
   padding: 0.72rem;
   border: 3px double color-mix(in srgb, var(--ds-accent) 62%, #cf9a45 38%);
   border-radius: 45% 45% 48% 48% / 38% 38% 52% 52%;
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 78%, transparent);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 78%, transparent);
   box-shadow:
     0 0 0 9px color-mix(in srgb, var(--ds-accent) 10%, transparent),
     0 0 0 11px color-mix(in srgb, var(--ds-accent) 24%, transparent),
@@ -848,7 +848,7 @@ html[data-ui-plugin-character-frame='polaroid'] .ds-ui-plugin-decor-layer::after
   width: clamp(9rem, 15cqw, 15rem);
   aspect-ratio: 4 / 5;
   border: 1px solid rgba(60, 64, 72, 0.08);
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 82%, white 18%);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 82%, white 18%);
   box-shadow: 0 18px 45px rgba(20, 27, 40, 0.12);
 }
 
@@ -858,7 +858,7 @@ html[data-ui-plugin-character-frame='polaroid'] .ds-ui-plugin-decor-layer::befor
 }
 
 html[data-ui-plugin-character-frame='polaroid'] .ds-ui-plugin-decor-layer::after {
-  bottom: calc(var(--Rcode-ui-plugin-composer-safe-inset, 12rem) + 7%);
+  bottom: calc(var(--Joker-ui-plugin-composer-safe-inset, 12rem) + 7%);
   right: 23%;
   transform: rotate(-7deg);
 }
@@ -878,9 +878,9 @@ html[data-ui-plugin-presentation='on'][data-ui-plugin-readability-scrim='opposit
   display: block;
   background: linear-gradient(
     90deg,
-    var(--Rcode-ui-plugin-host-bg-color) 0%,
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 94%, transparent) 38%,
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 72%, transparent) 56%,
+    var(--Joker-ui-plugin-host-bg-color) 0%,
+    color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 94%, transparent) 38%,
+    color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 72%, transparent) 56%,
     transparent 78%
   );
 }
@@ -889,7 +889,7 @@ html[data-ui-plugin-presentation='on'][data-ui-plugin-readability-scrim='full']
   .ds-ui-plugin-readability-scrim {
   z-index: 2;
   display: block;
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 78%, transparent);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 78%, transparent);
 }
 
 html[data-ui-plugin-readability-strength='soft'] .ds-ui-plugin-readability-scrim {
@@ -906,20 +906,20 @@ html[data-ui-plugin-readability-strength='strong'] .ds-ui-plugin-readability-scr
 
 /* Reserve real conversation/composer width for large right-side portraits. */
 html[data-ui-plugin-content-reserve='narrow'] .ds-chat-stage {
-  --Rcode-ui-plugin-content-reserve: clamp(10rem, 20cqw, 17rem);
-  --Rcode-ui-plugin-content-shift: clamp(3rem, 7cqw, 6rem);
-  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Rcode-ui-plugin-content-reserve));
+  --Joker-ui-plugin-content-reserve: clamp(10rem, 20cqw, 17rem);
+  --Joker-ui-plugin-content-shift: clamp(3rem, 7cqw, 6rem);
+  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Joker-ui-plugin-content-reserve));
 }
 
 html[data-ui-plugin-content-reserve='wide'] .ds-chat-stage {
-  --Rcode-ui-plugin-content-reserve: clamp(15rem, 28cqw, 25rem);
-  --Rcode-ui-plugin-content-shift: clamp(8rem, 15cqw, 14rem);
-  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Rcode-ui-plugin-content-reserve));
+  --Joker-ui-plugin-content-reserve: clamp(15rem, 28cqw, 25rem);
+  --Joker-ui-plugin-content-shift: clamp(8rem, 15cqw, 14rem);
+  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Joker-ui-plugin-content-reserve));
 }
 
 html[data-ui-plugin-presentation='on'] .ds-message-timeline-content,
 html[data-ui-plugin-presentation='on'] .ds-floating-composer {
-  translate: calc(-1 * var(--Rcode-ui-plugin-content-shift, 0rem)) 0;
+  translate: calc(-1 * var(--Joker-ui-plugin-content-shift, 0rem)) 0;
 }
 
 /* Fixed material recipes. Plugin manifests choose names, never CSS values. */
@@ -950,7 +950,7 @@ html[data-ui-plugin-surface-topbar='translucent'] .ds-topbar-surface,
 html[data-ui-plugin-surface-composer='translucent'] .ds-composer-shell.ds-chat-composer,
 html[data-ui-plugin-surface-cards='translucent']
   :is(.ds-card-soft, .ds-card-strong, .ds-card-muted, .ds-card-ghost, .ds-surface-soft, .ds-surface-strong) {
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 82%, transparent);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 82%, transparent);
   -webkit-backdrop-filter: blur(6px) saturate(1.04);
   backdrop-filter: blur(6px) saturate(1.04);
 }
@@ -962,10 +962,10 @@ html[data-ui-plugin-surface-composer='glass'] .ds-composer-shell.ds-chat-compose
 html[data-ui-plugin-surface-cards='glass']
   :is(.ds-card-soft, .ds-card-strong, .ds-card-muted, .ds-card-ghost, .ds-surface-soft, .ds-surface-strong) {
   border-color: color-mix(in srgb, var(--ds-border) 72%, white 28%);
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 62%, transparent);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 62%, transparent);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.38),
-    0 16px 42px color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 28%, transparent);
+    0 16px 42px color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 28%, transparent);
   -webkit-backdrop-filter: blur(16px) saturate(1.16);
   backdrop-filter: blur(16px) saturate(1.16);
 }
@@ -977,10 +977,10 @@ html[data-ui-plugin-surface-composer='strong-glass'] .ds-composer-shell.ds-chat-
 html[data-ui-plugin-surface-cards='strong-glass']
   :is(.ds-card-soft, .ds-card-strong, .ds-card-muted, .ds-card-ghost, .ds-surface-soft, .ds-surface-strong) {
   border-color: color-mix(in srgb, var(--ds-border-strong) 66%, white 34%);
-  background: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 74%, transparent);
+  background: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 74%, transparent);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.52),
-    0 22px 58px color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 36%, transparent);
+    0 22px 58px color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 36%, transparent);
   -webkit-backdrop-filter: blur(26px) saturate(1.24);
   backdrop-filter: blur(26px) saturate(1.24);
 }
@@ -1026,21 +1026,21 @@ html[data-ui-plugin-scene='on'] .ds-ui-plugin-scene-stage-layer {
 }
 
 html[data-ui-plugin-scene='on'] .ds-ui-plugin-scene-visual-zone {
-  /* Keep every scene image below Rcode's z-3 message/composer surface. The
+  /* Keep every scene image below Joker's z-3 message/composer surface. The
    * reserved side geometry still gives the character a clean visual zone,
    * while an expanded Composer or transient content can never be painted
    * underneath plugin artwork. */
   z-index: 2;
   display: block;
   top: 4.75rem;
-  bottom: var(--Rcode-ui-plugin-composer-safe-inset, 12rem);
+  bottom: var(--Joker-ui-plugin-composer-safe-inset, 12rem);
   width: clamp(20rem, 38cqw, 40rem);
   contain: layout paint;
 }
 
 html[data-ui-plugin-scene='on'] .ds-chat-stage {
   /* Discard the v1.5 right-side reserve before applying the selected v1.6
-   * layout. Backdrop scenes use Rcode's normal content width. */
+   * layout. Backdrop scenes use Joker's normal content width. */
   --ds-chat-side-rail-reserve: 5.25rem;
 }
 
@@ -1055,7 +1055,7 @@ html[data-ui-plugin-scene-layout='rail-left'] .ds-ui-plugin-scene-visual-zone {
 html[data-ui-plugin-scene-layout='card-right'] .ds-ui-plugin-scene-visual-zone,
 html[data-ui-plugin-scene-layout='card-left'] .ds-ui-plugin-scene-visual-zone {
   top: clamp(6.5rem, 12%, 9rem);
-  bottom: max(var(--Rcode-ui-plugin-composer-safe-inset, 12rem), 34%);
+  bottom: max(var(--Joker-ui-plugin-composer-safe-inset, 12rem), 34%);
   width: clamp(17rem, 31cqw, 32rem);
   border-radius: 2rem;
 }
@@ -1088,30 +1088,30 @@ html[data-ui-plugin-scene='on'] .ds-floating-composer {
 
 html[data-ui-plugin-scene-layout='rail-right'] .ds-chat-stage,
 html[data-ui-plugin-scene-layout='rail-left'] .ds-chat-stage {
-  --Rcode-ui-plugin-scene-content-reserve: clamp(15rem, 30cqw, 27rem);
-  --Rcode-ui-plugin-scene-content-shift: clamp(8rem, 16cqw, 15rem);
-  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Rcode-ui-plugin-scene-content-reserve));
+  --Joker-ui-plugin-scene-content-reserve: clamp(15rem, 30cqw, 27rem);
+  --Joker-ui-plugin-scene-content-shift: clamp(8rem, 16cqw, 15rem);
+  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Joker-ui-plugin-scene-content-reserve));
 }
 
 html[data-ui-plugin-scene-layout='card-right'] .ds-chat-stage,
 html[data-ui-plugin-scene-layout='card-left'] .ds-chat-stage {
-  --Rcode-ui-plugin-scene-content-reserve: clamp(11rem, 23cqw, 20rem);
-  --Rcode-ui-plugin-scene-content-shift: clamp(5rem, 10cqw, 9rem);
-  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Rcode-ui-plugin-scene-content-reserve));
+  --Joker-ui-plugin-scene-content-reserve: clamp(11rem, 23cqw, 20rem);
+  --Joker-ui-plugin-scene-content-shift: clamp(5rem, 10cqw, 9rem);
+  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Joker-ui-plugin-scene-content-reserve));
 }
 
 html:is(
     [data-ui-plugin-scene-layout='rail-right'],
     [data-ui-plugin-scene-layout='card-right']
   ) :is(.ds-message-timeline-content, .ds-floating-composer) {
-  translate: calc(-1 * var(--Rcode-ui-plugin-scene-content-shift)) 0;
+  translate: calc(-1 * var(--Joker-ui-plugin-scene-content-shift)) 0;
 }
 
 html:is(
     [data-ui-plugin-scene-layout='rail-left'],
     [data-ui-plugin-scene-layout='card-left']
   ) :is(.ds-message-timeline-content, .ds-floating-composer) {
-  translate: var(--Rcode-ui-plugin-scene-content-shift) 0;
+  translate: var(--Joker-ui-plugin-scene-content-shift) 0;
 }
 
 html:is(
@@ -1121,9 +1121,9 @@ html:is(
   .ds-ui-plugin-readability-scrim {
   background: linear-gradient(
     270deg,
-    var(--Rcode-ui-plugin-host-bg-color) 0%,
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 94%, transparent) 38%,
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 72%, transparent) 56%,
+    var(--Joker-ui-plugin-host-bg-color) 0%,
+    color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 94%, transparent) 38%,
+    color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 72%, transparent) 56%,
     transparent 78%
   );
 }
@@ -1141,55 +1141,55 @@ html:is(
 }
 
 .ds-ui-plugin-scene-artwork {
-  --Rcode-ui-plugin-scene-layer-x: 0%;
-  --Rcode-ui-plugin-scene-layer-y: 0%;
-  --Rcode-ui-plugin-scene-layer-opacity: 1;
+  --Joker-ui-plugin-scene-layer-x: 0%;
+  --Joker-ui-plugin-scene-layer-y: 0%;
+  --Joker-ui-plugin-scene-layer-opacity: 1;
   z-index: 1;
   width: 55%;
   height: 55%;
-  opacity: var(--Rcode-ui-plugin-scene-layer-opacity);
+  opacity: var(--Joker-ui-plugin-scene-layer-opacity);
   object-fit: contain;
   object-position: center;
   /* translate percentages resolve against the artwork's own X/Y dimensions;
    * unlike percentage margins this keeps offsetY independent of stage width. */
   translate:
-    calc(var(--Rcode-ui-plugin-scene-anchor-translate-x, -50%) + var(--Rcode-ui-plugin-scene-layer-x))
-    calc(var(--Rcode-ui-plugin-scene-anchor-translate-y, -50%) + var(--Rcode-ui-plugin-scene-layer-y));
+    calc(var(--Joker-ui-plugin-scene-anchor-translate-x, -50%) + var(--Joker-ui-plugin-scene-layer-x))
+    calc(var(--Joker-ui-plugin-scene-anchor-translate-y, -50%) + var(--Joker-ui-plugin-scene-layer-y));
   transform-origin: center;
   mix-blend-mode: normal;
 }
 
 .ds-ui-plugin-scene-artwork-backdrop {
-  --Rcode-ui-plugin-scene-layer-x: var(--Rcode-ui-plugin-scene-backdrop-offset-x, 0%);
-  --Rcode-ui-plugin-scene-layer-y: var(--Rcode-ui-plugin-scene-backdrop-offset-y, 0%);
-  --Rcode-ui-plugin-scene-layer-opacity: var(--Rcode-ui-plugin-scene-backdrop-opacity, 1);
+  --Joker-ui-plugin-scene-layer-x: var(--Joker-ui-plugin-scene-backdrop-offset-x, 0%);
+  --Joker-ui-plugin-scene-layer-y: var(--Joker-ui-plugin-scene-backdrop-offset-y, 0%);
+  --Joker-ui-plugin-scene-layer-opacity: var(--Joker-ui-plugin-scene-backdrop-opacity, 1);
 }
 
 .ds-ui-plugin-scene-artwork-ambient {
-  --Rcode-ui-plugin-scene-layer-x: var(--Rcode-ui-plugin-scene-ambient-offset-x, 0%);
-  --Rcode-ui-plugin-scene-layer-y: var(--Rcode-ui-plugin-scene-ambient-offset-y, 0%);
-  --Rcode-ui-plugin-scene-layer-opacity: var(--Rcode-ui-plugin-scene-ambient-opacity, 1);
+  --Joker-ui-plugin-scene-layer-x: var(--Joker-ui-plugin-scene-ambient-offset-x, 0%);
+  --Joker-ui-plugin-scene-layer-y: var(--Joker-ui-plugin-scene-ambient-offset-y, 0%);
+  --Joker-ui-plugin-scene-layer-opacity: var(--Joker-ui-plugin-scene-ambient-opacity, 1);
   z-index: 2;
 }
 
 .ds-ui-plugin-scene-artwork-frame {
-  --Rcode-ui-plugin-scene-layer-x: var(--Rcode-ui-plugin-scene-frame-offset-x, 0%);
-  --Rcode-ui-plugin-scene-layer-y: var(--Rcode-ui-plugin-scene-frame-offset-y, 0%);
-  --Rcode-ui-plugin-scene-layer-opacity: var(--Rcode-ui-plugin-scene-frame-opacity, 1);
+  --Joker-ui-plugin-scene-layer-x: var(--Joker-ui-plugin-scene-frame-offset-x, 0%);
+  --Joker-ui-plugin-scene-layer-y: var(--Joker-ui-plugin-scene-frame-offset-y, 0%);
+  --Joker-ui-plugin-scene-layer-opacity: var(--Joker-ui-plugin-scene-frame-opacity, 1);
   z-index: 3;
 }
 
 .ds-ui-plugin-scene-artwork-foreground {
-  --Rcode-ui-plugin-scene-layer-x: var(--Rcode-ui-plugin-scene-foreground-offset-x, 0%);
-  --Rcode-ui-plugin-scene-layer-y: var(--Rcode-ui-plugin-scene-foreground-offset-y, 0%);
-  --Rcode-ui-plugin-scene-layer-opacity: var(--Rcode-ui-plugin-scene-foreground-opacity, 1);
+  --Joker-ui-plugin-scene-layer-x: var(--Joker-ui-plugin-scene-foreground-offset-x, 0%);
+  --Joker-ui-plugin-scene-layer-y: var(--Joker-ui-plugin-scene-foreground-offset-y, 0%);
+  --Joker-ui-plugin-scene-layer-opacity: var(--Joker-ui-plugin-scene-foreground-opacity, 1);
   z-index: 4;
 }
 
 .ds-ui-plugin-scene-artwork-emblem {
-  --Rcode-ui-plugin-scene-layer-x: var(--Rcode-ui-plugin-scene-emblem-offset-x, 0%);
-  --Rcode-ui-plugin-scene-layer-y: var(--Rcode-ui-plugin-scene-emblem-offset-y, 0%);
-  --Rcode-ui-plugin-scene-layer-opacity: var(--Rcode-ui-plugin-scene-emblem-opacity, 1);
+  --Joker-ui-plugin-scene-layer-x: var(--Joker-ui-plugin-scene-emblem-offset-x, 0%);
+  --Joker-ui-plugin-scene-layer-y: var(--Joker-ui-plugin-scene-emblem-offset-y, 0%);
+  --Joker-ui-plugin-scene-layer-opacity: var(--Joker-ui-plugin-scene-emblem-opacity, 1);
   z-index: 5;
 }
 
@@ -1226,64 +1226,64 @@ html:is(
 }
 
 .ds-ui-plugin-scene-artwork[data-scene-anchor='top-left'] {
-  --Rcode-ui-plugin-scene-anchor-translate-x: 0%;
-  --Rcode-ui-plugin-scene-anchor-translate-y: 0%;
+  --Joker-ui-plugin-scene-anchor-translate-x: 0%;
+  --Joker-ui-plugin-scene-anchor-translate-y: 0%;
   top: 0;
   left: 0;
 }
 
 .ds-ui-plugin-scene-artwork[data-scene-anchor='top'] {
-  --Rcode-ui-plugin-scene-anchor-translate-x: -50%;
-  --Rcode-ui-plugin-scene-anchor-translate-y: 0%;
+  --Joker-ui-plugin-scene-anchor-translate-x: -50%;
+  --Joker-ui-plugin-scene-anchor-translate-y: 0%;
   top: 0;
   left: 50%;
 }
 
 .ds-ui-plugin-scene-artwork[data-scene-anchor='top-right'] {
-  --Rcode-ui-plugin-scene-anchor-translate-x: -100%;
-  --Rcode-ui-plugin-scene-anchor-translate-y: 0%;
+  --Joker-ui-plugin-scene-anchor-translate-x: -100%;
+  --Joker-ui-plugin-scene-anchor-translate-y: 0%;
   top: 0;
   left: 100%;
 }
 
 .ds-ui-plugin-scene-artwork[data-scene-anchor='left'] {
-  --Rcode-ui-plugin-scene-anchor-translate-x: 0%;
-  --Rcode-ui-plugin-scene-anchor-translate-y: -50%;
+  --Joker-ui-plugin-scene-anchor-translate-x: 0%;
+  --Joker-ui-plugin-scene-anchor-translate-y: -50%;
   top: 50%;
   left: 0;
 }
 
 .ds-ui-plugin-scene-artwork[data-scene-anchor='center'] {
-  --Rcode-ui-plugin-scene-anchor-translate-x: -50%;
-  --Rcode-ui-plugin-scene-anchor-translate-y: -50%;
+  --Joker-ui-plugin-scene-anchor-translate-x: -50%;
+  --Joker-ui-plugin-scene-anchor-translate-y: -50%;
   top: 50%;
   left: 50%;
 }
 
 .ds-ui-plugin-scene-artwork[data-scene-anchor='right'] {
-  --Rcode-ui-plugin-scene-anchor-translate-x: -100%;
-  --Rcode-ui-plugin-scene-anchor-translate-y: -50%;
+  --Joker-ui-plugin-scene-anchor-translate-x: -100%;
+  --Joker-ui-plugin-scene-anchor-translate-y: -50%;
   top: 50%;
   left: 100%;
 }
 
 .ds-ui-plugin-scene-artwork[data-scene-anchor='bottom-left'] {
-  --Rcode-ui-plugin-scene-anchor-translate-x: 0%;
-  --Rcode-ui-plugin-scene-anchor-translate-y: -100%;
+  --Joker-ui-plugin-scene-anchor-translate-x: 0%;
+  --Joker-ui-plugin-scene-anchor-translate-y: -100%;
   top: 100%;
   left: 0;
 }
 
 .ds-ui-plugin-scene-artwork[data-scene-anchor='bottom'] {
-  --Rcode-ui-plugin-scene-anchor-translate-x: -50%;
-  --Rcode-ui-plugin-scene-anchor-translate-y: -100%;
+  --Joker-ui-plugin-scene-anchor-translate-x: -50%;
+  --Joker-ui-plugin-scene-anchor-translate-y: -100%;
   top: 100%;
   left: 50%;
 }
 
 .ds-ui-plugin-scene-artwork[data-scene-anchor='bottom-right'] {
-  --Rcode-ui-plugin-scene-anchor-translate-x: -100%;
-  --Rcode-ui-plugin-scene-anchor-translate-y: -100%;
+  --Joker-ui-plugin-scene-anchor-translate-x: -100%;
+  --Joker-ui-plugin-scene-anchor-translate-y: -100%;
   top: 100%;
   left: 100%;
 }
@@ -1312,11 +1312,11 @@ html[data-ui-plugin-scene='on'] .ds-ui-plugin-scene-character {
   border-radius: 0;
   background: transparent;
   box-shadow: none;
-  opacity: var(--Rcode-ui-plugin-scene-character-opacity, 1);
+  opacity: var(--Joker-ui-plugin-scene-character-opacity, 1);
   object-fit: contain;
   object-position: center;
-  translate: var(--Rcode-ui-plugin-scene-character-offset-x, 0%)
-    var(--Rcode-ui-plugin-scene-character-offset-y, 0%);
+  translate: var(--Joker-ui-plugin-scene-character-offset-x, 0%)
+    var(--Joker-ui-plugin-scene-character-offset-y, 0%);
   transform-origin: 50% 62%;
 }
 
@@ -1445,35 +1445,35 @@ html[data-ui-plugin-scene-character-motion='none'] .ds-ui-plugin-scene-character
 
 html[data-ui-plugin-scene='on'] .ds-ui-plugin-scene-character,
 .ds-ui-plugin-scene-artwork[data-scene-motion]:not([data-scene-motion='none']) {
-  animation-duration: var(--Rcode-ui-plugin-scene-motion-duration, 8s);
-  --Rcode-ui-plugin-scene-motion-phase-b: -2.64s;
-  --Rcode-ui-plugin-scene-motion-phase-c: -5.28s;
+  animation-duration: var(--Joker-ui-plugin-scene-motion-duration, 8s);
+  --Joker-ui-plugin-scene-motion-phase-b: -2.64s;
+  --Joker-ui-plugin-scene-motion-phase-c: -5.28s;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;
 }
 
 html[data-ui-plugin-scene-character-motion-speed='slow'] .ds-ui-plugin-scene-character,
 .ds-ui-plugin-scene-artwork[data-scene-motion-speed='slow'] {
-  --Rcode-ui-plugin-scene-motion-duration: 12s;
-  --Rcode-ui-plugin-scene-motion-phase-b: -4s;
-  --Rcode-ui-plugin-scene-motion-phase-c: -8s;
+  --Joker-ui-plugin-scene-motion-duration: 12s;
+  --Joker-ui-plugin-scene-motion-phase-b: -4s;
+  --Joker-ui-plugin-scene-motion-phase-c: -8s;
 }
 
 html[data-ui-plugin-scene-character-motion-speed='fast'] .ds-ui-plugin-scene-character,
 .ds-ui-plugin-scene-artwork[data-scene-motion-speed='fast'] {
-  --Rcode-ui-plugin-scene-motion-duration: 5s;
-  --Rcode-ui-plugin-scene-motion-phase-b: -1.65s;
-  --Rcode-ui-plugin-scene-motion-phase-c: -3.3s;
+  --Joker-ui-plugin-scene-motion-duration: 5s;
+  --Joker-ui-plugin-scene-motion-phase-b: -1.65s;
+  --Joker-ui-plugin-scene-motion-phase-c: -3.3s;
 }
 
 html[data-ui-plugin-scene-character-motion-phase='b'] .ds-ui-plugin-scene-character,
 .ds-ui-plugin-scene-artwork[data-scene-motion-phase='b'] {
-  animation-delay: var(--Rcode-ui-plugin-scene-motion-phase-b, -2.64s);
+  animation-delay: var(--Joker-ui-plugin-scene-motion-phase-b, -2.64s);
 }
 
 html[data-ui-plugin-scene-character-motion-phase='c'] .ds-ui-plugin-scene-character,
 .ds-ui-plugin-scene-artwork[data-scene-motion-phase='c'] {
-  animation-delay: var(--Rcode-ui-plugin-scene-motion-phase-c, -5.28s);
+  animation-delay: var(--Joker-ui-plugin-scene-motion-phase-c, -5.28s);
 }
 
 .ds-ui-plugin-scene-artwork[data-scene-motion='float'] {
@@ -1566,11 +1566,11 @@ html[data-ui-plugin-scene-character-motion-phase='c'] .ds-ui-plugin-scene-charac
   0%,
   100% {
     filter: brightness(0.92);
-    opacity: calc(var(--Rcode-ui-plugin-scene-layer-opacity) * 0.68);
+    opacity: calc(var(--Joker-ui-plugin-scene-layer-opacity) * 0.68);
   }
   50% {
     filter: brightness(1.16);
-    opacity: var(--Rcode-ui-plugin-scene-layer-opacity);
+    opacity: var(--Joker-ui-plugin-scene-layer-opacity);
   }
 }
 
@@ -1586,7 +1586,7 @@ html[data-ui-plugin-scene-character-motion-phase='c'] .ds-ui-plugin-scene-charac
   }
 }
 
-/* v1.6 chrome recipes affect only fixed Rcode surfaces. */
+/* v1.6 chrome recipes affect only fixed Joker surfaces. */
 html[data-ui-plugin-scene-chrome-sidebar='soft'] :is(.ds-sidebar-shell, .ds-settings-sidebar),
 html[data-ui-plugin-scene-chrome-topbar='soft'] .ds-topbar-surface,
 html[data-ui-plugin-scene-chrome-composer='soft'] .ds-composer-shell.ds-chat-composer,
@@ -1616,7 +1616,7 @@ html[data-ui-plugin-scene-chrome-cards='paper']
   :is(.ds-card-soft, .ds-card-strong, .ds-card-muted, .ds-card-ghost, .ds-surface-soft, .ds-surface-strong) {
   border-radius: 0.85rem 1.35rem 0.9rem 1.25rem;
   border-color: color-mix(in srgb, var(--ds-accent) 22%, #a98252 78%);
-  background-color: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 90%, #f1dfb6 10%);
+  background-color: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 90%, #f1dfb6 10%);
   box-shadow: 8px 10px 0 color-mix(in srgb, var(--ds-accent) 6%, transparent);
 }
 
@@ -1676,7 +1676,7 @@ html[data-ui-plugin-scene-chrome-cards='polaroid']
   :is(.ds-card-soft, .ds-card-strong, .ds-card-muted, .ds-card-ghost, .ds-surface-soft, .ds-surface-strong) {
   border: 1px solid rgba(50, 55, 67, 0.13);
   border-radius: 0.35rem;
-  background-color: color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 94%, #fff4dd 6%);
+  background-color: color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 94%, #fff4dd 6%);
   box-shadow:
     -7px 10px 0 color-mix(in srgb, var(--ds-accent) 7%, transparent),
     0 20px 44px rgba(26, 31, 42, 0.16);
@@ -1689,7 +1689,7 @@ html[data-ui-plugin-scene-chrome-cards='ticket']
   :is(.ds-card-soft, .ds-card-strong, .ds-card-muted, .ds-card-ghost, .ds-surface-soft, .ds-surface-strong) {
   border: 2px dashed color-mix(in srgb, var(--ds-accent) 50%, #987044 50%);
   border-radius: 0.65rem 1.8rem;
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--Rcode-ui-plugin-host-bg-color) 82%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--Joker-ui-plugin-host-bg-color) 82%, transparent);
 }
 
 html[data-ui-plugin-scene-chrome-sidebar='seal'] :is(.ds-sidebar-shell, .ds-settings-sidebar),
@@ -1705,7 +1705,7 @@ html[data-ui-plugin-scene-chrome-cards='seal']
 }
 
 /* Character-specific v1.6 chrome recipes. These selectors only restyle
- * existing Rcode surfaces: they never create plugin-owned DOM or hit targets. */
+ * existing Joker surfaces: they never create plugin-owned DOM or hit targets. */
 html[data-ui-plugin-scene-chrome-sidebar='botanical']
   :is(.ds-sidebar-shell, .ds-settings-sidebar),
 html[data-ui-plugin-scene-chrome-topbar='botanical'] .ds-topbar-surface,
@@ -1733,7 +1733,7 @@ html[data-ui-plugin-scene-chrome-cards='botanical']
     color-mix(in srgb, var(--ds-accent) 13%, transparent),
     transparent 34%
   );
-  --ds-table-head-bg: color-mix(in srgb, var(--ds-accent) 12%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, var(--ds-accent) 12%, var(--Joker-ui-plugin-host-surface-color));
   border: 1px solid color-mix(in srgb, var(--ds-accent) 32%, #789883 68%);
   border-radius: 1.8rem 0.75rem 1.45rem 0.95rem;
   background:
@@ -1741,8 +1741,8 @@ html[data-ui-plugin-scene-chrome-cards='botanical']
     radial-gradient(circle at 94% 92%, color-mix(in srgb, #79ae8c 18%, transparent), transparent 31%),
     linear-gradient(
       145deg,
-      color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 91%, #fff0f5 9%),
-      color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 87%, #dff2e6 13%)
+      color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 91%, #fff0f5 9%),
+      color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 87%, #dff2e6 13%)
     );
   box-shadow:
     inset 4px 0 0 color-mix(in srgb, #79ae8c 22%, transparent),
@@ -1776,7 +1776,7 @@ html[data-ui-plugin-scene-chrome-cards='fortune-ledger']
   .ds-markdown
   [data-streamdown='table'] {
   --ds-sidebar-haze: linear-gradient(90deg, rgba(160, 35, 31, 0.07), transparent 36%);
-  --ds-table-head-bg: color-mix(in srgb, #b82e2c 11%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #b82e2c 11%, var(--Joker-ui-plugin-host-surface-color));
   border: 2px solid color-mix(in srgb, #b82e2c 58%, #b49355 42%);
   border-radius: 0.35rem;
   background:
@@ -1791,7 +1791,7 @@ html[data-ui-plugin-scene-chrome-cards='fortune-ledger']
       transparent 0 1.42rem,
       color-mix(in srgb, #b49355 15%, transparent) 1.42rem 1.47rem
     ),
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 91%, #f5e6c7 9%);
+    color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 91%, #f5e6c7 9%);
   box-shadow:
     inset 0 0 0 3px color-mix(in srgb, #b49355 13%, transparent),
     5px 7px 0 color-mix(in srgb, #8f2423 11%, transparent);
@@ -1822,7 +1822,7 @@ html[data-ui-plugin-scene-chrome-cards='dream-gate']
   .ds-markdown
   [data-streamdown='table'] {
   --ds-sidebar-haze: radial-gradient(ellipse at 50% 0%, rgba(195, 34, 74, 0.15), transparent 48%);
-  --ds-table-head-bg: color-mix(in srgb, #c3224a 13%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #c3224a 13%, var(--Joker-ui-plugin-host-surface-color));
   border: 2px solid color-mix(in srgb, #c3224a 52%, #cda15f 48%);
   border-radius: 2.4rem 2.4rem 0.7rem 0.7rem;
   background:
@@ -1832,7 +1832,7 @@ html[data-ui-plugin-scene-chrome-cards='dream-gate']
       transparent 58%
     ),
     radial-gradient(circle at 50% -12%, color-mix(in srgb, #d5a85e 18%, transparent), transparent 46%),
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 88%, #f4d9df 12%);
+    color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 88%, #f4d9df 12%);
   box-shadow:
     inset 0 0 0 4px color-mix(in srgb, #c3224a 8%, transparent),
     0 0 34px color-mix(in srgb, #c3224a 19%, transparent);
@@ -1865,7 +1865,7 @@ html[data-ui-plugin-scene-chrome-cards='washi'] .ds-markdown [data-streamdown='t
     rgba(139, 110, 68, 0.035) 0 1px,
     transparent 1px 8px
   );
-  --ds-table-head-bg: color-mix(in srgb, #b38a56 10%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #b38a56 10%, var(--Joker-ui-plugin-host-surface-color));
   border: 1px solid color-mix(in srgb, #9b7650 36%, var(--ds-border) 64%);
   border-radius: 0.75rem 1.35rem 0.82rem 1.18rem;
   background:
@@ -1879,7 +1879,7 @@ html[data-ui-plugin-scene-chrome-cards='washi'] .ds-markdown [data-streamdown='t
       color-mix(in srgb, #ffffff 7%, transparent) 0 2px,
       transparent 2px 11px
     ),
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 88%, #f3e3c2 12%);
+    color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 88%, #f3e3c2 12%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.36),
     7px 9px 0 color-mix(in srgb, #8d6745 7%, transparent);
@@ -1910,7 +1910,7 @@ html[data-ui-plugin-scene-chrome-cards='scrapbook']
   .ds-markdown
   [data-streamdown='table'] {
   --ds-sidebar-haze: linear-gradient(135deg, rgba(240, 119, 153, 0.08), transparent 42%);
-  --ds-table-head-bg: color-mix(in srgb, #f08aaa 12%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #f08aaa 12%, var(--Joker-ui-plugin-host-surface-color));
   border: 2px dashed color-mix(in srgb, #e66d98 42%, #6ba3be 58%);
   border-radius: 0.55rem 1.1rem 0.45rem 1.35rem;
   background:
@@ -1924,8 +1924,8 @@ html[data-ui-plugin-scene-chrome-cards='scrapbook']
     ),
     linear-gradient(
       22deg,
-      color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 88%, #fff1ba 12%),
-      color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 90%, #f7dbe8 10%)
+      color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 88%, #fff1ba 12%),
+      color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 90%, #f7dbe8 10%)
     );
   box-shadow:
     7px 8px 0 color-mix(in srgb, #e66d98 12%, transparent),
@@ -1955,14 +1955,14 @@ html[data-ui-plugin-scene-chrome-cards='aurora']
   > div:last-child,
 html[data-ui-plugin-scene-chrome-cards='aurora'] .ds-markdown [data-streamdown='table'] {
   --ds-sidebar-haze: radial-gradient(circle at 8% 4%, rgba(100, 224, 233, 0.13), transparent 37%);
-  --ds-table-head-bg: color-mix(in srgb, #7b6dea 12%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #7b6dea 12%, var(--Joker-ui-plugin-host-surface-color));
   border: 1px solid color-mix(in srgb, #72dfe5 44%, #a77ae7 56%);
   border-radius: 1.9rem 0.65rem 2.15rem 0.85rem;
   background:
     radial-gradient(circle at 8% 12%, color-mix(in srgb, #74e7d4 25%, transparent), transparent 36%),
     radial-gradient(circle at 92% 8%, color-mix(in srgb, #9c75e8 24%, transparent), transparent 40%),
     radial-gradient(circle at 62% 112%, color-mix(in srgb, #6fa4ee 17%, transparent), transparent 47%),
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 81%, transparent);
+    color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 81%, transparent);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.58),
     0 0 0 3px color-mix(in srgb, #72dfe5 7%, transparent),
@@ -1992,7 +1992,7 @@ html[data-ui-plugin-scene-chrome-cards='synth']
   > div:last-child,
 html[data-ui-plugin-scene-chrome-cards='synth'] .ds-markdown [data-streamdown='table'] {
   --ds-sidebar-haze: linear-gradient(135deg, rgba(49, 231, 238, 0.08), rgba(245, 75, 197, 0.06));
-  --ds-table-head-bg: color-mix(in srgb, #1bdde8 13%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #1bdde8 13%, var(--Joker-ui-plugin-host-surface-color));
   border: 1px solid color-mix(in srgb, #27dce5 58%, #ec4ec6 42%);
   border-radius: 0.35rem;
   background:
@@ -2006,7 +2006,7 @@ html[data-ui-plugin-scene-chrome-cards='synth'] .ds-markdown [data-streamdown='t
       color-mix(in srgb, #ec4ec6 7%, transparent) 0 1px,
       transparent 1px 1.25rem
     ),
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 82%, #102b38 18%);
+    color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 82%, #102b38 18%);
   box-shadow:
     inset 0 0 24px color-mix(in srgb, #27dce5 12%, transparent),
     0 0 18px color-mix(in srgb, #ec4ec6 18%, transparent);
@@ -2038,13 +2038,13 @@ html[data-ui-plugin-scene-chrome-cards='midnight-pass']
   .ds-markdown
   [data-streamdown='table'] {
   --ds-sidebar-haze: radial-gradient(circle at 50% 0%, rgba(220, 180, 92, 0.09), transparent 44%);
-  --ds-table-head-bg: color-mix(in srgb, #d4ac55 12%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #d4ac55 12%, var(--Joker-ui-plugin-host-surface-color));
   border: 2px dashed color-mix(in srgb, #d4ac55 64%, #493354 36%);
   border-radius: 0.6rem 1.7rem 0.6rem 1.7rem;
   background:
     linear-gradient(105deg, transparent 0 47%, color-mix(in srgb, #d4ac55 12%, transparent) 47% 49%, transparent 49%),
     radial-gradient(circle at 76% 8%, color-mix(in srgb, #7f4a98 16%, transparent), transparent 34%),
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 80%, #21172d 20%);
+    color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 80%, #21172d 20%);
   box-shadow:
     inset 0 0 0 3px color-mix(in srgb, #d4ac55 7%, transparent),
     0 20px 46px color-mix(in srgb, #21172d 24%, transparent);
@@ -2073,7 +2073,7 @@ html[data-ui-plugin-scene-chrome-cards='nautical']
   > div:last-child,
 html[data-ui-plugin-scene-chrome-cards='nautical'] .ds-markdown [data-streamdown='table'] {
   --ds-sidebar-haze: radial-gradient(circle at 14% 8%, rgba(41, 155, 166, 0.1), transparent 38%);
-  --ds-table-head-bg: color-mix(in srgb, #208e9b 13%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #208e9b 13%, var(--Joker-ui-plugin-host-surface-color));
   border: 2px solid color-mix(in srgb, #236b82 62%, #bf9860 38%);
   border-radius: 0.85rem 0.85rem 1.6rem 1.6rem;
   background:
@@ -2084,8 +2084,8 @@ html[data-ui-plugin-scene-chrome-cards='nautical'] .ds-markdown [data-streamdown
     ),
     linear-gradient(
       180deg,
-      color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 88%, #d9eef0 12%),
-      color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 91%, #e9dec7 9%)
+      color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 88%, #d9eef0 12%),
+      color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 91%, #e9dec7 9%)
     );
   box-shadow:
     inset 0 0 0 3px color-mix(in srgb, #bf9860 10%, transparent),
@@ -2415,7 +2415,7 @@ html[data-ui-plugin="lv-dongbin-cloud-sword"]
 
 /* Backdrop layouts normally collapse both scene wrappers onto z-1. Keep this
  * theme's transparent immortal medallion above the painted backdrop while it
- * remains below Rcode's z-3 conversation and composer surfaces. */
+ * remains below Joker's z-3 conversation and composer surfaces. */
 html[data-ui-plugin="lv-dongbin-cloud-sword"]
   .ds-ui-plugin-scene-visual-zone {
   z-index: 2;
@@ -4480,13 +4480,13 @@ html[data-ui-plugin-scene-chrome-cards='arc-reactor']
 html[data-ui-plugin-scene-chrome-cards='arc-reactor']
   .ds-markdown
   [data-streamdown='table'] {
-  --ds-table-head-bg: color-mix(in srgb, #8f1d27 14%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #8f1d27 14%, var(--Joker-ui-plugin-host-surface-color));
   border: 1px solid color-mix(in srgb, #a82731 58%, #d0a85f 42%);
   border-radius: 0.72rem;
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.2), transparent 34%),
     linear-gradient(105deg, transparent 0 76%, rgba(59, 202, 224, 0.055) 76% 78%, transparent 78%),
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 91%, #aeb9bd 9%);
+    color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 91%, #aeb9bd 9%);
   box-shadow:
     inset 0 1px rgba(255, 255, 255, 0.62),
     inset 3px 0 color-mix(in srgb, #a61e28 72%, transparent),
@@ -4841,7 +4841,7 @@ html[data-ui-plugin-scene-chrome-cards='dimension-lab']
   .ds-markdown
   [data-streamdown='table'] {
   --ds-sidebar-haze: linear-gradient(180deg, rgba(42, 213, 123, 0.09), transparent 36%);
-  --ds-table-head-bg: color-mix(in srgb, #28bd70 13%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #28bd70 13%, var(--Joker-ui-plugin-host-surface-color));
   border: 1px solid color-mix(in srgb, #2bd77f 58%, #416c63 42%);
   border-radius: 0.2rem 0.95rem 0.2rem 0.95rem;
   background:
@@ -4861,7 +4861,7 @@ html[data-ui-plugin-scene-chrome-cards='dimension-lab']
       color-mix(in srgb, #77f4ad 13%, transparent) 49% 51%,
       transparent 54%
     ),
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 83%, #102923 17%);
+    color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 83%, #102923 17%);
   box-shadow:
     inset 0 0 22px color-mix(in srgb, #2bd77f 12%, transparent),
     0 0 0 2px color-mix(in srgb, #2bd77f 7%, transparent);
@@ -4892,14 +4892,14 @@ html[data-ui-plugin-scene-chrome-cards='starlight']
   .ds-markdown
   [data-streamdown='table'] {
   --ds-sidebar-haze: radial-gradient(circle at 20% 6%, rgba(235, 137, 211, 0.13), transparent 39%);
-  --ds-table-head-bg: color-mix(in srgb, #d986d4 12%, var(--Rcode-ui-plugin-host-surface-color));
+  --ds-table-head-bg: color-mix(in srgb, #d986d4 12%, var(--Joker-ui-plugin-host-surface-color));
   border: 1px solid color-mix(in srgb, #e291d3 52%, #8d7ce5 48%);
   border-radius: 2.2rem;
   background:
     radial-gradient(circle, color-mix(in srgb, #ffffff 42%, transparent) 0 1px, transparent 1.5px) 0 0 / 1.4rem 1.4rem,
     radial-gradient(circle at 18% 12%, color-mix(in srgb, #f0a8db 22%, transparent), transparent 36%),
     radial-gradient(circle at 88% 92%, color-mix(in srgb, #8e7ce9 21%, transparent), transparent 38%),
-    color-mix(in srgb, var(--Rcode-ui-plugin-host-surface-color) 84%, #f0e2fb 16%);
+    color-mix(in srgb, var(--Joker-ui-plugin-host-surface-color) 84%, #f0e2fb 16%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.6),
     0 0 0 4px color-mix(in srgb, #e291d3 6%, transparent),

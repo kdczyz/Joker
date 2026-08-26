@@ -4,16 +4,16 @@ import type { TFunction } from 'i18next'
 import { useTranslation } from 'react-i18next'
 import { Bot, Check, ChevronDown, ChevronLeft, ChevronRight, Pencil, Plug, Plus, Power, Search, Sparkles, Trash2, Wrench, X } from 'lucide-react'
 import type {
-  RcodeRuntimeSettingsPatchV1,
-  RcodeRuntimeSettingsV1,
-  RcodeSubagentProfileV1,
-  RcodeSubagentsSettingsV1,
+  JokerRuntimeSettingsPatchV1,
+  JokerRuntimeSettingsV1,
+  JokerSubagentProfileV1,
+  JokerSubagentsSettingsV1,
   ModelProviderModelProfileV1,
   ModelReasoningEffort
 } from '@shared/app-settings'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
-import { RCODE_RUNTIME_TOOLS_PATH } from '@shared/Rcode-endpoints'
-import type { CoreRuntimeToolDiagnosticsJson } from '../../agent/Rcode-contract'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
+import { JOKER_RUNTIME_TOOLS_PATH } from '@shared/Joker-endpoints'
+import type { CoreRuntimeToolDiagnosticsJson } from '../../agent/Joker-contract'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { confirmDialog } from '../../lib/confirm-dialog'
 import { useChatStore } from '../../store/chat-store'
@@ -21,16 +21,16 @@ import { useChatStore } from '../../store/chat-store'
 type EditorVariant = 'panel' | 'settings'
 
 export type SubagentSettingsEditorProps = {
-  Rcode: RcodeRuntimeSettingsV1
-  onPatch: (patch: RcodeRuntimeSettingsPatchV1) => void | Promise<void>
+  Joker: JokerRuntimeSettingsV1
+  onPatch: (patch: JokerRuntimeSettingsPatchV1) => void | Promise<void>
   variant: EditorVariant
   className?: string
 }
 
-const EMPTY_SUBAGENTS: RcodeSubagentsSettingsV1 = { enabled: true, profiles: [] }
+const EMPTY_SUBAGENTS: JokerSubagentsSettingsV1 = { enabled: true, profiles: [] }
 const PRESET_COLORS = ['#3b82d8', '#1d9e75', '#e8943a', '#7f77dd', '#d4537e', '#d85a30']
 
-/** Rcode's built-in tool names (mirror Rcode/src/adapters/tool/builtin-tool-types.ts). Small,
+/** Joker's built-in tool names (mirror Joker/src/adapters/tool/builtin-tool-types.ts). Small,
  *  stable set — a static catalog gives nicer labels than parsing the loose diagnostics shape. */
 const BUILTIN_TOOL_NAMES = [
   'read',
@@ -51,13 +51,13 @@ type CapabilityCatalog = {
   skills: Array<{ id: string; name: string; description?: string }>
 }
 
-/** Fetch the live MCP-server + skill catalog from Rcode for the permission picker.
+/** Fetch the live MCP-server + skill catalog from Joker for the permission picker.
  *  Built-in tools come from the static list above; this only needs the dynamic bits.
  *  Returns empty lists on any failure so the dialog still renders. */
 async function loadCapabilityCatalog(): Promise<CapabilityCatalog> {
   const empty: CapabilityCatalog = { mcpServers: [], skills: [] }
   try {
-    const res = await rendererRuntimeClient.runtimeRequest(RCODE_RUNTIME_TOOLS_PATH, 'GET')
+    const res = await rendererRuntimeClient.runtimeRequest(JOKER_RUNTIME_TOOLS_PATH, 'GET')
     if (!res.ok) return empty
     const data = JSON.parse(res.body) as CoreRuntimeToolDiagnosticsJson
     const str = (v: unknown): string => (typeof v === 'string' ? v : '')
@@ -80,16 +80,16 @@ async function loadCapabilityCatalog(): Promise<CapabilityCatalog> {
   }
 }
 
-/** Rcode's REAL built-in delegatable subagents (mirror Rcode/src/delegation/builtin-profiles.ts). */
+/** Joker's REAL built-in delegatable subagents (mirror Joker/src/delegation/builtin-profiles.ts). */
 const BUILTIN_IDS = new Set(['general', 'explore', 'design-reviewer', 'over-engineering-reviewer'])
-const BUILTIN_AGENTS: RcodeSubagentProfileV1[] = [
+const BUILTIN_AGENTS: JokerSubagentProfileV1[] = [
   { id: 'general', enabled: true, name: '', mode: 'subagent', toolPolicy: 'inherit', color: '#3b82d8' },
   { id: 'explore', enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly', color: '#1d9e75' },
   { id: 'design-reviewer', enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly', color: '#7f77dd' },
   { id: 'over-engineering-reviewer', enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly', color: '#e8943a' }
 ]
 
-function newProfile(): RcodeSubagentProfileV1 {
+function newProfile(): JokerSubagentProfileV1 {
   return { id: crypto.randomUUID(), enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly' }
 }
 
@@ -145,7 +145,7 @@ type RoleSlot = {
 }
 
 export function SubagentSettingsEditor({
-  Rcode,
+  Joker,
   onPatch,
   variant,
   className
@@ -154,28 +154,28 @@ export function SubagentSettingsEditor({
   const { t: tSettings } = useTranslation('settings')
   const composerModelGroups = useChatStore((s) => s.composerModelGroups)
   const loadComposerModels = useChatStore((s) => s.loadComposerModels)
-  const [dialog, setDialog] = useState<{ profile: RcodeSubagentProfileV1; isNew: boolean } | null>(null)
-  const subagents = Rcode.subagents ?? EMPTY_SUBAGENTS
+  const [dialog, setDialog] = useState<{ profile: JokerSubagentProfileV1; isNew: boolean } | null>(null)
+  const subagents = Joker.subagents ?? EMPTY_SUBAGENTS
   // Compaction always runs in model mode (the heuristic fold is only a silent
   // fallback when the model call fails), so there is no user-facing mode toggle.
   // The model lives under contextCompaction.summaryModel (distinct from the
-  // top-level Rcode.summaryModel, which drives the session-summary role).
+  // top-level Joker.summaryModel, which drives the session-summary role).
   const compactionSlot: RoleSlot = {
-    model: Rcode.contextCompaction.summaryModel ?? '',
-    providerId: Rcode.contextCompaction.summaryProviderId ?? ''
+    model: Joker.contextCompaction.summaryModel ?? '',
+    providerId: Joker.contextCompaction.summaryProviderId ?? ''
   }
-  const smallModel: RoleSlot = { model: Rcode.smallModel ?? '', providerId: Rcode.smallModelProviderId ?? '' }
-  const titleSlot: RoleSlot = { model: Rcode.titleModel ?? '', providerId: Rcode.titleProviderId ?? '' }
-  const summarySlot: RoleSlot = { model: Rcode.summaryModel ?? '', providerId: Rcode.summaryProviderId ?? '' }
-  const codeReviewSlot: RoleSlot = { model: Rcode.codeReviewModel ?? '', providerId: Rcode.codeReviewProviderId ?? '' }
-  const planSlot: RoleSlot = { model: Rcode.planModel ?? '', providerId: Rcode.planProviderId ?? '' }
-  const titleReasoning = Rcode.titleReasoningEffort ?? 'off'
-  const summaryReasoning = Rcode.summaryReasoningEffort ?? 'off'
-  const codeReviewReasoning = Rcode.codeReviewReasoningEffort ?? 'off'
+  const smallModel: RoleSlot = { model: Joker.smallModel ?? '', providerId: Joker.smallModelProviderId ?? '' }
+  const titleSlot: RoleSlot = { model: Joker.titleModel ?? '', providerId: Joker.titleProviderId ?? '' }
+  const summarySlot: RoleSlot = { model: Joker.summaryModel ?? '', providerId: Joker.summaryProviderId ?? '' }
+  const codeReviewSlot: RoleSlot = { model: Joker.codeReviewModel ?? '', providerId: Joker.codeReviewProviderId ?? '' }
+  const planSlot: RoleSlot = { model: Joker.planModel ?? '', providerId: Joker.planProviderId ?? '' }
+  const titleReasoning = Joker.titleReasoningEffort ?? 'off'
+  const summaryReasoning = Joker.summaryReasoningEffort ?? 'off'
+  const codeReviewReasoning = Joker.codeReviewReasoningEffort ?? 'off'
 
   useEffect(() => { void loadComposerModels() }, [loadComposerModels])
 
-  const patchSubagents = useCallback((patch: Partial<RcodeSubagentsSettingsV1>): void => {
+  const patchSubagents = useCallback((patch: Partial<JokerSubagentsSettingsV1>): void => {
     void onPatch({
       subagents: {
         ...subagents,
@@ -185,7 +185,7 @@ export function SubagentSettingsEditor({
     })
   }, [onPatch, subagents])
 
-  const persistProfiles = useCallback((profiles: RcodeSubagentProfileV1[]): void => {
+  const persistProfiles = useCallback((profiles: JokerSubagentProfileV1[]): void => {
     const defaultProfile = subagents.defaultProfile
     patchSubagents({
       profiles,
@@ -196,7 +196,7 @@ export function SubagentSettingsEditor({
   }, [patchSubagents, subagents.defaultProfile])
 
   // Built-ins may not be in settings yet — upsert so configuring one persists it for the first time.
-  const upsertProfile = useCallback((id: string, patch: Partial<RcodeSubagentProfileV1>): void => {
+  const upsertProfile = useCallback((id: string, patch: Partial<JokerSubagentProfileV1>): void => {
     const baseline = subagents.profiles.find((p) => p.id === id) ?? BUILTIN_AGENTS.find((p) => p.id === id)
     if (!baseline) return
     const next = { ...baseline, ...patch }
@@ -212,7 +212,7 @@ export function SubagentSettingsEditor({
   }, [upsertProfile])
 
   // Per-profile reasoning depth. 'off' is the default → store undefined so the
-  // round-trip omits it (mergeRcodeRuntimeSettings strips 'off'/invalid).
+  // round-trip omits it (mergeJokerRuntimeSettings strips 'off'/invalid).
   const setProfileReasoning = useCallback((id: string, effort: ModelReasoningEffort): void => {
     upsertProfile(id, { reasoningEffort: effort === 'off' ? undefined : effort })
   }, [upsertProfile])
@@ -228,7 +228,7 @@ export function SubagentSettingsEditor({
     persistProfiles(subagents.profiles.filter((x) => x.id !== id))
   }, [subagents.profiles, persistProfiles, t])
 
-  const saveDialog = useCallback((profile: RcodeSubagentProfileV1): void => {
+  const saveDialog = useCallback((profile: JokerSubagentProfileV1): void => {
     const exists = subagents.profiles.some((p) => p.id === profile.id)
     persistProfiles(exists
       ? subagents.profiles.map((p) => (p.id === profile.id ? profile : p))
@@ -237,15 +237,15 @@ export function SubagentSettingsEditor({
   }, [subagents.profiles, persistProfiles])
 
   // Compaction model override is nested under contextCompaction (not a flat
-  // Rcode.* key), so it needs its own patch. Empty string clears it → compaction
+  // Joker.* key), so it needs its own patch. Empty string clears it → compaction
   // falls back to the main conversation model.
   const persistCompactionSlot = useCallback((model: string, providerId: string): void => {
     void onPatch({ contextCompaction: { summaryModel: model, summaryProviderId: providerId } })
   }, [onPatch])
 
-  // Each role slot patches its own agents.Rcode.* override fields. The model/
-  // provider keys are typed pairs on RcodeRuntimeSettingsV1; empty string clears
-  // them server-side (mergeRcodeRuntimeSettings omits blank slots).
+  // Each role slot patches its own agents.Joker.* override fields. The model/
+  // provider keys are typed pairs on JokerRuntimeSettingsV1; empty string clears
+  // them server-side (mergeJokerRuntimeSettings omits blank slots).
   const persistRoleSlot = useCallback(
     (
       modelKey: 'smallModel' | 'titleModel' | 'summaryModel' | 'codeReviewModel' | 'planModel',
@@ -258,8 +258,8 @@ export function SubagentSettingsEditor({
     [onPatch]
   )
 
-  // Persist a role-level reasoning slot to agents.Rcode.*. 'off' is the default;
-  // mergeRcodeRuntimeSettings strips 'off'/invalid, so the field round-trips clean.
+  // Persist a role-level reasoning slot to agents.Joker.*. 'off' is the default;
+  // mergeJokerRuntimeSettings strips 'off'/invalid, so the field round-trips clean.
   const persistRoleReasoning = useCallback(
     (
       key: 'titleReasoningEffort' | 'summaryReasoningEffort' | 'codeReviewReasoningEffort',
@@ -272,7 +272,7 @@ export function SubagentSettingsEditor({
 
   const isBuiltin = (id: string): boolean => BUILTIN_IDS.has(id)
   const delegatable = useMemo(() => {
-    // Rcode always installs its first-party profiles at composition time. Until
+    // Joker always installs its first-party profiles at composition time. Until
     // the runtime contract has an explicit disabled-builtin list, presenting a
     // power switch here would be a false promise: an omitted builtin is added
     // back by mergeBuiltinSubagentProfiles(). Keep those rows honestly enabled.
@@ -1037,19 +1037,19 @@ function ProfileDialog({
   onSave,
   onCancel
 }: {
-  profile: RcodeSubagentProfileV1
+  profile: JokerSubagentProfileV1
   isNew: boolean
   builtin: boolean
   groups: ModelProviderModelGroup[]
-  onSave: (p: RcodeSubagentProfileV1) => void
+  onSave: (p: JokerSubagentProfileV1) => void
   onCancel: () => void
 }): ReactElement {
   const { t } = useTranslation('common')
-  const [d, setD] = useState<RcodeSubagentProfileV1>(initial)
+  const [d, setD] = useState<JokerSubagentProfileV1>(initial)
   const [tab, setTab] = useState<'basic' | 'permissions'>('basic')
   const [catalog, setCatalog] = useState<CapabilityCatalog | null>(null)
   const [catalogLoading, setCatalogLoading] = useState(false)
-  const set = <K extends keyof RcodeSubagentProfileV1>(k: K, v: RcodeSubagentProfileV1[K]): void =>
+  const set = <K extends keyof JokerSubagentProfileV1>(k: K, v: JokerSubagentProfileV1[K]): void =>
     setD((p) => ({ ...p, [k]: v }))
 
   // Lazily fetch the MCP/skill catalog the first time the Permissions tab opens —
@@ -1135,7 +1135,7 @@ function ProfileDialog({
           <Field label={t('agentsView.fMode', 'Mode')}>
             <select
               value={d.mode}
-              onChange={(e) => set('mode', e.target.value as RcodeSubagentProfileV1['mode'])}
+              onChange={(e) => set('mode', e.target.value as JokerSubagentProfileV1['mode'])}
               className="w-full rounded-md border border-ds-border bg-[var(--ds-surface-elevated)] px-3 py-1.5 text-sm"
             >
               <option value="subagent">{t('agentsView.modeDelegate', 'delegate')}</option>
@@ -1219,8 +1219,8 @@ function TabButton({ active, onClick, badge, children }: {
  * REMOVES capabilities, so the child can never exceed the main agent.
  */
 function PermissionsTab({ d, setD, catalog, loading, t }: {
-  d: RcodeSubagentProfileV1
-  setD: Dispatch<SetStateAction<RcodeSubagentProfileV1>>
+  d: JokerSubagentProfileV1
+  setD: Dispatch<SetStateAction<JokerSubagentProfileV1>>
   catalog: CapabilityCatalog | null
   loading: boolean
   t: TFunction<'common'>

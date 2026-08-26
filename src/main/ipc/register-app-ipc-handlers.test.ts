@@ -8,21 +8,21 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
   defaultWriteSettings,
   defaultTerminalSettings,
-  mergeRcodeRuntimeSettings,
+  mergeJokerRuntimeSettings,
   type AppSettingsPatch,
   type AppSettingsV1
 } from '../../shared/app-settings'
 import { registerAppIpcHandlers } from './register-app-ipc-handlers'
 import {
   ApprovalConsentVerifier,
-  RCODE_APPROVAL_CONSENT_HEADER
-} from '../../../Rcode/src/server/approval-consent.js'
+  JOKER_APPROVAL_CONSENT_HEADER
+} from '../../../Joker/src/server/approval-consent.js'
 
 const handlers = new Map<string, (event: unknown, payload?: unknown) => Promise<unknown>>()
 const electronMock = vi.hoisted(() => ({
@@ -92,10 +92,10 @@ function settings(): AppSettingsV1 {
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      Rcode: defaultRcodeRuntimeSettings()
+      Joker: defaultJokerRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -131,7 +131,7 @@ function registerOptions(overrides: Partial<Parameters<typeof import('./register
     pollFeishuInstall: vi.fn() as never,
     startWeixinInstallQrcode: vi.fn() as never,
     pollWeixinInstall: vi.fn() as never,
-    resolveRcodeConfigPath: () => '/tmp/Rcode.json',
+    resolveJokerConfigPath: () => '/tmp/Joker.json',
     showTurnCompleteNotification: vi.fn() as never,
     getAppVersion: () => '0.1.0',
     readGuiUpdateState: vi.fn() as never,
@@ -259,13 +259,13 @@ describe('registerAppIpcHandlers', () => {
     const handler = handlers.get('settings:set')
     expect(handler).toBeTypeOf('function')
     await expect(
-      handler?.({}, { agents: { Rcode: { mysteryFlag: true } } })
+      handler?.({}, { agents: { Joker: { mysteryFlag: true } } })
     ).rejects.toThrow(/Invalid payload for settings:set/)
     expect(applySettingsPatch).not.toHaveBeenCalled()
   })
 
   it('reports whether a workspace directory currently exists', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'Rcode-workspace-exists-'))
+    const root = mkdtempSync(join(tmpdir(), 'Joker-workspace-exists-'))
     const filePath = join(root, 'not-a-directory')
     writeFileSync(filePath, 'file', 'utf8')
     registerAppIpcHandlers(registerOptions())
@@ -287,7 +287,7 @@ describe('registerAppIpcHandlers', () => {
     const payload = {
       theme: 'dark' as const,
       agents: {
-        Rcode: {
+        Joker: {
           port: 19000
         }
       }
@@ -303,7 +303,7 @@ describe('registerAppIpcHandlers', () => {
 
     await handlers.get('settings:set')?.({}, {
       agents: {
-        Rcode: {
+        Joker: {
           model: 'next-model',
           projectConfig: {
             grants: [{ workspaceRoot: '/workspace/forged', configDigest: 'a'.repeat(64) }]
@@ -313,7 +313,7 @@ describe('registerAppIpcHandlers', () => {
     })
 
     expect(applySettingsPatch).toHaveBeenCalledWith({
-      agents: { Rcode: { model: 'next-model' } }
+      agents: { Joker: { model: 'next-model' } }
     })
   })
 
@@ -331,7 +331,7 @@ describe('registerAppIpcHandlers', () => {
       saveSettingsPatch
     }))
     const payload = {
-      agents: { Rcode: { approvalPolicy: 'auto' as const, sandboxMode: 'danger-full-access' as const } }
+      agents: { Joker: { approvalPolicy: 'auto' as const, sandboxMode: 'danger-full-access' as const } }
     }
     const trustedEvent = { sender: contents, senderFrame: mainFrame }
 
@@ -358,7 +358,7 @@ describe('registerAppIpcHandlers', () => {
 
   it('requires a trusted workbench sender and native confirmation for user approvals', async () => {
     const current = settings()
-    current.agents.Rcode.runtimeToken = 'approval-runtime-secret'
+    current.agents.Joker.runtimeToken = 'approval-runtime-secret'
     const mainFrame = { processId: 10, routingId: 20 }
     const contents = { id: 7, mainFrame }
     const mainWindow = { isDestroyed: () => false, webContents: contents }
@@ -391,7 +391,7 @@ describe('registerAppIpcHandlers', () => {
     await expect(handler({ sender: contents, senderFrame: mainFrame }, payload))
       .resolves.toMatchObject({ confirmed: true, response: { ok: true } })
     const headers = runtimeRequest.mock.calls[0]?.[3] as Record<string, string>
-    const consent = headers[RCODE_APPROVAL_CONSENT_HEADER]
+    const consent = headers[JOKER_APPROVAL_CONSENT_HEADER]
     expect(consent).toMatch(/^v1\./)
     expect(new ApprovalConsentVerifier('approval-runtime-secret').verifyAndConsume({
       token: consent,
@@ -476,9 +476,9 @@ describe('registerAppIpcHandlers', () => {
     const [pluginId, css] = uiPluginMocks.activate.mock.calls[0] ?? []
     expect(pluginId).toBe('portrait-theme')
     expect(css).toContain("html[data-ui-plugin='portrait-theme']")
-    expect(css).toContain('--Rcode-ui-plugin-character-offset-x: 4%;')
-    expect(css).toContain('--Rcode-ui-plugin-character-offset-y: -2%;')
-    expect(css).toContain('--Rcode-ui-plugin-character-opacity: 0.93;')
+    expect(css).toContain('--Joker-ui-plugin-character-offset-x: 4%;')
+    expect(css).toContain('--Joker-ui-plugin-character-offset-y: -2%;')
+    expect(css).toContain('--Joker-ui-plugin-character-opacity: 0.93;')
     expect(css).not.toContain('crystal')
     expect(css).not.toContain('opposite-character')
   })
@@ -566,9 +566,9 @@ describe('registerAppIpcHandlers', () => {
       sceneAssets: { assets: { 'scene/frame.png': 'data:image/png;base64,AQID' } }
     })
     const [, css] = uiPluginMocks.activate.mock.calls[0] ?? []
-    expect(css).toContain('--Rcode-ui-plugin-scene-character-offset-x: 3%;')
-    expect(css).toContain('--Rcode-ui-plugin-scene-character-offset-y: -2%;')
-    expect(css).toContain('--Rcode-ui-plugin-scene-frame-offset-x: 1%;')
+    expect(css).toContain('--Joker-ui-plugin-scene-character-offset-x: 3%;')
+    expect(css).toContain('--Joker-ui-plugin-scene-character-offset-y: -2%;')
+    expect(css).toContain('--Joker-ui-plugin-scene-frame-offset-x: 1%;')
     expect(css).not.toContain('scene/frame.png')
     expect(css).not.toContain('rail-left')
     expect(css).not.toContain('sway')
@@ -630,7 +630,7 @@ describe('registerAppIpcHandlers', () => {
             kind: 'telegram' as const,
             botToken: '123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi',
             allowedChatIds: '123456789',
-            botUsername: 'Rcode_test_bot',
+            botUsername: 'Joker_test_bot',
             createdAt: '2026-06-19T00:00:00.000Z'
           },
           conversations: [],
@@ -656,7 +656,7 @@ describe('registerAppIpcHandlers', () => {
 
   it('saves generated files to a user-selected path', async () => {
     const { dialog } = await import('electron')
-    const temp = mkdtempSync(join(tmpdir(), 'Rcode-save-as-'))
+    const temp = mkdtempSync(join(tmpdir(), 'Joker-save-as-'))
     const source = join(temp, 'source.png')
     const target = join(temp, 'downloaded.png')
     writeFileSync(source, 'generated-image')
@@ -703,7 +703,7 @@ describe('registerAppIpcHandlers', () => {
     const handler = handlers.get('extension:artifact:open')!
     const payload = {
       artifactId: 'artifact_1234567890',
-      ownerExtensionId: 'Rcode.video-editor',
+      ownerExtensionId: 'Joker.video-editor',
       ownerExtensionVersion: '1.1.0',
       workspaceId: 'a'.repeat(64),
       workspaceRoot: '/tmp/workspace',
@@ -736,7 +736,7 @@ describe('registerAppIpcHandlers', () => {
   })
 
   it('keeps workspace watches alive across atomic replacements and releases the sender listener', async () => {
-    const temp = mkdtempSync(join(tmpdir(), 'Rcode-watch-atomic-'))
+    const temp = mkdtempSync(join(tmpdir(), 'Joker-watch-atomic-'))
     const target = join(temp, 'motion.svg')
     writeFileSync(target, '<svg id="one"/>')
     const sender = Object.assign(new EventEmitter(), {
@@ -802,11 +802,11 @@ describe('registerAppIpcHandlers', () => {
     const payload = { ...settings(), locale: 'zh' as const }
     const handler = handlers.get('settings:set')
     await expect(handler?.({}, payload)).resolves.toEqual(settings())
-    const { projectConfig: _projectConfig, ...safeRcode } = payload.agents.Rcode
+    const { projectConfig: _projectConfig, ...safeJoker } = payload.agents.Joker
     void _projectConfig
     expect(applySettingsPatch).toHaveBeenCalledWith({
       ...payload,
-      agents: { Rcode: safeRcode }
+      agents: { Joker: safeJoker }
     })
   })
 
@@ -845,7 +845,7 @@ describe('registerAppIpcHandlers', () => {
   it('writes MCP config JSON and notifies the runtime apply hook', async () => {
     const tempRoot = mkdtempSync(join(tmpdir(), 'deepseek-gui-ipc-'))
     const configPath = join(tempRoot, 'mcp.json')
-    const onRcodeMcpConfigWritten = vi.fn(async () => undefined)
+    const onJokerMcpConfigWritten = vi.fn(async () => undefined)
     const content = `${JSON.stringify({
       servers: {
         filesystem: {
@@ -857,16 +857,16 @@ describe('registerAppIpcHandlers', () => {
 
     try {
       registerAppIpcHandlers(registerOptions({
-        resolveRcodeConfigPath: () => configPath,
-        onRcodeMcpConfigWritten
+        resolveJokerConfigPath: () => configPath,
+        onJokerMcpConfigWritten
       }))
 
-      await expect(handlers.get('Rcode:config:write')?.({}, content)).resolves.toEqual({
+      await expect(handlers.get('Joker:config:write')?.({}, content)).resolves.toEqual({
         ok: true,
         path: configPath
       })
       expect(readFileSync(configPath, 'utf8')).toBe(content)
-      expect(onRcodeMcpConfigWritten).toHaveBeenCalledWith(configPath, content)
+      expect(onJokerMcpConfigWritten).toHaveBeenCalledWith(configPath, content)
     } finally {
       rmSync(tempRoot, { recursive: true, force: true })
     }
@@ -875,40 +875,40 @@ describe('registerAppIpcHandlers', () => {
   it('rejects invalid MCP config JSON before writing or applying it', async () => {
     const tempRoot = mkdtempSync(join(tmpdir(), 'deepseek-gui-ipc-'))
     const configPath = join(tempRoot, 'mcp.json')
-    const onRcodeMcpConfigWritten = vi.fn(async () => undefined)
+    const onJokerMcpConfigWritten = vi.fn(async () => undefined)
 
     try {
       registerAppIpcHandlers(registerOptions({
-        resolveRcodeConfigPath: () => configPath,
-        onRcodeMcpConfigWritten
+        resolveJokerConfigPath: () => configPath,
+        onJokerMcpConfigWritten
       }))
 
-      await expect(handlers.get('Rcode:config:write')?.({}, '{')).rejects.toThrow(
+      await expect(handlers.get('Joker:config:write')?.({}, '{')).rejects.toThrow(
         /MCP config must be JSON/
       )
-      await expect(handlers.get('Rcode:config:write')?.({}, '[]')).rejects.toThrow(
+      await expect(handlers.get('Joker:config:write')?.({}, '[]')).rejects.toThrow(
         /MCP config must be a JSON object/
       )
       expect(existsSync(configPath)).toBe(false)
-      expect(onRcodeMcpConfigWritten).not.toHaveBeenCalled()
+      expect(onJokerMcpConfigWritten).not.toHaveBeenCalled()
     } finally {
       rmSync(tempRoot, { recursive: true, force: true })
     }
   })
 
   it('writes and reads project config without implicitly granting MCP trust', async () => {
-    const tempRoot = mkdtempSync(join(tmpdir(), 'Rcode-project-config-ipc-'))
+    const tempRoot = mkdtempSync(join(tmpdir(), 'Joker-project-config-ipc-'))
     const workspace = join(tempRoot, 'workspace')
-    const onRcodeProjectConfigChanged = vi.fn(async () => undefined)
+    const onJokerProjectConfigChanged = vi.fn(async () => undefined)
     const content = JSON.stringify({
       version: 1,
       mcp: { servers: { local: { transport: 'stdio', command: 'node' } } }
     }, null, 2)
     try {
       await import('node:fs/promises').then(({ mkdir }) => mkdir(workspace))
-      registerAppIpcHandlers(registerOptions({ onRcodeProjectConfigChanged }))
+      registerAppIpcHandlers(registerOptions({ onJokerProjectConfigChanged }))
 
-      const written = await handlers.get('Rcode:project-config:write')?.({}, {
+      const written = await handlers.get('Joker:project-config:write')?.({}, {
         workspaceRoot: workspace,
         content
       }) as Record<string, unknown>
@@ -919,11 +919,11 @@ describe('registerAppIpcHandlers', () => {
         content,
         exists: true
       })
-      expect(onRcodeProjectConfigChanged).toHaveBeenCalledWith(
-        expect.stringContaining('/workspace/.Rcode/project.json'),
+      expect(onJokerProjectConfigChanged).toHaveBeenCalledWith(
+        expect.stringContaining('/workspace/.Joker/project.json'),
         content
       )
-      await expect(handlers.get('Rcode:project-config:read')?.({}, { workspaceRoot: workspace }))
+      await expect(handlers.get('Joker:project-config:read')?.({}, { workspaceRoot: workspace }))
         .resolves.toMatchObject({ status: 'valid', trust: 'untrusted', content })
     } finally {
       rmSync(tempRoot, { recursive: true, force: true })
@@ -931,7 +931,7 @@ describe('registerAppIpcHandlers', () => {
   })
 
   it('persists and revokes only the current validated project config digest', async () => {
-    const tempRoot = mkdtempSync(join(tmpdir(), 'Rcode-project-trust-ipc-'))
+    const tempRoot = mkdtempSync(join(tmpdir(), 'Joker-project-trust-ipc-'))
     const workspace = join(tempRoot, 'workspace')
     let current = settings()
     const store = { load: vi.fn(async () => current) }
@@ -939,7 +939,7 @@ describe('registerAppIpcHandlers', () => {
       current = {
         ...current,
         agents: {
-          Rcode: mergeRcodeRuntimeSettings(current.agents.Rcode, patch.agents?.Rcode)
+          Joker: mergeJokerRuntimeSettings(current.agents.Joker, patch.agents?.Joker)
         }
       }
       return current
@@ -947,7 +947,7 @@ describe('registerAppIpcHandlers', () => {
     try {
       await import('node:fs/promises').then(({ mkdir }) => mkdir(workspace))
       registerAppIpcHandlers(registerOptions({ store: store as never, applySettingsPatch }))
-      await handlers.get('Rcode:project-config:write')?.({}, {
+      await handlers.get('Joker:project-config:write')?.({}, {
         workspaceRoot: workspace,
         content: JSON.stringify({
           version: 1,
@@ -955,50 +955,50 @@ describe('registerAppIpcHandlers', () => {
         })
       })
 
-      const reviewed = await handlers.get('Rcode:project-config:read')?.({}, {
+      const reviewed = await handlers.get('Joker:project-config:read')?.({}, {
         workspaceRoot: workspace
       }) as { digest: string }
-      writeFileSync(join(workspace, '.Rcode', 'project.json'), JSON.stringify({
+      writeFileSync(join(workspace, '.Joker', 'project.json'), JSON.stringify({
         version: 1,
         mcp: { servers: { raced: { transport: 'stdio', command: 'node' } } }
       }))
-      await expect(handlers.get('Rcode:project-config:trust')?.({}, {
+      await expect(handlers.get('Joker:project-config:trust')?.({}, {
         workspaceRoot: workspace,
         trusted: true,
         expectedDigest: reviewed.digest
       })).rejects.toThrow(/changed after confirmation/)
-      expect(current.agents.Rcode.projectConfig.grants).toEqual([])
+      expect(current.agents.Joker.projectConfig.grants).toEqual([])
 
-      let currentReview = await handlers.get('Rcode:project-config:read')?.({}, {
+      let currentReview = await handlers.get('Joker:project-config:read')?.({}, {
         workspaceRoot: workspace
       }) as { digest: string }
       electronMock.showMessageBox.mockImplementationOnce(async () => {
-        writeFileSync(join(workspace, '.Rcode', 'project.json'), JSON.stringify({
+        writeFileSync(join(workspace, '.Joker', 'project.json'), JSON.stringify({
           version: 1,
           mcp: { servers: { duringConfirm: { transport: 'stdio', command: 'node' } } }
         }))
         return { response: 0 }
       })
-      await expect(handlers.get('Rcode:project-config:trust')?.({}, {
+      await expect(handlers.get('Joker:project-config:trust')?.({}, {
         workspaceRoot: workspace,
         trusted: true,
         expectedDigest: currentReview.digest
       })).rejects.toThrow(/changed during confirmation/)
-      expect(current.agents.Rcode.projectConfig.grants).toEqual([])
+      expect(current.agents.Joker.projectConfig.grants).toEqual([])
 
-      currentReview = await handlers.get('Rcode:project-config:read')?.({}, {
+      currentReview = await handlers.get('Joker:project-config:read')?.({}, {
         workspaceRoot: workspace
       }) as { digest: string }
       electronMock.showMessageBox.mockResolvedValueOnce({ response: 1 })
-      await expect(handlers.get('Rcode:project-config:trust')?.({}, {
+      await expect(handlers.get('Joker:project-config:trust')?.({}, {
         workspaceRoot: workspace,
         trusted: true,
         expectedDigest: currentReview.digest
       })).resolves.toMatchObject({ status: 'valid', trust: 'untrusted' })
-      expect(current.agents.Rcode.projectConfig.grants).toEqual([])
+      expect(current.agents.Joker.projectConfig.grants).toEqual([])
 
       electronMock.showMessageBox.mockResolvedValue({ response: 0 })
-      await expect(handlers.get('Rcode:project-config:trust')?.({}, {
+      await expect(handlers.get('Joker:project-config:trust')?.({}, {
         workspaceRoot: workspace,
         trusted: true,
         expectedDigest: currentReview.digest
@@ -1009,42 +1009,42 @@ describe('registerAppIpcHandlers', () => {
         defaultId: 1,
         cancelId: 1
       }))
-      expect(current.agents.Rcode.projectConfig.grants).toEqual([
+      expect(current.agents.Joker.projectConfig.grants).toEqual([
         expect.objectContaining({ workspaceRoot: expect.stringContaining('/workspace') })
       ])
 
-      writeFileSync(join(workspace, '.Rcode', 'project.json'), JSON.stringify({
+      writeFileSync(join(workspace, '.Joker', 'project.json'), JSON.stringify({
         version: 1,
         mcp: { servers: { changed: { transport: 'stdio', command: 'node' } } }
       }))
-      await expect(handlers.get('Rcode:project-config:read')?.({}, { workspaceRoot: workspace }))
+      await expect(handlers.get('Joker:project-config:read')?.({}, { workspaceRoot: workspace }))
         .resolves.toMatchObject({ status: 'valid', trust: 'stale' })
 
-      await expect(handlers.get('Rcode:project-config:trust')?.({}, {
+      await expect(handlers.get('Joker:project-config:trust')?.({}, {
         workspaceRoot: workspace,
         trusted: false
       })).resolves.toMatchObject({ status: 'valid', trust: 'untrusted' })
-      expect(current.agents.Rcode.projectConfig.grants).toEqual([])
+      expect(current.agents.Joker.projectConfig.grants).toEqual([])
     } finally {
       rmSync(tempRoot, { recursive: true, force: true })
     }
   })
 
   it('rejects invalid project config payloads and unsafe content without callbacks', async () => {
-    const tempRoot = mkdtempSync(join(tmpdir(), 'Rcode-project-invalid-ipc-'))
+    const tempRoot = mkdtempSync(join(tmpdir(), 'Joker-project-invalid-ipc-'))
     const workspace = join(tempRoot, 'workspace')
-    const onRcodeProjectConfigChanged = vi.fn()
+    const onJokerProjectConfigChanged = vi.fn()
     try {
       await import('node:fs/promises').then(({ mkdir }) => mkdir(workspace))
-      registerAppIpcHandlers(registerOptions({ onRcodeProjectConfigChanged }))
+      registerAppIpcHandlers(registerOptions({ onJokerProjectConfigChanged }))
 
-      await expect(handlers.get('Rcode:project-config:read')?.({}, { workspaceRoot: 'relative' }))
+      await expect(handlers.get('Joker:project-config:read')?.({}, { workspaceRoot: 'relative' }))
         .rejects.toThrow(/absolute path/)
-      await expect(handlers.get('Rcode:project-config:write')?.({}, {
+      await expect(handlers.get('Joker:project-config:write')?.({}, {
         workspaceRoot: workspace,
         content: JSON.stringify({ version: 1, skills: { roots: ['../escape'] } })
       })).rejects.toThrow(/escapes the workspace/)
-      expect(onRcodeProjectConfigChanged).not.toHaveBeenCalled()
+      expect(onJokerProjectConfigChanged).not.toHaveBeenCalled()
     } finally {
       rmSync(tempRoot, { recursive: true, force: true })
     }
@@ -1169,7 +1169,7 @@ describe('registerAppIpcHandlers', () => {
   })
 
   it('creates a unique conversation workspace, suffixing on timestamp collision', async () => {
-    const root = mkdtempSync(join(tmpdir(), 'Rcode-conv-'))
+    const root = mkdtempSync(join(tmpdir(), 'Joker-conv-'))
     try {
       registerAppIpcHandlers(registerOptions({
         store: { load: vi.fn(async () => ({ ...settings(), conversationWorkspaceRoot: root })) } as never
@@ -1195,7 +1195,7 @@ describe('registerAppIpcHandlers', () => {
   })
 
   it('does not create a missing custom conversation workspace root', async () => {
-    const parent = mkdtempSync(join(tmpdir(), 'Rcode-conv-missing-'))
+    const parent = mkdtempSync(join(tmpdir(), 'Joker-conv-missing-'))
     const root = join(parent, 'custom-root')
     try {
       registerAppIpcHandlers(registerOptions({

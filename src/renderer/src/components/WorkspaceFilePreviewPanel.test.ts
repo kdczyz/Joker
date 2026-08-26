@@ -45,7 +45,7 @@ beforeEach(() => {
   ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
   openWorkspacePathInEditor.mockClear()
   vi.stubGlobal('window', {
-    RcodeGui: { platform: 'linux' },
+    JokerGui: { platform: 'linux' },
     innerWidth: 1200,
     innerHeight: 800,
     requestAnimationFrame: (callback: FrameRequestCallback) => {
@@ -77,7 +77,7 @@ describe('WorkspaceFilePreviewPanel toolbar', () => {
     expect(html).toContain('data-reading-mode="false"')
     expect(html).toContain('lucide-maximize-2')
     expect(html).not.toContain('lucide-palette')
-    expect(html).not.toContain('Rcode-issue781-expand-button')
+    expect(html).not.toContain('Joker-issue781-expand-button')
   })
 
   it('renders roving accessible tabs and persistent controls without nested buttons', () => {

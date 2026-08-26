@@ -15,7 +15,7 @@ import { ActiveUiPluginStagePresentation } from '../chat/UiPluginStagePresentati
 import { DevPreviewLaunchCard } from '../DevPreviewLaunchCard'
 import { SessionHeader } from '../SessionHeader'
 import { SidebarTitlebarToggleButton } from '../sidebar/SidebarPrimitives'
-import type { JsonValue } from '@Rcode/extension-api'
+import type { JsonValue } from '@joker-code/extension-api'
 import type { RegisteredContribution } from '../../extensions/contribution-registry'
 import { DeclarativeActionBar } from '../../extensions/ControlledContributionSurfaces'
 

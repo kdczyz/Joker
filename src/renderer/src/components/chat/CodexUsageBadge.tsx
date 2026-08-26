@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 type UsageOk = Extract<
-  import('@shared/Rcode-gui-api').CodexAccountUsageResult,
+  import('@shared/Joker-gui-api').CodexAccountUsageResult,
   { ok: true }
 >
 type UsageState =
@@ -92,7 +92,7 @@ export function CodexUsageBadge({ providerId }: CodexUsageBadgeProps) {
   const inFlightRef = useRef(false)
 
   const refresh = useCallback(async (silent = false) => {
-    if (typeof window.RcodeGui?.codexAccountUsage !== 'function') {
+    if (typeof window.JokerGui?.codexAccountUsage !== 'function') {
       setState({ status: 'hidden' })
       return
     }
@@ -100,7 +100,7 @@ export function CodexUsageBadge({ providerId }: CodexUsageBadgeProps) {
     inFlightRef.current = true
     if (!silent) setState((prev) => (prev.status === 'ok' ? prev : { status: 'loading' }))
     try {
-      const result = await window.RcodeGui.codexAccountUsage()
+      const result = await window.JokerGui.codexAccountUsage()
       if (!mountedRef.current) return
       if (result.ok) {
         setState({ status: 'ok', data: result })

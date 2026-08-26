@@ -3,7 +3,7 @@ import { compileFunction, runInNewContext } from 'node:vm'
 import {
   resolveWindowsGitBashCandidates,
   type WindowsShellResolverOptions
-} from '../../Rcode/src/adapters/tool/windows-shell-resolver.js'
+} from '../../Joker/src/adapters/tool/windows-shell-resolver.js'
 import type {
   WorkflowCodeCheckResult,
   WorkflowCodeLanguage,

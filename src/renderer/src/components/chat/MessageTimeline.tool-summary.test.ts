@@ -227,7 +227,7 @@ describe('MessageTimeline tool summaries', () => {
   })
 })
 
-describe('MessageTimeline Rcode runtime metadata smoke', () => {
+describe('MessageTimeline Joker runtime metadata smoke', () => {
   beforeEach(() => {
     useChatStore.setState({
       route: 'chat',
@@ -366,7 +366,7 @@ describe('MessageTimeline Rcode runtime metadata smoke', () => {
     const html = renderToStaticMarkup(createElement(GeneratedFilesPanel, { blocks: [block] }))
     expect(html).toContain('Preview unavailable')
     expect(html).toContain('disabled=""')
-    expect(html).not.toContain('src="Rcode-media:')
+    expect(html).not.toContain('src="Joker-media:')
   })
 
   it('deduplicates generated files across tool blocks by path', () => {
@@ -402,7 +402,7 @@ describe('MessageTimeline Rcode runtime metadata smoke', () => {
       meta: {
         generatedFiles: [
           { relativePath: 'presentations/brief.pptx' },
-          { relativePath: 'brief.Rcode-ppt.html' }
+          { relativePath: 'brief.Joker-ppt.html' }
         ]
       }
     })
@@ -479,7 +479,7 @@ describe('MessageTimeline Rcode runtime metadata smoke', () => {
         '[Claw IM agent instructions]',
         '',
         '[Agent name]',
-        'Rcode',
+        'Joker',
         '',
         '---',
         '[Current user request]',
@@ -512,8 +512,8 @@ describe('MessageTimeline Rcode runtime metadata smoke', () => {
         },
         sources: [
           {
-            title: 'Rcode docs',
-            url: 'https://example.com/Rcode'
+            title: 'Joker docs',
+            url: 'https://example.com/Joker'
           }
         ]
       }
@@ -527,7 +527,7 @@ describe('MessageTimeline Rcode runtime metadata smoke', () => {
     expect(html).toContain('Child agent')
     expect(html).toContain('research')
     expect(html).toContain('Sources 1')
-    expect(html).toContain('https://example.com/Rcode')
+    expect(html).toContain('https://example.com/Joker')
   })
 
   it('renders failed tool bubbles with the orange warning tone', () => {
@@ -560,8 +560,8 @@ describe('MessageTimeline Rcode runtime metadata smoke', () => {
         },
         sources: [
           {
-            title: 'Rcode docs',
-            url: 'https://example.com/Rcode'
+            title: 'Joker docs',
+            url: 'https://example.com/Joker'
           }
         ]
       }

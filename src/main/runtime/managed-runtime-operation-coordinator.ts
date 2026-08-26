@@ -1,6 +1,6 @@
 /**
  * Serializes the main process operations that can replace or reconfigure the
- * single managed Rcode runtime. The coordinator owns concurrency only; callers
+ * single managed Joker runtime. The coordinator owns concurrency only; callers
  * retain runtime policy and I/O.
  */
 export class ManagedRuntimeOperationCoordinator<Settings> {

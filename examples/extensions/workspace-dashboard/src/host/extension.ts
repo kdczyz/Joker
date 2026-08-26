@@ -1,4 +1,4 @@
-import type { ExtensionContext, JsonObject } from '@Rcode/extension-api'
+import type { ExtensionContext, JsonObject } from '@joker-code/extension-api'
 
 function displayName(entry: JsonObject): string {
   const candidate = entry.name ?? entry.path ?? entry.uri
@@ -27,5 +27,5 @@ export async function activate(context: ExtensionContext): Promise<void> {
 }
 
 export async function deactivate(): Promise<void> {
-  // Rcode disposes context.subscriptions before the Extension Host exits.
+  // Joker disposes context.subscriptions before the Extension Host exits.
 }

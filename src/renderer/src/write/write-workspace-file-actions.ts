@@ -152,9 +152,9 @@ export function createWriteFileActions({
       const requestIsCurrent = (): boolean =>
         directoryRequestGenerations.get(requestKey) === requestGeneration && workspaceIsCurrent(workspaceRoot)
       set((state) => ({ loadingDirs: { ...state.loadingDirs, [targetKey]: true } }))
-      let result: Awaited<ReturnType<typeof window.RcodeGui.listWorkspaceDirectory>>
+      let result: Awaited<ReturnType<typeof window.JokerGui.listWorkspaceDirectory>>
       try {
-        result = await window.RcodeGui.listWorkspaceDirectory({ workspaceRoot, path })
+        result = await window.JokerGui.listWorkspaceDirectory({ workspaceRoot, path })
       } catch (error) {
         if (!requestIsCurrent()) return null
         set((state) => ({
@@ -237,7 +237,7 @@ export function createWriteFileActions({
       set({ fileLoading: true, fileError: null })
       try {
         if (isWriteImageFilePath(path)) {
-          const result = await window.RcodeGui.readWorkspaceImage({ path, workspaceRoot })
+          const result = await window.JokerGui.readWorkspaceImage({ path, workspaceRoot })
           if (!navigationIsCurrent(generation, workspaceRoot)) return
           if (!result.ok) {
             set({ fileLoading: false, fileError: result.message })
@@ -271,7 +271,7 @@ export function createWriteFileActions({
         }
 
         if (isWritePdfFilePath(path)) {
-          const result = await window.RcodeGui.readWorkspacePdf({ path, workspaceRoot })
+          const result = await window.JokerGui.readWorkspacePdf({ path, workspaceRoot })
           if (!navigationIsCurrent(generation, workspaceRoot)) return
           if (!result.ok) {
             set({ fileLoading: false, fileError: result.message })
@@ -304,7 +304,7 @@ export function createWriteFileActions({
           return
         }
 
-        const result = await window.RcodeGui.readWorkspaceFile({ path, workspaceRoot })
+        const result = await window.JokerGui.readWorkspaceFile({ path, workspaceRoot })
         if (!navigationIsCurrent(generation, workspaceRoot)) return
         if (!result.ok) {
           set({ fileLoading: false, fileError: result.message })
@@ -373,9 +373,9 @@ export function createWriteFileActions({
     },
 
     createFile: async (workspaceRoot, path, content = '') => {
-      let result: Awaited<ReturnType<typeof window.RcodeGui.createWorkspaceFile>>
+      let result: Awaited<ReturnType<typeof window.JokerGui.createWorkspaceFile>>
       try {
-        result = await window.RcodeGui.createWorkspaceFile({ workspaceRoot, path, content })
+        result = await window.JokerGui.createWorkspaceFile({ workspaceRoot, path, content })
       } catch (error) {
         if (workspaceIsCurrent(workspaceRoot)) set({ fileError: formatActionError(error) })
         return null
@@ -391,9 +391,9 @@ export function createWriteFileActions({
     },
 
     createDirectory: async (workspaceRoot, path) => {
-      let result: Awaited<ReturnType<typeof window.RcodeGui.createWorkspaceDirectory>>
+      let result: Awaited<ReturnType<typeof window.JokerGui.createWorkspaceDirectory>>
       try {
-        result = await window.RcodeGui.createWorkspaceDirectory({ workspaceRoot, path })
+        result = await window.JokerGui.createWorkspaceDirectory({ workspaceRoot, path })
       } catch (error) {
         if (workspaceIsCurrent(workspaceRoot)) set({ fileError: formatActionError(error) })
         return null
@@ -415,9 +415,9 @@ export function createWriteFileActions({
     renameEntry: async (workspaceRoot, path, newName) => {
       cancelExternalSyncAnimation()
       const nextName = ensureMarkdownRenameExtension(path, newName.trim())
-      let result: Awaited<ReturnType<typeof window.RcodeGui.renameWorkspaceEntry>>
+      let result: Awaited<ReturnType<typeof window.JokerGui.renameWorkspaceEntry>>
       try {
-        result = await window.RcodeGui.renameWorkspaceEntry({ workspaceRoot, path, newName: nextName })
+        result = await window.JokerGui.renameWorkspaceEntry({ workspaceRoot, path, newName: nextName })
       } catch (error) {
         if (workspaceIsCurrent(workspaceRoot)) set({ fileError: formatActionError(error) })
         return null
@@ -498,9 +498,9 @@ export function createWriteFileActions({
 
     deleteEntry: async (workspaceRoot, path) => {
       cancelExternalSyncAnimation()
-      let result: Awaited<ReturnType<typeof window.RcodeGui.deleteWorkspaceEntry>>
+      let result: Awaited<ReturnType<typeof window.JokerGui.deleteWorkspaceEntry>>
       try {
-        result = await window.RcodeGui.deleteWorkspaceEntry({ workspaceRoot, path })
+        result = await window.JokerGui.deleteWorkspaceEntry({ workspaceRoot, path })
       } catch (error) {
         if (workspaceIsCurrent(workspaceRoot)) set({ fileError: formatActionError(error) })
         return false

@@ -554,7 +554,7 @@ export function NodeConfigPanel({
     }
     let cancelled = false
     const handle = setTimeout(() => {
-      window.RcodeGui
+      window.JokerGui
         .checkWorkflowCode(codeLanguage, codeValue)
         .then((result) => {
           if (!cancelled) setCodeCheck(result)
@@ -890,7 +890,7 @@ function TestNodeDialog({
     setResult(null)
     try {
       await onBeforeTest?.()
-      const response = await window.RcodeGui.testWorkflowNode(workflowId, node.id, mock)
+      const response = await window.JokerGui.testWorkflowNode(workflowId, node.id, mock)
       if (response.ok) setResult(response.result)
       else setError(response.message)
     } catch (caught) {

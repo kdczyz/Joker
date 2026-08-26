@@ -1,9 +1,9 @@
-import type { RcodeGuiApi } from '../shared/Rcode-gui-api'
+import type { JokerGuiApi } from '../shared/Joker-gui-api'
 
-export type * from '../shared/Rcode-gui-api'
+export type * from '../shared/Joker-gui-api'
 
 declare global {
   interface Window {
-    RcodeGui: RcodeGuiApi
+    JokerGui: JokerGuiApi
   }
 }

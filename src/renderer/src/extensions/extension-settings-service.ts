@@ -1,11 +1,11 @@
-import type { JsonValue } from '@Rcode/extension-api'
+import type { JsonValue } from '@joker-code/extension-api'
 
 /**
  * Renderer-facing contract for the authenticated declarative settings broker.
  *
  * There is deliberately no localStorage implementation: host content scripts
- * share the Rcode document origin, so renderer-origin storage cannot isolate one
- * extension's configuration from another extension. Main/Rcode must derive the
+ * share the Joker document origin, so renderer-origin storage cannot isolate one
+ * extension's configuration from another extension. Main/Joker must derive the
  * owner from the qualified contribution ID, revalidate the manifest property
  * schema and scope, and persist into the extension's global/workspace state.
  */

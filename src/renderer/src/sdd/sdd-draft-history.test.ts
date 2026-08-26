@@ -24,10 +24,10 @@ function createMemoryStorage(): Storage {
 function directory(entries: Array<{ name: string, type: 'file' | 'directory', path?: string }>): WorkspaceDirectoryListResult {
   return {
     ok: true,
-    root: '/tmp/app/.Rcodesdd/requirements',
+    root: '/tmp/app/.Jokersdd/requirements',
     entries: entries.map((entry) => ({
       name: entry.name,
-      path: entry.path ?? `/tmp/app/.Rcodesdd/requirements/${entry.name}`,
+      path: entry.path ?? `/tmp/app/.Jokersdd/requirements/${entry.name}`,
       type: entry.type,
       ext: entry.type === 'file' ? '.md' : ''
     }))
@@ -54,22 +54,22 @@ describe('sdd-draft-history', () => {
     expect(titleFromSddDraftContent('', 'fallback')).toBe('fallback')
   })
 
-  it('discovers disk-only requirement drafts under .Rcodesdd/requirements', async () => {
+  it('discovers disk-only requirement drafts under .Jokersdd/requirements', async () => {
     const draftId = '123e4567-e89b-12d3-a456-426614174000'
     const listWorkspaceDirectory = vi.fn(async (options: WorkspaceDirectoryTarget) => {
-      if (options.path === '.Rcodesdd/requirements') {
+      if (options.path === '.Jokersdd/requirements') {
         return directory([
           { name: draftId, type: 'directory' },
           { name: 'not-a-draft', type: 'directory' },
           { name: 'requirement.md', type: 'file' }
         ])
       }
-      if (options.path === `.Rcodesdd/requirements/${draftId}`) {
+      if (options.path === `.Jokersdd/requirements/${draftId}`) {
         return directory([
           {
             name: 'requirement.md',
             type: 'file',
-            path: `/tmp/app/.Rcodesdd/requirements/${draftId}/requirement.md`
+            path: `/tmp/app/.Jokersdd/requirements/${draftId}/requirement.md`
           }
         ])
       }
@@ -77,7 +77,7 @@ describe('sdd-draft-history', () => {
     })
     const readWorkspaceFile = vi.fn(async (_options: WorkspaceFileTarget) => ({
       ok: true as const,
-      path: `/tmp/app/.Rcodesdd/requirements/${draftId}/requirement.md`,
+      path: `/tmp/app/.Jokersdd/requirements/${draftId}/requirement.md`,
       content: '# Payment requirement\n\n## Goal',
       size: 28,
       truncated: false
@@ -92,7 +92,7 @@ describe('sdd-draft-history', () => {
     expect(history).toHaveLength(1)
     expect(history[0]).toMatchObject({
       title: 'Payment requirement',
-      relativePath: `.Rcodesdd/requirements/${draftId}/requirement.md`,
+      relativePath: `.Jokersdd/requirements/${draftId}/requirement.md`,
       searchText: '# Payment requirement\n\n## Goal',
       source: 'disk'
     })
@@ -101,14 +101,14 @@ describe('sdd-draft-history', () => {
   it('includes Requirement AI thread ids from chat meta', async () => {
     const draftId = '123e4567-e89b-12d3-a456-426614174000'
     const listWorkspaceDirectory = vi.fn(async (options: WorkspaceDirectoryTarget) => {
-      if (options.path === '.Rcodesdd/requirements') {
+      if (options.path === '.Jokersdd/requirements') {
         return directory([{ name: draftId, type: 'directory' }])
       }
-      if (options.path === `.Rcodesdd/requirements/${draftId}`) {
+      if (options.path === `.Jokersdd/requirements/${draftId}`) {
         return directory([{
           name: 'requirement.md',
           type: 'file',
-          path: `/tmp/app/.Rcodesdd/requirements/${draftId}/requirement.md`
+          path: `/tmp/app/.Jokersdd/requirements/${draftId}/requirement.md`
         }])
       }
       return { ok: false as const, message: 'missing' }
@@ -132,7 +132,7 @@ describe('sdd-draft-history', () => {
       }
       return {
         ok: true as const,
-        path: `/tmp/app/.Rcodesdd/requirements/${draftId}/requirement.md`,
+        path: `/tmp/app/.Jokersdd/requirements/${draftId}/requirement.md`,
         content: '# Payment requirement',
         size: 21,
         truncated: false
@@ -161,18 +161,18 @@ describe('sdd-draft-history', () => {
     useSddDraftStore.getState().clearActiveDraft()
 
     const listWorkspaceDirectory = vi.fn(async (options: WorkspaceDirectoryTarget) => {
-      if (options.path === '.Rcodesdd/requirements') {
+      if (options.path === '.Jokersdd/requirements') {
         return directory([{ name: '123e4567-e89b-12d3-a456-426614174000', type: 'directory' }])
       }
       return directory([{
         name: 'requirement.md',
         type: 'file',
-        path: '/tmp/app/.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md'
+        path: '/tmp/app/.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md'
       }])
     })
     const readWorkspaceFile = vi.fn(async () => ({
       ok: true as const,
-      path: '/tmp/app/.Rcodesdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
+      path: '/tmp/app/.Jokersdd/requirements/123e4567-e89b-12d3-a456-426614174000/requirement.md',
       content: '# Disk title',
       size: 12,
       truncated: false

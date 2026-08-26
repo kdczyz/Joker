@@ -12,7 +12,7 @@ function setRuntimeRequest(runtimeRequest: RuntimeRequest): void {
   Object.defineProperty(globalThis, 'window', {
     configurable: true,
     value: {
-      RcodeGui: {
+      JokerGui: {
         runtimeRequest
       }
     }

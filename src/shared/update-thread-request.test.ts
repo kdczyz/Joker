@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { UpdateThreadRequest } from '../../Rcode/src/contracts/threads'
+import { UpdateThreadRequest } from '../../Joker/src/contracts/threads'
 
 describe('UpdateThreadRequest', () => {
   it('accepts workspace as a valid patch field', () => {

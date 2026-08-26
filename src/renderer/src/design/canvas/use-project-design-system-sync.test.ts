@@ -27,7 +27,7 @@ function installApi(options: {
     content = payload.content
     return { ok: true as const, path: '/workspace/DESIGN.md', bytesWritten: payload.content.length }
   })
-  vi.stubGlobal('window', { RcodeGui: { readWorkspaceFile, writeWorkspaceFile } })
+  vi.stubGlobal('window', { JokerGui: { readWorkspaceFile, writeWorkspaceFile } })
   return { readWorkspaceFile, writeWorkspaceFile, content: () => content }
 }
 

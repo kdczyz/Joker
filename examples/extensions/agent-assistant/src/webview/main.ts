@@ -3,15 +3,15 @@ import {
   type AgentRunEvent,
   type AgentRunSubscription,
   type HostTransport
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 
 declare global {
   interface Window {
-    readonly RcodeExtension: HostTransport
+    readonly JokerExtension: HostTransport
   }
 }
 
-const client = new ExtensionHostClient(window.RcodeExtension)
+const client = new ExtensionHostClient(window.JokerExtension)
 const form = document.querySelector<HTMLFormElement>('#prompt-form')
 const prompt = document.querySelector<HTMLTextAreaElement>('#prompt')
 const cancelButton = document.querySelector<HTMLButtonElement>('#cancel')

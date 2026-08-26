@@ -10,13 +10,13 @@ function artifact(id: string): DesignArtifact {
     id,
     kind: 'html',
     title: 'Home',
-    relativePath: `.Rcode-design/doc/${id}/v2.html`,
-    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
+    relativePath: `.Joker-design/doc/${id}/v2.html`,
+    designMdPath: `.Joker-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
     versions: [
-      { id: `${id}-v1`, relativePath: `.Rcode-design/doc/${id}/v1.html`, createdAt: now, summary: 'Base screen' },
-      { id: `${id}-v2`, relativePath: `.Rcode-design/doc/${id}/v2.html`, createdAt: now, summary: '' }
+      { id: `${id}-v1`, relativePath: `.Joker-design/doc/${id}/v1.html`, createdAt: now, summary: 'Base screen' },
+      { id: `${id}-v2`, relativePath: `.Joker-design/doc/${id}/v2.html`, createdAt: now, summary: '' }
     ]
   }
 }
@@ -26,13 +26,13 @@ function svgArtifact(id: string): DesignArtifact {
     id,
     kind: 'svg',
     title: 'Orbit loader',
-    relativePath: `.Rcode-design/doc/${id}/v2.svg`,
-    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
+    relativePath: `.Joker-design/doc/${id}/v2.svg`,
+    designMdPath: `.Joker-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
     versions: [
-      { id: `${id}-v1`, relativePath: `.Rcode-design/doc/${id}/v1.svg`, createdAt: now, summary: 'Base motion' },
-      { id: `${id}-v2`, relativePath: `.Rcode-design/doc/${id}/v2.svg`, createdAt: now, summary: '' }
+      { id: `${id}-v1`, relativePath: `.Joker-design/doc/${id}/v1.svg`, createdAt: now, summary: 'Base motion' },
+      { id: `${id}-v2`, relativePath: `.Joker-design/doc/${id}/v2.svg`, createdAt: now, summary: '' }
     ],
     node: { x: 0, y: 0, width: 320, height: 240, sizeMode: 'manual', viewMode: 'preview' }
   }
@@ -41,10 +41,10 @@ function svgArtifact(id: string): DesignArtifact {
 function resolvedTarget(patch: Partial<ResolvedDesignTurnTarget> = {}): ResolvedDesignTurnTarget {
   return {
     target: 'html',
-    artifactRelativePath: '.Rcode-design/doc/home/v2.html',
-    basePath: '.Rcode-design/doc/home/v1.html',
+    artifactRelativePath: '.Joker-design/doc/home/v2.html',
+    basePath: '.Joker-design/doc/home/v1.html',
     htmlArtifactId: 'home',
-    designNotesPath: '.Rcode-design/doc/home/DESIGN.md',
+    designNotesPath: '.Joker-design/doc/home/DESIGN.md',
     visibleTargets: [],
     targetAutoRepairKey: 'artifact:home',
     ...patch
@@ -95,11 +95,11 @@ describe('prepareDesignTurnFiles', () => {
 
     expect(result).toEqual({ ok: true, previewSource: 'base', notesWritten: true })
     expect(api.writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: '.Rcode-design/doc/home/v2.html',
+      path: '.Joker-design/doc/home/v2.html',
       content: '<!doctype html><html><body>Base</body></html>'
     }))
     expect(api.writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: '.Rcode-design/doc/home/DESIGN.md',
+      path: '.Joker-design/doc/home/DESIGN.md',
       content: expect.stringContaining('Tighten hierarchy')
     }))
     expect(api.writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
@@ -125,11 +125,11 @@ describe('prepareDesignTurnFiles', () => {
       promptText: 'Add a calmer loop',
       resolvedTarget: resolvedTarget({
         target: 'svg',
-        artifactRelativePath: '.Rcode-design/doc/orbit/v2.svg',
-        basePath: '.Rcode-design/doc/orbit/v1.svg',
+        artifactRelativePath: '.Joker-design/doc/orbit/v2.svg',
+        basePath: '.Joker-design/doc/orbit/v1.svg',
         htmlArtifactId: undefined,
         svgArtifactId: 'orbit',
-        designNotesPath: '.Rcode-design/doc/orbit/DESIGN.md'
+        designNotesPath: '.Joker-design/doc/orbit/DESIGN.md'
       }),
       artifacts: [svg],
       api
@@ -137,13 +137,13 @@ describe('prepareDesignTurnFiles', () => {
 
     expect(result).toEqual({ ok: true, previewSource: 'base', notesWritten: true })
     expect(api.readWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: '.Rcode-design/doc/orbit/v2.svg'
+      path: '.Joker-design/doc/orbit/v2.svg'
     }))
     expect(api.writeWorkspaceFile).not.toHaveBeenCalledWith(expect.objectContaining({
-      path: '.Rcode-design/doc/orbit/v2.svg'
+      path: '.Joker-design/doc/orbit/v2.svg'
     }))
     expect(api.writeWorkspaceFile).toHaveBeenCalledWith(expect.objectContaining({
-      path: '.Rcode-design/doc/orbit/DESIGN.md',
+      path: '.Joker-design/doc/orbit/DESIGN.md',
       content: expect.stringContaining('Add a calmer loop')
     }))
   })

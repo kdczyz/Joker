@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import type { RcodeRuntimeStatusPayload } from '@shared/Rcode-gui-api'
+import type { JokerRuntimeStatusPayload } from '@shared/Joker-gui-api'
 import { RuntimeBanner } from '../RuntimeBanner'
 import {
   resolveWriteRuntimeBannerMessage,
@@ -8,7 +8,7 @@ import {
 import { shouldSuppressRuntimeErrorBanner } from '../../lib/runtime-banner-visibility'
 
 type UseWorkbenchRuntimeBannersInput = {
-  runtimeStatus: RcodeRuntimeStatusPayload | null
+  runtimeStatus: JokerRuntimeStatusPayload | null
   runtimeConnection: RuntimeConnectionLike
   runtimeLogPath: string
   runtimeError: string | null
@@ -54,8 +54,8 @@ export function useWorkbenchRuntimeBanners({
       runtimeReady={runtimeConnection === 'ready'}
       stageInsetClass={stageInsetClass}
       onOpenLogDir={
-        typeof window !== 'undefined' && typeof window.RcodeGui?.openLogDir === 'function'
-          ? () => window.RcodeGui.openLogDir()
+        typeof window !== 'undefined' && typeof window.JokerGui?.openLogDir === 'function'
+          ? () => window.JokerGui.openLogDir()
           : undefined
       }
       onOpenSettings={onOpenSettings}

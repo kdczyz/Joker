@@ -5,7 +5,7 @@ import {
   type JsonObject,
   type WorkspaceApi,
   type WorkspaceFile
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import {
   MAX_PRESENTATION_HTML_BYTES,
   createPresentationProject,
@@ -54,14 +54,14 @@ class MemoryWorkspace implements WorkspaceApi {
   }
 }
 
-test('presentation paths are root-level bounded .Rcode-ppt.html names', () => {
-  assert.equal(validatePresentationPath('roadmap.Rcode-ppt.html'), 'roadmap.Rcode-ppt.html')
+test('presentation paths are root-level bounded .Joker-ppt.html names', () => {
+  assert.equal(validatePresentationPath('roadmap.Joker-ppt.html'), 'roadmap.Joker-ppt.html')
   for (const invalid of [
-    '../roadmap.Rcode-ppt.html',
-    'slides/roadmap.Rcode-ppt.html',
-    '/roadmap.Rcode-ppt.html',
-    'C:\\roadmap.Rcode-ppt.html',
-    '.Rcode-ppt.html',
+    '../roadmap.Joker-ppt.html',
+    'slides/roadmap.Joker-ppt.html',
+    '/roadmap.Joker-ppt.html',
+    'C:\\roadmap.Joker-ppt.html',
+    '.Joker-ppt.html',
     'roadmap.html'
   ]) {
     assert.throws(() => validatePresentationPath(invalid), (error: unknown) =>
@@ -72,7 +72,7 @@ test('presentation paths are root-level bounded .Rcode-ppt.html names', () => {
 test('apply uses revision CAS and durable operation receipts', async () => {
   const workspace = new MemoryWorkspace()
   const service = new PresentationProjectService(workspace)
-  const created = await service.create({ path: 'roadmap.Rcode-ppt.html', title: 'Roadmap' })
+  const created = await service.create({ path: 'roadmap.Joker-ppt.html', title: 'Roadmap' })
   assert.equal(created.project.revision, 1)
   assert.match(created.contentSha256, /^[0-9a-f]{64}$/)
 
@@ -116,9 +116,9 @@ test('apply uses revision CAS and durable operation receipts', async () => {
 test('parsed insert and upsert operations work without optional indexes', async () => {
   const workspace = new MemoryWorkspace()
   const service = new PresentationProjectService(workspace)
-  await service.create({ path: 'optional-index.Rcode-ppt.html' })
+  await service.create({ path: 'optional-index.Joker-ppt.html' })
   const inserted = await service.apply({
-    path: 'optional-index.Rcode-ppt.html',
+    path: 'optional-index.Joker-ppt.html',
     expectedRevision: 1,
     operationId: 'insert-without-index',
     operations: parsePresentationOperations([
@@ -126,7 +126,7 @@ test('parsed insert and upsert operations work without optional indexes', async 
     ])
   })
   const updated = await service.apply({
-    path: 'optional-index.Rcode-ppt.html',
+    path: 'optional-index.Joker-ppt.html',
     expectedRevision: inserted.currentRevision,
     operationId: 'upsert-without-index',
     operations: parsePresentationOperations([{
@@ -141,16 +141,16 @@ test('parsed insert and upsert operations work without optional indexes', async 
 test('per-path queue serializes concurrent mutations before CAS', async () => {
   const workspace = new MemoryWorkspace()
   const service = new PresentationProjectService(workspace)
-  await service.create({ path: 'queue.Rcode-ppt.html' })
+  await service.create({ path: 'queue.Joker-ppt.html' })
   const results = await Promise.allSettled([
     service.apply({
-      path: 'queue.Rcode-ppt.html',
+      path: 'queue.Joker-ppt.html',
       expectedRevision: 1,
       operationId: 'queue-a',
       operations: [{ kind: 'document.update', patch: { title: 'A' } }]
     }),
     service.apply({
-      path: 'queue.Rcode-ppt.html',
+      path: 'queue.Joker-ppt.html',
       expectedRevision: 1,
       operationId: 'queue-b',
       operations: [{ kind: 'document.update', patch: { title: 'B' } }]
@@ -158,15 +158,15 @@ test('per-path queue serializes concurrent mutations before CAS', async () => {
   ])
   assert.equal(results.filter(({ status }) => status === 'fulfilled').length, 1)
   assert.equal(results.filter(({ status }) => status === 'rejected').length, 1)
-  assert.equal((await service.read('queue.Rcode-ppt.html')).project.revision, 2)
+  assert.equal((await service.read('queue.Joker-ppt.html')).project.revision, 2)
 })
 
 test('case aliases share a lock and cannot overwrite an existing presentation', async () => {
   const workspace = new MemoryWorkspace()
   const service = new PresentationProjectService(workspace)
-  await service.create({ path: 'Roadmap.Rcode-ppt.html' })
+  await service.create({ path: 'Roadmap.Joker-ppt.html' })
   await assert.rejects(
-    service.create({ path: 'roadmap.Rcode-ppt.html' }),
+    service.create({ path: 'roadmap.Joker-ppt.html' }),
     isConflict
   )
   assert.equal(workspace.writes, 1)
@@ -175,9 +175,9 @@ test('case aliases share a lock and cannot overwrite an existing presentation', 
 test('semantic operation failures stay classified before persistence', async () => {
   const workspace = new MemoryWorkspace()
   const service = new PresentationProjectService(workspace)
-  await service.create({ path: 'semantic-failure.Rcode-ppt.html' })
+  await service.create({ path: 'semantic-failure.Joker-ppt.html' })
   await assert.rejects(service.apply({
-    path: 'semantic-failure.Rcode-ppt.html',
+    path: 'semantic-failure.Joker-ppt.html',
     expectedRevision: 1,
     operationId: 'missing-slide',
     operations: [{
@@ -195,7 +195,7 @@ test('write verification detects transport corruption', async () => {
   workspace.corruptNextWrite = true
   const service = new PresentationProjectService(workspace)
   await assert.rejects(
-    service.create({ path: 'corrupt.Rcode-ppt.html' }),
+    service.create({ path: 'corrupt.Joker-ppt.html' }),
     (error: unknown) =>
       error instanceof ExtensionApiError && error.code === 'INTERNAL_ERROR'
   )
@@ -204,26 +204,26 @@ test('write verification detects transport corruption', async () => {
 test('validation reports malformed and non-canonical HTML without accepting an unsafe shell', async () => {
   const workspace = new MemoryWorkspace()
   const service = new PresentationProjectService(workspace)
-  await service.create({ path: 'validate.Rcode-ppt.html' })
-  const canonical = workspace.files.get('validate.Rcode-ppt.html')
+  await service.create({ path: 'validate.Joker-ppt.html' })
+  const canonical = workspace.files.get('validate.Joker-ppt.html')
   assert.ok(canonical)
 
-  workspace.files.set('validate.Rcode-ppt.html', {
+  workspace.files.set('validate.Joker-ppt.html', {
     ...canonical,
     content: canonical.content.replace('<body>', '<body><script>alert(1)</script>')
   })
-  const unsafe = await service.validate('validate.Rcode-ppt.html')
+  const unsafe = await service.validate('validate.Joker-ppt.html')
   assert.equal(unsafe.valid, false)
   assert.equal(unsafe.revision, 1)
   assert.equal(unsafe.errors[0]?.code, 'non_canonical_html')
-  await assert.rejects(service.read('validate.Rcode-ppt.html'), (error: unknown) =>
+  await assert.rejects(service.read('validate.Joker-ppt.html'), (error: unknown) =>
     error instanceof ExtensionApiError && error.code === 'VALIDATION_FAILED')
 
-  workspace.files.set('validate.Rcode-ppt.html', {
+  workspace.files.set('validate.Joker-ppt.html', {
     ...canonical,
     content: '<!doctype html><title>broken</title>'
   })
-  const malformed = await service.validate('validate.Rcode-ppt.html')
+  const malformed = await service.validate('validate.Joker-ppt.html')
   assert.equal(malformed.valid, false)
   assert.equal(malformed.revision, null)
   assert.ok(malformed.errors.length > 0)
@@ -232,14 +232,14 @@ test('validation reports malformed and non-canonical HTML without accepting an u
 test('oversized rendered projections fail as known validation errors before writing', async () => {
   const workspace = new MemoryWorkspace()
   const service = new PresentationProjectService(workspace)
-  await service.create({ path: 'render-limit.Rcode-ppt.html' })
+  await service.create({ path: 'render-limit.Joker-ppt.html' })
   const operations = Array.from({ length: 128 }, (_, index) => ({
     kind: 'element.upsert' as const,
     slideId: 'slide-1',
     element: createTextElement(`element-${index}`, { text: '<'.repeat(1000) })
   }))
   await assert.rejects(service.apply({
-    path: 'render-limit.Rcode-ppt.html',
+    path: 'render-limit.Joker-ppt.html',
     expectedRevision: 1,
     operationId: 'render-too-large',
     operations
@@ -252,14 +252,14 @@ test('oversized rendered projections fail as known validation errors before writ
     firstSlideId: 'slide-1'
   })
   project.slides[0].elements = operations.map(({ element }) => element)
-  const minimalHtml = `<script id="Rcode-presentation-model" type="application/json">${stableStringify(project)}</script>`
+  const minimalHtml = `<script id="Joker-presentation-model" type="application/json">${stableStringify(project)}</script>`
   assert.ok(new TextEncoder().encode(minimalHtml).byteLength < MAX_PRESENTATION_HTML_BYTES)
-  workspace.files.set('render-limit.Rcode-ppt.html', {
-    path: 'render-limit.Rcode-ppt.html',
+  workspace.files.set('render-limit.Joker-ppt.html', {
+    path: 'render-limit.Joker-ppt.html',
     content: minimalHtml,
     encoding: 'utf8'
   })
-  const validation = await service.validate('render-limit.Rcode-ppt.html')
+  const validation = await service.validate('render-limit.Joker-ppt.html')
   assert.equal(validation.valid, false)
   assert.equal(validation.revision, 1)
   assert.equal(validation.errors[0]?.code, 'html_too_large')
@@ -268,55 +268,55 @@ test('oversized rendered projections fail as known validation errors before writ
 test('workspace entries reported as symlinks or other types fail closed', async () => {
   const workspace = new MemoryWorkspace()
   const service = new PresentationProjectService(workspace)
-  await service.create({ path: 'regular.Rcode-ppt.html' })
-  workspace.listOverride = [{ name: 'regular.Rcode-ppt.html', type: 'other' }]
-  await assert.rejects(service.read('regular.Rcode-ppt.html'), (error: unknown) =>
+  await service.create({ path: 'regular.Joker-ppt.html' })
+  workspace.listOverride = [{ name: 'regular.Joker-ppt.html', type: 'other' }]
+  await assert.rejects(service.read('regular.Joker-ppt.html'), (error: unknown) =>
     error instanceof ExtensionApiError && error.code === 'VALIDATION_FAILED')
 })
 
 test('copy export is non-destructive and safely replayable', async () => {
   const workspace = new MemoryWorkspace()
   const service = new PresentationProjectService(workspace)
-  await service.create({ path: 'source.Rcode-ppt.html' })
+  await service.create({ path: 'source.Joker-ppt.html' })
   const exported = await service.exportCopy({
-    path: 'source.Rcode-ppt.html',
-    destinationPath: 'copy.Rcode-ppt.html',
+    path: 'source.Joker-ppt.html',
+    destinationPath: 'copy.Joker-ppt.html',
     expectedRevision: 1
   })
   assert.equal(exported.idempotentReplay, false)
   assert.match(exported.contentSha256, /^[0-9a-f]{64}$/)
   const replay = await service.exportCopy({
-    path: 'source.Rcode-ppt.html',
-    destinationPath: 'copy.Rcode-ppt.html',
+    path: 'source.Joker-ppt.html',
+    destinationPath: 'copy.Joker-ppt.html',
     expectedRevision: 1
   })
   assert.equal(replay.idempotentReplay, true)
   assert.equal(replay.contentSha256, exported.contentSha256)
 
-  await service.create({ path: 'occupied.Rcode-ppt.html', title: 'Other' })
+  await service.create({ path: 'occupied.Joker-ppt.html', title: 'Other' })
   await assert.rejects(service.exportCopy({
-    path: 'source.Rcode-ppt.html',
-    destinationPath: 'occupied.Rcode-ppt.html',
+    path: 'source.Joker-ppt.html',
+    destinationPath: 'occupied.Joker-ppt.html',
     expectedRevision: 1
   }), isConflict)
 })
 
 test('size and saturated root listings fail closed', async () => {
   const workspace = new MemoryWorkspace()
-  workspace.files.set('large.Rcode-ppt.html', {
-    path: 'large.Rcode-ppt.html',
+  workspace.files.set('large.Joker-ppt.html', {
+    path: 'large.Joker-ppt.html',
     content: 'x'.repeat(MAX_PRESENTATION_HTML_BYTES + 1),
     encoding: 'utf8'
   })
   const service = new PresentationProjectService(workspace)
-  await assert.rejects(service.read('large.Rcode-ppt.html'), (error: unknown) =>
+  await assert.rejects(service.read('large.Joker-ppt.html'), (error: unknown) =>
     error instanceof ExtensionApiError && error.code === 'RESOURCE_LIMIT')
 
   workspace.listOverride = Array.from({ length: 10_000 }, (_, index) => ({
     name: `entry-${index}.txt`,
     type: 'file'
   }))
-  await assert.rejects(service.create({ path: 'unseen.Rcode-ppt.html' }), isConflict)
+  await assert.rejects(service.create({ path: 'unseen.Joker-ppt.html' }), isConflict)
 })
 
 function isConflict(error: unknown): boolean {

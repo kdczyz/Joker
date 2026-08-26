@@ -141,7 +141,7 @@ export function ChatDesignTreePanel({
       <SidebarTreeRow
         key={doc.id}
         active={active}
-        title={`.Rcode-design/${doc.id}`}
+        title={`.Joker-design/${doc.id}`}
         onClick={() => toggleDocument(doc.id)}
         buttonClassName="items-center gap-1.5 px-2.5 py-2 text-[12.5px]"
         trailing={

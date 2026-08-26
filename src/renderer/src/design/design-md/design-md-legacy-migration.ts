@@ -19,11 +19,11 @@ export function createLegacyDesignSystemMigrationDraft(raw: string): LegacyDesig
     components: parsed.document.components
   }, null, parsed.document.meta.name)
   const notes = [
-    'Migrated from `.Rcode-design/design-system.json`.',
+    'Migrated from `.Joker-design/design-system.json`.',
     'The legacy file was not modified or deleted.',
     componentNames.length
-      ? `Rich Rcode component trees remain in the legacy sidecar: ${componentNames.join(', ')}.`
-      : 'No rich Rcode component trees were present.'
+      ? `Rich Joker component trees remain in the legacy sidecar: ${componentNames.join(', ')}.`
+      : 'No rich Joker component trees were present.'
   ]
   return {
     content: `${base.trimEnd()}\n\n## Migration Notes\n\n${notes.map((note) => `- ${note}`).join('\n')}\n`,

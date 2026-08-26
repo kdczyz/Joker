@@ -14,8 +14,8 @@ function developmentRendererEnvironment(environment, options) {
   return {
     ...environment,
     ELECTRON_RENDERER_URL: `http://127.0.0.1:${rendererPort}`,
-    RCODE_ELECTRON_VITE_PORT: String(rendererPort),
-    RCODE_ELECTRON_VITE_CACHE_DIR: join(temporaryRoot, 'vite-cache')
+    JOKER_ELECTRON_VITE_PORT: String(rendererPort),
+    JOKER_ELECTRON_VITE_CACHE_DIR: join(temporaryRoot, 'vite-cache')
   }
 }
 

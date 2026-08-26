@@ -196,7 +196,7 @@ async function doctor() {
   const mcp = await fetchJson("/api/mcp/servers");
   const ai = await fetchJson("/api/ai/providers").catch(() => ({ providers: [], activeProviderId: health.provider }));
   const hooks = await fetchJson(`/api/hooks/trust?projectPath=${encodeURIComponent(state.projectPath)}`).catch(() => ({ exists: false }));
-  console.log(paint("bold", "Rcode CLI"));
+  console.log(paint("bold", "Joker CLI"));
   console.log(`Server: ${baseUrl}`);
   console.log(`Provider: ${health.provider} / ${health.model} (${health.providerConfigured ? "configured" : "missing key"})`);
   console.log(`AI interfaces: ${ai.providers.length} (active: ${ai.activeProviderId || health.provider})`);
@@ -401,8 +401,8 @@ function parseOptions(args) {
 }
 
 function printHelp() {
-  const binName = path.basename(process.argv[1] || "rcode");
-  console.log(`Rcode CLI
+  const binName = path.basename(process.argv[1] || "joker");
+  console.log(`Joker CLI
 
 Usage:
   ${binName} chat [--project <path>] [--mode <mode>] [--model <id>]
@@ -509,7 +509,7 @@ async function handleSlash(input, rl) {
 
 async function chat() {
   await ensureServer();
-  console.log(paint("bold", "Rcode Terminal"));
+  console.log(paint("bold", "Joker Terminal"));
   console.log(paint("dim", `project=${state.projectPath} mode=${state.mode} thinking=${state.thinkingMode}`));
   console.log(paint("dim", "Type /help for commands, /exit to quit.\n"));
 

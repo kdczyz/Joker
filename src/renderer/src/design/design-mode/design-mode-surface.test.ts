@@ -22,11 +22,11 @@ function artifact(): DesignArtifact {
     id: 'home',
     kind: 'html',
     title: 'Home',
-    relativePath: '.Rcode-design/doc/home/v1.html',
-    designMdPath: '.Rcode-design/doc/home/DESIGN.md',
+    relativePath: '.Joker-design/doc/home/v1.html',
+    designMdPath: '.Joker-design/doc/home/DESIGN.md',
     createdAt: now,
     updatedAt: now,
-    versions: [{ id: 'home-v1', relativePath: '.Rcode-design/doc/home/v1.html', createdAt: now, summary: '' }],
+    versions: [{ id: 'home-v1', relativePath: '.Joker-design/doc/home/v1.html', createdAt: now, summary: '' }],
     direction: { id: 'dir_home', name: 'Home direction', status: 'active' }
   }
 }
@@ -36,11 +36,11 @@ function svgArtifact(): DesignArtifact {
     id: 'motion',
     kind: 'svg',
     title: 'Orbit loader',
-    relativePath: '.Rcode-design/doc/motion/v1.svg',
-    designMdPath: '.Rcode-design/doc/motion/DESIGN.md',
+    relativePath: '.Joker-design/doc/motion/v1.svg',
+    designMdPath: '.Joker-design/doc/motion/DESIGN.md',
     createdAt: now,
     updatedAt: now,
-    versions: [{ id: 'motion-v1', relativePath: '.Rcode-design/doc/motion/v1.svg', createdAt: now, summary: '' }]
+    versions: [{ id: 'motion-v1', relativePath: '.Joker-design/doc/motion/v1.svg', createdAt: now, summary: '' }]
   }
 }
 
@@ -68,7 +68,7 @@ function canvasDocument(): CanvasDocument {
     id: 'asset_logo',
     name: 'Logo',
     parentId: ROOT_SHAPE_ID,
-    imageUrl: '.Rcode-design/assets/logo.png'
+    imageUrl: '.Joker-design/assets/logo.png'
   }
   const note = {
     ...createAgentNoteShape(
@@ -142,7 +142,7 @@ describe('design mode surface manifest', () => {
 
     expect(manifest).toMatchObject({
       version: 1,
-      kind: 'Rcode.design.mode-surface',
+      kind: 'Joker.design.mode-surface',
       document: { id: 'doc', title: 'Ops app' },
       counts: {
         screenCount: 1,
@@ -158,7 +158,7 @@ describe('design mode surface manifest', () => {
       },
       recommendedSurfaceId: 'handoff',
       workflow: {
-        kind: 'Rcode.design.mode-workflow',
+        kind: 'Joker.design.mode-workflow',
         recommendedStepId: 'repair-review-notes'
       }
     })

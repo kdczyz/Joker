@@ -14,7 +14,7 @@ import { embeddedArtifactOf, isHtmlFrame, shapeBounds, shapeGeometry } from '../
 import type { CanvasMotionDocument } from '../../../../design/motion/canvas-motion-types'
 import { createEmptyMotionDocument } from '../../../../design/motion/model'
 
-const CANVAS_VIEWPORT_STORAGE_PREFIX = 'Rcode.design.canvasViewport'
+const CANVAS_VIEWPORT_STORAGE_PREFIX = 'Joker.design.canvasViewport'
 const IMAGE_ANNOTATION_ACTION_WIDTH = 112
 const IMAGE_ANNOTATION_ACTION_HEIGHT = 30
 const IMAGE_ANNOTATION_ACTION_GAP = 10

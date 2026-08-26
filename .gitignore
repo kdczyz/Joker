@@ -1,4 +1,4 @@
-### Node / Electron (Rcode)
+### Node / Electron (Joker)
 node_modules/
 out/
 dist/
@@ -8,7 +8,7 @@ resources/bundled-extensions/
 *.log
 .DS_Store
 
-### Rcode 后端与构建产物
+### Joker 后端与构建产物
 dist-server
 dist-server-bundle
 dist-worker
@@ -44,8 +44,8 @@ release.local.env
 
 ### Tool data
 .workbuddy/
-.Rcode-design/
-.Rcode-canvas/
+.Joker-design/
+.Joker-canvas/
 openspec/
 
 ### Large binaries (exceed GitHub 100MB limit; keep local only)

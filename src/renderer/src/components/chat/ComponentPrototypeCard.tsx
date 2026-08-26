@@ -47,7 +47,7 @@ export function componentPrototypeFromBlock(block: ToolBlock): ComponentPrototyp
     : null
   if (!artifactId || !title || !relativePath || !viewport) return null
   if (
-    !/^\.Rcode-design\/component-prototypes\/[^/]+\/prototype\.html$/i.test(relativePath)
+    !/^\.Joker-design\/component-prototypes\/[^/]+\/prototype\.html$/i.test(relativePath)
     || relativePath.split('/').includes('..')
   ) return null
   if (
@@ -116,7 +116,7 @@ export function componentPrototypeFollowUpPrompt(
 
 function componentPrototypePartition(blockId: string): string {
   const safe = blockId.replace(/[^a-z0-9_-]/gi, '-').slice(0, 80) || 'prototype'
-  return `Rcode-component-prototype-${safe}`
+  return `Joker-component-prototype-${safe}`
 }
 
 export function ComponentPrototypeCard({
@@ -179,11 +179,11 @@ export function ComponentPrototypeCard({
   }
   const copyCode = async (): Promise<void> => {
     setMenuOpen(false)
-    if (typeof window.RcodeGui?.readWorkspaceFile !== 'function') {
+    if (typeof window.JokerGui?.readWorkspaceFile !== 'function') {
       setCopyState('error')
       return
     }
-    const result = await window.RcodeGui.readWorkspaceFile({ path: prototype.relativePath, workspaceRoot })
+    const result = await window.JokerGui.readWorkspaceFile({ path: prototype.relativePath, workspaceRoot })
       .catch(() => ({ ok: false as const, message: 'read failed' }))
     if (!result.ok) {
       setCopyState('error')

@@ -185,14 +185,14 @@ describe('workspace editor icons', () => {
     fsPromisesMock.stat.mockResolvedValueOnce({ isFile: () => true })
     const { openEditorPath } = await import('./workspace-editors')
     const result = await openEditorPath({
-      path: 'brief.Rcode-ppt.html',
+      path: 'brief.Joker-ppt.html',
       workspaceRoot: '/tmp/workspace',
       editorId: 'file-manager',
       openPolicy: 'presentation-artifact'
     })
 
     expect(result).toMatchObject({ ok: true, editorId: 'file-manager' })
-    expect(electronMock.showItemInFolder).toHaveBeenCalledWith('brief.Rcode-ppt.html')
+    expect(electronMock.showItemInFolder).toHaveBeenCalledWith('brief.Joker-ppt.html')
     expect(electronMock.openPath).not.toHaveBeenCalled()
   })
 
@@ -250,37 +250,37 @@ describe('workspace editor icons', () => {
     expect(electronMock.showItemInFolder).not.toHaveBeenCalled()
   })
 
-  it('system-opens a Rcode HTML deck only while its trusted content digest still matches', async () => {
+  it('system-opens a Joker HTML deck only while its trusted content digest still matches', async () => {
     const expectedSha256 = createHash('sha256').update(imageBytes).digest('hex')
-    workspacePathsMock.resolveOpenTargetPath.mockResolvedValueOnce('/tmp/workspace/deck.Rcode-ppt.html')
+    workspacePathsMock.resolveOpenTargetPath.mockResolvedValueOnce('/tmp/workspace/deck.Joker-ppt.html')
     fsPromisesMock.stat.mockResolvedValueOnce({ isFile: () => true, size: imageBytes.byteLength })
     const { openEditorPath } = await import('./workspace-editors')
 
     await expect(openEditorPath({
-      path: '/tmp/workspace/deck.Rcode-ppt.html',
+      path: '/tmp/workspace/deck.Joker-ppt.html',
       workspaceRoot: '/tmp/workspace',
       editorId: 'system',
       openPolicy: 'presentation-artifact',
       expectedSha256
     })).resolves.toMatchObject({ ok: true, editorId: 'system' })
-    expect(fsPromisesMock.readFile).toHaveBeenCalledWith('/tmp/workspace/deck.Rcode-ppt.html')
-    expect(electronMock.openPath).toHaveBeenCalledWith('/tmp/workspace/deck.Rcode-ppt.html')
+    expect(fsPromisesMock.readFile).toHaveBeenCalledWith('/tmp/workspace/deck.Joker-ppt.html')
+    expect(electronMock.openPath).toHaveBeenCalledWith('/tmp/workspace/deck.Joker-ppt.html')
   })
 
-  it('rejects a Rcode HTML deck that changed after the trusted write', async () => {
-    workspacePathsMock.resolveOpenTargetPath.mockResolvedValueOnce('/tmp/workspace/deck.Rcode-ppt.html')
+  it('rejects a Joker HTML deck that changed after the trusted write', async () => {
+    workspacePathsMock.resolveOpenTargetPath.mockResolvedValueOnce('/tmp/workspace/deck.Joker-ppt.html')
     fsPromisesMock.stat.mockResolvedValueOnce({ isFile: () => true, size: imageBytes.byteLength })
     const { openEditorPath } = await import('./workspace-editors')
 
     await expect(openEditorPath({
-      path: '/tmp/workspace/deck.Rcode-ppt.html',
+      path: '/tmp/workspace/deck.Joker-ppt.html',
       workspaceRoot: '/tmp/workspace',
       editorId: 'system',
       openPolicy: 'presentation-artifact',
       expectedSha256: '0'.repeat(64)
     })).resolves.toEqual({
       ok: false,
-      message: 'Presentation changed after it was generated. Save it again in Rcode PPT before opening.'
+      message: 'Presentation changed after it was generated. Save it again in Joker PPT before opening.'
     })
     expect(electronMock.openPath).not.toHaveBeenCalled()
   })

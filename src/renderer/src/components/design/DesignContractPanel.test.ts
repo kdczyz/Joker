@@ -61,7 +61,7 @@ describe('DesignContractPanel', () => {
   it('shows a resolved write failure instead of reporting export success', async () => {
     ;(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true
     vi.stubGlobal('window', {
-      RcodeGui: {
+      JokerGui: {
         writeWorkspaceFile: vi.fn(async () => ({ ok: false as const, message: 'disk full' }))
       }
     })

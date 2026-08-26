@@ -1,4 +1,4 @@
-export const GUI_PLAN_RELATIVE_DIR = '.Rcodesdd/plan'
+export const GUI_PLAN_RELATIVE_DIR = '.jokersdd/plan'
 export const GUI_PLAN_LEGACY_RELATIVE_DIR = '.deepseekgui/plan'
 export const GUI_PLAN_ACCEPTED_RELATIVE_DIRS = [
   GUI_PLAN_RELATIVE_DIR,
@@ -82,8 +82,8 @@ export function planDisplayNameFromRelativePath(relativePath: string): string {
 }
 
 /**
- * Stable name of the native Rcode plan tool. Kept distinct from the
- * historical `gui_plan_create` MCP bridge so the renderer and Rcode
+ * Stable name of the native Joker plan tool. Kept distinct from the
+ * historical `gui_plan_create` MCP bridge so the renderer and Joker
  * can recognize the new contract without colliding with legacy code.
  */
 export const GUI_PLAN_CREATE_PLAN_TOOL_NAME = 'create_plan'
@@ -98,14 +98,14 @@ export const GUI_PLAN_CLOSE_TAG = '</gui_plan>'
 
 /**
  * Plan tool operation kinds. The renderer passes one of these on every
- * plan/refine turn so Rcode can scope tool availability to the
+ * plan/refine turn so Joker can scope tool availability to the
  * active plan context.
  */
 export type GuiPlanOperation = 'draft' | 'refine'
 
 /**
  * Shared input contract for the native `create_plan` tool. The schema is
- * the public surface the model sees; validation is enforced by Rcode
+ * the public surface the model sees; validation is enforced by Joker
  * in addition to these TypeScript types so the GUI can preview calls.
  */
 export type CreatePlanToolInput = {
@@ -146,7 +146,7 @@ export type CreatePlanToolOutput = {
 }
 
 /**
- * Build the deterministic plan id used by both renderer and Rcode.
+ * Build the deterministic plan id used by both renderer and Joker.
  * The id is derived from the workspace root and relative path so it
  * remains stable across reconnects, replays, and rename-free edits.
  */
@@ -171,7 +171,7 @@ export function validateCreatePlanToolInput(input: Partial<CreatePlanToolInput>)
     if (!path) {
       issues.push('plan_relative_path must be non-empty when supplied')
     } else if (!isGuiPlanRelativePath(path)) {
-      issues.push('plan_relative_path must be a direct Markdown file under .Rcodesdd/plan')
+      issues.push('plan_relative_path must be a direct Markdown file under .jokersdd/plan')
     }
   }
   if (input.plan_id != null && typeof input.plan_id !== 'string') {
@@ -182,7 +182,7 @@ export function validateCreatePlanToolInput(input: Partial<CreatePlanToolInput>)
 
 /**
  * Compare two workspace roots using the same normalization as the
- * plan path checks. Used by Rcode to verify the active workspace
+ * plan path checks. Used by Joker to verify the active workspace
  * matches the one encoded in a plan context.
  */
 export function guiPlanWorkspaceMatches(actual: string, expected: string): boolean {

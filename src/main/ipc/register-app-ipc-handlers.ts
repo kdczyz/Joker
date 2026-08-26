@@ -14,7 +14,7 @@ import { basename, dirname, extname, isAbsolute, join, resolve } from 'node:path
 import { access, copyFile, mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { z } from 'zod'
 import {
-  getRcodeRuntimeSettings,
+  getJokerRuntimeSettings,
   type AppSettingsPatch,
   type AppSettingsV1,
   type ClawRunResult,
@@ -38,7 +38,7 @@ import type {
   TurnCompleteNotificationPayload,
   UpstreamModelsResult,
   WorkspacePickResult
-} from '../../shared/Rcode-gui-api'
+} from '../../shared/Joker-gui-api'
 import type { WorkspaceFileSaveAsResult } from '../../shared/workspace-file'
 import {
   clawMirrorPayloadSchema,
@@ -75,10 +75,10 @@ import {
   worktreePathSchema,
   runtimeRequestPayloadSchema,
   runtimeImageAttachmentUploadPayloadSchema,
-  RcodeProtectedApprovalPayloadSchema,
-  RcodeProjectConfigTrustPayloadSchema,
-  RcodeProjectConfigWorkspacePayloadSchema,
-  RcodeProjectConfigWritePayloadSchema,
+  JokerProtectedApprovalPayloadSchema,
+  JokerProjectConfigTrustPayloadSchema,
+  JokerProjectConfigWorkspacePayloadSchema,
+  JokerProjectConfigWritePayloadSchema,
   scheduleTaskFromTextPayloadSchema,
   shellOpenExternalUrlSchema,
   skillGithubImportPayloadSchema,
@@ -121,17 +121,17 @@ import {
 import { uploadRuntimeImageAttachmentQueued } from '../services/runtime-image-attachment-service'
 import {
   createApprovalConsentToken,
-  RCODE_APPROVAL_CONSENT_HEADER
+  JOKER_APPROVAL_CONSENT_HEADER
 } from '../approval-consent'
 import {
-  RcodeExecutionSettingsConsentService,
+  JokerExecutionSettingsConsentService,
   executionSettingsEqual,
-  RcodeExecutionSettingsChange,
-  type RcodeExecutionSettingsConsentAction
+  JokerExecutionSettingsChange,
+  type JokerExecutionSettingsConsentAction
 } from '../execution-settings-consent'
 import {
-  DEFAULT_RCODE_DATA_DIR,
-  resolveRcodeRuntimeSettings,
+  DEFAULT_JOKER_DATA_DIR,
+  resolveJokerRuntimeSettings,
   resolveModelProviderProxyUrl
 } from '../../shared/app-settings'
 import { detectLegacySessions, importLegacySessions } from '../services/legacy-session-import-service'
@@ -165,7 +165,7 @@ import {
   clearGithubAccountFromEnvironment
 } from '../github-environment-bridge'
 import { enableGithubMcp, disableGithubMcp, isGithubMcpEnabled } from '../github-mcp'
-import { resolveRcodeMcpJsonPath } from '../claw-schedule-mcp-config'
+import { resolveJokerMcpJsonPath } from '../claw-schedule-mcp-config'
 import {
   storeGithubCredentials,
   getGithubCredentials,
@@ -286,11 +286,11 @@ import {
   normalizeSkillRootPath
 } from '../services/skill-service'
 import {
-  ensureRcodeProjectConfigDirectory,
-  loadRcodeProjectConfig,
-  readRcodeProjectConfigSource,
-  writeRcodeProjectConfig
-} from '../../../Rcode/src/config/project-config.js'
+  ensureJokerProjectConfigDirectory,
+  loadJokerProjectConfig,
+  readJokerProjectConfigSource,
+  writeJokerProjectConfig
+} from '../../../Joker/src/config/project-config.js'
 import { readProjectConfigState } from '../services/project-config-service'
 
 const extensionArtifactActionSchema = z.strictObject({
@@ -341,9 +341,9 @@ type RegisterAppIpcHandlersOptions = {
   pollFeishuInstall: (deviceCode: string) => Promise<ClawImInstallPollResult>
   startWeixinInstallQrcode: (weixinBridgeUrl?: string) => Promise<ClawImInstallQrResult>
   pollWeixinInstall: (deviceCode: string, weixinBridgeUrl?: string) => Promise<ClawImInstallPollResult>
-  resolveRcodeConfigPath: () => string
-  onRcodeMcpConfigWritten?: (path: string, content: string) => Promise<void> | void
-  onRcodeProjectConfigChanged?: (path: string, content: string) => Promise<void> | void
+  resolveJokerConfigPath: () => string
+  onJokerMcpConfigWritten?: (path: string, content: string) => Promise<void> | void
+  onJokerProjectConfigChanged?: (path: string, content: string) => Promise<void> | void
   showTurnCompleteNotification: (
     payload: TurnCompleteNotificationPayload
   ) => Promise<SystemNotificationResult>
@@ -360,15 +360,15 @@ function parseIpcPayload<T>(channel: string, schema: z.ZodType<T>, payload: unkn
 }
 
 function withoutRendererProjectConfigGrants(partial: AppSettingsPatch): AppSettingsPatch {
-  const Rcode = partial.agents?.Rcode
-  if (!Rcode || Rcode.projectConfig === undefined) return partial
-  const { projectConfig: _projectConfig, ...safeRcode } = Rcode
+  const Joker = partial.agents?.Joker
+  if (!Joker || Joker.projectConfig === undefined) return partial
+  const { projectConfig: _projectConfig, ...safeJoker } = Joker
   void _projectConfig
   return {
     ...partial,
     agents: {
       ...partial.agents,
-      Rcode: safeRcode
+      Joker: safeJoker
     }
   }
 }
@@ -554,8 +554,8 @@ function runDesktopCommand(
 }
 
 export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): void {
-  // Seed the built-in "design system & craft" skill into ~/.Rcode/skills/ once.
-  void ensureBundledSkills(join(homedir(), '.Rcode'))
+  // Seed the built-in "design system & craft" skill into ~/.Joker/skills/ once.
+  void ensureBundledSkills(join(homedir(), '.Joker'))
   const {
     store,
     getMainWindow,
@@ -571,9 +571,9 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     pollFeishuInstall,
     startWeixinInstallQrcode,
     pollWeixinInstall,
-    resolveRcodeConfigPath,
-    onRcodeMcpConfigWritten,
-    onRcodeProjectConfigChanged,
+    resolveJokerConfigPath,
+    onJokerMcpConfigWritten,
+    onJokerProjectConfigChanged,
     showTurnCompleteNotification,
     getAppVersion,
     resolveLogDirectory,
@@ -584,7 +584,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   })
   const workspaceFileWatchers = new Map<string, WorkspaceFileWatchRecord>()
   const workspaceFileWatchSenders = new Map<number, WorkspaceFileWatchSenderRecord>()
-  const executionSettingsConsents = new RcodeExecutionSettingsConsentService()
+  const executionSettingsConsents = new JokerExecutionSettingsConsentService()
   const uiPluginThemeController = new UiPluginCdpThemeController({
     getWebContents: () => {
       const window = getMainWindow()
@@ -612,7 +612,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     persist: (patch: AppSettingsPatch) => Promise<AppSettingsV1>
   ): Promise<AppSettingsV1> => {
     const current = await store.load()
-    const change = RcodeExecutionSettingsChange(current, partial)
+    const change = JokerExecutionSettingsChange(current, partial)
     if (!change) return persist(partial)
 
     assertTrustedWorkbenchSender(event, getMainWindow)
@@ -623,7 +623,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
     const confirmation = await dialog.showMessageBox(parent, {
       type: 'warning',
-      title: 'Change Rcode execution permissions',
+      title: 'Change Joker execution permissions',
       message: 'Apply this tool approval and sandbox configuration?',
       detail: [
         `Current approval policy: ${change.current.approvalPolicy}`,
@@ -646,14 +646,14 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     // when the dialog eventually closes.
     const latest = await store.load()
     const latestExecution = {
-      approvalPolicy: latest.agents.Rcode.approvalPolicy,
-      sandboxMode: latest.agents.Rcode.sandboxMode
+      approvalPolicy: latest.agents.Joker.approvalPolicy,
+      sandboxMode: latest.agents.Joker.sandboxMode
     }
     if (!executionSettingsEqual(latestExecution, change.current)) {
-      throw new Error('Rcode execution settings changed while confirmation was open; retry the change.')
+      throw new Error('Joker execution settings changed while confirmation was open; retry the change.')
     }
 
-    const action: RcodeExecutionSettingsConsentAction = {
+    const action: JokerExecutionSettingsConsentAction = {
       ...change,
       senderId: event.sender.id,
       senderProcessId: senderFrame.processId,
@@ -775,16 +775,16 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   // OAuth; we only detect it / capture the setup-token).
   ipcMain.handle('claude-subscription:status', async () => claudeSubscriptionStatus())
   // The Claude Code binary (~222MB) is NOT bundled — it's downloaded on demand
-  // into userData/agent-sdk and resolved from there (or Rcode/node_modules in dev).
-  const claudeSubRcodeDirs = (): string[] =>
+  // into userData/agent-sdk and resolved from there (or Joker/node_modules in dev).
+  const claudeSubJokerDirs = (): string[] =>
     [
       app.isPackaged ? app.getAppPath().replace(/app\.asar$/, 'app.asar.unpacked') : app.getAppPath(),
       process.cwd()
-    ].map((root) => join(root, 'Rcode'))
+    ].map((root) => join(root, 'Joker'))
   const claudeSubBinary = (): string | undefined =>
-    resolveClaudeBinary(app.getPath('userData'), claudeSubRcodeDirs())
+    resolveClaudeBinary(app.getPath('userData'), claudeSubJokerDirs())
   ipcMain.handle('claude-subscription:sdk-status', async () => ({
-    ...agentSdkStatus(app.getPath('userData'), claudeSubRcodeDirs()),
+    ...agentSdkStatus(app.getPath('userData'), claudeSubJokerDirs()),
     download: agentSdkDownloadState()
   }))
   ipcMain.handle('claude-subscription:sdk-install', async () =>
@@ -799,7 +799,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   ipcMain.handle('claude-subscription:models', async (_event, token: unknown) =>
     fetchSdkModels({
       token: typeof token === 'string' ? token : undefined,
-      RcodeRoots: claudeSubRcodeDirs(),
+      JokerRoots: claudeSubJokerDirs(),
       binaryPath: claudeSubBinary()
     })
   )
@@ -840,7 +840,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     assertTrustedWorkbenchSender(event, getMainWindow)
     const request = parseIpcPayload(
       'approval:decide',
-      RcodeProtectedApprovalPayloadSchema,
+      JokerProtectedApprovalPayloadSchema,
       payload
     )
     if (request.source === 'user') {
@@ -851,8 +851,8 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
         type: 'warning',
         title: allow ? 'Approve tool action' : 'Deny tool action',
         message: allow
-          ? 'Allow this pending Rcode tool action once?'
-          : 'Deny this pending Rcode tool action?',
+          ? 'Allow this pending Joker tool action once?'
+          : 'Deny this pending Joker tool action?',
         detail: `Approval: ${request.approvalId}\n\nThis protected native prompt cannot be controlled by extension Webviews or Direct DOM content scripts.`,
         buttons: [allow ? 'Allow once' : 'Deny', 'Cancel'],
         defaultId: 1,
@@ -864,7 +864,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
 
     const settings = await store.load()
-    const runtimeToken = getRcodeRuntimeSettings(settings).runtimeToken.trim()
+    const runtimeToken = getJokerRuntimeSettings(settings).runtimeToken.trim()
     const consentToken = createApprovalConsentToken({
       runtimeToken,
       approvalId: request.approvalId,
@@ -875,7 +875,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       `/v1/approvals/${encodeURIComponent(request.approvalId)}`,
       'POST',
       JSON.stringify({ decision: request.decision }),
-      { [RCODE_APPROVAL_CONSENT_HEADER]: consentToken }
+      { [JOKER_APPROVAL_CONSENT_HEADER]: consentToken }
     )
     return { confirmed: true as const, response }
   })
@@ -1312,14 +1312,14 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     return { ok: true, htmlUrl: result.htmlUrl }
   })
 
-  // --- GitHub MCP 服务器（一键把已登录 token 注入 Rcode MCP 配置）---
+  // --- GitHub MCP 服务器（一键把已登录 token 注入 Joker MCP 配置）---
   ipcMain.handle('github:mcp:enable', async () => {
     try {
       await enableGithubMcp()
       // 关键：写完 mcp.json 后必须触发与 GUI MCP 设置页相同的同步链路，
       // 否则运行中的 agent 运行时（config.json + 已 spawn 的 MCP 进程）不会
       // 感知到新服务器，对话里也就调不到 GitHub 工具。
-      await onRcodeMcpConfigWritten?.(resolveRcodeMcpJsonPath(), '')
+      await onJokerMcpConfigWritten?.(resolveJokerMcpJsonPath(), '')
       return { ok: true as const }
     } catch (err) {
       return { ok: false as const, message: err instanceof Error ? err.message : String(err) }
@@ -1328,7 +1328,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 
   ipcMain.handle('github:mcp:disable', async () => {
     await disableGithubMcp()
-    await onRcodeMcpConfigWritten?.(resolveRcodeMcpJsonPath(), '')
+    await onJokerMcpConfigWritten?.(resolveJokerMcpJsonPath(), '')
     return { ok: true as const }
   })
 
@@ -1533,11 +1533,11 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     if (isManagedPptMasterSkillRootDisabled(settings)) {
       return {
         ok: false as const,
-        message: 'PPT Master uses ~/.Rcode/skills, which is disabled in Settings → Agents → Skills. Enable that skill directory, then try again.'
+        message: 'PPT Master uses ~/.Joker/skills, which is disabled in Settings → Agents → Skills. Enable that skill directory, then try again.'
       }
     }
     const result = await ensurePptMaster({
-      RcodeHomeDir: join(homedir(), '.Rcode'),
+      JokerHomeDir: join(homedir(), '.Joker'),
       proxyUrl: resolveModelProviderProxyUrl(settings)
     })
     if (!result.ok) return result
@@ -1550,7 +1550,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     } catch (error) {
       return {
         ok: false as const,
-        message: `PPT Master installed, but Rcode could not restart: ${error instanceof Error ? error.message : String(error)}`
+        message: `PPT Master installed, but Joker could not restart: ${error instanceof Error ? error.message : String(error)}`
       }
     }
   })
@@ -1586,9 +1586,9 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 
   ipcMain.handle('ui-plugin:list', async (event) => {
     assertTrustedWorkbenchSender(event, getMainWindow)
-    const RcodeHomeDir = join(homedir(), '.Rcode')
-    await ensureBundledUiPlugins(RcodeHomeDir)
-    return { plugins: await listUiPlugins(RcodeHomeDir) }
+    const JokerHomeDir = join(homedir(), '.Joker')
+    await ensureBundledUiPlugins(JokerHomeDir)
+    return { plugins: await listUiPlugins(JokerHomeDir) }
   })
 
   ipcMain.handle('ui-plugin:install', async (event) => {
@@ -1606,7 +1606,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       return { canceled: true as const }
     }
     const result = await enqueueUiPluginOperation(() =>
-      installUiPluginFromDirectory(join(homedir(), '.Rcode'), sourceDir)
+      installUiPluginFromDirectory(join(homedir(), '.Joker'), sourceDir)
     )
     if (!result.ok) {
       return { canceled: false as const, ok: false as const, errors: result.errors }
@@ -1629,16 +1629,16 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
           return { ok: false }
         }
       }
-      return { ok: await removeUiPlugin(join(homedir(), '.Rcode'), request.id) }
+      return { ok: await removeUiPlugin(join(homedir(), '.Joker'), request.id) }
     })
   })
 
   ipcMain.handle('ui-plugin:load', async (event, payload: unknown) => {
     assertTrustedWorkbenchSender(event, getMainWindow)
     const request = parseIpcPayload('ui-plugin:load', uiPluginIdPayloadSchema, payload)
-    const RcodeHomeDir = join(homedir(), '.Rcode')
-    await ensureBundledUiPlugins(RcodeHomeDir)
-    return loadUiPluginFigures(RcodeHomeDir, request.id)
+    const JokerHomeDir = join(homedir(), '.Joker')
+    await ensureBundledUiPlugins(JokerHomeDir)
+    return loadUiPluginFigures(JokerHomeDir, request.id)
   })
 
   ipcMain.handle('ui-plugin:theme:activate', async (event, payload: unknown) => {
@@ -1649,9 +1649,9 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       payload
     )
     return enqueueUiPluginOperation(async () => {
-      const RcodeHomeDir = join(homedir(), '.Rcode')
-      await ensureBundledUiPlugins(RcodeHomeDir)
-      const loaded = await loadUiPluginFigures(RcodeHomeDir, request.id)
+      const JokerHomeDir = join(homedir(), '.Joker')
+      await ensureBundledUiPlugins(JokerHomeDir)
+      const loaded = await loadUiPluginFigures(JokerHomeDir, request.id)
       if (!loaded.ok) return { ok: false as const, error: loaded.error }
 
       // Only normalized manifest fields and main-validated image data reach the
@@ -1697,8 +1697,8 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     })
   })
 
-  ipcMain.handle('Rcode:config:read', async () => {
-    const path = resolveRcodeConfigPath()
+  ipcMain.handle('Joker:config:read', async () => {
+    const path = resolveJokerConfigPath()
     try {
       const content = await readFile(path, 'utf8')
       return { path, content, exists: true as const }
@@ -1710,18 +1710,18 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
   })
 
-  ipcMain.handle('Rcode:config:write', async (_, content: unknown) => {
+  ipcMain.handle('Joker:config:write', async (_, content: unknown) => {
     const validatedContent = parseIpcPayload(
-      'Rcode:config:write',
+      'Joker:config:write',
       deepseekConfigContentSchema,
       content
     )
-    const path = resolveRcodeConfigPath()
+    const path = resolveJokerConfigPath()
     validateMcpConfigContent(validatedContent)
     await mkdir(dirname(path), { recursive: true })
     await writeFile(path, validatedContent, 'utf8')
     try {
-      await onRcodeMcpConfigWritten?.(path, validatedContent)
+      await onJokerMcpConfigWritten?.(path, validatedContent)
     } catch (error: unknown) {
       logError('mcp-config', 'Failed to apply MCP config change after write', {
         path,
@@ -1731,9 +1731,9 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     return { ok: true as const, path }
   })
 
-  ipcMain.handle('Rcode:config:open-dir', async () => {
+  ipcMain.handle('Joker:config:open-dir', async () => {
     try {
-      const path = resolveRcodeConfigPath()
+      const path = resolveJokerConfigPath()
       const dirPath = dirname(path)
       await mkdir(dirPath, { recursive: true })
       return openPathWithShell(dirPath)
@@ -1751,7 +1751,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   ) => {
     const settings = settingsOverride ?? await store.load()
     const state = await readProjectConfigState(settings, workspaceRoot)
-    const source = await readRcodeProjectConfigSource(workspaceRoot).catch(() => null)
+    const source = await readJokerProjectConfigSource(workspaceRoot).catch(() => null)
     return {
       ...state,
       content: source?.content ?? '',
@@ -1759,24 +1759,24 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
   }
 
-  ipcMain.handle('Rcode:project-config:read', async (_, payload: unknown) => {
+  ipcMain.handle('Joker:project-config:read', async (_, payload: unknown) => {
     const request = parseIpcPayload(
-      'Rcode:project-config:read',
-      RcodeProjectConfigWorkspacePayloadSchema,
+      'Joker:project-config:read',
+      JokerProjectConfigWorkspacePayloadSchema,
       payload
     )
     return projectConfigFileResult(request.workspaceRoot)
   })
 
-  ipcMain.handle('Rcode:project-config:write', async (_, payload: unknown) => {
+  ipcMain.handle('Joker:project-config:write', async (_, payload: unknown) => {
     const request = parseIpcPayload(
-      'Rcode:project-config:write',
-      RcodeProjectConfigWritePayloadSchema,
+      'Joker:project-config:write',
+      JokerProjectConfigWritePayloadSchema,
       payload
     )
-    const written = await writeRcodeProjectConfig(request.workspaceRoot, request.content)
+    const written = await writeJokerProjectConfig(request.workspaceRoot, request.content)
     try {
-      await onRcodeProjectConfigChanged?.(written.path, request.content)
+      await onJokerProjectConfigChanged?.(written.path, request.content)
     } catch (error) {
       logError('project-config', 'Failed to apply project config change after write', {
         path: written.path,
@@ -1786,14 +1786,14 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     return projectConfigFileResult(written.workspaceRoot)
   })
 
-  ipcMain.handle('Rcode:project-config:trust', async (_, payload: unknown) => {
+  ipcMain.handle('Joker:project-config:trust', async (_, payload: unknown) => {
     const request = parseIpcPayload(
-      'Rcode:project-config:trust',
-      RcodeProjectConfigTrustPayloadSchema,
+      'Joker:project-config:trust',
+      JokerProjectConfigTrustPayloadSchema,
       payload
     )
     const current = await store.load()
-    const loaded = await loadRcodeProjectConfig(request.workspaceRoot)
+    const loaded = await loadJokerProjectConfig(request.workspaceRoot)
     if (request.trusted && loaded.status !== 'valid') {
       throw new Error(
         loaded.status === 'invalid'
@@ -1818,8 +1818,8 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
             : isChinese ? '（无）' : '(none)',
           loaded.status === 'valid' ? `SHA-256: ${loaded.digest}` : '',
           isChinese
-            ? '仅批准你已审查且信任的项目配置。批准后，Rcode 可以启动其中声明的命令。'
-            : 'Approve only a project configuration you reviewed and trust. Rcode may start its declared commands.'
+            ? '仅批准你已审查且信任的项目配置。批准后，Joker 可以启动其中声明的命令。'
+            : 'Approve only a project configuration you reviewed and trust. Joker may start its declared commands.'
         ].filter(Boolean).join('\n\n')
       : isChinese
         ? `工作区：${canonicalRoot}\n\n撤销后，项目 MCP 将在下一次配置应用时被移除。`
@@ -1849,7 +1849,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
     let confirmedDigest: string | undefined
     if (request.trusted) {
-      const confirmed = await loadRcodeProjectConfig(canonicalRoot)
+      const confirmed = await loadJokerProjectConfig(canonicalRoot)
       if (confirmed.status !== 'valid' ||
         !sameProjectWorkspace(confirmed.workspaceRoot, canonicalRoot) ||
         confirmed.digest !== request.expectedDigest.toLowerCase()) {
@@ -1857,26 +1857,26 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       }
       confirmedDigest = confirmed.digest
     }
-    const grants = getRcodeRuntimeSettings(current).projectConfig.grants.filter((grant) =>
+    const grants = getJokerRuntimeSettings(current).projectConfig.grants.filter((grant) =>
       !sameProjectWorkspace(grant.workspaceRoot, canonicalRoot)
     )
     if (request.trusted && confirmedDigest) {
       grants.push({ workspaceRoot: canonicalRoot, configDigest: confirmedDigest })
     }
     const saved = await applySettingsPatch({
-      agents: { Rcode: { projectConfig: { grants } } }
+      agents: { Joker: { projectConfig: { grants } } }
     })
     return projectConfigFileResult(canonicalRoot, saved)
   })
 
-  ipcMain.handle('Rcode:project-config:open-dir', async (_, payload: unknown) => {
+  ipcMain.handle('Joker:project-config:open-dir', async (_, payload: unknown) => {
     const request = parseIpcPayload(
-      'Rcode:project-config:open-dir',
-      RcodeProjectConfigWorkspacePayloadSchema,
+      'Joker:project-config:open-dir',
+      JokerProjectConfigWorkspacePayloadSchema,
       payload
     )
     try {
-      const directory = await ensureRcodeProjectConfigDirectory(request.workspaceRoot)
+      const directory = await ensureJokerProjectConfigDirectory(request.workspaceRoot)
       return openPathWithShell(directory)
     } catch (error) {
       return {
@@ -1886,10 +1886,10 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
   })
 
-  const resolveRcodeThreadsDataDir = async (): Promise<string> => {
+  const resolveJokerThreadsDataDir = async (): Promise<string> => {
     const settings = await store.load()
-    const runtime = resolveRcodeRuntimeSettings(settings)
-    return expandHomePath(runtime.dataDir?.trim() || DEFAULT_RCODE_DATA_DIR)
+    const runtime = resolveJokerRuntimeSettings(settings)
+    return expandHomePath(runtime.dataDir?.trim() || DEFAULT_JOKER_DATA_DIR)
   }
 
   // Map the user's checkpoint settings (issue #651) to the service storage
@@ -1902,16 +1902,16 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     ...(cfg.maxPerThread !== undefined ? { maxPerThread: cfg.maxPerThread } : {})
   })
 
-  ipcMain.handle('Rcode:sessions:detect-legacy', async () =>
-    detectLegacySessions({ homeDir: homedir(), destDataDir: await resolveRcodeThreadsDataDir() })
+  ipcMain.handle('Joker:sessions:detect-legacy', async () =>
+    detectLegacySessions({ homeDir: homedir(), destDataDir: await resolveJokerThreadsDataDir() })
   )
 
-  ipcMain.handle('Rcode:sessions:import-legacy', async (_, payload: unknown) => {
-    const request = parseIpcPayload('Rcode:sessions:import-legacy', legacySessionImportPayloadSchema, payload)
+  ipcMain.handle('Joker:sessions:import-legacy', async (_, payload: unknown) => {
+    const request = parseIpcPayload('Joker:sessions:import-legacy', legacySessionImportPayloadSchema, payload)
     try {
       const summary = await importLegacySessions({
         homeDir: homedir(),
-        destDataDir: await resolveRcodeThreadsDataDir(),
+        destDataDir: await resolveJokerThreadsDataDir(),
         ...(request.sourceDir ? { sourceDir: request.sourceDir } : {}),
         log: (message, detail) => logError('legacy-session-import', message, detail)
       })
@@ -1924,7 +1924,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     }
   })
 
-  ipcMain.handle('Rcode:sessions:pick-source-dir', async (): Promise<WorkspacePickResult> => {
+  ipcMain.handle('Joker:sessions:pick-source-dir', async (): Promise<WorkspacePickResult> => {
     const options: Electron.OpenDialogOptions = {
       title: 'Select a folder containing previous conversations',
       properties: ['openDirectory', 'dontAddToRecent']
@@ -1964,7 +1964,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     const request = parseIpcPayload('git:checkpoint:create', gitCheckpointCreatePayloadSchema, payload)
     const settings = await store.load()
     return createGitCheckpoint({
-      dataDir: await resolveRcodeThreadsDataDir(),
+      dataDir: await resolveJokerThreadsDataDir(),
       workspaceRoot: request.workspaceRoot,
       threadId: request.threadId,
       storage: resolveCheckpointStorageOptions(settings.checkpointCleanup)
@@ -1974,7 +1974,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     const request = parseIpcPayload('git:checkpoint:restore', gitCheckpointRestorePayloadSchema, payload)
     const settings = await store.load()
     return restoreGitCheckpoint({
-      dataDir: await resolveRcodeThreadsDataDir(),
+      dataDir: await resolveJokerThreadsDataDir(),
       checkpointId: request.checkpointId,
       ...(request.allowPartialRestore ? { allowPartialRestore: true } : {}),
       ...(request.expectedThreadId ? { expectedThreadId: request.expectedThreadId } : {}),
@@ -2454,7 +2454,7 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 }
 
 function isManagedPptMasterSkillRootDisabled(settings: AppSettingsV1): boolean {
-  const target = comparableSkillRootPath(join(homedir(), '.Rcode', 'skills'))
+  const target = comparableSkillRootPath(join(homedir(), '.Joker', 'skills'))
   const disabledDirectories = [
     ...settings.claw.skills.disabledDirs,
     ...settings.schedule.skills.disabledDirs

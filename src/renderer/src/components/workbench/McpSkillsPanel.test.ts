@@ -2,7 +2,7 @@ import { createElement } from 'react'
 import { act, create, type ReactTestInstance, type ReactTestRenderer } from 'react-test-renderer'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { AppSettingsV1 } from '@shared/app-settings'
-import type { RcodeGuiApi, RcodeProjectConfigFileResult } from '@shared/Rcode-gui-api'
+import type { JokerGuiApi, JokerProjectConfigFileResult } from '@shared/Joker-gui-api'
 import i18n from '../../i18n'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { McpSkillsPanel } from './McpSkillsPanel'
@@ -37,9 +37,9 @@ describe('McpSkillsPanel', () => {
       mcp: { servers: { 'project-server': { transport: 'stdio', command: 'project-mcp', enabled: true } } },
       skills: { enabled: true, includeConventional: true, roots: [], disabledIds: [] }
     }, null, 2)
-    const projectResult: RcodeProjectConfigFileResult = {
+    const projectResult: JokerProjectConfigFileResult = {
       workspaceRoot: '/workspace/project',
-      path: '/workspace/project/.Rcode/project.json',
+      path: '/workspace/project/.Joker/project.json',
       content: projectContent,
       exists: true,
       status: 'valid',
@@ -54,7 +54,7 @@ describe('McpSkillsPanel', () => {
       content,
       trust: 'stale' as const
     }))
-    const setGlobalConfig = vi.fn(async () => ({ ok: true as const, path: '/home/user/.Rcode/mcp.json' }))
+    const setGlobalConfig = vi.fn(async () => ({ ok: true as const, path: '/home/user/.Joker/mcp.json' }))
     const setSettings = vi.spyOn(rendererRuntimeClient, 'setSettings').mockResolvedValue({
       disabledSkillIds: ['global-skill']
     } as unknown as AppSettingsV1)
@@ -62,13 +62,13 @@ describe('McpSkillsPanel', () => {
       disabledSkillIds: []
     } as unknown as AppSettingsV1)
 
-    const RcodeGui = {
-      getRcodeConfigFile: vi.fn(async () => ({
-        path: '/home/user/.Rcode/mcp.json',
+    const JokerGui = {
+      getJokerConfigFile: vi.fn(async () => ({
+        path: '/home/user/.Joker/mcp.json',
         content: '{"servers":{"global-server":{"command":"global-mcp"}}}',
         exists: true
       })),
-      setRcodeConfigFile: setGlobalConfig,
+      setJokerConfigFile: setGlobalConfig,
       listSkills: vi.fn(async () => ({
         ok: true as const,
         skills: [{
@@ -82,12 +82,12 @@ describe('McpSkillsPanel', () => {
         }],
         validationErrors: []
       })),
-      getRcodeProjectConfigFile: vi.fn(async () => projectResult),
-      setRcodeProjectConfigFile: setProjectConfig,
-      openRcodeProjectConfigDir: vi.fn(async () => ({ ok: true as const })),
-      openRcodeConfigDir: vi.fn(async () => ({ ok: true as const }))
-    } as unknown as RcodeGuiApi
-    vi.stubGlobal('window', { RcodeGui })
+      getJokerProjectConfigFile: vi.fn(async () => projectResult),
+      setJokerProjectConfigFile: setProjectConfig,
+      openJokerProjectConfigDir: vi.fn(async () => ({ ok: true as const })),
+      openJokerConfigDir: vi.fn(async () => ({ ok: true as const }))
+    } as unknown as JokerGuiApi
+    vi.stubGlobal('window', { JokerGui })
 
     const onOpenSettings = vi.fn()
     let renderer!: ReactTestRenderer

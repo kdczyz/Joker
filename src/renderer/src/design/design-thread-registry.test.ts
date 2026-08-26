@@ -65,7 +65,7 @@ describe('design-thread-registry', () => {
   it('recognizes legacy design assistant thread records', () => {
     const storage = new MemoryStorage()
     storage.setItem(
-      'Rcode.design-assistant.threadRegistry.v1',
+      'Joker.design-assistant.threadRegistry.v1',
       JSON.stringify({ '/Users/zxy/project': 'thread-legacy-design' })
     )
 
@@ -145,7 +145,7 @@ describe('design-thread-registry', () => {
       storage
     )
     storage.setItem(
-      'Rcode.design-assistant.threadRegistry.v1',
+      'Joker.design-assistant.threadRegistry.v1',
       JSON.stringify({ '/Users/zxy/project': 'thread-design' })
     )
 

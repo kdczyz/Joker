@@ -22,7 +22,7 @@ afterEach(async () => {
 })
 
 describe('runtime image attachment service', () => {
-  it('loads clipboard bytes, prepares bounded variants, and uploads directly to Rcode', async () => {
+  it('loads clipboard bytes, prepares bounded variants, and uploads directly to Joker', async () => {
     const source = await sharp({
       create: { width: 640, height: 480, channels: 4, background: '#336699ff' }
     }).png().toBuffer()
@@ -66,7 +66,7 @@ describe('runtime image attachment service', () => {
   })
 
   it('supports local-path and Base64 sources without using generic runtime IPC', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcode-runtime-image-'))
+    const root = await mkdtemp(join(tmpdir(), 'Joker-runtime-image-'))
     tempRoots.push(root)
     const filePath = join(root, 'picked.png')
     const source = await sharp({

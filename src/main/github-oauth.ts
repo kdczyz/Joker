@@ -87,7 +87,7 @@ export type GithubOAuthResult =
   | { ok: false; message: string }
 
 const GITHUB_BROWSER_SUCCESS_HTML =
-  '<!doctype html><html><head><meta charset="utf-8"><title>GitHub 登录</title><style>body{font-family:system-ui,-apple-system,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0d1117;color:#e6edf3}.box{text-align:center;padding:2rem}h1{margin-bottom:.5rem}p{color:#8b949e}</style></head><body><div class="box"><h1>登录成功</h1><p>可以关闭此窗口并返回 Rcode。</p></div><script>setTimeout(()=>window.close(),1500)</script></body></html>'
+  '<!doctype html><html><head><meta charset="utf-8"><title>GitHub 登录</title><style>body{font-family:system-ui,-apple-system,sans-serif;display:flex;justify-content:center;align-items:center;height:100vh;margin:0;background:#0d1117;color:#e6edf3}.box{text-align:center;padding:2rem}h1{margin-bottom:.5rem}p{color:#8b949e}</style></head><body><div class="box"><h1>登录成功</h1><p>可以关闭此窗口并返回 Joker。</p></div><script>setTimeout(()=>window.close(),1500)</script></body></html>'
 
 function githubErrorHtml(message: string): string {
   const safe = message.replace(/[&<>"]/g, (ch) =>
@@ -156,7 +156,7 @@ async function fetchGithubUser(accessToken: string): Promise<GithubUser> {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       Accept: 'application/vnd.github+json',
-      'User-Agent': 'Rcode'
+      'User-Agent': 'Joker'
     }
   })
   if (!res.ok) {

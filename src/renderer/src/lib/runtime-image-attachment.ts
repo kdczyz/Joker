@@ -25,10 +25,10 @@ export async function runtimeImageSourceForFile(
 export async function uploadRuntimeImageAttachment(
   request: RuntimeImageAttachmentUploadRequest
 ): Promise<RuntimeImageAttachmentUploadSuccess> {
-  if (typeof window.RcodeGui?.uploadRuntimeImageAttachment !== 'function') {
+  if (typeof window.JokerGui?.uploadRuntimeImageAttachment !== 'function') {
     throw new Error('Image attachment upload is unavailable.')
   }
-  const result = await window.RcodeGui.uploadRuntimeImageAttachment(request)
+  const result = await window.JokerGui.uploadRuntimeImageAttachment(request)
   if (!result.ok) throw new Error(result.message)
   return result
 }

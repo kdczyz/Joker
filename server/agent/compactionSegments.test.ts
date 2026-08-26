@@ -92,7 +92,7 @@ test("renderSegmentMarkdown none returns empty", () => {
 });
 
 test("writeSegment creates segment file and INDEX", async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), "rcode-seg-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "joker-seg-"));
   try {
     const messages: AgentMessage[] = [
       { role: "user", content: "test question about tokens and context" },
@@ -126,7 +126,7 @@ test("writeSegment creates segment file and INDEX", async () => {
 });
 
 test("writeSegment strips system tags from content", async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), "rcode-seg-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "joker-seg-"));
   try {
     const messages: AgentMessage[] = [
       { role: "user", content: "<user_info>OS darwin</user_info>real question" }
@@ -141,7 +141,7 @@ test("writeSegment strips system tags from content", async () => {
 });
 
 test("writeSegment none detail returns undefined", async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), "rcode-seg-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "joker-seg-"));
   try {
     const result = await writeSegment(dir, 1, [{ role: "user", content: "hi" }], "none");
     assert.equal(result, undefined);
@@ -154,7 +154,7 @@ test("writeSegment none detail returns undefined", async () => {
 });
 
 test("readCompactionIndex returns empty string when no index exists", async () => {
-  const dir = await mkdtemp(path.join(tmpdir(), "rcode-seg-"));
+  const dir = await mkdtemp(path.join(tmpdir(), "joker-seg-"));
   try {
     assert.equal(await readCompactionIndex(dir), "");
   } finally {

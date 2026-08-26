@@ -397,7 +397,7 @@ export async function fetchProviderBalance(id: string): Promise<ProviderBalanceR
       headers: {
         accept: "application/json",
         authorization: `Bearer ${apiKey}`,
-        "user-agent": "Rcode"
+        "user-agent": "Joker"
       },
       signal: AbortSignal.timeout(12000)
     });
@@ -450,7 +450,7 @@ async function fetchModelsForConfig(provider: AiProviderConfig) {
     const response = await fetch(url, {
       headers: {
         authorization: `Bearer ${apiKey}`,
-        "user-agent": "Rcode"
+        "user-agent": "Joker"
       },
       signal: AbortSignal.timeout(15000)
     }).catch((error: unknown) => {

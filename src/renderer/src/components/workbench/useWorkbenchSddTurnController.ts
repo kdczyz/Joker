@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { buildGuiPlanId, buildPlanRelativePath } from '@shared/gui-plan'
 import { sddDraftTraceRelativePath } from '@shared/sdd'
 import { buildSddTraceSnapshot } from '@shared/sdd-trace'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 import type { AttachmentReference, ChatBlock, RuntimeConnectionStatus } from '../../agent/types'
-import type { CoreRuntimeInfoJson } from '../../agent/Rcode-contract'
+import type { CoreRuntimeInfoJson } from '../../agent/Joker-contract'
 import { useChatStore } from '../../store/chat-store'
 import type { ChatState, SendMessageOverrides } from '../../store/chat-store-types'
 import { providerIdForComposerModel } from '../../store/chat-store-helpers'
@@ -210,7 +210,7 @@ export function useWorkbenchSddTurnController({
     workspace: string
   ): Promise<{ images: SddDraftImageReference[]; attachmentIds: string[] }> => {
     const attachmentCapabilities = runtimeInfo?.capabilities.attachments
-    if (!attachmentCapabilities || typeof window.RcodeGui?.uploadRuntimeImageAttachment !== 'function') {
+    if (!attachmentCapabilities || typeof window.JokerGui?.uploadRuntimeImageAttachment !== 'function') {
       throw new Error(t('composerAttachmentUnavailable'))
     }
     const attachmentIds: string[] = []
@@ -317,7 +317,7 @@ export function useWorkbenchSddTurnController({
     let attachmentIds: string[] = []
     if (payload.image) {
       try {
-        const read = await window.RcodeGui.readWorkspaceImage({
+        const read = await window.JokerGui.readWorkspaceImage({
           path: payload.image.absolutePath,
           workspaceRoot: draft.workspaceRoot
         })
@@ -421,7 +421,7 @@ export function useWorkbenchSddTurnController({
     const supportsImageAttachments =
       collected.images.length > 0 &&
       runtimeInfo?.capabilities.attachments.available === true &&
-      typeof window.RcodeGui?.uploadRuntimeImageAttachment === 'function'
+      typeof window.JokerGui?.uploadRuntimeImageAttachment === 'function'
 
     let imagesForPrompt = collected.images
     let attachmentIds: string[] = []
@@ -485,7 +485,7 @@ export function useWorkbenchSddTurnController({
     }
     const tracePath = sddDraftTraceRelativePath(draft.relativePath)
     if (tracePath) {
-      await window.RcodeGui
+      await window.JokerGui
         .writeWorkspaceFile({
           workspaceRoot: draft.workspaceRoot,
           path: tracePath,

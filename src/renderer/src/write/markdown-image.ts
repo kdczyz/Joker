@@ -24,7 +24,7 @@ export type WriteMarkdownImageLoadResult =
 
 function imageIpcAvailable(): boolean {
   return typeof window !== 'undefined' &&
-    typeof window.RcodeGui?.readWorkspaceImage === 'function'
+    typeof window.JokerGui?.readWorkspaceImage === 'function'
 }
 
 export function resolveWriteMarkdownImage(
@@ -76,7 +76,7 @@ export async function loadWriteMarkdownImage(
   }
 
   try {
-    const result = await window.RcodeGui.readWorkspaceImage({ path: resolved.localPath })
+    const result = await window.JokerGui.readWorkspaceImage({ path: resolved.localPath })
     if (result.ok) {
       return {
         ok: true,

@@ -186,9 +186,9 @@ function StreamdownLink({
       return
     }
 
-    if (isExternal && href && typeof window.RcodeGui?.openExternal === 'function') {
+    if (isExternal && href && typeof window.JokerGui?.openExternal === 'function') {
       event.preventDefault()
-      void window.RcodeGui.openExternal(href).catch(() => undefined)
+      void window.JokerGui.openExternal(href).catch(() => undefined)
     }
   }
 
@@ -197,7 +197,7 @@ function StreamdownLink({
     event.preventDefault()
     void openWorkspacePathInEditor(resolvedFileTarget, workspaceRoot).then((result) => {
       if (!result.ok) {
-        void window.RcodeGui?.logError?.('editor-open', 'Failed to open file reference', {
+        void window.JokerGui?.logError?.('editor-open', 'Failed to open file reference', {
           message: result.message,
           target: resolvedFileTarget
         })?.catch(() => undefined)

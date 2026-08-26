@@ -10,10 +10,10 @@ let packageRoot = ''
 
 beforeEach(async () => {
   vi.useFakeTimers()
-  packageRoot = await mkdtemp(join(tmpdir(), 'Rcode-direct-dom-'))
+  packageRoot = await mkdtemp(join(tmpdir(), 'Joker-direct-dom-'))
   await mkdir(join(packageRoot, 'dist'), { recursive: true })
-  await writeFile(join(packageRoot, 'dist/content.js'), 'globalThis.__RcodeDirectDomRan = true\n')
-  await writeFile(join(packageRoot, 'dist/content.css'), '.Rcode-direct-dom { color: red }\n')
+  await writeFile(join(packageRoot, 'dist/content.js'), 'globalThis.__JokerDirectDomRan = true\n')
+  await writeFile(join(packageRoot, 'dist/content.css'), '.Joker-direct-dom { color: red }\n')
 })
 
 afterEach(async () => {
@@ -99,7 +99,7 @@ describe('ExtensionContentScriptController', () => {
       }
     })
     expect(bootstrap.bindings[0]!.worldId).toBeGreaterThanOrEqual(10_000)
-    expect(bootstrap.bindings[0]!.scripts[0]!.code).toContain('__RcodeDirectDomRan')
+    expect(bootstrap.bindings[0]!.scripts[0]!.code).toContain('__JokerDirectDomRan')
 
     await vi.advanceTimersByTimeAsync(30)
     expect(frame.reload).toHaveBeenCalledTimes(1)
@@ -172,7 +172,7 @@ describe('ExtensionContentScriptController', () => {
     )).resolves.toBe(true)
     expect(frame.execute).toHaveBeenCalledWith(
       expect.any(Number),
-      [expect.objectContaining({ code: expect.stringContaining('Rcode-extension-deactivate') })]
+      [expect.objectContaining({ code: expect.stringContaining('Joker-extension-deactivate') })]
     )
     await vi.advanceTimersByTimeAsync(30)
     expect(frame.reload).toHaveBeenCalledTimes(1)
@@ -212,7 +212,7 @@ describe('ExtensionContentScriptController', () => {
     await vi.advanceTimersByTimeAsync(2_050)
     expect(frame.execute).toHaveBeenCalledWith(
       expect.any(Number),
-      [expect.objectContaining({ code: expect.stringContaining('Rcode-extension-deactivate') })]
+      [expect.objectContaining({ code: expect.stringContaining('Joker-extension-deactivate') })]
     )
     await vi.advanceTimersByTimeAsync(30)
     expect(frame.reload).toHaveBeenCalled()

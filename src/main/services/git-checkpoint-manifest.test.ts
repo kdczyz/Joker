@@ -10,7 +10,7 @@ import {
 } from './git-checkpoint-manifest'
 
 async function tempDir(): Promise<string> {
-  const path = join(tmpdir(), `Rcode-checkpoint-manifest-${randomUUID()}`)
+  const path = join(tmpdir(), `Joker-checkpoint-manifest-${randomUUID()}`)
   await mkdir(path, { recursive: true })
   return path
 }

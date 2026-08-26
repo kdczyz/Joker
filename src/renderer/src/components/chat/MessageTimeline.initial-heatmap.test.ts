@@ -30,25 +30,25 @@ describe('MessageTimeline initial heatmap empty hero routing', () => {
     await i18n.changeLanguage('en')
   })
 
-  it('shows the collapsed Rcode calendar for eligible initial chat states', () => {
+  it('shows the collapsed Joker calendar for eligible initial chat states', () => {
     const html = renderHero()
 
     expect(html).toContain('Expand calendar')
-    expect(html).not.toContain('Daily Rcode usage calendar')
+    expect(html).not.toContain('Daily Joker usage calendar')
     expect(html).not.toContain('Start a new conversation')
   })
 
   it('keeps offline, missing-workspace, and Claw empty states gated away from the heatmap', () => {
     const offlineHtml = renderHero({ ready: false })
-    expect(offlineHtml).toContain('Rcode is waking the local agent')
-    expect(offlineHtml).toContain('ds-Rcode-state-sleep')
+    expect(offlineHtml).toContain('Joker is waking the local agent')
+    expect(offlineHtml).toContain('ds-Joker-state-sleep')
     const workspaceHtml = renderHero({ hasWorkspace: false })
     expect(workspaceHtml).toContain('Choose working directory')
-    expect(workspaceHtml).toContain('ds-Rcode-state-sit')
+    expect(workspaceHtml).toContain('ds-Joker-state-sit')
     const clawHtml = renderHero({ route: 'claw' })
     expect(clawHtml).toContain('Start a conversation with this assistant')
-    expect(clawHtml).toContain('ds-Rcode-state-greet')
-    expect(clawHtml).not.toContain('Rcode usage')
+    expect(clawHtml).toContain('ds-Joker-state-greet')
+    expect(clawHtml).not.toContain('Joker usage')
   })
 
   it('shows the runtime error in the offline hero when one is available', () => {

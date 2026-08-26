@@ -3,12 +3,12 @@ import { useTranslation } from 'react-i18next'
 import {
   APP_LOCALE_OPTIONS,
   DEFAULT_MODEL_PROVIDER_ID,
-  RCODE_TOOL_PERMISSION_MODES,
-  RcodeToolPermissionModeSettings,
+  JOKER_TOOL_PERMISSION_MODES,
+  JokerToolPermissionModeSettings,
   normalizeAppSettings,
   type AppSettingsPatch,
   type AppSettingsV1,
-  type RcodeToolPermissionMode,
+  type JokerToolPermissionMode,
   type ModelProviderPreset
 } from '@shared/app-settings'
 import {
@@ -60,14 +60,14 @@ const themeOptions: { value: ThemePref; icon: typeof Sun; labelKey: string }[] =
 ]
 
 type PermissionOption = {
-  value: RcodeToolPermissionMode
+  value: JokerToolPermissionMode
   labelKey: string
   descriptionKey: string
   Icon: typeof Hand
   iconClass: string
 }
 
-const PERMISSION_OPTIONS: PermissionOption[] = RCODE_TOOL_PERMISSION_MODES.map((value) => {
+const PERMISSION_OPTIONS: PermissionOption[] = JOKER_TOOL_PERMISSION_MODES.map((value) => {
   switch (value) {
     case 'always-ask':
       return {
@@ -255,8 +255,8 @@ export function InitialSetupDialog(): ReactElement {
   }
 
   const handleOpenKeyPage = (url: string) => {
-    if (typeof window.RcodeGui?.openExternal !== 'function') return
-    void window.RcodeGui.openExternal(url).catch(() => undefined)
+    if (typeof window.JokerGui?.openExternal !== 'function') return
+    void window.JokerGui.openExternal(url).catch(() => undefined)
   }
 
   const selectedCard = PROVIDER_CARDS.find((card) => card.presetId === selection.presetId) ?? PROVIDER_CARDS[0]
@@ -279,7 +279,7 @@ export function InitialSetupDialog(): ReactElement {
     setSelection((current) => ({ ...current, mode }))
   }
 
-  const selectPermissionMode = (permissionMode: RcodeToolPermissionMode): void => {
+  const selectPermissionMode = (permissionMode: JokerToolPermissionMode): void => {
     setError(null)
     setSelection((current) => ({ ...current, permissionMode }))
     const current = formRef.current
@@ -287,9 +287,9 @@ export function InitialSetupDialog(): ReactElement {
     updateForm({
       agents: {
         ...current.agents,
-        Rcode: {
-          ...current.agents.Rcode,
-          ...RcodeToolPermissionModeSettings(permissionMode)
+        Joker: {
+          ...current.agents.Joker,
+          ...JokerToolPermissionModeSettings(permissionMode)
         }
       }
     } as SetupFormPatch)

@@ -4,14 +4,14 @@ import { join } from 'node:path'
 import { afterEach, describe, expect, it } from 'vitest'
 import { DataMigrationManifestV1Schema, parsePackageRelativePath } from '../../shared/data-migration'
 import {
-  DEFAULT_RCODEPACK_INSPECTION_BUDGET,
-  inspectRcodepackHeader,
-  inspectRcodepackPackage,
-  validateRcodepackArchiveDirectory,
-  validateRcodepackEntryPath,
-  validateRcodepackLinkMetadata
+  DEFAULT_JOKERPACK_INSPECTION_BUDGET,
+  inspectJokerpackHeader,
+  inspectJokerpackPackage,
+  validateJokerpackArchiveDirectory,
+  validateJokerpackEntryPath,
+  validateJokerpackLinkMetadata
 } from './archive-security'
-import { createRcodepackPackage } from './Rcodepack-container'
+import { createJokerpackPackage } from './Jokerpack-container'
 
 const roots: string[] = []
 
@@ -46,12 +46,12 @@ function manifest() {
   })
 }
 
-describe('Rcodepack archive security', () => {
+describe('Jokerpack archive security', () => {
   it('identifies and inspects a verified package without importing it', async () => {
-    const root = await mkdtemp(join(tmpdir(), 'Rcodepack-inspection-'))
+    const root = await mkdtemp(join(tmpdir(), 'Jokerpack-inspection-'))
     roots.push(root)
-    const packagePath = join(root, 'sample.Rcodepack')
-    await createRcodepackPackage({
+    const packagePath = join(root, 'sample.Jokerpack')
+    await createJokerpackPackage({
       outputPath: packagePath,
       manifest: manifest(),
       catalogs: [{ path: parsePackageRelativePath('catalog/workspaces.json'), value: [] }],
@@ -62,10 +62,10 @@ describe('Rcodepack archive security', () => {
         source: { kind: 'buffer', data: Buffer.from('portable') }
       }]
     })
-    expect(await inspectRcodepackHeader(packagePath)).toMatchObject({
-      kind: 'Rcodepack', encrypted: false, passwordRequired: false
+    expect(await inspectJokerpackHeader(packagePath)).toMatchObject({
+      kind: 'Jokerpack', encrypted: false, passwordRequired: false
     })
-    const inspected = await inspectRcodepackPackage({
+    const inspected = await inspectJokerpackPackage({
       packagePath,
       temporaryDirectory: join(root, 'inspection')
     })
@@ -79,8 +79,8 @@ describe('Rcodepack archive security', () => {
       '../escape', '/absolute/file', 'C:/drive/file', '\\\\server\\share',
       'safe/file:stream', 'safe/CON.txt', 'safe/trailing. ', `safe/${'a'.repeat(256)}`
     ]
-    for (const path of malicious) expect(() => validateRcodepackEntryPath(path)).toThrow()
-    expect(validateRcodepackEntryPath('payload/workspaces/ws_1/files/合法-name.txt')).toBe('payload/workspaces/ws_1/files/合法-name.txt')
+    for (const path of malicious) expect(() => validateJokerpackEntryPath(path)).toThrow()
+    expect(validateJokerpackEntryPath('payload/workspaces/ws_1/files/合法-name.txt')).toBe('payload/workspaces/ws_1/files/合法-name.txt')
   })
 
   it('rejects case/Unicode aliases and compression or expanded-size bombs', () => {
@@ -94,18 +94,18 @@ describe('Rcodepack archive security', () => {
       mode: 0o100600,
       modifiedAt: '2026-07-15T00:00:00.000Z'
     })
-    expect(() => validateRcodepackArchiveDirectory(
+    expect(() => validateJokerpackArchiveDirectory(
       [entry('payload/File.txt'), entry('payload/file.txt')],
       []
     )).toThrow('ambiguous path collision')
-    expect(() => validateRcodepackArchiveDirectory(
+    expect(() => validateJokerpackArchiveDirectory(
       [entry('payload/café.txt'), entry('payload/cafe\u0301.txt')],
       []
     )).toThrow('ambiguous path collision')
-    expect(() => validateRcodepackArchiveDirectory(
+    expect(() => validateJokerpackArchiveDirectory(
       [entry('payload/bomb.bin', 20_000, 1)],
       [],
-      { ...DEFAULT_RCODEPACK_INSPECTION_BUDGET, maximumCompressionRatio: 100 }
+      { ...DEFAULT_JOKERPACK_INSPECTION_BUDGET, maximumCompressionRatio: 100 }
     )).toThrow('compression ratio')
   })
 
@@ -115,12 +115,12 @@ describe('Rcodepack archive security', () => {
       logicalBytes: 0,
       sha256: '0'.repeat(64)
     }
-    expect(() => validateRcodepackLinkMetadata([{
+    expect(() => validateJokerpackLinkMetadata([{
       ...base,
       path: parsePackageRelativePath('payload/link'),
       linkTarget: parsePackageRelativePath('payload/missing')
     }])).toThrow('not a declared internal entry')
-    expect(() => validateRcodepackLinkMetadata([
+    expect(() => validateJokerpackLinkMetadata([
       { ...base, path: parsePackageRelativePath('payload/a'), linkTarget: parsePackageRelativePath('payload/b') },
       { ...base, path: parsePackageRelativePath('payload/b'), linkTarget: parsePackageRelativePath('payload/a') }
     ])).toThrow('loop')
@@ -130,12 +130,12 @@ describe('Rcodepack archive security', () => {
     const stems = ['CON', 'aux.txt', 'name:ads', '..', 'trailing.', 'trailing ']
     for (let index = 0; index < 128; index += 1) {
       const stem = stems[index % stems.length]!
-      expect(() => validateRcodepackEntryPath(`payload/${index}/${stem}`)).toThrow()
+      expect(() => validateJokerpackEntryPath(`payload/${index}/${stem}`)).toThrow()
     }
   })
 
   it('rejects a million-entry small-file workload from its declared count before traversal', () => {
-    const tooMany = new Array(DEFAULT_RCODEPACK_INSPECTION_BUDGET.maximumEntries + 1)
-    expect(() => validateRcodepackArchiveDirectory(tooMany, [])).toThrow('entry count exceeds')
+    const tooMany = new Array(DEFAULT_JOKERPACK_INSPECTION_BUDGET.maximumEntries + 1)
+    expect(() => validateJokerpackArchiveDirectory(tooMany, [])).toThrow('entry count exceeds')
   })
 })

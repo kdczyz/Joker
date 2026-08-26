@@ -8,7 +8,7 @@ const labels: Record<string, string> = {
   sectionGeneral: 'General',
   workspaceRoot: 'Default workspace',
   workspaceRootDesc: 'Default workspace description',
-  workspaceRootPlaceholder: '~/.Rcode/default_workspace',
+  workspaceRootPlaceholder: '~/.Joker/default_workspace',
   restoreWorkspaceDefault: 'Restore default',
   browse: 'Browse'
 }
@@ -49,9 +49,9 @@ function baseCtx(): Record<string, unknown> {
         retentionDays: 3
       }
     },
-    Rcode: {},
+    Joker: {},
     update: noop,
-    updateRcode: noop,
+    updateJoker: noop,
     showRuntimeToken: false,
     setShowRuntimeToken: noop,
     portError: '',
@@ -106,7 +106,7 @@ function baseCtx(): Record<string, unknown> {
 
 describe('GeneralSettingsSection workspace layout', () => {
   beforeEach(() => {
-    vi.stubGlobal('window', { RcodeGui: {} })
+    vi.stubGlobal('window', { JokerGui: {} })
   })
 
   afterEach(() => {

@@ -29,7 +29,7 @@ describe('parseMcpConfigText', () => {
     expect(model.preserved).toEqual({})
   })
 
-  it('parses a Rcode-format stdio server', () => {
+  it('parses a Joker-format stdio server', () => {
     const model = expectOk(
       parseMcpConfigText(
         JSON.stringify({

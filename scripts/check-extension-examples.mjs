@@ -14,7 +14,7 @@ const expected = [
   'agent-assistant',
   'direct-dom',
   'hello-sidebar',
-  'Rcode-video-editor',
+  'Joker-video-editor',
   'presentation-studio',
   'social-media-sidebar',
   'streaming-model-provider',
@@ -26,20 +26,20 @@ if (JSON.stringify(examples) !== JSON.stringify(expected)) {
 }
 
 run('npm', ['run', 'build:extensions'])
-run('npm', ['run', 'build:Rcode'])
-run('node', ['--test', join(examplesRoot, 'run-repository-Rcode-cli.test.mjs')])
+run('npm', ['run', 'build:Joker'])
+run('node', ['--test', join(examplesRoot, 'run-repository-Joker-cli.test.mjs')])
 
-for (const packageName of ['@Rcode/extension-api', '@Rcode/extension-react', '@Rcode/extension-test']) {
+for (const packageName of ['@joker-code/extension-api', '@joker-code/extension-react', '@joker-code/extension-test']) {
   await import(packageName)
 }
-await import(pathToFileURL(join(root, 'packages', 'create-Rcode-extension', 'src', 'scaffold.mjs')).href)
+await import(pathToFileURL(join(root, 'packages', 'create-Joker-extension', 'src', 'scaffold.mjs')).href)
 
-const temporary = await mkdtemp(join(tmpdir(), 'Rcode-extension-examples-'))
+const temporary = await mkdtemp(join(tmpdir(), 'Joker-extension-examples-'))
 try {
   for (const name of examples) {
     const directory = join(examplesRoot, name)
     const packageJson = JSON.parse(await readFile(join(directory, 'package.json'), 'utf8'))
-    const manifest = JSON.parse(await readFile(join(directory, 'Rcode-extension.json'), 'utf8'))
+    const manifest = JSON.parse(await readFile(join(directory, 'Joker-extension.json'), 'utf8'))
     run('npm', ['--prefix', directory, 'run', 'typecheck'])
     run('npm', ['--prefix', directory, 'run', 'build'])
     if (manifest.main !== undefined) {
@@ -48,12 +48,12 @@ try {
     if (manifest.browser !== undefined) {
       await assertBrowserBuild(directory, manifest.browser)
     }
-    run('node', [join(examplesRoot, 'validate-manifest.mjs'), join(directory, 'Rcode-extension.json')])
+    run('node', [join(examplesRoot, 'validate-manifest.mjs'), join(directory, 'Joker-extension.json')])
     if (packageJson.scripts?.test) run('npm', ['--prefix', directory, 'run', 'test'])
     run('npm', ['--prefix', directory, 'run', 'validate', '--', '--json'])
     run('npm', [
       '--prefix', directory, 'run', 'pack', '--',
-      '--output', join(temporary, `${name}.Rcodex`), '--overwrite', '--json'
+      '--output', join(temporary, `${name}.Jokerx`), '--overwrite', '--json'
     ])
   }
 } finally {
@@ -72,8 +72,8 @@ async function assertBrowserBuild(directory, browserEntry) {
   const htmlPath = resolve(directory, browserEntry)
   assertInside(outputRoot, htmlPath, 'browser entry')
   const html = await readFile(htmlPath, 'utf8')
-  if (html.includes('@Rcode/extension-api')) {
-    throw new Error(`${relative(root, htmlPath)} contains a bare @Rcode/extension-api reference`)
+  if (html.includes('@joker-code/extension-api')) {
+    throw new Error(`${relative(root, htmlPath)} contains a bare @joker-code/extension-api reference`)
   }
 
   const scriptSources = [...html.matchAll(/<script\b[^>]*\bsrc=["']([^"']+)["'][^>]*>/gi)]
@@ -97,8 +97,8 @@ async function assertBrowserBuild(directory, browserEntry) {
   }
   for (const path of javascriptFiles) {
     const source = await readFile(path, 'utf8')
-    if (source.includes('@Rcode/extension-api')) {
-      throw new Error(`${relative(root, path)} contains a bare @Rcode/extension-api reference`)
+    if (source.includes('@joker-code/extension-api')) {
+      throw new Error(`${relative(root, path)} contains a bare @joker-code/extension-api reference`)
     }
     for (const specifier of moduleSpecifiers(source)) {
       if (!specifier.startsWith('.')) {

@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import type { AppSettingsV1, RcodeRuntimeSettingsV1 } from '@shared/app-settings'
+import type { AppSettingsV1, JokerRuntimeSettingsV1 } from '@shared/app-settings'
 import { coerceRendererSettings, diffSettingsPatch, mergeSettings } from './settings-utils'
 
-function settings(RcodePatch: Partial<RcodeRuntimeSettingsV1> = {}): AppSettingsV1 {
+function settings(JokerPatch: Partial<JokerRuntimeSettingsV1> = {}): AppSettingsV1 {
   return coerceRendererSettings({
     agents: {
-      Rcode: RcodePatch
+      Joker: JokerPatch
     }
   } as unknown as AppSettingsV1)
 }
@@ -29,8 +29,8 @@ describe('diffSettingsPatch', () => {
     const next: AppSettingsV1 = {
       ...base,
       agents: {
-        Rcode: {
-          ...base.agents.Rcode,
+        Joker: {
+          ...base.agents.Joker,
           runtimeToken: ''
         }
       }
@@ -38,7 +38,7 @@ describe('diffSettingsPatch', () => {
 
     expect(diffSettingsPatch(base, next)).toEqual({
       agents: {
-        Rcode: {
+        Joker: {
           runtimeToken: ''
         }
       }
@@ -125,15 +125,15 @@ describe('diffSettingsPatch', () => {
       blockedSkills: ['unsafe-skill']
     }
     const next = mergeSettings(base, {
-      agents: { Rcode: { subagents: { profiles: [replacement] } } }
+      agents: { Joker: { subagents: { profiles: [replacement] } } }
     })
 
     const patch = diffSettingsPatch(base, next)
 
     expect(patch).toEqual({
-      agents: { Rcode: { subagents: { profiles: [replacement] } } }
+      agents: { Joker: { subagents: { profiles: [replacement] } } }
     })
-    expect(mergeSettings(base, patch).agents.Rcode.subagents).toEqual({
+    expect(mergeSettings(base, patch).agents.Joker.subagents).toEqual({
       enabled: true,
       maxParallel: 3,
       maxChildRuns: 12,
@@ -157,14 +157,14 @@ describe('diffSettingsPatch', () => {
       summaryReasoningEffort: 'medium',
       codeReviewReasoningEffort: 'high',
       contextCompaction: {
-        ...settings().agents.Rcode.contextCompaction,
+        ...settings().agents.Joker.contextCompaction,
         summaryModel: 'compaction-model',
         summaryProviderId: 'provider-a'
       }
     }))
     const next = mergeSettings(base, {
       agents: {
-        Rcode: {
+        Joker: {
           smallModel: '',
           smallModelProviderId: '',
           titleModel: '',
@@ -188,7 +188,7 @@ describe('diffSettingsPatch', () => {
 
     expect(patch).toEqual({
       agents: {
-        Rcode: {
+        Joker: {
           smallModel: '',
           smallModelProviderId: '',
           titleModel: '',
@@ -207,7 +207,7 @@ describe('diffSettingsPatch', () => {
         }
       }
     })
-    const roundTripped = mergeSettings(base, patch).agents.Rcode
+    const roundTripped = mergeSettings(base, patch).agents.Joker
     expect(roundTripped.smallModel).toBeUndefined()
     expect(roundTripped.titleModel).toBeUndefined()
     expect(roundTripped.summaryModel).toBeUndefined()

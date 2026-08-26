@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 
 test("learning records are deduplicated, updated, and reject credentials", async () => {
-  process.env.LOCAL_DATABASE_PATH = `/tmp/rcode-learning-db-${process.pid}-${Date.now()}.sqlite`;
+  process.env.LOCAL_DATABASE_PATH = `/tmp/joker-learning-db-${process.pid}-${Date.now()}.sqlite`;
   const {
     appendConversationMessage,
     deleteLearningRecord,
@@ -13,7 +13,7 @@ test("learning records are deduplicated, updated, and reject credentials", async
     recordAgentUsageEvent,
     saveLearningRecord
   } = await import("./database");
-  const projectPath = `/tmp/rcode-learning-${process.pid}-${Date.now()}`;
+  const projectPath = `/tmp/joker-learning-${process.pid}-${Date.now()}`;
   const first = saveLearningRecord({
     projectPath,
     title: "Use the project formatter",

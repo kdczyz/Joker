@@ -66,7 +66,7 @@ describe('HTML frame DOM source capture', () => {
 
     const matches = htmlFrameDomSourceBindingMatches({
       shapeId: 'shape_frame',
-      artifactRelativePath: '.Rcode-design/home/index.html',
+      artifactRelativePath: '.Joker-design/home/index.html',
       snapshot: snapshot!
     })
 
@@ -75,7 +75,7 @@ describe('HTML frame DOM source capture', () => {
         designObjectId: 'shape_frame',
         node: expect.objectContaining({
           tagName: 'main',
-          sourceFile: '.Rcode-design/home/index.html'
+          sourceFile: '.Joker-design/home/index.html'
         })
       }
     ])
@@ -85,6 +85,6 @@ describe('HTML frame DOM source capture', () => {
     await expect(captureHtmlFrameDomSourceSnapshot(() => null)).resolves.toBeNull()
     await expect(captureHtmlFrameDomSourceSnapshot(() => Promise.reject(new Error('detached')))).resolves.toBeNull()
     expect(HTML_FRAME_DOM_SOURCE_GUEST_SRC).toContain('data-onlook-id')
-    expect(HTML_FRAME_DOM_SOURCE_GUEST_SRC).toContain('data-Rcode-source-file')
+    expect(HTML_FRAME_DOM_SOURCE_GUEST_SRC).toContain('data-Joker-source-file')
   })
 })

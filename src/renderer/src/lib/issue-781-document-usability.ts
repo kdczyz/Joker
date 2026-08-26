@@ -2,11 +2,11 @@ import type { WorkspaceFileTarget } from '@shared/workspace-file'
 import { findFileReferences } from './file-references'
 import { previewWorkspaceFile } from './workspace-file-preview'
 
-const LINKIFIED_ATTR = 'data-Rcode-issue781-linkified'
-const FILE_PATH_ATTR = 'data-Rcode-issue781-file-path'
-const FILE_LINE_ATTR = 'data-Rcode-issue781-file-line'
-const FILE_COLUMN_ATTR = 'data-Rcode-issue781-file-column'
-const STYLE_ID = 'Rcode-issue-781-document-usability-style'
+const LINKIFIED_ATTR = 'data-Joker-issue781-linkified'
+const FILE_PATH_ATTR = 'data-Joker-issue781-file-path'
+const FILE_LINE_ATTR = 'data-Joker-issue781-file-line'
+const FILE_COLUMN_ATTR = 'data-Joker-issue781-file-column'
+const STYLE_ID = 'Joker-issue-781-document-usability-style'
 const OUTPUT_CONTAINER_SELECTOR = '.ds-markdown, .ds-code-block-html, .ds-file-preview-code-html'
 
 let installed = false

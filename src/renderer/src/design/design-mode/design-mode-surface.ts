@@ -52,8 +52,8 @@ export type DesignModeSurfaceCounts = {
 
 export type DesignModeSurfaceManifest = {
   version: 1
-  kind: 'Rcode.design.mode-surface'
-  source: 'Rcode-design-mode'
+  kind: 'Joker.design.mode-surface'
+  source: 'Joker-design-mode'
   document: { id: string; title: string } | null
   counts: DesignModeSurfaceCounts
   surfaces: DesignModeSurface[]
@@ -304,8 +304,8 @@ export function buildDesignModeSurfaceManifest(
   ]
   const manifest = {
     version: 1,
-    kind: 'Rcode.design.mode-surface',
-    source: 'Rcode-design-mode',
+    kind: 'Joker.design.mode-surface',
+    source: 'Joker-design-mode',
     document: options.document ? { id: options.document.id, title: options.document.title } : null,
     counts,
     surfaces,

@@ -9,8 +9,8 @@ import {
   resolveClawScheduleMcpCommand,
   resolveClawScheduleMcpNodeEntryPath,
   resolveDeepseekConfigPath,
-  resolveRcodeConfigPath,
-  resolveRcodeMcpJsonPath,
+  resolveJokerConfigPath,
+  resolveJokerMcpJsonPath,
   syncClawScheduleMcpConfig,
   type ClawScheduleMcpLaunchConfig
 } from './claw-schedule-mcp-config'
@@ -18,7 +18,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -38,10 +38,10 @@ function createSettings(patch: Partial<AppSettingsV1['schedule']['internal']> = 
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
     agents: {
-      Rcode: defaultRcodeRuntimeSettings()
+      Joker: defaultJokerRuntimeSettings()
     },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: {
       enabled: true,
       retentionDays: 2
@@ -82,19 +82,19 @@ function createSettings(patch: Partial<AppSettingsV1['schedule']['internal']> = 
 }
 
 const launch: ClawScheduleMcpLaunchConfig = {
-  appPath: '/Applications/Rcode.app',
-  execPath: '/Applications/Rcode.app/Contents/MacOS/Rcode',
+  appPath: '/Applications/Joker.app',
+  execPath: '/Applications/Joker.app/Contents/MacOS/Joker',
   isPackaged: false
 }
 
 describe('claw schedule MCP config', () => {
-  it('uses Rcode config files by default', () => {
-    expect(resolveRcodeConfigPath()).toBe(join(homedir(), '.Rcode', 'config.toml'))
-    expect(resolveRcodeMcpJsonPath()).toBe(join(homedir(), '.Rcode', 'mcp.json'))
-    expect(resolveDeepseekConfigPath()).toBe(resolveRcodeConfigPath())
+  it('uses Joker config files by default', () => {
+    expect(resolveJokerConfigPath()).toBe(join(homedir(), '.Joker', 'config.toml'))
+    expect(resolveJokerMcpJsonPath()).toBe(join(homedir(), '.Joker', 'mcp.json'))
+    expect(resolveDeepseekConfigPath()).toBe(resolveJokerConfigPath())
   })
 
-  it('writes the gui_schedule server to the Rcode MCP JSON config shape', () => {
+  it('writes the gui_schedule server to the Joker MCP JSON config shape', () => {
     const settings = createSettings({ port: 19787, secret: 'top-secret' })
     const synced = buildSyncedClawScheduleMcpJson(
       {
@@ -140,7 +140,7 @@ describe('claw schedule MCP config', () => {
 
   it('uses the macOS Electron helper for real app bundle paths', () => {
     expect(resolveClawScheduleMcpCommand(launch, 'darwin')).toBe(
-      '/Applications/Rcode.app/Contents/Frameworks/Rcode Helper.app/Contents/MacOS/Rcode Helper'
+      '/Applications/Joker.app/Contents/Frameworks/Joker Helper.app/Contents/MacOS/Joker Helper'
     )
     expect(resolveClawScheduleMcpCommand({
       appPath: '/tmp/deepseek-gui-test-app',
@@ -193,10 +193,10 @@ describe('claw schedule MCP config', () => {
 
   it('syncs mcp.json and cleans the old config.toml entry on disk', async () => {
     const root = await mkdtemp(join(tmpdir(), 'ds-gui-mcp-'))
-    const RcodeDir = join(root, '.Rcode')
-    const configTomlPath = join(RcodeDir, 'config.toml')
-    const mcpJsonPath = join(RcodeDir, 'mcp.json')
-    await mkdir(RcodeDir, { recursive: true })
+    const JokerDir = join(root, '.Joker')
+    const configTomlPath = join(JokerDir, 'config.toml')
+    const mcpJsonPath = join(JokerDir, 'mcp.json')
+    await mkdir(JokerDir, { recursive: true })
     await writeFile(
       configTomlPath,
       [

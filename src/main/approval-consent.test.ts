@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { ApprovalConsentVerifier } from '../../Rcode/src/server/approval-consent.js'
+import { ApprovalConsentVerifier } from '../../Joker/src/server/approval-consent.js'
 import { createApprovalConsentToken } from './approval-consent'
 
-describe('protected Rcode approval consent', () => {
-  it('is action-bound, short-lived, and one-shot across Main and Rcode', () => {
+describe('protected Joker approval consent', () => {
+  it('is action-bound, short-lived, and one-shot across Main and Joker', () => {
     const now = 10_000
     const token = createApprovalConsentToken({
       runtimeToken: 'runtime-secret',

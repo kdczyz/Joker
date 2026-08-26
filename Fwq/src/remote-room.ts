@@ -204,13 +204,13 @@ export class RemoteRoom extends DurableObject<Env> {
     if (request.headers.get("upgrade")?.toLowerCase() !== "websocket") {
       return new Response("Expected WebSocket upgrade", { status: 426 });
     }
-    const role = request.headers.get("x-rcode-role");
-    const userId = request.headers.get("x-rcode-user-id");
+    const role = request.headers.get("x-joker-role");
+    const userId = request.headers.get("x-joker-user-id");
     if (!isRole(role) || !userId) return new Response("Unauthorized", { status: 401 });
 
     let device: DeviceMetadata | undefined;
     if (role === "agent") {
-      try { device = parseDevice(JSON.parse(request.headers.get("x-rcode-device") || "null")); } catch { device = undefined; }
+      try { device = parseDevice(JSON.parse(request.headers.get("x-joker-device") || "null")); } catch { device = undefined; }
       if (!device) return new Response("Agent device metadata required", { status: 400 });
     }
 

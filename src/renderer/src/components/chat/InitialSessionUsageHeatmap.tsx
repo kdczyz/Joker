@@ -862,10 +862,10 @@ export function InitialSessionUsageHeatmapView({
 
   useEffect(() => {
     let cancelled = false
-    if (typeof window === 'undefined' || typeof window.RcodeGui?.getSettings !== 'function') return
-    void window.RcodeGui.getSettings()
+    if (typeof window === 'undefined' || typeof window.JokerGui?.getSettings !== 'function') return
+    void window.JokerGui.getSettings()
       .then((settings) => {
-        if (!cancelled) setModelLabel(settings.agents.Rcode.model.trim())
+        if (!cancelled) setModelLabel(settings.agents.Joker.model.trim())
       })
       .catch(() => {
         if (!cancelled) setModelLabel('')

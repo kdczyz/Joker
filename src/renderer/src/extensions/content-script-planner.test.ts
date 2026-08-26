@@ -1,4 +1,4 @@
-import { ExtensionContributionsSchema } from '@Rcode/extension-api'
+import { ExtensionContributionsSchema } from '@joker-code/extension-api'
 import { describe, expect, it } from 'vitest'
 import {
   ContributionRegistry,
@@ -45,13 +45,13 @@ describe('host content-script planning', () => {
       isolatedWorld: true,
       api: {
         version: 1,
-        globalName: 'RcodeHost'
+        globalName: 'JokerHost'
       },
       compatibility: { stable: false, warning: UNSUPPORTED_DOM_WARNING }
     })
     expect(plan.descriptors[0]?.worldId).toBeGreaterThanOrEqual(10_000)
-    expect(plan.descriptors[0]?.scripts).toEqual(['Rcode-extension://acme.dom/dist/content.js'])
-    expect(plan.descriptors[0]?.api.excludes).toContain('window.RcodeGui')
+    expect(plan.descriptors[0]?.scripts).toEqual(['Joker-extension://acme.dom/dist/content.js'])
+    expect(plan.descriptors[0]?.api.excludes).toContain('window.JokerGui')
   })
 
   it('never injects into protected surfaces or unsupported management routes', () => {

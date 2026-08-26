@@ -1,20 +1,20 @@
 import {
   DEFAULT_MODEL_PROVIDER_ID,
-  RCODE_TOOL_PERMISSION_MODES,
+  JOKER_TOOL_PERMISSION_MODES,
   MODEL_PROVIDER_PRESETS,
-  applyRcodeRuntimePatch,
-  getRcodeRuntimeSettings,
+  applyJokerRuntimePatch,
+  getJokerRuntimeSettings,
   getModelProviderSettings,
-  RcodeToolPermissionModeFromSettings,
-  RcodeToolPermissionModeSettings,
+  JokerToolPermissionModeFromSettings,
+  JokerToolPermissionModeSettings,
   modelProviderPresetProfile,
   modelProviderTokenPlanProfile,
   normalizeAppSettings,
   tokenPlanProviderId,
   type AppSettingsPatch,
   type AppSettingsV1,
-  type RcodeToolPermissionMode,
-  type RcodeRuntimeSettingsPatchV1,
+  type JokerToolPermissionMode,
+  type JokerRuntimeSettingsPatchV1,
   type ModelProviderPreset,
   type ModelProviderProfileV1
 } from '@shared/app-settings'
@@ -33,7 +33,7 @@ export type InitialSetupDrafts = Record<string, InitialSetupDraft>
 export type InitialSetupSelection = {
   presetId: string
   mode: InitialSetupAccessMode
-  permissionMode: RcodeToolPermissionMode
+  permissionMode: JokerToolPermissionMode
 }
 
 const INITIAL_SETUP_PROVIDER_PRESET_IDS = new Set(['xiaomi', 'minimax'])
@@ -71,9 +71,9 @@ export function initialSetupDrafts(settings: AppSettingsV1): InitialSetupDrafts 
 
 /** Card and mode to preselect: the active provider when it is one of ours, default otherwise. */
 export function initialSetupSelection(settings: AppSettingsV1): InitialSetupSelection {
-  const runtime = getRcodeRuntimeSettings(settings)
+  const runtime = getJokerRuntimeSettings(settings)
   const activeId = runtime.providerId.trim()
-  const permissionMode = RcodeToolPermissionModeFromSettings(runtime)
+  const permissionMode = JokerToolPermissionModeFromSettings(runtime)
   for (const preset of INITIAL_SETUP_PROVIDER_PRESETS) {
     if (activeId === preset.id) return { presetId: preset.id, mode: 'api', permissionMode }
     if (preset.tokenPlan && activeId === tokenPlanProviderId(preset.id)) {
@@ -98,7 +98,7 @@ export function initialSetupAutoWirePlan(
   settings: AppSettingsV1,
   drafts: InitialSetupDrafts
 ): InitialSetupAutoWirePlan {
-  const runtime = getRcodeRuntimeSettings(settings)
+  const runtime = getJokerRuntimeSettings(settings)
   const speechUnconfigured = !runtime.speechToText.enabled && !runtime.speechToText.providerId.trim()
   const imageUnconfigured = !runtime.imageGeneration.enabled && !runtime.imageGeneration.providerId.trim()
   const plan: InitialSetupAutoWirePlan = { speechProviderId: '', imageProviderId: '' }
@@ -161,7 +161,7 @@ export function buildInitialSetupSettings(
     }
   } as AppSettingsV1)
 
-  const runtime = getRcodeRuntimeSettings(next)
+  const runtime = getJokerRuntimeSettings(next)
   const selectedId = initialSetupProfileId(selection)
   const selectedProfile = getModelProviderSettings(next).providers.find(
     (profile) => profile.id === selectedId
@@ -174,17 +174,17 @@ export function buildInitialSetupSettings(
   // selection still matches the persisted policy would silently weaken values
   // the UI cannot represent — e.g. demote approvalPolicy 'never'/'suggest' or
   // escalate an 'external-sandbox' sandbox. When unchanged we omit the spread
-  // so applyRcodeRuntimePatch leaves the existing pair untouched.
-  const currentPermissionMode = RcodeToolPermissionModeFromSettings(runtime)
-  const selectedPermissionMode = selection.permissionMode && RCODE_TOOL_PERMISSION_MODES.includes(selection.permissionMode)
+  // so applyJokerRuntimePatch leaves the existing pair untouched.
+  const currentPermissionMode = JokerToolPermissionModeFromSettings(runtime)
+  const selectedPermissionMode = selection.permissionMode && JOKER_TOOL_PERMISSION_MODES.includes(selection.permissionMode)
     ? selection.permissionMode
     : currentPermissionMode
   const permissionChanged = selectedPermissionMode !== currentPermissionMode
-  const RcodePatch: RcodeRuntimeSettingsPatchV1 = {
+  const JokerPatch: JokerRuntimeSettingsPatchV1 = {
     providerId: selectedId,
     apiKey: '',
     baseUrl: '',
-    ...(permissionChanged ? RcodeToolPermissionModeSettings(selectedPermissionMode) : {}),
+    ...(permissionChanged ? JokerToolPermissionModeSettings(selectedPermissionMode) : {}),
     ...(switchingProvider && selectedProfile?.models[0] ? { model: selectedProfile.models[0] } : {}),
     ...(wire.speechProviderId
       ? { speechToText: { enabled: true, providerId: wire.speechProviderId } }
@@ -193,7 +193,7 @@ export function buildInitialSetupSettings(
       ? { imageGeneration: { enabled: true, providerId: wire.imageProviderId } }
       : {})
   }
-  return applyRcodeRuntimePatch(next, RcodePatch)
+  return applyJokerRuntimePatch(next, JokerPatch)
 }
 
 export function buildInitialSetupSettingsPatch(

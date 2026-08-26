@@ -11,7 +11,7 @@ describe('project DESIGN.md lifecycle store', () => {
     const first = parseProjectDesignMd(source('#112233')).document!
     useProjectDesignSystemStore.getState().setReady(first)
     expect(useProjectDesignSystemStore.getState()).toMatchObject({ status: 'ready', document: first })
-    useProjectDesignSystemStore.getState().setInvalid([{ severity: 'error', message: 'bad revision', source: 'Rcode' }])
+    useProjectDesignSystemStore.getState().setInvalid([{ severity: 'error', message: 'bad revision', source: 'Joker' }])
     expect(useProjectDesignSystemStore.getState()).toMatchObject({ status: 'invalid', document: first })
     useProjectDesignSystemStore.getState().setMissing()
     expect(useProjectDesignSystemStore.getState()).toMatchObject({ status: 'missing', document: null, inspectorOpen: false })

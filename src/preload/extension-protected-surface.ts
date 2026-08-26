@@ -1,6 +1,6 @@
 import { ipcRenderer } from 'electron'
 
-const SESSION_ARGUMENT = '--Rcode-protected-surface-session='
+const SESSION_ARGUMENT = '--Joker-protected-surface-session='
 const sessionId =
   process.argv.find((argument) => argument.startsWith(SESSION_ARGUMENT))?.slice(SESSION_ARGUMENT.length) ?? ''
 

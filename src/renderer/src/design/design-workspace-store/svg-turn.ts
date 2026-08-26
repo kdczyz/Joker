@@ -101,7 +101,7 @@ function nextSvgVersionNumber(
 }
 
 function requireSvgFileApi() {
-  const api = typeof window !== 'undefined' ? window.RcodeGui : undefined
+  const api = typeof window !== 'undefined' ? window.JokerGui : undefined
   if (
     !api ||
     typeof api.readWorkspaceFile !== 'function' ||
@@ -125,7 +125,7 @@ async function persistMetaStrict(workspaceRoot: string, artifact: DesignArtifact
 }
 
 async function deleteEntryBestEffort(workspaceRoot: string, path: string): Promise<void> {
-  const api = typeof window !== 'undefined' ? window.RcodeGui : undefined
+  const api = typeof window !== 'undefined' ? window.JokerGui : undefined
   if (typeof api?.deleteWorkspaceEntry !== 'function') return
   await deleteDesignWorkspaceEntry({ path, workspaceRoot }, api)
 }
@@ -140,7 +140,7 @@ async function restoreOrDeleteMetaBestEffort(
     await deleteEntryBestEffort(workspaceRoot, metaPath)
     return
   }
-  const api = typeof window !== 'undefined' ? window.RcodeGui : undefined
+  const api = typeof window !== 'undefined' ? window.JokerGui : undefined
   if (typeof api?.writeWorkspaceFile !== 'function') return
   await writeDesignWorkspaceFile({ path: metaPath, workspaceRoot, content: previousContent }, api)
 }
@@ -600,8 +600,8 @@ export async function duplicateSvgArtifact(
     !source ||
     source.kind !== 'svg' ||
     !workspaceRoot ||
-    typeof window.RcodeGui?.readWorkspaceFile !== 'function' ||
-    typeof window.RcodeGui?.createWorkspaceFile !== 'function'
+    typeof window.JokerGui?.readWorkspaceFile !== 'function' ||
+    typeof window.JokerGui?.createWorkspaceFile !== 'function'
   ) {
     return
   }
@@ -614,7 +614,7 @@ export async function duplicateSvgArtifact(
     const current = get()
     return current.workspaceRoot === context.workspaceRoot && current.activeDocumentId === context.documentId
   }
-  const read = await window.RcodeGui.readWorkspaceFile({ path: source.relativePath, workspaceRoot }).catch(() => null)
+  const read = await window.JokerGui.readWorkspaceFile({ path: source.relativePath, workspaceRoot }).catch(() => null)
   if (!read?.ok || read.truncated) return
   if (!contextMatches()) return
   const docId = context.documentId
@@ -622,7 +622,7 @@ export async function duplicateSvgArtifact(
   const copyId = createDesignArtifactId()
   const relativePath = `${artifactDirPath(docId, copyId)}/v1.svg`
   const designMdPath = artifactDesignMdPath(docId, copyId)
-  const write = await window.RcodeGui
+  const write = await window.JokerGui
     .createWorkspaceFile({ path: relativePath, workspaceRoot, content: read.content })
     .catch(() => null)
   if (!write?.ok) return
@@ -635,8 +635,8 @@ export async function duplicateSvgArtifact(
     return
   }
   const sourceNotes = source.designMdPath ?? artifactDesignMdPathOf(source.relativePath)
-  const notes = await window.RcodeGui.readWorkspaceFile({ path: sourceNotes, workspaceRoot }).catch(() => null)
-  if (notes?.ok && typeof window.RcodeGui.writeWorkspaceFile === 'function') {
+  const notes = await window.JokerGui.readWorkspaceFile({ path: sourceNotes, workspaceRoot }).catch(() => null)
+  if (notes?.ok && typeof window.JokerGui.writeWorkspaceFile === 'function') {
     await writeDesignWorkspaceFile({ path: designMdPath, workspaceRoot, content: notes.content })
   }
   if (!contextMatches()) {

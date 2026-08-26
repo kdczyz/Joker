@@ -4,9 +4,9 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from 'node:pat
 import { canonicalPath, normalizePathSeparators, resolveTargetPathWithinWorkspace } from './workspace-paths'
 import {
   normalizeWriteSettings,
-  resolveRcodeImageGenerationSettings,
+  resolveJokerImageGenerationSettings,
   type AppSettingsV1,
-  type RcodeImageGenerationSettingsV1,
+  type JokerImageGenerationSettingsV1,
   type WriteSettingsPatchV1
 } from '../../shared/app-settings'
 import {
@@ -22,8 +22,8 @@ import {
   createImageGenClient,
   ImageGenHttpError,
   type ImageGenClient
-} from '../../../Rcode/src/adapters/tool/image-gen-tool-provider.js'
-import { detectImage } from '../../../Rcode/src/attachments/attachment-store.js'
+} from '../../../Joker/src/adapters/tool/image-gen-tool-provider.js'
+import { detectImage } from '../../../Joker/src/attachments/attachment-store.js'
 import { resolveCodexOAuthApiKey } from '../codex-auth'
 
 // Matches WORKSPACE_IMAGE_DIR in workspace-files.ts so infographics land in
@@ -49,7 +49,7 @@ const KIND_DEFAULT_PROMPT: Record<WriteInfographicKind, string> = {
 }
 
 export function isWriteInfographicConfigured(
-  imageGeneration: Pick<RcodeImageGenerationSettingsV1, 'enabled' | 'baseUrl' | 'apiKey' | 'model'>
+  imageGeneration: Pick<JokerImageGenerationSettingsV1, 'enabled' | 'baseUrl' | 'apiKey' | 'model'>
 ): boolean {
   return (
     imageGeneration.enabled &&
@@ -83,7 +83,7 @@ function fitPromptToMaxChars(prefix: string, text: string, maxChars: number): st
   return fittedText ? `${fittedPrefix}${separator}${fittedText}` : fittedPrefix
 }
 
-function imagePromptMaxChars(imageGeneration: RcodeImageGenerationSettingsV1): number | undefined {
+function imagePromptMaxChars(imageGeneration: JokerImageGenerationSettingsV1): number | undefined {
   return imageGeneration.protocol === 'minimax-image' ? MINIMAX_PROMPT_MAX_CHARS : undefined
 }
 
@@ -127,7 +127,7 @@ export async function requestWriteInfographic(
   request: WriteInfographicRequest,
   options: { client?: ImageGenClient } = {}
 ): Promise<WriteInfographicResult> {
-  const imageGeneration = resolveRcodeImageGenerationSettings(settings)
+  const imageGeneration = resolveJokerImageGenerationSettings(settings)
   if (!isWriteInfographicConfigured(imageGeneration)) {
     return { ok: false, message: 'image generation provider is not configured' }
   }
@@ -209,7 +209,7 @@ export async function requestWriteInfographic(
     // directory from the same canonical root to keep the relative link clean.
     // dirname(imageDir) only equals the root for single-segment dirs, so
     // canonicalize the root itself (covers nested dirs like the per-
-    // requirement '.Rcodesdd/requirements/<id>/img').
+    // requirement '.Jokersdd/requirements/<id>/img').
     const canonicalRoot = await canonicalPath(workspaceRoot)
     const documentDir = join(canonicalRoot, dirname(relativeToRoot))
     markdownPath = normalizePathSeparators(relative(documentDir, absolutePath))

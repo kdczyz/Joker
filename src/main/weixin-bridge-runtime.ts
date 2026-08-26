@@ -56,7 +56,7 @@ type WeixinPackageInfo = {
 type WeixinLoginSession = {
   sessionKey: string
   qrcode: string
-  qrcodeUrl: string
+  qjokerUrl: string
   startedAt: number
   currentApiBaseUrl?: string
 }
@@ -175,7 +175,7 @@ function readWeixinPackageInfo(): WeixinPackageInfo {
   const packageJson = resolvePackagePath('@tencent-weixin/openclaw-weixin', 'package.json')
   if (!packageJson) {
     throw new Error(
-      'Built-in WeChat login component is missing. Reinstall Rcode or rebuild with @tencent-weixin/openclaw-weixin bundled.'
+      'Built-in WeChat login component is missing. Reinstall Joker or rebuild with @tencent-weixin/openclaw-weixin bundled.'
     )
   }
   const parsed = JSON.parse(readFileSync(packageJson, 'utf8')) as JsonRecord
@@ -198,7 +198,7 @@ function buildBaseInfo(): JsonRecord {
   const info = readWeixinPackageInfo()
   return {
     channel_version: info.version,
-    bot_agent: `Rcode/${app.getVersion() || '0.0.0'}`
+    bot_agent: `Joker/${app.getVersion() || '0.0.0'}`
   }
 }
 
@@ -488,7 +488,7 @@ async function readBridgeConfig(): Promise<JsonRecord> {
 async function prepareBridgeState(port: number): Promise<void> {
   if (!resolveWeixinPluginRoot()) {
     throw new Error(
-      'Built-in WeChat login component is missing. Reinstall Rcode or rebuild with @tencent-weixin/openclaw-weixin bundled.'
+      'Built-in WeChat login component is missing. Reinstall Joker or rebuild with @tencent-weixin/openclaw-weixin bundled.'
     )
   }
   await ensureStateDirs()
@@ -561,11 +561,11 @@ async function startWeixinLogin(params: JsonRecord): Promise<JsonRecord> {
   const force = params.force === true
   const sessionKey = recordString(params, 'accountId') || randomUUID()
   const existing = activeLogins.get(sessionKey)
-  if (!force && existing && isLoginFresh(existing) && existing.qrcodeUrl) {
+  if (!force && existing && isLoginFresh(existing) && existing.qjokerUrl) {
     return {
-      qrcode: existing.qrcodeUrl,
-      qrUrl: existing.qrcodeUrl,
-      qrDataUrl: existing.qrcodeUrl,
+      qrcode: existing.qjokerUrl,
+      qrUrl: existing.qjokerUrl,
+      qrDataUrl: existing.qjokerUrl,
       sessionKey,
       message: '二维码已显示，请用手机微信扫描。'
     }
@@ -573,21 +573,21 @@ async function startWeixinLogin(params: JsonRecord): Promise<JsonRecord> {
 
   const qr = await fetchQRCode(recordString(params, 'botType') || WEIXIN_DEFAULT_BOT_TYPE)
   const qrcode = recordString(qr, 'qrcode')
-  const qrcodeUrl = recordString(qr, 'qrcode_img_content') || recordString(qr, 'qrcodeUrl')
-  if (!qrcode || !qrcodeUrl) {
+  const qjokerUrl = recordString(qr, 'qrcode_img_content') || recordString(qr, 'qjokerUrl')
+  if (!qrcode || !qjokerUrl) {
     throw new Error(recordString(qr, 'message') || 'WeChat QR response is incomplete.')
   }
   activeLogins.set(sessionKey, {
     sessionKey,
     qrcode,
-    qrcodeUrl,
+    qjokerUrl,
     startedAt: Date.now(),
     currentApiBaseUrl: WEIXIN_API_BASE_URL
   })
   return {
-    qrcode: qrcodeUrl,
-    qrUrl: qrcodeUrl,
-    qrDataUrl: qrcodeUrl,
+    qrcode: qjokerUrl,
+    qrUrl: qjokerUrl,
+    qrDataUrl: qjokerUrl,
     sessionKey,
     message: '用手机微信扫描二维码，以继续连接。'
   }
@@ -634,7 +634,7 @@ async function waitForWeixinLogin(params: JsonRecord): Promise<JsonRecord> {
           alreadyConnected: true,
           accountId: normalizeAccountId(sessionKey),
           sessionKey,
-          message: '已连接过此 Rcode，无需重复连接。'
+          message: '已连接过此 Joker，无需重复连接。'
         }
       case 'scaned_but_redirect': {
         const redirectHost = recordString(status, 'redirect_host')
@@ -660,7 +660,7 @@ async function waitForWeixinLogin(params: JsonRecord): Promise<JsonRecord> {
           sessionKey,
           baseUrl,
           userId,
-          message: '已将此 Rcode 连接到微信。'
+          message: '已将此 Joker 连接到微信。'
         }
       }
     }
@@ -762,7 +762,7 @@ async function getUpdates(
 }
 
 function generateMessageId(): string {
-  return `Rcode-weixin-${randomUUID()}`
+  return `Joker-weixin-${randomUUID()}`
 }
 
 async function sendMessageWeixin(params: {
@@ -943,7 +943,7 @@ async function postToDeepSeekGuiWebhook(
   if (settings.webhookSecret) {
     headers.authorization = `Bearer ${settings.webhookSecret}`
     // 同时带新旧两个 secret 头:接收端可能还是只认旧头的老版本。
-    headers['x-Rcode-secret'] = settings.webhookSecret
+    headers['x-Joker-secret'] = settings.webhookSecret
     headers['x-deepseek-gui-secret'] = settings.webhookSecret
   }
   const res = await fetch(settings.webhookUrl, {
@@ -956,7 +956,7 @@ async function postToDeepSeekGuiWebhook(
   const reply = recordString(data, 'reply') || recordString(data, 'text')
   if (reply) return data
   if (!res.ok || data.ok === false) {
-    throw new Error(recordString(data, 'message') || `Rcode webhook HTTP ${res.status}`)
+    throw new Error(recordString(data, 'message') || `Joker webhook HTTP ${res.status}`)
   }
   return data
 }

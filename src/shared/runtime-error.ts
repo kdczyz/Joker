@@ -1,19 +1,19 @@
 /**
- * Shared parser for Rcode runtime error bodies.
+ * Shared parser for Joker runtime error bodies.
  *
- * Rcode's contract (`Rcode/src/contracts/errors.ts`) returns
+ * Joker's contract (`Joker/src/contracts/errors.ts`) returns
  * `{ code, message, details? }`. Older code paths may also surface
  * `{ error: string | { message }, message? }` where `error` is a
  * legacy machine-readable code (e.g. `runtime_auth_required`).
  *
  * This module normalises both shapes so the renderer and main
  * process agree on a single `RuntimeError` view. The `code` field
- * always carries either a Rcode contract code or one of the
+ * always carries either a Joker contract code or one of the
  * `LEGACY_MAIN_GUARD_CODES` (main-process guard codes that aren't
- * part of the Rcode schema). `details` carries the original
+ * part of the Joker schema). `details` carries the original
  * payload untouched so callers that need more context can read it.
  */
-export type RcodeErrorCode =
+export type JokerErrorCode =
   | 'validation_error'
   | 'unauthorized'
   | 'forbidden'
@@ -43,7 +43,7 @@ export type LegacyMainGuardCode =
   | 'runtime_request_user_input_unsupported'
   | 'missing_api_key'
 
-export type RuntimeErrorCode = RcodeErrorCode | LegacyMainGuardCode
+export type RuntimeErrorCode = JokerErrorCode | LegacyMainGuardCode
 
 export type RuntimeError = {
   code: RuntimeErrorCode
@@ -51,7 +51,7 @@ export type RuntimeError = {
   details?: unknown
 }
 
-const KNOWN_RCODE_CODES: ReadonlySet<RcodeErrorCode> = new Set<RcodeErrorCode>([
+const KNOWN_JOKER_CODES: ReadonlySet<JokerErrorCode> = new Set<JokerErrorCode>([
   'validation_error',
   'unauthorized',
   'forbidden',
@@ -84,7 +84,7 @@ const KNOWN_LEGACY_CODES: ReadonlySet<LegacyMainGuardCode> = new Set<LegacyMainG
 
 function normalizeCode(value: unknown): RuntimeErrorCode {
   if (typeof value !== 'string') return 'unknown'
-  if ((KNOWN_RCODE_CODES as Set<string>).has(value)) return value as RcodeErrorCode
+  if ((KNOWN_JOKER_CODES as Set<string>).has(value)) return value as JokerErrorCode
   if ((KNOWN_LEGACY_CODES as Set<string>).has(value)) return value as LegacyMainGuardCode
   return 'unknown'
 }
@@ -106,7 +106,7 @@ function readNestedMessage(value: unknown): string {
 }
 
 /**
- * Parse a Rcode runtime error body. Falls back to the supplied
+ * Parse a Joker runtime error body. Falls back to the supplied
  * fallback message when the body is empty, not JSON, or carries no
  * recognisable fields. The returned object always has `code` and
  * `message`; `details` is only present when the body carried one.
@@ -151,8 +151,8 @@ export function runtimeErrorToError(error: RuntimeError): Error {
   )
 }
 
-export function isKnownRcodeErrorCode(value: unknown): value is RcodeErrorCode {
-  return typeof value === 'string' && (KNOWN_RCODE_CODES as Set<string>).has(value)
+export function isKnownJokerErrorCode(value: unknown): value is JokerErrorCode {
+  return typeof value === 'string' && (KNOWN_JOKER_CODES as Set<string>).has(value)
 }
 
 export function isLegacyMainGuardCode(value: unknown): value is LegacyMainGuardCode {

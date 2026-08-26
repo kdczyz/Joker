@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
 import { net } from 'electron'
 import type { AppSettingsV1, ClawImChannelV1 } from '../shared/app-settings'
-import type { ClawImTelegramConnectErrorCode } from '../shared/Rcode-gui-api'
+import type { ClawImTelegramConnectErrorCode } from '../shared/Joker-gui-api'
 import type { JsonSettingsStore } from './settings-store'
 
 /**
@@ -383,7 +383,7 @@ class TelegramChannel {
         return undefined
       }
       const ext = inferImageExtension(fileMeta.result.file_path)
-      const dir = join(tmpdir(), 'Rcode-telegram-attachments')
+      const dir = join(tmpdir(), 'Joker-telegram-attachments')
       await mkdir(dir, { recursive: true })
       const fileName = `tg-${chatId}-${messageId}-${createHash('sha1').update(largest.file_id).digest('hex').slice(0, 10)}.${ext}`
       const filePath = join(dir, fileName)

@@ -11,10 +11,10 @@ import {
   ShieldQuestion
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import type { ApprovalPolicy, RcodeToolPermissionMode, SandboxMode } from '@shared/app-settings'
+import type { ApprovalPolicy, JokerToolPermissionMode, SandboxMode } from '@shared/app-settings'
 import {
-  RcodeToolPermissionModeFromSettings,
-  RcodeToolPermissionModeSettings
+  JokerToolPermissionModeFromSettings,
+  JokerToolPermissionModeSettings
 } from '@shared/app-settings'
 import { runTrustedUserActivation } from '../../extensions/protected-user-activation'
 import { confirmDialog } from '../../lib/confirm-dialog'
@@ -32,7 +32,7 @@ type Props = {
 }
 
 type ApprovalOption = {
-  value: RcodeToolPermissionMode
+  value: JokerToolPermissionMode
   labelKey: string
   descriptionKey: string
   Icon: typeof Hand
@@ -97,15 +97,15 @@ const APPROVAL_OPTIONS: ApprovalOption[] = [
   }
 ]
 
-function permissionOption(mode: RcodeToolPermissionMode): ApprovalOption {
+function permissionOption(mode: JokerToolPermissionMode): ApprovalOption {
   return APPROVAL_OPTIONS.find((option) => option.value === mode) ?? APPROVAL_OPTIONS[1]
 }
 
-function permissionLabelKey(mode: RcodeToolPermissionMode): string {
+function permissionLabelKey(mode: JokerToolPermissionMode): string {
   return permissionOption(mode).labelKey
 }
 
-function permissionDescriptionKey(mode: RcodeToolPermissionMode): string {
+function permissionDescriptionKey(mode: JokerToolPermissionMode): string {
   return permissionOption(mode).descriptionKey
 }
 
@@ -121,7 +121,7 @@ export function FloatingComposerExecutionPicker({
   const rootRef = useRef<HTMLDivElement | null>(null)
   const approvalButtonRef = useRef<HTMLButtonElement | null>(null)
   const menuRef = useRef<HTMLDivElement | null>(null)
-  const permissionMode = RcodeToolPermissionModeFromSettings(value)
+  const permissionMode = JokerToolPermissionModeFromSettings(value)
   const currentPermissionOption = permissionOption(permissionMode)
   const bypass = permissionMode === 'bypass'
   const PermissionIcon = currentPermissionOption.Icon
@@ -189,7 +189,7 @@ export function FloatingComposerExecutionPicker({
         if (!confirmed) return
         applyTrustedComposerExecutionChange(
           event,
-          RcodeToolPermissionModeSettings(option.value),
+          JokerToolPermissionModeSettings(option.value),
           update
         )
       })
@@ -197,7 +197,7 @@ export function FloatingComposerExecutionPicker({
     }
     applyTrustedComposerExecutionChange(
       event,
-      RcodeToolPermissionModeSettings(option.value),
+      JokerToolPermissionModeSettings(option.value),
       update
     )
   }
@@ -282,7 +282,7 @@ function ExecutionRow({
   iconClass,
   onClick
 }: {
-  mode: RcodeToolPermissionMode
+  mode: JokerToolPermissionMode
   selected: boolean
   label: string
   description: string

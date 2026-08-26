@@ -12,7 +12,7 @@ function binding(overrides: Partial<ExtensionConsentBinding> = {}): ExtensionCon
     extensionId: 'acme.example',
     extensionVersion: '1.0.0',
     operationKind: 'extension.install',
-    parameters: { path: '/tmp/example.Rcodex', permissions: ['ui.views'] },
+    parameters: { path: '/tmp/example.Jokerx', permissions: ['ui.views'] },
     senderId: 12,
     protectedWindowSessionId: 'protected-window-1',
     ...overrides
@@ -36,7 +36,7 @@ describe('ExtensionConsentTokenService', () => {
 
     expect(() => service.consume(
       issued.token,
-      binding({ parameters: { path: '/tmp/other.Rcodex', permissions: ['ui.views'] } })
+      binding({ parameters: { path: '/tmp/other.Jokerx', permissions: ['ui.views'] } })
     )).toThrowError(expect.objectContaining({ code: 'EXTENSION_CONSENT_MISMATCH' }))
     expect(() => service.consume(issued.token, binding())).toThrowError(
       expect.objectContaining({ code: 'EXTENSION_CONSENT_REPLAYED' })

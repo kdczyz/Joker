@@ -178,9 +178,9 @@ describe('UiPluginStagePresentation', () => {
     const nodeFs = 'node:fs/promises'
     const { readFile } = await import(/* @vite-ignore */ nodeFs)
     const css = await readFile(new URL('../../styles/surfaces-write.css', import.meta.url), 'utf8')
-    expect(css).toContain('--Rcode-ui-plugin-host-bg-color: var(--bg-app, #f3f5fc);')
-    expect(css).toContain('--Rcode-ui-plugin-host-surface-color: var(--surface-2, #ffffff);')
-    expect(css).toContain('var(--Rcode-ui-plugin-host-bg-color) 0%')
+    expect(css).toContain('--Joker-ui-plugin-host-bg-color: var(--bg-app, #f3f5fc);')
+    expect(css).toContain('--Joker-ui-plugin-host-surface-color: var(--surface-2, #ffffff);')
+    expect(css).toContain('var(--Joker-ui-plugin-host-bg-color) 0%')
     expect(css).not.toMatch(/color-mix\([^;]*var\(--ds-bg-main\)/)
     expect(css).not.toMatch(/color-mix\([^;]*var\(--ds-surface-elevated\)/)
     expect(css).toContain("html[data-ui-plugin-scene-layout='rail-left']")

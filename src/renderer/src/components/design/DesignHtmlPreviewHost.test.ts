@@ -9,17 +9,17 @@ import {
 describe('DesignHtmlPreviewHost helpers', () => {
   it('renders skeletons and last-good previews, but not transient first chunks', () => {
     expect(shouldRenderDesignHtmlPreviewWebview({
-      fileUrl: 'file:///workspace/.Rcode-design/screen/v1.html',
+      fileUrl: 'file:///workspace/.Joker-design/screen/v1.html',
       renderState: 'skeleton',
       hasRenderableContent: false
     })).toBe(true)
     expect(shouldRenderDesignHtmlPreviewWebview({
-      fileUrl: 'file:///workspace/.Rcode-design/screen/v1.html',
+      fileUrl: 'file:///workspace/.Joker-design/screen/v1.html',
       renderState: 'transient',
       hasRenderableContent: false
     })).toBe(false)
     expect(shouldRenderDesignHtmlPreviewWebview({
-      fileUrl: 'file:///workspace/.Rcode-design/screen/v1.html',
+      fileUrl: 'file:///workspace/.Joker-design/screen/v1.html',
       renderState: 'transient',
       hasRenderableContent: true
     })).toBe(true)
@@ -32,13 +32,13 @@ describe('DesignHtmlPreviewHost helpers', () => {
 
   it('never mounts skeletons for surfaces that opt out of skeleton painting', () => {
     expect(shouldRenderDesignHtmlPreviewWebview({
-      fileUrl: 'file:///workspace/.Rcode-design/screen/v1.html',
+      fileUrl: 'file:///workspace/.Joker-design/screen/v1.html',
       renderState: 'skeleton',
       hasRenderableContent: false,
       mountWhileSkeleton: false
     })).toBe(false)
     expect(shouldRenderDesignHtmlPreviewWebview({
-      fileUrl: 'file:///workspace/.Rcode-design/screen/v1.html',
+      fileUrl: 'file:///workspace/.Joker-design/screen/v1.html',
       renderState: 'renderable',
       hasRenderableContent: true,
       mountWhileSkeleton: false

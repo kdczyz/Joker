@@ -1,6 +1,6 @@
 # Data migration v1 compatibility fixture
 
-Files in this directory are immutable compatibility evidence for `.Rcodepack`
+Files in this directory are immutable compatibility evidence for `.Jokerpack`
 format version 1. Never regenerate or rewrite a committed v1 fixture to match a
 new implementation. Add a new named fixture or a new version directory instead.
 

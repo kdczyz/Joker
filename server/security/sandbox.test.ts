@@ -188,7 +188,7 @@ test("portable executor aborts an active shell process", async () => {
 test("portable executor injects allowlisted secret references and redacts output", async () => {
   const root = await mkdtemp(path.join(os.tmpdir(), "agent-console-"));
   const previous = process.env.CLOUDFLARE_API_TOKEN;
-  process.env.CLOUDFLARE_API_TOKEN = "rcode-test-secret-value";
+  process.env.CLOUDFLARE_API_TOKEN = "joker-test-secret-value";
   try {
     const result = await portableExecutor.run({
       command: "node -e \"process.stdout.write(process.env.CLOUDFLARE_API_TOKEN)\"",

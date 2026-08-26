@@ -1,4 +1,4 @@
-import type { ExtensionContext } from '@Rcode/extension-api'
+import type { ExtensionContext } from '@joker-code/extension-api'
 
 export async function activate(context: ExtensionContext): Promise<void> {
   // The profile is static Manifest metadata. Runs are created through the same
@@ -7,5 +7,5 @@ export async function activate(context: ExtensionContext): Promise<void> {
 }
 
 export async function deactivate(): Promise<void> {
-  // Active subscriptions are disposed by their owning View session and by Rcode.
+  // Active subscriptions are disposed by their owning View session and by Joker.
 }

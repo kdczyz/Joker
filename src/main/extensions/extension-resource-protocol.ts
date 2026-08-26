@@ -2,15 +2,15 @@ import { readFile, realpath, stat } from 'node:fs/promises'
 import { extname, posix, resolve, sep } from 'node:path'
 import type { Protocol } from 'electron'
 
-export const RCODE_EXTENSION_SCHEME = 'Rcode-extension'
-export const RCODE_EXTENSION_CSP = [
+export const JOKER_EXTENSION_SCHEME = 'Joker-extension'
+export const JOKER_EXTENSION_CSP = [
   "default-src 'none'",
   "script-src 'self'",
   "style-src 'self'",
-  "img-src 'self' data: Rcode-media:",
+  "img-src 'self' data: Joker-media:",
   "font-src 'self'",
   "connect-src 'none'",
-  "media-src 'self' Rcode-media:",
+  "media-src 'self' Joker-media:",
   "worker-src 'self'",
   "frame-src 'none'",
   "object-src 'none'",
@@ -18,7 +18,7 @@ export const RCODE_EXTENSION_CSP = [
   "form-action 'none'"
 ].join('; ')
 
-export const RCODE_EXTERNAL_WEBVIEW_EXTENSION_CSP = RCODE_EXTENSION_CSP.replace(
+export const JOKER_EXTERNAL_WEBVIEW_EXTENSION_CSP = JOKER_EXTENSION_CSP.replace(
   "frame-src 'none'",
   'frame-src https:'
 )
@@ -43,8 +43,8 @@ export type ExtensionResourceDescriptorResolver = (
 type SchemeRegistrar = Pick<Protocol, 'registerSchemesAsPrivileged'>
 type ProtocolHandler = Pick<Protocol, 'handle' | 'unhandle'>
 
-export const RCODE_EXTENSION_PRIVILEGED_SCHEME = {
-  scheme: RCODE_EXTENSION_SCHEME,
+export const JOKER_EXTENSION_PRIVILEGED_SCHEME = {
+  scheme: JOKER_EXTENSION_SCHEME,
   privileges: {
     standard: true,
     secure: true,
@@ -55,23 +55,23 @@ export const RCODE_EXTENSION_PRIVILEGED_SCHEME = {
   }
 } as const
 
-export function registerRcodeExtensionSchemeAsPrivileged(protocol: SchemeRegistrar): void {
-  protocol.registerSchemesAsPrivileged([RCODE_EXTENSION_PRIVILEGED_SCHEME])
+export function registerJokerExtensionSchemeAsPrivileged(protocol: SchemeRegistrar): void {
+  protocol.registerSchemesAsPrivileged([JOKER_EXTENSION_PRIVILEGED_SCHEME])
 }
 
-export function registerRcodeExtensionProtocol(options: {
+export function registerJokerExtensionProtocol(options: {
   protocol: ProtocolHandler
   resolveDescriptor: ExtensionResourceDescriptorResolver
   onDenied?: (detail: { extensionId?: string; code: string }) => void
 }): void {
   try {
-    options.protocol.unhandle(RCODE_EXTENSION_SCHEME)
+    options.protocol.unhandle(JOKER_EXTENSION_SCHEME)
   } catch {
     // First registration has no existing handler.
   }
-  options.protocol.handle(RCODE_EXTENSION_SCHEME, async (request) => {
+  options.protocol.handle(JOKER_EXTENSION_SCHEME, async (request) => {
     try {
-      const resource = await resolveRcodeExtensionResource(request.url, options.resolveDescriptor)
+      const resource = await resolveJokerExtensionResource(request.url, options.resolveDescriptor)
       const bytes = await readFile(resource.path)
       if (bytes.byteLength > MAX_RESOURCE_BYTES) throw new ExtensionResourceError('RESOURCE_TOO_LARGE')
       return new Response(new Uint8Array(bytes), {
@@ -93,7 +93,7 @@ export function registerRcodeExtensionProtocol(options: {
         headers: {
           'Content-Type': 'text/plain; charset=utf-8',
           'Cache-Control': 'no-store',
-          'Content-Security-Policy': RCODE_EXTENSION_CSP,
+          'Content-Security-Policy': JOKER_EXTENSION_CSP,
           'X-Content-Type-Options': 'nosniff'
         }
       })
@@ -101,7 +101,7 @@ export function registerRcodeExtensionProtocol(options: {
   })
 }
 
-export async function resolveRcodeExtensionResource(
+export async function resolveJokerExtensionResource(
   rawUrl: string,
   resolveDescriptor: ExtensionResourceDescriptorResolver
 ): Promise<{
@@ -110,7 +110,7 @@ export async function resolveRcodeExtensionResource(
   descriptor: ExtensionResourceDescriptor
   hostResource?: 'icon'
 }> {
-  const parsed = parseRcodeExtensionUrl(rawUrl)
+  const parsed = parseJokerExtensionUrl(rawUrl)
   const descriptor = await resolveDescriptor(parsed.extensionId)
   if (!descriptor || descriptor.extensionId !== parsed.extensionId) {
     throw new ExtensionResourceError('EXTENSION_NOT_AVAILABLE')
@@ -157,7 +157,7 @@ export async function resolveRcodeExtensionResource(
   }
 }
 
-export function parseRcodeExtensionUrl(rawUrl: string): {
+export function parseJokerExtensionUrl(rawUrl: string): {
   extensionId: string
   relativePath: string
   viewSessionId?: string
@@ -170,7 +170,7 @@ export function parseRcodeExtensionUrl(rawUrl: string): {
     throw new ExtensionResourceError('URL_INVALID')
   }
   if (
-    url.protocol !== `${RCODE_EXTENSION_SCHEME}:` ||
+    url.protocol !== `${JOKER_EXTENSION_SCHEME}:` ||
     !EXTENSION_ID.test(url.hostname) ||
     url.username ||
     url.password ||
@@ -179,7 +179,7 @@ export function parseRcodeExtensionUrl(rawUrl: string): {
   ) {
     throw new ExtensionResourceError('URL_INVALID')
   }
-  const authorityEnd = rawUrl.indexOf('/', `${RCODE_EXTENSION_SCHEME}://`.length)
+  const authorityEnd = rawUrl.indexOf('/', `${JOKER_EXTENSION_SCHEME}://`.length)
   if (authorityEnd < 0) throw new ExtensionResourceError('PATH_INVALID')
   const rawPath = rawUrl.slice(authorityEnd + 1).split(/[?#]/, 1)[0] ?? ''
   if (/%(?:2f|5c)/i.test(rawPath)) throw new ExtensionResourceError('PATH_INVALID')
@@ -209,10 +209,10 @@ export function parseRcodeExtensionUrl(rawUrl: string): {
   ) {
     throw new ExtensionResourceError('PATH_INVALID')
   }
-  const viewSessionId = url.searchParams.get('RcodeViewSession') ?? undefined
-  const hostResource = url.searchParams.get('RcodeHostResource') ?? undefined
+  const viewSessionId = url.searchParams.get('JokerViewSession') ?? undefined
+  const hostResource = url.searchParams.get('JokerHostResource') ?? undefined
   for (const key of url.searchParams.keys()) {
-    if (key !== 'RcodeViewSession' && key !== 'RcodeHostResource') {
+    if (key !== 'JokerViewSession' && key !== 'JokerHostResource') {
       throw new ExtensionResourceError('QUERY_INVALID')
     }
   }
@@ -241,8 +241,8 @@ export function extensionResourceHeaders(
   return {
     'Content-Type': safeContentType(relativePath),
     'Content-Security-Policy': allowExternalWebview
-      ? RCODE_EXTERNAL_WEBVIEW_EXTENSION_CSP
-      : RCODE_EXTENSION_CSP,
+      ? JOKER_EXTERNAL_WEBVIEW_EXTENSION_CSP
+      : JOKER_EXTENSION_CSP,
     'Cache-Control': 'no-store',
     'Cross-Origin-Resource-Policy': allowHostImageEmbedding ? 'cross-origin' : 'same-origin',
     'Referrer-Policy': 'no-referrer',

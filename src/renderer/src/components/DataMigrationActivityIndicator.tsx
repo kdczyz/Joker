@@ -9,12 +9,12 @@ export function DataMigrationActivityIndicator(): ReactElement | null {
   const openSettings = useChatStore((state) => state.openSettings)
   const [status, setStatus] = useState<DataMigrationOperationStatus | null>(null)
   const refresh = useCallback(async () => {
-    setStatus(await window.RcodeGui.dataMigration.getStatus())
+    setStatus(await window.JokerGui.dataMigration.getStatus())
   }, [])
 
   useEffect(() => {
     void refresh().catch(() => undefined)
-    const unsubscribe = window.RcodeGui.dataMigration.onProgress(() => void refresh().catch(() => undefined))
+    const unsubscribe = window.JokerGui.dataMigration.onProgress(() => void refresh().catch(() => undefined))
     return unsubscribe
   }, [refresh])
 

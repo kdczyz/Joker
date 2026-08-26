@@ -1,8 +1,8 @@
 /**
  * Fetch the Claude models available to a subscription, via the Agent SDK's
- * `query().supportedModels()`. The SDK lives in Rcode's
+ * `query().supportedModels()`. The SDK lives in Joker's
  * node_modules (not the app's), so we run a short ESM eval in a Node subprocess
- * with cwd = the Rcode dir, scoping the OAuth token into its env. Defensive: any
+ * with cwd = the Joker dir, scoping the OAuth token into its env. Defensive: any
  * failure (no SDK, timeout, not-logged-in) resolves to `[]` so the caller keeps
  * its existing/preset model list.
  */
@@ -12,10 +12,10 @@ import { join } from 'node:path'
 
 const SDK_PKG = '@anthropic-ai/claude-agent-sdk'
 // Frame the JSON payload so we can extract it from any other stdout noise.
-const MARK = '<<<RCODE_MODELS>>>'
+const MARK = '<<<JOKER_MODELS>>>'
 
-function resolveRcodeDir(RcodeRoots: readonly string[]): string | undefined {
-  return RcodeRoots.find((root) => existsSync(join(root, 'node_modules', '@anthropic-ai', 'claude-agent-sdk')))
+function resolveJokerDir(JokerRoots: readonly string[]): string | undefined {
+  return JokerRoots.find((root) => existsSync(join(root, 'node_modules', '@anthropic-ai', 'claude-agent-sdk')))
 }
 
 /** Env with API-key overrides stripped so the OAuth token is what authenticates. */
@@ -29,16 +29,16 @@ function scopedEnv(token?: string): NodeJS.ProcessEnv {
 
 export function fetchSdkModels(options: {
   token?: string
-  RcodeRoots: readonly string[]
-  /** Explicit Claude Code binary path (when not bundled in Rcode/node_modules). */
+  JokerRoots: readonly string[]
+  /** Explicit Claude Code binary path (when not bundled in Joker/node_modules). */
   binaryPath?: string
   /** Node/Electron executable to run the eval with (defaults to the current one). */
   nodePath?: string
   spawnFn?: typeof spawn
   timeoutMs?: number
 }): Promise<string[]> {
-  const RcodeDir = resolveRcodeDir(options.RcodeRoots)
-  if (!RcodeDir) return Promise.resolve([])
+  const JokerDir = resolveJokerDir(options.JokerRoots)
+  if (!JokerDir) return Promise.resolve([])
   const spawnFn = options.spawnFn ?? spawn
   const timeoutMs = options.timeoutMs ?? 30_000
   const nodePath = options.nodePath ?? process.execPath
@@ -75,7 +75,7 @@ export function fetchSdkModels(options: {
 
     try {
       child = spawnFn(nodePath, ['--input-type=module', '-e', script], {
-        cwd: RcodeDir,
+        cwd: JokerDir,
         stdio: ['ignore', 'pipe', 'pipe'],
         env: scopedEnv(options.token)
       })

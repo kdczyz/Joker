@@ -2,7 +2,7 @@ import type { AppSettingsV1 } from '../../shared/app-settings'
 import {
   getRuntimeBaseUrlForSettings,
   runtimeAuthHeaders
-} from './Rcode-adapter'
+} from './Joker-adapter'
 
 export type RuntimeThreadsListResult = {
   ok: boolean

@@ -24,8 +24,8 @@ const {
   }
 } = require('./after-pack.cjs')
 
-function fixture(t, executableName = 'Rcode-gui') {
-  const appOutDir = mkdtempSync(join(tmpdir(), 'Rcode-linux-launcher-test-'))
+function fixture(t, executableName = 'Joker-gui') {
+  const appOutDir = mkdtempSync(join(tmpdir(), 'Joker-linux-launcher-test-'))
   t.after(() => rmSync(appOutDir, { recursive: true, force: true }))
   const executable = join(appOutDir, executableName)
   writeFileSync(executable, Buffer.from([0x7f, 0x45, 0x4c, 0x46, 0x00]))
@@ -49,9 +49,9 @@ function runLauncher(executable, args, runAsNode = '') {
 }
 
 function executableLauncherFixture(t) {
-  const appOutDir = mkdtempSync(join(tmpdir(), 'Rcode-linux-launcher-exec-test-'))
+  const appOutDir = mkdtempSync(join(tmpdir(), 'Joker-linux-launcher-exec-test-'))
   t.after(() => rmSync(appOutDir, { recursive: true, force: true }))
-  const executableName = 'Rcode-gui'
+  const executableName = 'Joker-gui'
   const executable = join(appOutDir, executableName)
   const realExecutable = join(appOutDir, linuxRealExecutableName(executableName))
   writeFileSync(

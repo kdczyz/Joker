@@ -22,7 +22,7 @@ const draft = {
 function renderEditor(): string {
   return renderToStaticMarkup(
     createElement(ImageAnnotationEditor, {
-      imageUrl: '.Rcode-design/image.png',
+      imageUrl: '.Joker-design/image.png',
       workspaceRoot: '/workspace',
       title: 'image.png',
       onCancel: () => undefined,

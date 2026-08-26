@@ -72,7 +72,7 @@ describe('design turn dispatch', () => {
       guiDesignArtifact: {
         kind: 'svg',
         artifactId: 'motion',
-        relativePath: '.Rcode-design/doc/motion/v2.svg'
+        relativePath: '.Joker-design/doc/motion/v2.svg'
       }
     })
 
@@ -82,7 +82,7 @@ describe('design turn dispatch', () => {
       guiDesignArtifact: {
         kind: 'svg',
         artifactId: 'motion',
-        relativePath: '.Rcode-design/doc/motion/v2.svg'
+        relativePath: '.Joker-design/doc/motion/v2.svg'
       }
     })
     expect(overrides.guiDesignCanvas).toBeUndefined()

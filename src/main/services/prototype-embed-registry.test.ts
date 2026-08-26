@@ -13,8 +13,8 @@ let workspace: string
 describe('prototype embed registry', () => {
   beforeEach(() => {
     workspace = realpathSync(mkdtempSync(join(tmpdir(), 'proto-registry-')))
-    mkdirSync(join(workspace, '.Rcodesdd', 'proto'), { recursive: true })
-    writeFileSync(join(workspace, '.Rcodesdd', 'proto', 'page.html'), '<html></html>')
+    mkdirSync(join(workspace, '.Jokersdd', 'proto'), { recursive: true })
+    writeFileSync(join(workspace, '.Jokersdd', 'proto', 'page.html'), '<html></html>')
   })
 
   afterEach(() => {
@@ -24,7 +24,7 @@ describe('prototype embed registry', () => {
 
   it('authorizes a contained prototype and allow-lists its file url', async () => {
     const result = await authorizePrototypePath(
-      join(workspace, '.Rcodesdd', 'proto', 'page.html'),
+      join(workspace, '.Jokersdd', 'proto', 'page.html'),
       workspace
     )
     expect(result.ok).toBe(true)
@@ -35,7 +35,7 @@ describe('prototype embed registry', () => {
 
   it('authorizes the nested inline component prototype artifact path', async () => {
     const relativePath = join(
-      '.Rcode-design',
+      '.Joker-design',
       'component-prototypes',
       'date-range-picker-abcdef',
       'prototype.html'
@@ -52,10 +52,10 @@ describe('prototype embed registry', () => {
   })
 
   it('rejects non-html files and files outside a proto directory', async () => {
-    writeFileSync(join(workspace, '.Rcodesdd', 'proto', 'notes.txt'), 'x')
+    writeFileSync(join(workspace, '.Jokersdd', 'proto', 'notes.txt'), 'x')
     writeFileSync(join(workspace, 'loose.html'), '<html></html>')
 
-    const txt = await authorizePrototypePath(join(workspace, '.Rcodesdd', 'proto', 'notes.txt'), workspace)
+    const txt = await authorizePrototypePath(join(workspace, '.Jokersdd', 'proto', 'notes.txt'), workspace)
     expect(txt.ok).toBe(false)
 
     const loose = await authorizePrototypePath(join(workspace, 'loose.html'), workspace)
@@ -63,11 +63,11 @@ describe('prototype embed registry', () => {
   })
 
   it('rejects paths escaping the workspace and missing files', async () => {
-    const escaped = await authorizePrototypePath('/tmp/.Rcodesdd/proto/evil.html', workspace)
+    const escaped = await authorizePrototypePath('/tmp/.Jokersdd/proto/evil.html', workspace)
     expect(escaped.ok).toBe(false)
 
     const missing = await authorizePrototypePath(
-      join(workspace, '.Rcodesdd', 'proto', 'gone.html'),
+      join(workspace, '.Jokersdd', 'proto', 'gone.html'),
       workspace
     )
     expect(missing).toMatchObject({ ok: false, message: expect.stringContaining('not found') })

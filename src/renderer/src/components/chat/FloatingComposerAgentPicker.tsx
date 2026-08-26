@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { Bot, ChevronDown } from 'lucide-react'
-import type { RcodeSubagentProfileV1 } from '@shared/app-settings'
+import type { JokerSubagentProfileV1 } from '@shared/app-settings'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { useChatStore } from '../../store/chat-store'
 
@@ -12,14 +12,14 @@ type Props = {
   disabled?: boolean
 }
 
-function isAvailableForPrimary(profile: RcodeSubagentProfileV1): boolean {
+function isAvailableForPrimary(profile: JokerSubagentProfileV1): boolean {
   return profile.enabled && (profile.mode === 'primary' || profile.mode === 'all')
 }
 
 export function FloatingComposerAgentPicker({ compact = false, disabled }: Props): ReactElement | null {
   const composerAgentId = useChatStore((s) => s.composerAgentId)
   const setComposerAgentId = useChatStore((s) => s.setComposerAgentId)
-  const [agents, setAgents] = useState<RcodeSubagentProfileV1[]>([])
+  const [agents, setAgents] = useState<JokerSubagentProfileV1[]>([])
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
   const loadedRef = useRef(false)
@@ -27,7 +27,7 @@ export function FloatingComposerAgentPicker({ compact = false, disabled }: Props
   const loadAgents = useCallback(async (force = false): Promise<void> => {
     try {
       const settings = await rendererRuntimeClient.getSettings({ forceRefresh: force })
-      const profiles = settings.agents?.Rcode?.subagents?.profiles ?? []
+      const profiles = settings.agents?.Joker?.subagents?.profiles ?? []
       setAgents(profiles.filter(isAvailableForPrimary))
       loadedRef.current = true
     } catch {

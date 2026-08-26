@@ -64,7 +64,7 @@ export function canPrepareImplementDesignTurn(
 }
 
 function currentWriteApi(api?: DesignCodeRoundtripWriteApi): DesignCodeRoundtripWriteApi | undefined {
-  return api ?? (typeof window !== 'undefined' ? window.RcodeGui : undefined)
+  return api ?? (typeof window !== 'undefined' ? window.JokerGui : undefined)
 }
 
 async function publishDesignSystemForImplementation(options: {

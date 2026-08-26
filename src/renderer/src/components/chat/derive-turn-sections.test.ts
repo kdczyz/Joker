@@ -222,7 +222,7 @@ describe('deriveTurnSections', () => {
           status: 'completed',
           artifactId: 'component_abc',
           title: 'Date range picker',
-          relativePath: '.Rcode-design/component-prototypes/date-picker/prototype.html',
+          relativePath: '.Joker-design/component-prototypes/date-picker/prototype.html',
           viewport: { width: 720, height: 460 },
           profile: 'component-designer'
         }
@@ -265,17 +265,17 @@ describe('deriveTurnSections', () => {
 
   it('merges repeated file changes for the same displayed path', () => {
     const firstPatch = [
-      'diff --git a/.Rcodesdd/draft/plan/requirement.md b/.Rcodesdd/draft/plan/requirement.md',
-      '--- a/.Rcodesdd/draft/plan/requirement.md',
-      '+++ b/.Rcodesdd/draft/plan/requirement.md',
+      'diff --git a/.Jokersdd/draft/plan/requirement.md b/.Jokersdd/draft/plan/requirement.md',
+      '--- a/.Jokersdd/draft/plan/requirement.md',
+      '+++ b/.Jokersdd/draft/plan/requirement.md',
       '@@ -1,1 +1,1 @@',
       '-old title',
       '+new title'
     ].join('\n')
     const secondPatch = [
-      'diff --git a/.Rcodesdd/draft/plan/requirement.md b/.Rcodesdd/draft/plan/requirement.md',
-      '--- a/.Rcodesdd/draft/plan/requirement.md',
-      '+++ b/.Rcodesdd/draft/plan/requirement.md',
+      'diff --git a/.Jokersdd/draft/plan/requirement.md b/.Jokersdd/draft/plan/requirement.md',
+      '--- a/.Jokersdd/draft/plan/requirement.md',
+      '+++ b/.Jokersdd/draft/plan/requirement.md',
       '@@ -4,1 +4,2 @@',
       ' context',
       '+new detail'
@@ -287,7 +287,7 @@ describe('deriveTurnSections', () => {
         summary: 'Edit requirement',
         status: 'success',
         toolKind: 'file_change',
-        filePath: '/tmp/.Rcodesdd/draft/plan/requirement.md',
+        filePath: '/tmp/.Jokersdd/draft/plan/requirement.md',
         detail: firstPatch
       },
       {
@@ -296,7 +296,7 @@ describe('deriveTurnSections', () => {
         summary: 'Edit requirement again',
         status: 'success',
         toolKind: 'file_change',
-        filePath: '/tmp/.Rcodesdd/draft/plan/requirement.md',
+        filePath: '/tmp/.Jokersdd/draft/plan/requirement.md',
         detail: secondPatch
       }
     ])
@@ -304,7 +304,7 @@ describe('deriveTurnSections', () => {
     expect(result.turnFileChanges).toHaveLength(1)
     expect(result.turnFileChanges[0]).toMatchObject({
       id: 'tool_first_edit',
-      filePath: '.Rcodesdd/draft/plan/requirement.md'
+      filePath: '.Jokersdd/draft/plan/requirement.md'
     })
     expect(result.turnFileChanges[0]?.detail).toContain('+new title')
     expect(result.turnFileChanges[0]?.detail).toContain('+new detail')

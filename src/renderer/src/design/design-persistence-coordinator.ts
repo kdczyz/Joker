@@ -35,7 +35,7 @@ function operationKey(workspaceRoot: string, path: string): string {
 }
 
 function defaultApi(): DesignPersistenceApi | undefined {
-  return typeof window === 'undefined' ? undefined : window.RcodeGui
+  return typeof window === 'undefined' ? undefined : window.JokerGui
 }
 
 function errorMessage(error: unknown): string {

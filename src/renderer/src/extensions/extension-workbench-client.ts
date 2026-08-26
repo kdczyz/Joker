@@ -9,7 +9,7 @@ import {
   type JsonValue,
   type ModelProviderDeclaration,
   type ProviderModel
-} from '@Rcode/extension-api'
+} from '@joker-code/extension-api'
 import type {
   ExtensionInstallRequest,
   ExtensionListProviderModelsRequest,
@@ -151,9 +151,9 @@ type ExtensionWorkbenchTransport = {
 }
 
 const trustedWorkbenchTransport: ExtensionWorkbenchTransport = {
-  getWorkbench: (request) => window.RcodeGui.extensionGetWorkbench(request),
-  listModelProviders: (request) => window.RcodeGui.extensionListModelProviders(request),
-  listProviderModels: (request) => window.RcodeGui.extensionListProviderModels(request)
+  getWorkbench: (request) => window.JokerGui.extensionGetWorkbench(request),
+  listModelProviders: (request) => window.JokerGui.extensionListModelProviders(request),
+  listProviderModels: (request) => window.JokerGui.extensionListProviderModels(request)
 }
 
 export class ExtensionWorkbenchClientError extends Error {
@@ -207,7 +207,7 @@ export class ExtensionWorkbenchClient {
     workspaceRoot?: string,
     locale?: string
   ): Promise<ExtensionManagementEntry[]> {
-    const value = parseBody(await window.RcodeGui.extensionList({
+    const value = parseBody(await window.JokerGui.extensionList({
       limit: 500,
       ...(workspaceRoot ? { workspaceRoot } : {}),
       ...(locale ? { locale } : {})
@@ -224,7 +224,7 @@ export class ExtensionWorkbenchClient {
     host: ExtensionHostDiagnostic
     seed?: BundledExtensionSeedDiagnostic
   }>> {
-    const value = parseBody(await window.RcodeGui.extensionDiagnostics())
+    const value = parseBody(await window.JokerGui.extensionDiagnostics())
     if (!value || typeof value !== 'object' || !Array.isArray((value as { diagnostics?: unknown }).diagnostics)) {
       throw new ExtensionWorkbenchClientError('EXTENSION_RESPONSE_INVALID', 'Extension diagnostics are malformed')
     }
@@ -237,23 +237,23 @@ export class ExtensionWorkbenchClient {
   }
 
   async pickPackage(): Promise<string | null> {
-    const result = await window.RcodeGui.extensionPickPackage()
+    const result = await window.JokerGui.extensionPickPackage()
     return result.canceled ? null : result.path
   }
 
   async pickDevelopmentDirectory(): Promise<string | null> {
-    const result = await window.RcodeGui.extensionPickDevelopmentDirectory()
+    const result = await window.JokerGui.extensionPickDevelopmentDirectory()
     return result.canceled ? null : result.path
   }
 
   async install(request: ProtectedExtensionInstallRequest): Promise<void> {
-    const result = await window.RcodeGui.extensionInstall(request)
+    const result = await window.JokerGui.extensionInstall(request)
     if (isRuntimeRequestResult(result)) parseBody(result)
     this.notifyChanged()
   }
 
   async reviewPermissions(extensionId: string, workspaceRoot?: string): Promise<void> {
-    await window.RcodeGui.extensionReviewPermissions({ extensionId, workspaceRoot })
+    await window.JokerGui.extensionReviewPermissions({ extensionId, workspaceRoot })
     this.notifyChanged()
   }
 
@@ -263,7 +263,7 @@ export class ExtensionWorkbenchClient {
     permissions: string[],
     workspaceRoot?: string
   ): Promise<void> {
-    parseBody(await window.RcodeGui.extensionSetPermissions({
+    parseBody(await window.JokerGui.extensionSetPermissions({
       extensionId,
       expectedVersion,
       permissions,
@@ -279,7 +279,7 @@ export class ExtensionWorkbenchClient {
     workspaceRoot: string,
     enableScope: 'global' | 'workspace'
   ): Promise<void> {
-    parseBody(await window.RcodeGui.extensionSetPermissions({
+    parseBody(await window.JokerGui.extensionSetPermissions({
       extensionId,
       expectedVersion,
       permissions,
@@ -295,24 +295,24 @@ export class ExtensionWorkbenchClient {
       ...(workspaceRoot ? { workspaceRoot } : {})
     }
     const result = enabled
-      ? await window.RcodeGui.extensionEnable(request)
-      : await window.RcodeGui.extensionDisable(request)
+      ? await window.JokerGui.extensionEnable(request)
+      : await window.JokerGui.extensionDisable(request)
     parseBody(result)
     this.notifyChanged()
   }
 
   async rollback(extensionId: string): Promise<void> {
-    parseBody(await window.RcodeGui.extensionRollback({ extensionId }))
+    parseBody(await window.JokerGui.extensionRollback({ extensionId }))
     this.notifyChanged()
   }
 
   async reload(extensionId: string): Promise<void> {
-    parseBody(await window.RcodeGui.extensionReload({ extensionId }))
+    parseBody(await window.JokerGui.extensionReload({ extensionId }))
     this.notifyChanged()
   }
 
   async uninstall(extensionId: string): Promise<void> {
-    parseBody(await window.RcodeGui.extensionUninstall({ extensionId }))
+    parseBody(await window.JokerGui.extensionUninstall({ extensionId }))
     this.notifyChanged()
   }
 
@@ -321,7 +321,7 @@ export class ExtensionWorkbenchClient {
     providerId?: string,
     includeUnavailable = true
   ): Promise<ExtensionAccountList> {
-    const value = parseBody(await window.RcodeGui.extensionListAccounts({
+    const value = parseBody(await window.JokerGui.extensionListAccounts({
       extensionId,
       ...(providerId ? { providerId } : {}),
       includeUnavailable
@@ -391,9 +391,9 @@ export class ExtensionWorkbenchClient {
     modelId: string
     workspaceRoot?: string
   }): Promise<void> {
-    parseBody(await window.RcodeGui.extensionSetProviderBinding(input))
+    parseBody(await window.JokerGui.extensionSetProviderBinding(input))
     this.notifyChanged()
-    window.dispatchEvent(new CustomEvent('Rcode:provider-bindings-changed'))
+    window.dispatchEvent(new CustomEvent('Joker:provider-bindings-changed'))
   }
 
   async createAccountSession(input: {
@@ -405,7 +405,7 @@ export class ExtensionWorkbenchClient {
     scopes?: string[]
     workspaceRoot?: string
   }): Promise<AccountSession> {
-    const value = parseBody(await window.RcodeGui.extensionCreateAccountSession(input))
+    const value = parseBody(await window.JokerGui.extensionCreateAccountSession(input))
     if (!isRecord(value) || !('session' in value)) {
       throw new ExtensionWorkbenchClientError(
         'EXTENSION_RESPONSE_INVALID',
@@ -416,7 +416,7 @@ export class ExtensionWorkbenchClient {
   }
 
   async getAccountSession(extensionId: string, sessionId: string): Promise<AccountSession> {
-    const value = parseBody(await window.RcodeGui.extensionGetAccountSession({ extensionId, sessionId }))
+    const value = parseBody(await window.JokerGui.extensionGetAccountSession({ extensionId, sessionId }))
     if (!isRecord(value) || !('session' in value)) {
       throw new ExtensionWorkbenchClientError(
         'EXTENSION_RESPONSE_INVALID',
@@ -432,7 +432,7 @@ export class ExtensionWorkbenchClient {
     sessionId: string
     workspaceRoot?: string
   }): Promise<AccountSession> {
-    const value = parseBody(await window.RcodeGui.extensionCompleteAccountSession({
+    const value = parseBody(await window.JokerGui.extensionCompleteAccountSession({
       ...input
     }))
     if (!isRecord(value) || !('session' in value)) {
@@ -445,7 +445,7 @@ export class ExtensionWorkbenchClient {
   }
 
   async cancelAccountSession(extensionId: string, sessionId: string): Promise<void> {
-    parseBody(await window.RcodeGui.extensionCancelAccountSession({ extensionId, sessionId }))
+    parseBody(await window.JokerGui.extensionCancelAccountSession({ extensionId, sessionId }))
   }
 
   async createApiKeyAccount(input: {
@@ -456,7 +456,7 @@ export class ExtensionWorkbenchClient {
     label?: string
     workspaceRoot?: string
   }): Promise<Account> {
-    const value = parseBody(await window.RcodeGui.extensionCreateApiKeyAccount(input))
+    const value = parseBody(await window.JokerGui.extensionCreateApiKeyAccount(input))
     if (!isRecord(value) || !('account' in value)) {
       throw new ExtensionWorkbenchClientError(
         'EXTENSION_RESPONSE_INVALID',
@@ -473,7 +473,7 @@ export class ExtensionWorkbenchClient {
     providerId: string
     workspaceRoot?: string
   }): Promise<void> {
-    parseBody(await window.RcodeGui.extensionDeleteAccount(input))
+    parseBody(await window.JokerGui.extensionDeleteAccount(input))
   }
 
   async renameAccount(input: {
@@ -483,7 +483,7 @@ export class ExtensionWorkbenchClient {
     providerId: string
     workspaceRoot?: string
   }): Promise<Account> {
-    const value = parseBody(await window.RcodeGui.extensionRenameAccount(input))
+    const value = parseBody(await window.JokerGui.extensionRenameAccount(input))
     if (!isRecord(value) || !('account' in value)) {
       throw new ExtensionWorkbenchClientError(
         'EXTENSION_RESPONSE_INVALID',
@@ -500,7 +500,7 @@ export class ExtensionWorkbenchClient {
     providerId: string
     workspaceRoot?: string
   }): Promise<Account> {
-    const value = parseBody(await window.RcodeGui.extensionReplaceApiKeyAccount(input))
+    const value = parseBody(await window.JokerGui.extensionReplaceApiKeyAccount(input))
     if (!isRecord(value) || !('account' in value)) {
       throw new ExtensionWorkbenchClientError(
         'EXTENSION_RESPONSE_INVALID',
@@ -516,7 +516,7 @@ export class ExtensionWorkbenchClient {
     options: { retryHost?: boolean } = {}
   ): Promise<ExtensionViewSession> {
     const normalizedWorkspaceRoot = workspaceRoot?.trim()
-    return window.RcodeGui.extensionCreateViewSession({
+    return window.JokerGui.extensionCreateViewSession({
       contributionId,
       ...(normalizedWorkspaceRoot ? { workspaceRoot: normalizedWorkspaceRoot } : {}),
       ...(options.retryHost ? { retryHost: true } : {})
@@ -524,14 +524,14 @@ export class ExtensionWorkbenchClient {
   }
 
   async disposeViewSession(sessionId: string): Promise<void> {
-    await window.RcodeGui.extensionDisposeViewSession({ sessionId })
+    await window.JokerGui.extensionDisposeViewSession({ sessionId })
   }
 
   async postViewMessage(sessionId: string, message: {
     channel: string
     payload: JsonValue
   }): Promise<void> {
-    parseBody(await window.RcodeGui.extensionPostViewMessage({
+    parseBody(await window.JokerGui.extensionPostViewMessage({
       sessionId,
       channel: message.channel,
       payload: message.payload
@@ -544,7 +544,7 @@ export class ExtensionWorkbenchClient {
     workspaceRoot?: string
   ): Promise<JsonValue> {
     const request = { commandId, context, ...(workspaceRoot ? { workspaceRoot } : {}) }
-    const response = await window.RcodeGui.extensionInvokeCommand(request)
+    const response = await window.JokerGui.extensionInvokeCommand(request)
     const value = isRuntimeRequestResult(response) ? parseBody(response) : response
     if (value && typeof value === 'object' && 'result' in value) {
       return JsonValueSchema.parse((value as { result: unknown }).result)
@@ -553,7 +553,7 @@ export class ExtensionWorkbenchClient {
   }
 
   private notifyChanged(): void {
-    window.dispatchEvent(new CustomEvent('Rcode:extensions-changed'))
+    window.dispatchEvent(new CustomEvent('Joker:extensions-changed'))
   }
 }
 

@@ -74,8 +74,8 @@ export function buildPrototypeViewportModeScript(target: DesignTarget): string {
 (() => {
   try {
     const target = ${JSON.stringify(target)};
-    const styleId = '__RcodePrototypeViewportModeStyle';
-    document.documentElement.dataset.RcodePrototypeViewport = target;
+    const styleId = '__JokerPrototypeViewportModeStyle';
+    document.documentElement.dataset.JokerPrototypeViewport = target;
     let style = document.getElementById(styleId);
     if (!style) {
       style = document.createElement('style');
@@ -83,14 +83,14 @@ export function buildPrototypeViewportModeScript(target: DesignTarget): string {
       document.head.appendChild(style);
     }
     style.textContent = \`
-html[data-Rcode-prototype-viewport="app"],
-html[data-Rcode-prototype-viewport="app"] body {
+html[data-Joker-prototype-viewport="app"],
+html[data-Joker-prototype-viewport="app"] body {
   scrollbar-width: none !important;
   -ms-overflow-style: none !important;
 }
-html[data-Rcode-prototype-viewport="app"]::-webkit-scrollbar,
-html[data-Rcode-prototype-viewport="app"] body::-webkit-scrollbar,
-html[data-Rcode-prototype-viewport="app"] *::-webkit-scrollbar {
+html[data-Joker-prototype-viewport="app"]::-webkit-scrollbar,
+html[data-Joker-prototype-viewport="app"] body::-webkit-scrollbar,
+html[data-Joker-prototype-viewport="app"] *::-webkit-scrollbar {
   width: 0 !important;
   height: 0 !important;
   background: transparent !important;
@@ -161,7 +161,7 @@ function PrototypePlayerOverlayInner({
     workspaceRoot,
     relativePath: currentArtifactPath,
     enabled: Boolean(open && workspaceRoot && currentArtifact),
-    partition: 'Rcode-proto'
+    partition: 'Joker-proto'
   })
 
   useEffect(() => {

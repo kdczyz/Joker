@@ -33,13 +33,13 @@ function createWatchApi(result: WorkspaceFileWatchResult | Promise<WorkspaceFile
 }
 
 describe('design preview file helpers', () => {
-  it('recognizes only Rcode preview skeleton content', () => {
-    expect(isDesignPreviewSkeleton(buildDesignPreviewSkeleton('.Rcode-design/new/v1.html'))).toBe(true)
+  it('recognizes only Joker preview skeleton content', () => {
+    expect(isDesignPreviewSkeleton(buildDesignPreviewSkeleton('.Joker-design/new/v1.html'))).toBe(true)
     expect(isDesignPreviewSkeleton('<!doctype html><html><body><h1>Real page</h1></body></html>')).toBe(false)
   })
 
   it('classifies skeleton, stable HTML, and transient partial writes separately', () => {
-    expect(designPreviewRenderState(buildDesignPreviewSkeleton('.Rcode-design/new/v1.html'))).toBe('skeleton')
+    expect(designPreviewRenderState(buildDesignPreviewSkeleton('.Joker-design/new/v1.html'))).toBe('skeleton')
     expect(designPreviewRenderState('<!doctype html><html><body><h1>Real page</h1></body></html>')).toBe('renderable')
     expect(designPreviewRenderState('<!doctype html><html><body><h1>Half written')).toBe('transient')
     expect(designPreviewRenderState('```html\n<html><body>oops')).toBe('transient')
@@ -48,29 +48,29 @@ describe('design preview file helpers', () => {
   it('creates a visible skeleton for a new HTML turn before sending', async () => {
     const writeWorkspaceFile = vi.fn(async () => ({
       ok: true as const,
-      path: '/workspace/.Rcode-design/new/v1.html',
+      path: '/workspace/.Joker-design/new/v1.html',
       savedAt: '2026-06-21T00:00:00.000Z'
     }))
 
     const result = await prepareDesignPreviewFile(
       '/workspace',
-      '.Rcode-design/new/v1.html',
+      '.Joker-design/new/v1.html',
       undefined,
       { writeWorkspaceFile }
     )
 
     expect(result).toEqual({ ok: true, source: 'skeleton' })
     expect(writeWorkspaceFile).toHaveBeenCalledWith({
-      path: '.Rcode-design/new/v1.html',
+      path: '.Joker-design/new/v1.html',
       workspaceRoot: '/workspace',
       content: expect.stringContaining('Generating design...')
     })
     const [payload] = writeWorkspaceFile.mock.calls[0] as unknown as [{ content: string }]
-    expect(payload.content).toContain('.Rcode-design/new/v1.html')
+    expect(payload.content).toContain('.Joker-design/new/v1.html')
   })
 
   it('keeps the skeleton preview compact and non-scrollable inside small canvas frames', () => {
-    const skeleton = buildDesignPreviewSkeleton('.Rcode-design/new/v1.html')
+    const skeleton = buildDesignPreviewSkeleton('.Joker-design/new/v1.html')
 
     expect(skeleton).toContain('overflow: hidden')
     expect(skeleton).toContain('height: 100%')
@@ -81,31 +81,31 @@ describe('design preview file helpers', () => {
   it('copies the previous HTML version into an iteration preview file', async () => {
     const readWorkspaceFile = vi.fn(async () => ({
       ok: true as const,
-      path: '/workspace/.Rcode-design/screen/v1.html',
+      path: '/workspace/.Joker-design/screen/v1.html',
       content: '<!doctype html><html><body>Previous</body></html>',
       size: 48,
       truncated: false
     }))
     const writeWorkspaceFile = vi.fn(async () => ({
       ok: true as const,
-      path: '/workspace/.Rcode-design/screen/v2.html',
+      path: '/workspace/.Joker-design/screen/v2.html',
       savedAt: '2026-06-21T00:00:00.000Z'
     }))
 
     const result = await prepareDesignPreviewFile(
       '/workspace',
-      '.Rcode-design/screen/v2.html',
-      '.Rcode-design/screen/v1.html',
+      '.Joker-design/screen/v2.html',
+      '.Joker-design/screen/v1.html',
       { readWorkspaceFile, writeWorkspaceFile }
     )
 
     expect(result).toEqual({ ok: true, source: 'base' })
     expect(readWorkspaceFile).toHaveBeenCalledWith({
-      path: '.Rcode-design/screen/v1.html',
+      path: '.Joker-design/screen/v1.html',
       workspaceRoot: '/workspace'
     })
     expect(writeWorkspaceFile).toHaveBeenCalledWith({
-      path: '.Rcode-design/screen/v2.html',
+      path: '.Joker-design/screen/v2.html',
       workspaceRoot: '/workspace',
       content: '<!doctype html><html><body>Previous</body></html>'
     })
@@ -115,9 +115,9 @@ describe('design preview file helpers', () => {
     const { api, emit, off } = createWatchApi({
       ok: true,
       watchId: 'watch-1',
-      path: '/workspace/.Rcode-design/screen/v1.html',
-      content: buildDesignPreviewSkeleton('.Rcode-design/screen/v1.html'),
-      size: buildDesignPreviewSkeleton('.Rcode-design/screen/v1.html').length,
+      path: '/workspace/.Joker-design/screen/v1.html',
+      content: buildDesignPreviewSkeleton('.Joker-design/screen/v1.html'),
+      size: buildDesignPreviewSkeleton('.Joker-design/screen/v1.html').length,
       truncated: false,
       startedAt: '2026-06-21T00:00:00.000Z'
     })
@@ -126,7 +126,7 @@ describe('design preview file helpers', () => {
     const dispose = startDesignHtmlPreviewWatch({
       api,
       workspaceRoot: '/workspace',
-      path: '.Rcode-design/screen/v1.html',
+      path: '.Joker-design/screen/v1.html',
       onRevision,
       onSkeletonChange,
       onError: vi.fn(),
@@ -138,7 +138,7 @@ describe('design preview file helpers', () => {
       ok: true,
       watchId: 'watch-other',
       workspaceRoot: '/workspace',
-      path: '/workspace/.Rcode-design/screen/v1.html',
+      path: '/workspace/.Joker-design/screen/v1.html',
       content: 'ignored',
       size: 7,
       truncated: false,
@@ -148,7 +148,7 @@ describe('design preview file helpers', () => {
       ok: true,
       watchId: 'watch-1',
       workspaceRoot: '/workspace',
-      path: '/workspace/.Rcode-design/screen/v1.html',
+      path: '/workspace/.Joker-design/screen/v1.html',
       content: '<html><body>Changed</body></html>',
       size: 33,
       truncated: false,
@@ -171,7 +171,7 @@ describe('design preview file helpers', () => {
     const { api, emit, off } = createWatchApi({
       ok: true,
       watchId: 'watch-1',
-      path: '/workspace/.Rcode-design/screen/v1.html',
+      path: '/workspace/.Joker-design/screen/v1.html',
       content: '<!doctype html><html><body><main><h1>Loading',
       size: 44,
       truncated: false,
@@ -183,7 +183,7 @@ describe('design preview file helpers', () => {
     const dispose = startDesignHtmlPreviewWatch({
       api,
       workspaceRoot: '/workspace',
-      path: '.Rcode-design/screen/v1.html',
+      path: '.Joker-design/screen/v1.html',
       onRevision,
       onSkeletonChange,
       onPreviewStateChange,
@@ -200,7 +200,7 @@ describe('design preview file helpers', () => {
       ok: true,
       watchId: 'watch-1',
       workspaceRoot: '/workspace',
-      path: '/workspace/.Rcode-design/screen/v1.html',
+      path: '/workspace/.Joker-design/screen/v1.html',
       content: '<!doctype html><html><body><main><h1>Done</h1></main></body></html>',
       size: 70,
       truncated: false,
@@ -223,9 +223,9 @@ describe('design preview file helpers', () => {
       const { api, emit, off } = createWatchApi({
         ok: true,
         watchId: 'watch-1',
-        path: '/workspace/.Rcode-design/screen/v1.html',
-        content: buildDesignPreviewSkeleton('.Rcode-design/screen/v1.html'),
-        size: buildDesignPreviewSkeleton('.Rcode-design/screen/v1.html').length,
+        path: '/workspace/.Joker-design/screen/v1.html',
+        content: buildDesignPreviewSkeleton('.Joker-design/screen/v1.html'),
+        size: buildDesignPreviewSkeleton('.Joker-design/screen/v1.html').length,
         truncated: false,
         startedAt: '2026-06-21T00:00:00.000Z'
       })
@@ -234,7 +234,7 @@ describe('design preview file helpers', () => {
       const dispose = startDesignHtmlPreviewWatch({
         api,
         workspaceRoot: '/workspace',
-        path: '.Rcode-design/screen/v1.html',
+        path: '.Joker-design/screen/v1.html',
         onRevision,
         onSkeletonChange,
         onError: vi.fn(),
@@ -251,7 +251,7 @@ describe('design preview file helpers', () => {
           ok: true,
           watchId: 'watch-1',
           workspaceRoot: '/workspace',
-          path: '/workspace/.Rcode-design/screen/v1.html',
+          path: '/workspace/.Joker-design/screen/v1.html',
           content,
           size: content.length,
           truncated: false,

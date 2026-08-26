@@ -6,7 +6,7 @@ function channel(provider: 'feishu' | 'weixin' | 'telegram'): ClawImChannelV1 {
   return {
     id: `${provider}_1`, provider, label: provider, enabled: true, model: 'auto', threadId: '',
     workspaceRoot: '/workspace', conversations: [], welcomeSentAt: '',
-    agentProfile: { name: 'Rcode', description: '', identity: '', personality: '', userContext: '', replyRules: '' },
+    agentProfile: { name: 'Joker', description: '', identity: '', personality: '', userContext: '', replyRules: '' },
     createdAt: '', updatedAt: ''
   }
 }

@@ -11,7 +11,7 @@ import {
 const tempRoots: string[] = []
 
 async function makeTempRoot(): Promise<string> {
-  const root = await mkdtemp(join(tmpdir(), 'Rcode-session-import-'))
+  const root = await mkdtemp(join(tmpdir(), 'Joker-session-import-'))
   tempRoots.push(root)
   return root
 }
@@ -39,55 +39,55 @@ afterEach(async () => {
 })
 
 describe('defaultLegacySourceCandidates', () => {
-  it('points at the legacy DeepSeek GUI Rcode and coreagent threads dirs', () => {
+  it('points at the legacy DeepSeek GUI Joker and coreagent threads dirs', () => {
     const candidates = defaultLegacySourceCandidates('/home/zoe')
     expect(candidates.map((c) => c.path)).toEqual([
-      join('/home/zoe', '.deepseekgui', 'Rcode', 'threads'),
+      join('/home/zoe', '.deepseekgui', 'Joker', 'threads'),
       join('/home/zoe', '.deepseekgui', 'coreagent', 'threads')
     ])
-    expect(candidates.map((c) => c.kind)).toEqual(['Rcode', 'coreagent'])
+    expect(candidates.map((c) => c.kind)).toEqual(['Joker', 'coreagent'])
   })
 })
 
 describe('detectLegacySessions', () => {
   it('reports thread counts and how many are new vs the destination', async () => {
     const root = await makeTempRoot()
-    const RcodeThreads = join(root, '.deepseekgui', 'Rcode', 'threads')
-    await writeThread(RcodeThreads, 'thr_a')
-    await writeThread(RcodeThreads, 'thr_b')
+    const JokerThreads = join(root, '.deepseekgui', 'Joker', 'threads')
+    await writeThread(JokerThreads, 'thr_a')
+    await writeThread(JokerThreads, 'thr_b')
     const coreagentThreads = join(root, '.deepseekgui', 'coreagent', 'threads')
     await writeThread(coreagentThreads, 'thr_c')
-    // One of the Rcode threads already exists in the destination.
-    const dataDir = join(root, '.Rcode', 'data')
+    // One of the Joker threads already exists in the destination.
+    const dataDir = join(root, '.Joker', 'data')
     await writeThread(join(dataDir, 'threads'), 'thr_a')
 
     const detection = await detectLegacySessions({ homeDir: root, destDataDir: dataDir })
 
     expect(detection.destDir).toBe(join(dataDir, 'threads'))
-    const Rcode = detection.sources.find((s) => s.kind === 'Rcode')
-    expect(Rcode).toMatchObject({ threadCount: 2, newCount: 1 })
+    const Joker = detection.sources.find((s) => s.kind === 'Joker')
+    expect(Joker).toMatchObject({ threadCount: 2, newCount: 1 })
     const coreagent = detection.sources.find((s) => s.kind === 'coreagent')
     expect(coreagent).toMatchObject({ threadCount: 1, newCount: 1 })
   })
 
   it('omits sources that do not exist', async () => {
     const root = await makeTempRoot()
-    await writeThread(join(root, '.deepseekgui', 'Rcode', 'threads'), 'thr_a')
+    await writeThread(join(root, '.deepseekgui', 'Joker', 'threads'), 'thr_a')
     const detection = await detectLegacySessions({
       homeDir: root,
-      destDataDir: join(root, '.Rcode', 'data')
+      destDataDir: join(root, '.Joker', 'data')
     })
-    expect(detection.sources.map((s) => s.kind)).toEqual(['Rcode'])
+    expect(detection.sources.map((s) => s.kind)).toEqual(['Joker'])
   })
 })
 
 describe('importLegacySessions', () => {
   it('copies all auto-detected legacy threads into the destination', async () => {
     const root = await makeTempRoot()
-    await writeThread(join(root, '.deepseekgui', 'Rcode', 'threads'), 'thr_a')
-    await writeThread(join(root, '.deepseekgui', 'Rcode', 'threads'), 'thr_b')
+    await writeThread(join(root, '.deepseekgui', 'Joker', 'threads'), 'thr_a')
+    await writeThread(join(root, '.deepseekgui', 'Joker', 'threads'), 'thr_b')
     await writeThread(join(root, '.deepseekgui', 'coreagent', 'threads'), 'thr_c')
-    const dataDir = join(root, '.Rcode', 'data')
+    const dataDir = join(root, '.Joker', 'data')
 
     const summary = await importLegacySessions({ homeDir: root, destDataDir: dataDir })
 
@@ -101,8 +101,8 @@ describe('importLegacySessions', () => {
 
   it('never overwrites a thread that already exists in the destination', async () => {
     const root = await makeTempRoot()
-    await writeThread(join(root, '.deepseekgui', 'Rcode', 'threads'), 'thr_a', 'legacy title')
-    const dataDir = join(root, '.Rcode', 'data')
+    await writeThread(join(root, '.deepseekgui', 'Joker', 'threads'), 'thr_a', 'legacy title')
+    const dataDir = join(root, '.Joker', 'data')
     await writeThread(join(dataDir, 'threads'), 'thr_a', 'current title')
 
     const summary = await importLegacySessions({ homeDir: root, destDataDir: dataDir })
@@ -115,10 +115,10 @@ describe('importLegacySessions', () => {
 
   it('imports from an explicitly chosen folder, descending into a threads subdir', async () => {
     const root = await makeTempRoot()
-    // User picks the parent (…/backup/Rcode), not the threads dir itself.
-    const pickedParent = join(root, 'backup', 'Rcode')
+    // User picks the parent (…/backup/Joker), not the threads dir itself.
+    const pickedParent = join(root, 'backup', 'Joker')
     await writeThread(join(pickedParent, 'threads'), 'thr_x')
-    const dataDir = join(root, '.Rcode', 'data')
+    const dataDir = join(root, '.Joker', 'data')
 
     const summary = await importLegacySessions({
       homeDir: root,
@@ -142,7 +142,7 @@ describe('importLegacySessions', () => {
     const oddDir = join(source, 'session-1')
     await mkdir(oddDir, { recursive: true })
     await writeFile(join(oddDir, 'thread.json'), '{"id":"session-1","title":"x","turns":[]}', 'utf8')
-    const dataDir = join(root, '.Rcode', 'data')
+    const dataDir = join(root, '.Joker', 'data')
 
     const summary = await importLegacySessions({
       homeDir: root,
@@ -158,7 +158,7 @@ describe('importLegacySessions', () => {
     const root = await makeTempRoot()
     const summary = await importLegacySessions({
       homeDir: root,
-      destDataDir: join(root, '.Rcode', 'data')
+      destDataDir: join(root, '.Joker', 'data')
     })
     expect(summary).toMatchObject({ total: 0, imported: 0, skipped: 0 })
   })

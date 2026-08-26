@@ -1,14 +1,14 @@
 import {
-  resolveRcodeSpeechToTextSettings,
+  resolveJokerSpeechToTextSettings,
   type AppSettingsV1,
-  type RcodeSpeechToTextSettingsV1
+  type JokerSpeechToTextSettingsV1
 } from '../../shared/app-settings'
 import {
   SPEECH_TRANSCRIPTION_MAX_BASE64_CHARS,
   type SpeechTranscriptionRequest,
   type SpeechTranscriptionResult
 } from '../../shared/speech-to-text'
-import { describeNetworkError } from '../../../Rcode/src/adapters/tool/image-gen-tool-provider.js'
+import { describeNetworkError } from '../../../Joker/src/adapters/tool/image-gen-tool-provider.js'
 import { transcribeViaLocalWhisper } from './local-whisper-service'
 
 const FILE_EXTENSION_BY_MIME: Record<string, string> = {
@@ -22,7 +22,7 @@ const FILE_EXTENSION_BY_MIME: Record<string, string> = {
 }
 
 export function isSpeechToTextConfigured(
-  speechToText: Pick<RcodeSpeechToTextSettingsV1, 'enabled' | 'protocol' | 'baseUrl' | 'apiKey' | 'model'>
+  speechToText: Pick<JokerSpeechToTextSettingsV1, 'enabled' | 'protocol' | 'baseUrl' | 'apiKey' | 'model'>
 ): boolean {
   if (speechToText.protocol === 'local-whisper') {
     return speechToText.enabled && Boolean(speechToText.model.trim())
@@ -42,11 +42,11 @@ export async function requestSpeechTranscription(
     fetchImpl?: typeof fetch
     localWhisperTranscriber?: (
       request: SpeechTranscriptionRequest,
-      speechToText: RcodeSpeechToTextSettingsV1
+      speechToText: JokerSpeechToTextSettingsV1
     ) => Promise<string>
   } = {}
 ): Promise<SpeechTranscriptionResult> {
-  const speechToText = request.speechToText ?? resolveRcodeSpeechToTextSettings(settings)
+  const speechToText = request.speechToText ?? resolveJokerSpeechToTextSettings(settings)
   if (!isSpeechToTextConfigured(speechToText)) {
     return { ok: false, message: 'speech-to-text provider is not configured' }
   }
@@ -75,7 +75,7 @@ export async function requestSpeechTranscription(
  * part and the transcript comes back as the assistant message content.
  */
 async function transcribeViaMimoAsr(
-  speechToText: RcodeSpeechToTextSettingsV1,
+  speechToText: JokerSpeechToTextSettingsV1,
   request: SpeechTranscriptionRequest,
   fetchImpl: typeof fetch
 ): Promise<string> {
@@ -126,7 +126,7 @@ async function transcribeViaMimoAsr(
 
 /** Standard OpenAI-style multipart upload to {baseUrl}/audio/transcriptions. */
 async function transcribeViaOpenAiTranscriptions(
-  speechToText: RcodeSpeechToTextSettingsV1,
+  speechToText: JokerSpeechToTextSettingsV1,
   request: SpeechTranscriptionRequest,
   fetchImpl: typeof fetch
 ): Promise<string> {

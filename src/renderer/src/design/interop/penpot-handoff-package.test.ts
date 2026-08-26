@@ -18,13 +18,13 @@ import {
 const now = '2026-06-29T00:00:00.000Z'
 
 function artifact(): DesignArtifact {
-  const relativePath = '.Rcode-design/doc/home/v1.html'
+  const relativePath = '.Joker-design/doc/home/v1.html'
   return {
     id: 'home',
     kind: 'html',
     title: 'Home',
     relativePath,
-    designMdPath: '.Rcode-design/doc/home/DESIGN.md',
+    designMdPath: '.Joker-design/doc/home/DESIGN.md',
     createdAt: now,
     updatedAt: now,
     versions: [{ id: 'home-v1', relativePath, createdAt: now, summary: '' }],
@@ -34,13 +34,13 @@ function artifact(): DesignArtifact {
 }
 
 function svgArtifact(): DesignArtifact {
-  const relativePath = '.Rcode-design/doc/motion/v1.svg'
+  const relativePath = '.Joker-design/doc/motion/v1.svg'
   return {
     id: 'motion',
     kind: 'svg',
     title: 'Orbit loader',
     relativePath,
-    designMdPath: '.Rcode-design/doc/motion/DESIGN.md',
+    designMdPath: '.Joker-design/doc/motion/DESIGN.md',
     createdAt: now,
     updatedAt: now,
     versions: [{ id: 'motion-v1', relativePath, createdAt: now, summary: 'Motion' }]
@@ -71,7 +71,7 @@ function canvasDocument(): CanvasDocument {
     id: 'asset_logo',
     name: 'Logo',
     parentId: ROOT_SHAPE_ID,
-    imageUrl: '.Rcode-design/assets/logo.png'
+    imageUrl: '.Joker-design/assets/logo.png'
   }
   doc.objects[ROOT_SHAPE_ID] = { ...doc.objects[ROOT_SHAPE_ID], children: [frame.id, image.id] }
   doc.objects[frame.id] = frame
@@ -96,7 +96,7 @@ const designSystem: DesignSystem = {
 
 describe('penpot handoff package', () => {
   it('uses the stable package path', () => {
-    expect(PENPOT_HANDOFF_PACKAGE_PATH).toBe('.Rcode-design/penpot-package.json')
+    expect(PENPOT_HANDOFF_PACKAGE_PATH).toBe('.Joker-design/penpot-package.json')
   })
 
   it('exports tokens, components, frames, assets, and graph summary', () => {
@@ -111,7 +111,7 @@ describe('penpot handoff package', () => {
 
     expect(pkg).toMatchObject({
       version: 1,
-      kind: 'Rcode.penpot.handoff',
+      kind: 'Joker.penpot.handoff',
       document: { id: 'doc', title: 'Ops app', artifactCount: 1 },
       graph: {
         projectId: 'doc',
@@ -133,8 +133,8 @@ describe('penpot handoff package', () => {
         kind: 'html-frame',
         bounds: { x: 12, y: 24, width: 390, height: 844 },
         htmlArtifactId: 'home',
-        htmlPath: '.Rcode-design/doc/home/v1.html',
-        designMdPath: '.Rcode-design/doc/home/DESIGN.md',
+        htmlPath: '.Joker-design/doc/home/v1.html',
+        designMdPath: '.Joker-design/doc/home/DESIGN.md',
         direction: { id: 'dir_1', name: 'Calm ops', status: 'accepted' },
         prototypeLinks: [{ targetTitle: 'Settings', targetArtifactId: 'settings', href: '../settings/v1.html' }]
       }
@@ -144,7 +144,7 @@ describe('penpot handoff package', () => {
         id: 'asset_logo',
         name: 'Logo',
         kind: 'image',
-        path: '.Rcode-design/assets/logo.png',
+        path: '.Joker-design/assets/logo.png',
         bounds: { x: 40, y: 60, width: 100, height: 100 }
       }
     ])
@@ -161,7 +161,7 @@ describe('penpot handoff package', () => {
     )
 
     expect(content.endsWith('\n')).toBe(true)
-    expect(JSON.parse(content)).toMatchObject({ kind: 'Rcode.penpot.handoff' })
+    expect(JSON.parse(content)).toMatchObject({ kind: 'Joker.penpot.handoff' })
   })
 
   it('exports SVG frames with generic artifact provenance and the standalone SVG path', () => {
@@ -190,8 +190,8 @@ describe('penpot handoff package', () => {
       bounds: { x: 80, y: 120, width: 320, height: 240 },
       artifactId: 'motion',
       artifactKind: 'svg',
-      svgPath: '.Rcode-design/doc/motion/v1.svg',
-      designMdPath: '.Rcode-design/doc/motion/DESIGN.md'
+      svgPath: '.Joker-design/doc/motion/v1.svg',
+      designMdPath: '.Joker-design/doc/motion/DESIGN.md'
     }])
   })
 })

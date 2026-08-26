@@ -9,18 +9,18 @@ function run(command, args, options = {}) {
 }
 
 // Keep clean-checkout bootstrap on the same canonical order as release builds:
-// build the workspace API first, install Rcode's separate dependency tree, then
-// compile Rcode. `npm --prefix Rcode ci` does not run this root lifecycle script, so
-// delegating to build:rcode cannot recurse back into postinstall.
-const buildRcode = run('npm', ['run', 'build:rcode'])
-if (buildRcode.status !== 0) {
-  process.exit(buildRcode.status || 1)
+// build the workspace API first, install Joker's separate dependency tree, then
+// compile Joker. `npm --prefix Joker ci` does not run this root lifecycle script, so
+// delegating to build:joker cannot recurse back into postinstall.
+const buildJoker = run('npm', ['run', 'build:joker'])
+if (buildJoker.status !== 0) {
+  process.exit(buildJoker.status || 1)
 }
 
-// Rcode is spawned with the Electron binary (ELECTRON_RUN_AS_NODE) and resolves
+// Joker is spawned with the Electron binary (ELECTRON_RUN_AS_NODE) and resolves
 // better-sqlite3 from the root node_modules, so the native module must match
 // Electron's ABI — the node-ABI prebuild that `npm install` fetches cannot be
-// loaded there and Rcode would silently fall back to JSONL scanning. Best
+// loaded there and Joker would silently fall back to JSONL scanning. Best
 // effort: a failure (e.g. offline) keeps the JSONL fallback working.
 const { join } = require('node:path')
 try {
@@ -32,7 +32,7 @@ try {
     `--target=${electronVersion}`
   ], { cwd: join(__dirname, '..', 'node_modules', 'better-sqlite3') })
   if (result.status !== 0) {
-    console.warn('[postinstall] better-sqlite3 electron prebuild failed; Rcode will use the JSONL fallback')
+    console.warn('[postinstall] better-sqlite3 electron prebuild failed; Joker will use the JSONL fallback')
   }
 } catch (error) {
   console.warn('[postinstall] skipped better-sqlite3 electron prebuild:', error.message)

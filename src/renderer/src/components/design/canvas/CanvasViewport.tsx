@@ -82,7 +82,7 @@ export {
 type Props = {
   workspaceRoot: string
   artifactId: string
-  /** Workspace subdirectory the canvas doc persists under. Defaults to `.Rcode-design`. */
+  /** Workspace subdirectory the canvas doc persists under. Defaults to `.Joker-design`. */
   baseDir?: string
   /** Optional design-system directory. Defaults to baseDir; Code canvases use a per-thread dir. */
   designSystemBaseDir?: string
@@ -488,7 +488,7 @@ export function CanvasViewport({
       document: useCanvasShapeStore.getState().document,
       format,
       workspaceRoot,
-      filename: 'Rcode-whiteboard',
+      filename: 'Joker-whiteboard',
       backgroundColor
     })
   }, [t, workspaceRoot])

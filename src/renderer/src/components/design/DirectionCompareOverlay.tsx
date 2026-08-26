@@ -32,7 +32,7 @@ function DirectionPreview({ workspaceRoot, artifact }: DirectionPreviewProps) {
     workspaceRoot,
     relativePath: artifact?.kind === 'html' ? artifact.relativePath : undefined,
     enabled: Boolean(workspaceRoot && artifact?.kind === 'html'),
-    partition: `Rcode-direction-compare-${partitionId || 'empty'}`
+    partition: `Joker-direction-compare-${partitionId || 'empty'}`
   })
 
   return (

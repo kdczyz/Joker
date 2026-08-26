@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
-  RcodeExecutionSettingsConsentService,
-  RcodeExecutionSettingsChange,
-  type RcodeExecutionSettingsConsentAction
+  JokerExecutionSettingsConsentService,
+  JokerExecutionSettingsChange,
+  type JokerExecutionSettingsConsentAction
 } from './execution-settings-consent'
 import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultTerminalSettings,
@@ -25,9 +25,9 @@ function settings(): AppSettingsV1 {
     uiFontScale: 0.82,
     chatContentMaxWidthPx: 896,
     provider: defaultModelProviderSettings(),
-    agents: { Rcode: defaultRcodeRuntimeSettings() },
+    agents: { Joker: defaultJokerRuntimeSettings() },
     workspaceRoot: '/tmp/workspace',
-    conversationWorkspaceRoot: '~/Documents/Rcode',
+    conversationWorkspaceRoot: '~/Documents/Joker',
     log: { enabled: false, retentionDays: 7 },
     checkpointCleanup: { enabled: false, intervalDays: 3 },
     notifications: { turnComplete: true },
@@ -45,17 +45,17 @@ function settings(): AppSettingsV1 {
   }
 }
 
-describe('protected Rcode execution settings consent', () => {
+describe('protected Joker execution settings consent', () => {
   it('detects changed execution security settings but ignores equal snapshots', () => {
     const current = settings()
-    expect(RcodeExecutionSettingsChange(current, {
-      agents: { Rcode: {
-        approvalPolicy: current.agents.Rcode.approvalPolicy,
-        sandboxMode: current.agents.Rcode.sandboxMode
+    expect(JokerExecutionSettingsChange(current, {
+      agents: { Joker: {
+        approvalPolicy: current.agents.Joker.approvalPolicy,
+        sandboxMode: current.agents.Joker.sandboxMode
       } }
     })).toBeUndefined()
-    expect(RcodeExecutionSettingsChange(current, {
-      agents: { Rcode: { approvalPolicy: 'auto', sandboxMode: 'danger-full-access' } }
+    expect(JokerExecutionSettingsChange(current, {
+      agents: { Joker: { approvalPolicy: 'auto', sandboxMode: 'danger-full-access' } }
     })).toEqual({
       current: { approvalPolicy: 'on-request', sandboxMode: 'workspace-write' },
       next: { approvalPolicy: 'auto', sandboxMode: 'danger-full-access' }
@@ -65,11 +65,11 @@ describe('protected Rcode execution settings consent', () => {
   it('binds a short-lived token to one exact sender and settings transition', () => {
     let now = 1_000
     let tokenNumber = 0
-    const service = new RcodeExecutionSettingsConsentService(
+    const service = new JokerExecutionSettingsConsentService(
       () => now,
       () => `token-${++tokenNumber}`
     )
-    const action: RcodeExecutionSettingsConsentAction = {
+    const action: JokerExecutionSettingsConsentAction = {
       current: { approvalPolicy: 'on-request', sandboxMode: 'workspace-write' },
       next: { approvalPolicy: 'auto', sandboxMode: 'danger-full-access' },
       senderId: 7,

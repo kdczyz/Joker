@@ -12,10 +12,10 @@ function artifact(id: string, kind: DesignArtifact['kind']): DesignArtifact {
     id,
     kind,
     title: id,
-    relativePath: `.Rcode-design/doc/${id}/${kind === 'html' ? 'v1.html' : 'canvas.json'}`,
+    relativePath: `.Joker-design/doc/${id}/${kind === 'html' ? 'v1.html' : 'canvas.json'}`,
     createdAt: now,
     updatedAt: now,
-    versions: [{ id: `${id}-v1`, relativePath: `.Rcode-design/doc/${id}/v1.html`, createdAt: now, summary: '' }]
+    versions: [{ id: `${id}-v1`, relativePath: `.Joker-design/doc/${id}/v1.html`, createdAt: now, summary: '' }]
   }
 }
 

@@ -1,4 +1,4 @@
-import type { ExtensionToolDeclarationInput, JsonObject } from '@Rcode/extension-api'
+import type { ExtensionToolDeclarationInput, JsonObject } from '@joker-code/extension-api'
 
 const idSchema: JsonObject = {
   type: 'string',
@@ -11,7 +11,7 @@ const pathSchema: JsonObject = {
   type: 'string',
   minLength: 14,
   maxLength: 240,
-  pattern: '^[A-Za-z0-9][A-Za-z0-9._ -]*\\.Rcode-ppt\\.html$'
+  pattern: '^[A-Za-z0-9][A-Za-z0-9._ -]*\\.Joker-ppt\\.html$'
 }
 
 const sha256Schema: JsonObject = {
@@ -322,7 +322,7 @@ const applyInputSchema: JsonObject = {
       type: 'string',
       minLength: 1,
       maxLength: 128,
-      description: 'Optional idempotency key. Rcode derives one from the tool invocation when omitted.'
+      description: 'Optional idempotency key. Joker derives one from the tool invocation when omitted.'
     },
     operations: {
       type: 'array',
@@ -410,7 +410,7 @@ const exportOutputSchema: JsonObject = {
 export const presentationToolDeclarations = [
   {
     id: 'presentation-create',
-    description: 'Create a new root-level standalone .Rcode-ppt.html presentation without overwriting an existing file.',
+    description: 'Create a new root-level standalone .Joker-ppt.html presentation without overwriting an existing file.',
     inputSchema: createInputSchema,
     outputSchema: createOutputSchema,
     sideEffects: 'write',
@@ -458,19 +458,19 @@ export const presentationToolDeclarations = [
 export const presentationCommandContributions = [
   {
     id: 'presentation-create',
-    title: 'Rcode PPT: Create Deck',
+    title: 'Joker PPT: Create Deck',
     description: 'Create a new root-level standalone HTML presentation.',
     inputSchema: createInputSchema
   },
   {
     id: 'presentation-load',
-    title: 'Rcode PPT: Load Deck',
+    title: 'Joker PPT: Load Deck',
     description: 'Load a root-level standalone HTML presentation.',
     inputSchema: pathInputSchema
   },
   {
     id: 'presentation-save',
-    title: 'Rcode PPT: Save Operations',
+    title: 'Joker PPT: Save Operations',
     description: 'Save one revision-aware batch of visual presentation operations.',
     inputSchema: {
       ...applyInputSchema,
@@ -479,7 +479,7 @@ export const presentationCommandContributions = [
   },
   {
     id: 'presentation-export-copy',
-    title: 'Rcode PPT: Export Copy',
+    title: 'Joker PPT: Export Copy',
     description: 'Copy the current revision to another root-level HTML presentation.',
     inputSchema: exportInputSchema
   }
@@ -487,7 +487,7 @@ export const presentationCommandContributions = [
 
 export const presentationSidebarViewContribution = {
   id: 'studio',
-  title: 'Rcode PPT',
+  title: 'Joker PPT',
   entry: 'dist/webview/index.html',
   icon: 'assets/presentation-studio.svg',
   order: 40,

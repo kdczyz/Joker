@@ -21,11 +21,11 @@ function htmlArtifact(id: string, title: string): DesignArtifact {
     id,
     kind: 'html',
     title,
-    relativePath: `.Rcode-design/doc/${id}/v1.html`,
-    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
+    relativePath: `.Joker-design/doc/${id}/v1.html`,
+    designMdPath: `.Joker-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
-    versions: [{ id: `${id}-v1`, relativePath: `.Rcode-design/doc/${id}/v1.html`, createdAt: now, summary: '' }]
+    versions: [{ id: `${id}-v1`, relativePath: `.Joker-design/doc/${id}/v1.html`, createdAt: now, summary: '' }]
   }
 }
 
@@ -34,10 +34,10 @@ function boardArtifact(): DesignArtifact {
     id: 'board',
     kind: 'canvas',
     title: 'Board',
-    relativePath: '.Rcode-design/doc/board/canvas.json',
+    relativePath: '.Joker-design/doc/board/canvas.json',
     createdAt: now,
     updatedAt: now,
-    versions: [{ id: 'board-v1', relativePath: '.Rcode-design/doc/board/canvas.json', createdAt: now, summary: '' }]
+    versions: [{ id: 'board-v1', relativePath: '.Joker-design/doc/board/canvas.json', createdAt: now, summary: '' }]
   }
 }
 
@@ -46,11 +46,11 @@ function svgArtifact(id: string, title: string): DesignArtifact {
     id,
     kind: 'svg',
     title,
-    relativePath: `.Rcode-design/doc/${id}/v1.svg`,
-    designMdPath: `.Rcode-design/doc/${id}/DESIGN.md`,
+    relativePath: `.Joker-design/doc/${id}/v1.svg`,
+    designMdPath: `.Joker-design/doc/${id}/DESIGN.md`,
     createdAt: now,
     updatedAt: now,
-    versions: [{ id: `${id}-v1`, relativePath: `.Rcode-design/doc/${id}/v1.svg`, createdAt: now, summary: '' }]
+    versions: [{ id: `${id}-v1`, relativePath: `.Joker-design/doc/${id}/v1.svg`, createdAt: now, summary: '' }]
   }
 }
 
@@ -66,18 +66,18 @@ function workspaceState(artifacts: DesignArtifact[]): Pick<
       const artifactId = options?.artifactId ?? 'fresh'
       return {
         artifactId,
-        relativePath: `.Rcode-design/doc/${artifactId}/v2.html`,
-        basePath: `.Rcode-design/doc/${artifactId}/v1.html`,
-        designMdPath: `.Rcode-design/doc/${artifactId}/DESIGN.md`
+        relativePath: `.Joker-design/doc/${artifactId}/v2.html`,
+        basePath: `.Joker-design/doc/${artifactId}/v1.html`,
+        designMdPath: `.Joker-design/doc/${artifactId}/DESIGN.md`
       }
     }),
     prepareSvgTurn: vi.fn(async (_: string, options?: { artifactId?: string }) => {
       const artifactId = options?.artifactId ?? 'fresh-svg'
       return {
         artifactId,
-        relativePath: `.Rcode-design/doc/${artifactId}/v2.svg`,
-        basePath: `.Rcode-design/doc/${artifactId}/v1.svg`,
-        designMdPath: `.Rcode-design/doc/${artifactId}/DESIGN.md`,
+        relativePath: `.Joker-design/doc/${artifactId}/v2.svg`,
+        basePath: `.Joker-design/doc/${artifactId}/v1.svg`,
+        designMdPath: `.Joker-design/doc/${artifactId}/DESIGN.md`,
         newlyCreated: false,
         versionCreated: true
       }
@@ -102,10 +102,10 @@ describe('design turn target resolver', () => {
 
     expect(resolved).toMatchObject({
       target: 'svg',
-      artifactRelativePath: '.Rcode-design/doc/orbit/v2.svg',
-      basePath: '.Rcode-design/doc/orbit/v1.svg',
+      artifactRelativePath: '.Joker-design/doc/orbit/v2.svg',
+      basePath: '.Joker-design/doc/orbit/v1.svg',
       svgArtifactId: 'orbit',
-      designNotesPath: '.Rcode-design/doc/orbit/DESIGN.md',
+      designNotesPath: '.Joker-design/doc/orbit/DESIGN.md',
       nextIntentMode: 'modify'
     })
     expect(state.prepareSvgTurn).toHaveBeenCalledWith(
@@ -153,10 +153,10 @@ describe('design turn target resolver', () => {
 
     expect(resolved).toMatchObject({
       target: 'screen',
-      artifactRelativePath: '.Rcode-design/doc/home/v2.html',
-      basePath: '.Rcode-design/doc/home/v1.html',
+      artifactRelativePath: '.Joker-design/doc/home/v2.html',
+      basePath: '.Joker-design/doc/home/v1.html',
       htmlArtifactId: 'home',
-      designNotesPath: '.Rcode-design/doc/home/DESIGN.md',
+      designNotesPath: '.Joker-design/doc/home/DESIGN.md',
       targetAutoRepairKey: 'artifact:home',
       selectedFrame: { id: 'frame_home' },
       htmlFrameContext: { name: 'Home frame', width: 1280, height: 800 }
@@ -193,7 +193,7 @@ describe('design turn target resolver', () => {
       nextIntentMode: 'modify',
       htmlElementContext: {
         selector: '#cta',
-        artifactRelativePath: '.Rcode-design/doc/home/v1.html'
+        artifactRelativePath: '.Joker-design/doc/home/v1.html'
       }
     })
   })
@@ -231,7 +231,7 @@ describe('design turn target resolver', () => {
 
     expect(resolved).toMatchObject({
       target: 'canvas',
-      artifactRelativePath: '.Rcode-design/doc/board/canvas.json',
+      artifactRelativePath: '.Joker-design/doc/board/canvas.json',
       nextIntentMode: 'generate',
       targetAutoRepairKey: ''
     })

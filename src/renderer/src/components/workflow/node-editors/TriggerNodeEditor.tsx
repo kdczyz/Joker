@@ -19,7 +19,7 @@ function Field({ label, children }: { label: string; children: ReactNode }): Rea
 function buildWorkflowRunCurl(settings: AppSettingsV1, name: string): string {
   const lines = [`curl -X POST http://127.0.0.1:${settings.workflow.webhookPort}/workflow/run \\`, '  -H "Content-Type: application/json" \\']
   const secret = settings.workflow.webhookSecret.trim()
-  if (secret) lines.push(`  -H "x-Rcode-secret: ${secret}" \\`)
+  if (secret) lines.push(`  -H "x-Joker-secret: ${secret}" \\`)
   lines.push(`  -d '${JSON.stringify({ workflow: name, input: '' }).replace(/'/g, "'\\''")}'`)
   return lines.join('\n')
 }

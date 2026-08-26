@@ -64,11 +64,11 @@ describe('app command line bootstrap', () => {
   it('supports explicit Linux Wayland IME opt-in and opt-out', async () => {
     const { configureLinuxWaylandImeSwitches } = await import('./app-command-line')
 
-    configureLinuxWaylandImeSwitches('linux', { DISPLAY: ':0', RCODE_LINUX_WAYLAND_IME: '1' })
+    configureLinuxWaylandImeSwitches('linux', { DISPLAY: ':0', JOKER_LINUX_WAYLAND_IME: '1' })
     expect(appendSwitch).toHaveBeenCalledTimes(3)
 
     appendSwitch.mockReset()
-    configureLinuxWaylandImeSwitches('linux', { WAYLAND_DISPLAY: 'wayland-1', RCODE_LINUX_WAYLAND_IME: '0' })
+    configureLinuxWaylandImeSwitches('linux', { WAYLAND_DISPLAY: 'wayland-1', JOKER_LINUX_WAYLAND_IME: '0' })
     expect(appendSwitch).not.toHaveBeenCalled()
   })
 })

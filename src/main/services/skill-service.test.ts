@@ -6,7 +6,7 @@ import {
   defaultClawSettings,
   defaultDesignSettings,
   defaultKeyboardShortcuts,
-  defaultRcodeRuntimeSettings,
+  defaultJokerRuntimeSettings,
   defaultModelProviderSettings,
   defaultScheduleSettings,
   defaultWorkflowSettings,
@@ -25,7 +25,7 @@ vi.mock('node:os', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:os')>()
   return {
     ...actual,
-    homedir: () => process.env.RCODE_SKILL_TEST_HOME || actual.homedir()
+    homedir: () => process.env.JOKER_SKILL_TEST_HOME || actual.homedir()
   }
 })
 
@@ -34,11 +34,11 @@ describe('skill-service', () => {
 
   beforeEach(async () => {
     tempRoot = await mkdtemp(join(tmpdir(), 'gui-skills-'))
-    process.env.RCODE_SKILL_TEST_HOME = tempRoot
+    process.env.JOKER_SKILL_TEST_HOME = tempRoot
   })
 
   afterEach(async () => {
-    delete process.env.RCODE_SKILL_TEST_HOME
+    delete process.env.JOKER_SKILL_TEST_HOME
     await rm(tempRoot, { recursive: true, force: true })
   })
 
@@ -67,9 +67,9 @@ describe('skill-service', () => {
     }))
   })
 
-  it('discovers project Rcode skills from .Rcode/skills and exposes the root to runtime', async () => {
-    const workspaceRoot = join(tempRoot, 'workspace-Rcode')
-    const skillRoot = join(workspaceRoot, '.Rcode', 'skills')
+  it('discovers project Joker skills from .Joker/skills and exposes the root to runtime', async () => {
+    const workspaceRoot = join(tempRoot, 'workspace-Joker')
+    const skillRoot = join(workspaceRoot, '.Joker', 'skills')
     const pmSkill = join(skillRoot, 'pm')
     await mkdir(pmSkill, { recursive: true })
     await writeFile(
@@ -99,10 +99,10 @@ describe('skill-service', () => {
     const roots = await listGuiSkillRoots(settings, workspaceRoot)
     expect(roots.ok).toBe(true)
     if (!roots.ok) return
-    const RcodeRoot = roots.roots.find((root) => root.id === 'workspace-Rcode')
-    expect(RcodeRoot).toMatchObject({
+    const JokerRoot = roots.roots.find((root) => root.id === 'workspace-Joker')
+    expect(JokerRoot).toMatchObject({
       path: skillRoot,
-      labelKey: 'pluginSkillRootWorkspaceRcode',
+      labelKey: 'pluginSkillRootWorkspaceJoker',
       scope: 'project',
       source: 'common',
       exists: true,
@@ -282,7 +282,7 @@ describe('skill-service', () => {
   it('recognizes roots under ~/.codex/plugins/cache as Codex plugin caches', () => {
     expect(isCodexPluginCacheRoot(join(tempRoot, '.codex', 'plugins', 'cache', 'vercel', '2.1', 'skills'))).toBe(true)
     expect(isCodexPluginCacheRoot(join(tempRoot, '.codex', 'skills'))).toBe(false)
-    expect(isCodexPluginCacheRoot(join(tempRoot, '.Rcode', 'skills'))).toBe(false)
+    expect(isCodexPluginCacheRoot(join(tempRoot, '.Joker', 'skills'))).toBe(false)
   })
 
   it('rejects a skill.json whose entry escapes the package directory (path traversal)', async () => {
@@ -339,9 +339,9 @@ describe('skill-service', () => {
       uiFontScale: 0.82,
     chatContentMaxWidthPx: 896,
       provider: defaultModelProviderSettings(),
-      agents: { Rcode: defaultRcodeRuntimeSettings() },
+      agents: { Joker: defaultJokerRuntimeSettings() },
       workspaceRoot,
-      conversationWorkspaceRoot: '~/Documents/Rcode',
+      conversationWorkspaceRoot: '~/Documents/Joker',
       log: { enabled: false, retentionDays: 7 },
       checkpointCleanup: { enabled: false, intervalDays: 3 },
       notifications: { turnComplete: true },

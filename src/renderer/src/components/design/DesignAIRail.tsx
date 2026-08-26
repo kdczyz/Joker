@@ -19,7 +19,7 @@ import type { AttachmentReference, NormalizedThread, RuntimeConnectionStatus, Ch
 import { getProvider } from '../../agent/registry'
 import type { QueuedUserMessage } from '../../store/chat-store-types'
 import { threadSnapshotLooksRunning } from '../../store/chat-store-runtime-helpers'
-import type { ModelProviderModelGroup } from '@shared/Rcode-gui-api'
+import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
 import { DESIGN_ASSISTANT_THREAD_TITLE } from '../../design/design-thread-registry'
 import { useDesignWorkspaceStore } from '../../design/design-workspace-store'
 import { defaultFrameSizeForDesignTarget } from '../../design/design-context'
