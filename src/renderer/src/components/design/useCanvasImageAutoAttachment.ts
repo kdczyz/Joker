@@ -9,6 +9,7 @@ import {
 import type { CanvasDocument } from '../../design/canvas/canvas-types'
 import type { ImageAttachmentUploadCapabilities } from '../../lib/image-attachment-upload'
 import { uploadRuntimeImageAttachment } from '../../lib/runtime-image-attachment'
+import { cacheAttachmentReference } from '../../lib/attachment-preview-cache'
 import type { ComposerAttachmentUpdater } from '../workbench-composer-attachments'
 
 export type CanvasImageAutoAttachmentOptions = {
@@ -100,6 +101,7 @@ export function useCanvasImageAutoAttachment(
           uploaded: result.attachment,
           preview: result.preview
         })
+        cacheAttachmentReference(ref)
         dynamicRef.current.setComposerAttachmentsForScope('design', (cur) => [...cur, ref])
         autoAttachmentIdRef.current = result.attachment.id
       } catch {

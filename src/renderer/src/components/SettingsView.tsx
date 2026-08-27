@@ -114,9 +114,7 @@ const WebSearchSettingsSection = lazy(() =>
 const GithubSettingsSection = lazy(() =>
   import('./settings-section-github').then((module) => ({ default: module.GithubSettingsSection }))
 )
-const CloudflareSettingsSection = lazy(() =>
-  import('./settings-section-cloudflare').then((module) => ({ default: module.CloudflareSettingsSection }))
-)
+
 
 function LoadedAgentsSettingsSection({
   onReady,
@@ -138,7 +136,7 @@ function SettingsSectionFallback(): ReactElement {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'cloudflare'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github'
 type SettingsPatch = AppSettingsPatch
 type InlineNotice = {
   tone: 'success' | 'error' | 'info'
@@ -1398,7 +1396,7 @@ export function SettingsView(): ReactElement {
             {category === 'dataMigration' ? <DataMigrationSettingsSection /> : null}
             {category === 'webSearch' ? <WebSearchSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'github' ? <GithubSettingsSection /> : null}
-            {category === 'cloudflare' ? <CloudflareSettingsSection /> : null}
+
           </Suspense>
           </div>
         </div>

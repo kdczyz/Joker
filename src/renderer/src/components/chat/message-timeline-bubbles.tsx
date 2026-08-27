@@ -26,6 +26,7 @@ import {
 import { InjectedMemoryMetaChip } from './injected-memory-meta-chip'
 import { isPresentationArtifactPath } from './presentation-file-artifacts'
 import { readGeneratedWorkspaceImagePreview } from './generated-media-preview'
+import { enrichAttachmentFromCache } from '../../lib/attachment-preview-cache'
 import { useTimelineFilePreviewWorkspaceRoot } from './timeline-file-preview-workspace'
 
 const COPY_FEEDBACK_RESET_MS = 1600
@@ -1186,7 +1187,7 @@ function UserAttachmentPreviews({
       byId.set(attachment.id, attachment)
     }
     for (const id of attachmentIds) {
-      if (!byId.has(id)) byId.set(id, { id })
+      if (!byId.has(id)) byId.set(id, enrichAttachmentFromCache({ id }))
     }
     return [...byId.values()]
   }, [meta])

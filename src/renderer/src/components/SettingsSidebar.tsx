@@ -6,7 +6,6 @@ import {
   Bug,
   ChevronLeft,
   ChevronRight,
-  Cloud,
   GitBranch,
   Github,
   Globe,
@@ -24,7 +23,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthGate'
 
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'cloudflare'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github'
 
 export function SettingsSidebar({
   category,
@@ -93,15 +92,6 @@ export function SettingsSidebar({
         >
           <Github className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('github')}
-        </button>
-        <button
-          type="button"
-          data-cursor-spotlight-target
-          className={catCls('cloudflare')}
-          onClick={() => setCategory('cloudflare')}
-        >
-          <Cloud className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
-          {t('cloudflare')}
         </button>
         <button
           type="button"

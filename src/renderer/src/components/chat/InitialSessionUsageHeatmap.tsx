@@ -280,10 +280,19 @@ export function HeatmapGrid({
   const showTooltip = (bucket: DailyUsageBucket, target: HTMLElement) => {
     onSelect(bucket)
     const cellRect = target.getBoundingClientRect()
+    const tooltipX = cellRect.left + cellRect.width / 2
+    const tooltipY = cellRect.top
+    // Clamp so the tooltip never overflows the Electron window bounds.
+    const viewW = window.innerWidth
+    const viewH = window.innerHeight
+    const TOOLTIP_HALF = 160 // approximate max half-width of the tooltip text
+    const TOOLTIP_H = 32 // approximate tooltip height
+    const clampedX = Math.max(TOOLTIP_HALF + 4, Math.min(viewW - TOOLTIP_HALF - 4, tooltipX))
+    const clampedY = Math.max(TOOLTIP_H + 4, tooltipY) // keep above viewport top
     setHovered({
       bucket,
-      left: cellRect.left + cellRect.width / 2,
-      top: cellRect.top
+      left: clampedX,
+      top: clampedY
     })
   }
 
@@ -450,7 +459,7 @@ export function HeatmapGrid({
           {hovered && (
             <div
               role="tooltip"
-              className="pointer-events-none fixed z-[9999] -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-ds-border bg-ds-popover px-2.5 py-1.5 text-[12px] leading-4 text-ds-ink shadow-lg"
+              className="pointer-events-none fixed z-[9999] -translate-x-1/2 -translate-y-full max-w-[min(340px,80vw)] break-words rounded-md border border-ds-border bg-ds-popover px-2.5 py-1.5 text-[12px] leading-4 text-ds-ink shadow-lg"
               style={{ left: hovered.left, top: hovered.top - 8 }}
             >
               {dailySummary(hovered.bucket, t, i18n.language)}
@@ -607,6 +616,38 @@ function ModelUsagePanel({
       ]
     : []
 
+  // SVG line chart dimensions
+  const CHART_W = 460
+  const CHART_H = 150
+  const PAD_TOP = 14
+  const PAD_BOTTOM = 28
+  const PAD_LEFT = 0
+  const PAD_RIGHT = 0
+  const plotW = CHART_W - PAD_LEFT - PAD_RIGHT
+  const plotH = CHART_H - PAD_TOP - PAD_BOTTOM
+  const n = Math.max(chartDays.length, 1)
+  const xStep = plotW / Math.max(n - 1, 1)
+
+  // Build SVG polyline points for each series
+  const seriesLines = [
+    { key: 'output', color: MODEL_USAGE_BREAKDOWN_COLORS.output, values: chartBreakdowns.map((b) => b.output) },
+    { key: 'uncached-input', color: MODEL_USAGE_BREAKDOWN_COLORS.uncachedInput, values: chartBreakdowns.map((b) => b.uncachedInput) },
+    { key: 'cached-input', color: MODEL_USAGE_BREAKDOWN_COLORS.cachedInput, values: chartBreakdowns.map((b) => b.cachedInput) }
+  ]
+  const toSvgPoints = (values: number[]): string =>
+    values
+      .map((v, i) => {
+        const x = PAD_LEFT + i * xStep
+        const y = PAD_TOP + plotH - (maxTokens > 0 ? (v / maxTokens) * plotH : 0)
+        return `${x},${y}`
+      })
+      .join(' ')
+  const toSvgDot = (value: number, index: number) => {
+    const x = PAD_LEFT + index * xStep
+    const y = PAD_TOP + plotH - (maxTokens > 0 ? (value / maxTokens) * plotH : 0)
+    return { x, y }
+  }
+
   if (state.loading && !usage) {
     return (
       <div className="grid min-h-[180px] place-items-center text-[12px] text-ds-faint">
@@ -631,121 +672,156 @@ function ModelUsagePanel({
           {formatTokenCount(usage?.totals.totalTokens ?? 0, locale)}
         </span>
       </div>
-      <div className="grid min-h-[206px] grid-cols-[44px_1fr] gap-2">
-        <div className="grid grid-rows-5 pb-5 pt-14 text-right text-[11px] leading-none text-ds-faint">
-          {[1, 0.75, 0.5, 0.25, 0].map((ratio) => (
-            <span key={ratio}>
-              {ratio === 0 ? '0' : formatCompactNumber(maxTokens * ratio)}
-            </span>
-          ))}
-        </div>
-        <div className="relative min-w-0" onMouseLeave={() => setActiveDayIndex(null)}>
-          {activeDay && activeBreakdown ? (
-            <div
-              className={`pointer-events-none absolute top-0 z-20 w-[min(18rem,calc(100vw-4rem))] max-w-full rounded-[18px] border border-ds-border bg-ds-card/98 p-3 shadow-[0_18px_46px_rgba(20,47,95,0.12)] backdrop-blur-xl ${tooltipTransformClass}`}
-              style={{ left: `${tooltipAnchorPercent}%` }}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <span className="text-[12.5px] font-semibold text-ds-ink">{activeDay.date}</span>
-                <span className="whitespace-nowrap text-[12.5px] font-semibold tabular-nums text-ds-ink">
-                  {t('usageHeatmapModelTooltipTotalTokens', {
-                    value: formatTokenCount(activeBreakdown.total, locale)
-                  })}
-                </span>
-              </div>
-              <div className="mt-2 grid gap-1.5">
-                {tooltipRows.map((row) => (
-                  <div
-                    key={row.key}
-                    className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 text-[12px] leading-5"
-                  >
-                    <span
-                      className="h-2.5 w-2.5 rounded-[3px]"
-                      style={{ backgroundColor: row.color }}
-                      aria-hidden
-                    />
-                    <span className="min-w-0 text-ds-muted">{row.label}</span>
-                    <span className="whitespace-nowrap tabular-nums text-ds-ink">
-                      {t('usageHeatmapModelTooltipTotalTokens', {
-                        value: formatTokenCount(row.value, locale)
-                      })}
-                    </span>
-                  </div>
-                ))}
-              </div>
+      <div className="relative min-w-0 px-1 pt-2" onMouseLeave={() => setActiveDayIndex(null)}>
+        {/* Tooltip */}
+        {activeDay && activeBreakdown ? (
+          <div
+            className={`pointer-events-none absolute top-0 z-20 w-[min(18rem,calc(100vw-4rem))] max-w-full rounded-[18px] border border-ds-border bg-ds-card/98 p-3 shadow-[0_18px_46px_rgba(20,47,95,0.12)] backdrop-blur-xl ${tooltipTransformClass}`}
+            style={{ left: `${tooltipAnchorPercent}%` }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <span className="text-[12.5px] font-semibold text-ds-ink">{activeDay.date}</span>
+              <span className="whitespace-nowrap text-[12.5px] font-semibold tabular-nums text-ds-ink">
+                {t('usageHeatmapModelTooltipTotalTokens', {
+                  value: formatTokenCount(activeBreakdown.total, locale)
+                })}
+              </span>
             </div>
-          ) : null}
-          <div className="grid min-h-[150px] min-w-0 grid-flow-col items-end gap-2 pt-14">
+            <div className="mt-2 grid gap-1.5">
+              {tooltipRows.map((row) => (
+                <div
+                  key={row.key}
+                  className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2 text-[12px] leading-5"
+                >
+                  <span
+                    className="h-2.5 w-2.5 rounded-[3px]"
+                    style={{ backgroundColor: row.color }}
+                    aria-hidden
+                  />
+                  <span className="min-w-0 text-ds-muted">{row.label}</span>
+                  <span className="whitespace-nowrap tabular-nums text-ds-ink">
+                    {t('usageHeatmapModelTooltipTotalTokens', {
+                      value: formatTokenCount(row.value, locale)
+                    })}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+        {/* SVG line chart */}
+        <svg
+          viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+          className="w-full min-h-[150px]"
+          preserveAspectRatio="none"
+          aria-label={t('usageHeatmapTokens')}
+        >
+          {/* Y-axis grid lines */}
+          {[1, 0.75, 0.5, 0.25, 0].map((ratio) => {
+            const y = PAD_TOP + plotH * (1 - ratio)
+            return (
+              <line
+                key={ratio}
+                x1={PAD_LEFT}
+                y1={y}
+                x2={CHART_W - PAD_RIGHT}
+                y2={y}
+                stroke="currentColor"
+                className="text-ds-border-muted"
+                strokeWidth={0.5}
+                strokeDasharray={ratio === 0 ? undefined : '4 3'}
+              />
+            )
+          })}
+          {/* Y-axis labels */}
+          {[1, 0.75, 0.5, 0.25, 0].map((ratio) => {
+            const y = PAD_TOP + plotH * (1 - ratio)
+            return (
+              <text
+                key={`label-${ratio}`}
+                x={PAD_LEFT - 4}
+                y={y + 3}
+                textAnchor="end"
+                className="fill-current text-[9px] text-ds-faint"
+              >
+                {ratio === 0 ? '0' : formatCompactNumber(maxTokens * ratio)}
+              </text>
+            )
+          })}
+          {/* Lines */}
+          {seriesLines.map((s) => (
+            <polyline
+              key={s.key}
+              points={toSvgPoints(s.values)}
+              fill="none"
+              stroke={s.color}
+              strokeWidth={2}
+              strokeLinejoin="round"
+              strokeLinecap="round"
+            />
+          ))}
+          {/* Dots + hit areas */}
           {chartDays.map((bucket, index) => {
             const breakdown = chartBreakdowns[index]
-            const segments = [
-              {
-                key: 'output',
-                value: breakdown.output,
-                color: MODEL_USAGE_BREAKDOWN_COLORS.output
-              },
-              {
-                key: 'uncached-input',
-                value: breakdown.uncachedInput,
-                color: MODEL_USAGE_BREAKDOWN_COLORS.uncachedInput
-              },
-              {
-                key: 'cached-input',
-                value: breakdown.cachedInput,
-                color: MODEL_USAGE_BREAKDOWN_COLORS.cachedInput
-              }
-            ]
             const dateLabel = formatChartDate(bucket.date, locale)
             const summary = modelUsageBreakdownSummary(dateLabel, bucket, t, locale)
             const active = resolvedActiveDayIndex === index
-            const barHeight = Math.max(8, (breakdown.total / maxTokens) * 112)
             return (
-              <div key={`${bucket.date}-${index}`} className="relative grid min-w-0 grid-rows-[1fr_auto] gap-2">
+              <g key={`${bucket.date}-${index}`}>
+                {/* Vertical crosshair on active */}
                 {active ? (
-                  <span
-                    className="pointer-events-none absolute bottom-5 left-1/2 top-0 z-0 w-px -translate-x-1/2 border-l border-dashed border-accent/35"
-                    aria-hidden
+                  <line
+                    x1={PAD_LEFT + index * xStep}
+                    y1={PAD_TOP}
+                    x2={PAD_LEFT + index * xStep}
+                    y2={PAD_TOP + plotH}
+                    stroke="currentColor"
+                    className="text-accent/35"
+                    strokeWidth={1}
+                    strokeDasharray="4 3"
                   />
                 ) : null}
-                <button
-                  type="button"
+                {/* Dots */}
+                {seriesLines.map((s) => {
+                  const dot = toSvgDot(s.values[index], index)
+                  return (
+                    <circle
+                      key={s.key}
+                      cx={dot.x}
+                      cy={dot.y}
+                      r={active ? 4 : 2.5}
+                      fill={s.color}
+                      stroke="var(--ds-card, #fff)"
+                      strokeWidth={1.5}
+                      className="transition-[r] duration-150"
+                    />
+                  )
+                })}
+                {/* Invisible hit area for hover */}
+                <rect
+                  x={PAD_LEFT + index * xStep - xStep / 2}
+                  y={PAD_TOP}
+                  width={xStep}
+                  height={plotH}
+                  fill="transparent"
                   title={summary}
-                  aria-label={summary}
                   onMouseEnter={() => setActiveDayIndex(index)}
                   onFocus={() => setActiveDayIndex(index)}
                   onClick={() => setActiveDayIndex(index)}
-                  className="relative z-[1] flex min-h-[112px] items-end rounded-[10px] px-1 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:ring-offset-2 focus:ring-offset-ds-bg"
+                />
+                {/* Date labels */}
+                <text
+                  x={PAD_LEFT + index * xStep}
+                  y={CHART_H - 4}
+                  textAnchor="middle"
+                  className="fill-current text-[9px] text-ds-faint"
                 >
-                  <span
-                    className={`flex w-full flex-col-reverse overflow-hidden rounded-t-[6px] shadow-[inset_0_1px_0_rgba(255,255,255,0.36)] transition ${
-                      active ? 'ring-1 ring-accent/18' : ''
-                    }`}
-                    style={{ height: `${barHeight}px` }}
-                  >
-                    {segments.map((segment) => {
-                      const ratio = breakdown.total > 0 ? segment.value / breakdown.total : 0
-                      if (ratio <= 0) return null
-                      return (
-                        <span
-                          key={segment.key}
-                          className="w-full border-t border-white/35 dark:border-white/10"
-                          style={{
-                            height: `${Math.max(4, ratio * barHeight)}px`,
-                            backgroundColor: segment.color
-                          }}
-                        />
-                      )
-                    })}
-                  </span>
-                </button>
-                <span className="truncate text-center text-[11px] text-ds-faint">
                   {dateLabel}
-                </span>
-              </div>
+                </text>
+              </g>
             )
           })}
-          </div>
-        </div>
+        </svg>
       </div>
       <div className="mt-3 grid gap-1.5">
         {topModels.map((bucket, index) => {
@@ -837,24 +913,15 @@ export function InitialSessionUsageHeatmapView({
   const totals = useMemo(() => usageTotalsFromBuckets(metricBuckets), [metricBuckets])
   const streaks = useMemo(() => usageStreaks(metricBuckets), [metricBuckets])
   const overviewMetrics = [
-    { label: t('usageHeatmapSessions'), value: formatCompactNumber(totals.threadCount) },
     { label: t('usageHeatmapMessages'), value: formatCompactNumber(totals.turns) },
     { label: t('usageHeatmapTotalTokens'), value: formatCompactNumber(totals.totalTokens) },
     { label: t('usageHeatmapActiveDays'), value: String(totals.activeDays) },
     { label: t('usageHeatmapCurrentStreak'), value: t('usageHeatmapStreakDays', { count: streaks.current }) },
     { label: t('usageHeatmapLongestStreak'), value: t('usageHeatmapStreakDays', { count: streaks.longest }) },
-    { label: t('usageHeatmapCost'), value: formatCost(totals.costUsd, i18n.language, totals.costCny) },
     {
       label: t('usageHeatmapCacheSavings'),
       value: t('usageHeatmapSavedTokensValue', { tokens: formatCompactNumber(totals.cachedTokens) })
-    },
-    {
-      label: t('usageHeatmapContextSavings'),
-      value: t('usageHeatmapSavedTokensValue', {
-        tokens: formatCompactNumber(totals.tokenEconomySavingsTokens)
-      })
-    },
-    { label: t('usageHeatmapCache'), value: formatPercent(totals.cacheHitRate) }
+    }
   ]
 
   useEffect(() => {
@@ -931,7 +998,7 @@ export function InitialSessionUsageHeatmapView({
             </div>
             {activeTab === 'overview' ? (
               <>
-                <div className="grid min-w-0 grid-cols-2 gap-1.5 sm:grid-cols-4">
+                <div className="grid min-w-0 grid-cols-3 gap-1.5">
                   {overviewMetrics.map((metric) => (
                     <Metric key={metric.label} label={metric.label} value={metric.value} />
                   ))}

@@ -19,9 +19,10 @@ describe('compat retry policy', () => {
     expect(parseRetryAfterMs('Thu, 01 Jan 1970 00:00:03 GMT', 1_000)).toBe(2_000)
   })
 
-  it('uses deterministic bounded jitter when Retry-After is absent', () => {
-    const response = new Response('', { status: 503 })
-    expect(retryDelayMs(response, 100, 1, { random: () => 0 })).toBe(160)
-    expect(retryDelayMs(response, 100, 1, { random: () => 1 })).toBe(240)
+  it('uses a fixed retry interval independent of the attempt count', () => {
+    const response = new Response('', { status: 429 })
+    expect(retryDelayMs(response, 100, 1, { random: () => 0 })).toBe(100)
+    expect(retryDelayMs(response, 100, 3, { random: () => 1 })).toBe(100)
+    expect(retryDelayMs(response, 5_000, 0, {})).toBe(5_000)
   })
 })

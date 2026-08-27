@@ -76,9 +76,6 @@ import {
   ProviderModelImportDialog,
   type ProviderModelImportResult
 } from './provider-model-import-dialog'
-import { CloudProvidersPanel } from './settings-cloud-providers'
-import type { CloudAiProvider } from '../auth/authClient'
-import { RemoteAgentPanel } from './settings-remote-agent'
 import { useAuth } from '../auth/AuthGate'
 
 const MODEL_ENDPOINT_FORMAT_LABEL_KEYS: Record<ModelEndpointFormat, string> = {
@@ -1688,13 +1685,6 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
 
   return (
     <>
-    <CloudProvidersPanel
-      onImportProvider={handleImportCloudProvider}
-      getLocalProviders={() => modelProviders}
-      authenticated={cloudAuthenticated}
-      onAutoSyncProviders={handleAutoSyncProviders}
-    />
-    <RemoteAgentPanel />
     <SettingsCard title={t('providers')}>
       <SettingRow
         title={t('providers')}

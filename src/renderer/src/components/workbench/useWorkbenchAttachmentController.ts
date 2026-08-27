@@ -7,6 +7,7 @@ import {
   runtimeImageSourceForFile,
   uploadRuntimeImageAttachment
 } from '../../lib/runtime-image-attachment'
+import { cacheAttachmentReference } from '../../lib/attachment-preview-cache'
 import type {
   ComposerAttachmentScope,
   ComposerAttachmentUpdater
@@ -124,7 +125,7 @@ export function useWorkbenchAttachmentController({
             ...(workspace ? { workspace } : {})
           })
           const attachment = result.attachment
-          uploaded.push({
+          const ref: AttachmentReference = {
             id: attachment.id,
             kind: 'image',
             name: attachment.name,
@@ -133,7 +134,9 @@ export function useWorkbenchAttachmentController({
             height: attachment.height,
             previewUrl: runtimeImagePreviewUrl(result),
             ...(result.localFilePath ? { localFilePath: result.localFilePath } : {})
-          })
+          }
+          cacheAttachmentReference(ref)
+          uploaded.push(ref)
         } else if (typeof provider.uploadAttachment === 'function') {
           const base64Data = arrayBufferToBase64(await file.arrayBuffer())
           const mimeType = file.type || 'image/png'
@@ -145,7 +148,7 @@ export function useWorkbenchAttachmentController({
             ...(activeThreadId ? { threadId: activeThreadId } : {}),
             ...(workspace ? { workspace } : {})
           })
-          uploaded.push({
+          const ref: AttachmentReference = {
             id: attachment.id,
             kind: 'image',
             name: attachment.name,
@@ -155,7 +158,9 @@ export function useWorkbenchAttachmentController({
             previewUrl: attachment.textFallback?.dataBase64
               ? `data:${attachment.mimeType || 'image/png'};base64,${attachment.textFallback.dataBase64}`
               : `data:${mimeType};base64,${base64Data}`
-          })
+          }
+          cacheAttachmentReference(ref)
+          uploaded.push(ref)
         } else {
           throw new Error(t('composerAttachmentUnavailable'))
         }
@@ -210,6 +215,7 @@ export function useWorkbenchAttachmentController({
         previewUrl: runtimeImagePreviewUrl(result),
         ...(result.localFilePath ? { localFilePath: result.localFilePath } : {})
       }
+      cacheAttachmentReference(reference)
       setComposerAttachmentsForScope(attachmentScope, (current) => {
         const byId = new Map(current.map((item) => [item.id, item]))
         byId.set(reference.id, reference)
