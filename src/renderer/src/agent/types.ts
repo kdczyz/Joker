@@ -187,6 +187,10 @@ export type NormalizedThread = {
   summary?: string
   latestTurnId?: string
   latestTurnStatus?: string
+  /** Runtime is waiting on an unresolved tool-approval request for this thread. */
+  awaitingApproval?: boolean
+  /** Runtime is waiting on an unanswered ask-user question for this thread. */
+  awaitingUserInput?: boolean
   relation?: 'primary' | 'fork' | 'side'
   parentThreadId?: string
   forkedFromThreadId?: string

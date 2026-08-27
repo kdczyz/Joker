@@ -16,7 +16,7 @@ import {
   insertCompactionIntoVisibleHistory
 } from './compaction-history.js'
 import { resolveCompactionModel, summarizeCompactionWithModel } from './compaction-summary.js'
-import { ContextCompactor } from './context-compactor.js'
+import { ContextCompactor, type CompactionPlan } from './context-compactor.js'
 import { repairModelHistoryItems } from '../domain/model-history-repair.js'
 import { recordLifecycleHookWarnings } from './turn-lifecycle-hooks.js'
 import type { ContextCompactionConfig } from './model-context-profile.js'
@@ -98,9 +98,18 @@ export class HistoryCompactionService {
     turnId: string
     toolSpecs?: readonly ModelToolSpec[]
     reserveModelRequest?: () => Promise<{ allowed: boolean; reason?: string }>
+    /**
+     * When set, force compaction toward this token budget even if the
+     * estimate/threshold heuristics would not trigger (and regardless of the
+     * suppression state). This is the "measured context overflow" safety net:
+     * the loop composes a request, detects the real input exceeding the model
+     * window, and re-issues a forced compaction before giving up.
+     */
+    forceBudgetTokens?: number
   }): Promise<TurnItem[]> {
-    // Skip compaction when suppressed by a previous deterministic failure.
-    if (isSuppressed(this.suppression)) {
+    // Skip compaction when suppressed by a previous deterministic failure,
+    // unless this is an explicit forced compaction for an overflow budget.
+    if (input.forceBudgetTokens === undefined && isSuppressed(this.suppression)) {
       return input.items
     }
     try {
@@ -112,11 +121,20 @@ export class HistoryCompactionService {
       prefix: this.deps.prefix.fewShots,
       tools: input.toolSpecs
     })
-    const plan = this.deps.compactor.planCompaction(input.items, {
-      model: thresholdModel,
-      promptTokens: pressure?.promptTokens,
-      overheadTokens
-    })
+    // Forced compaction ignores the soft/hard estimate thresholds and always
+    // runs an aggressive keep-recent=1 pass to reclaim as much history as
+    // possible within the requested budget.
+    const plan = input.forceBudgetTokens !== undefined
+      ? {
+          mode: 'force',
+          keepRecent: 1,
+          reason: `forced compaction: request must fit a ${input.forceBudgetTokens}-token context window`
+        } as CompactionPlan
+      : this.deps.compactor.planCompaction(input.items, {
+          model: thresholdModel,
+          promptTokens: pressure?.promptTokens,
+          overheadTokens
+        })
     if (!plan) return input.items
     const hooks = this.deps.getHooks?.()
     if (hasHooksForPhase(hooks, 'PreCompact')) {
@@ -146,7 +164,7 @@ export class HistoryCompactionService {
         const currentItems = repairModelHistoryItems(
           effectiveHistoryAfterLatestCompaction(snapshot.items)
         )
-        const currentPlan = attempt === 1
+        const currentPlan = attempt === 1 || input.forceBudgetTokens !== undefined
           ? plan
           : this.deps.compactor.planCompaction(currentItems, {
               model: thresholdModel,
@@ -167,6 +185,9 @@ export class HistoryCompactionService {
           reason: currentPlan.reason,
           mode: currentPlan.mode,
           keepRecent: currentPlan.keepRecent,
+          ...(input.forceBudgetTokens !== undefined
+            ? { budgetTokens: input.forceBudgetTokens }
+            : {}),
           summaryItemId
         })
         if (result.replacedTokens === 0) {
@@ -180,7 +201,13 @@ export class HistoryCompactionService {
         // to newer history. On retry the deterministic heuristic is used
         // instead of issuing a duplicate summarizer request.
         const contextCompaction = this.deps.getContextCompaction?.()
-        if (attempt === 1 && contextCompaction?.summaryMode === 'model') {
+        // Forced overflow compaction must not issue a model summarizer request:
+        // the summarizer could itself exceed the window. Heuristic summary only.
+        const shouldUseModelSummary =
+          attempt === 1 &&
+          contextCompaction?.summaryMode === 'model' &&
+          input.forceBudgetTokens === undefined
+        if (shouldUseModelSummary) {
           if (input.signal.aborted) {
             return {
               changed: false,

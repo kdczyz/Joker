@@ -162,6 +162,7 @@ export function SettingsView(): ReactElement {
   const { t: tCommon } = useTranslation('common')
   const setRoute = useChatStore((s) => s.setRoute)
   const settingsReturnRoute = useChatStore((s) => s.settingsReturnRoute)
+  const settingsReturnThreadId = useChatStore((s) => s.settingsReturnThreadId)
   const settingsSection = useChatStore((s) => s.settingsSection)
   const openCode = useChatStore((s) => s.openCode)
   const openClaw = useChatStore((s) => s.openClaw)
@@ -1004,6 +1005,19 @@ export function SettingsView(): ReactElement {
     })()
   }
 
+  const goToChat = (): void => {
+    void (async () => {
+      await flushPendingSave()
+      await reloadUiSettings()
+      setRoute('chat')
+      if (settingsReturnThreadId) {
+        await selectThread(settingsReturnThreadId)
+      } else {
+        await openCode()
+      }
+    })()
+  }
+
   const openOnboardingPreview = (): void => {
     void (async () => {
       await flushPendingSave()
@@ -1310,6 +1324,7 @@ export function SettingsView(): ReactElement {
         category={category}
         setCategory={setCategory}
         goBack={goBack}
+        goToChat={goToChat}
         extensionSettingsAvailable={extensionSettingsAvailable}
         t={t}
       />

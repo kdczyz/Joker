@@ -26,6 +26,12 @@ import type { SddDraft } from '../../sdd/sdd-draft-store'
 import { SidebarIconButton, SidebarTreeRow } from '../sidebar/SidebarPrimitives'
 import type { SidebarThreadWorktreeRecord } from './sidebar-project-selectors'
 import type { SidebarDropPosition } from './sidebar-order'
+import {
+  THREAD_STATUS_DOT_COLOR,
+  THREAD_STATUS_DOT_PULSE,
+  threadStatusDotForThread,
+  type ThreadStatusDot
+} from './thread-status-dot'
 
 const DRAFT_HISTORY_PAGE_SIZE = 3
 
@@ -207,11 +213,22 @@ export function ThreadRow({
     ? t('sidebarThreadWorktree', { branch: worktreeRecord.branch || 'worktree' })
     : ''
   const updatedLabel = formatRelativeTime(thread.updatedAt, locale)
+  const statusDot = threadStatusDotForThread(thread)
+  const statusDotLabel =
+    statusDot === 'running'
+      ? t('sidebarThreadStatusRunning')
+      : statusDot === 'interrupted'
+        ? t('sidebarThreadStatusInterrupted')
+        : statusDot === 'needs-review'
+          ? t('sidebarThreadStatusNeedsReview')
+          : statusDot === 'completed'
+            ? t('sidebarThreadStatusCompleted')
+            : ''
   const ariaLabel = [
     thread.title,
     updatedLabel,
     pinned ? t('sidebarThreadPinned') : '',
-    showRunning ? t('sidebarThreadRunning') : '',
+    showRunning ? t('sidebarThreadRunning') : statusDotLabel,
     showUnreadDot ? t('sidebarThreadUnread') : '',
     worktreeLabel
   ].filter(Boolean).join(' - ')
@@ -318,6 +335,8 @@ export function ThreadRow({
             {updatedLabel}
           </span>
           <ThreadActivityDot
+            status={statusDot}
+            statusLabel={statusDotLabel}
             running={showRunning}
             unread={showUnreadDot}
             unreadLabel={t('sidebarThreadUnread')}
@@ -329,15 +348,42 @@ export function ThreadRow({
 }
 
 function ThreadActivityDot({
+  status,
+  statusLabel,
   running,
   unread,
   unreadLabel
 }: {
+  status: ThreadStatusDot
+  statusLabel: string
   running: boolean
   unread: boolean
   unreadLabel: string
 }): ReactElement | null {
-  if (running) {
+  // Terminal derived states (completed / interrupted / needs-review) take
+  // priority over the `running` prop so that the correct colored dot is
+  // shown even while showRunning hasn't settled yet (e.g. thread.status
+  // from the backend is still 'running' briefly after a turn completes).
+  if (status === 'interrupted' || status === 'needs-review' || status === 'completed') {
+    const pulse = THREAD_STATUS_DOT_PULSE[status]
+    return (
+      <span className="relative flex h-2.5 w-2.5 shrink-0 items-center justify-center">
+        {pulse ? (
+          <span className={`absolute inline-flex h-full w-full animate-ping rounded-full ${pulse} opacity-75`} />
+        ) : null}
+        <span
+          className={`relative inline-flex h-1.5 w-1.5 rounded-full ${THREAD_STATUS_DOT_COLOR[status]}${
+            status === 'needs-review' ? ' shadow-[0_0_0_2px_rgba(245,158,11,0.22)]' : ''
+          }`}
+          title={statusLabel}
+          aria-label={statusLabel}
+        />
+      </span>
+    )
+  }
+  // Active execution: blue ping/pulse so an in-flight turn reads as live
+  // even before the latest-turn status has settled.
+  if (running || status === 'running') {
     return (
       <span className="relative flex h-2.5 w-2.5 shrink-0 items-center justify-center">
         <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />

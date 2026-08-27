@@ -40,6 +40,12 @@ export type CoreThreadSummaryJson = {
   forkedAt?: string
   forkedFromMessageCount?: number
   forkedFromTurnCount?: number
+  /** Status of the most recent turn, persisted on the core thread summary. */
+  latestTurnStatus?: string
+  /** Runtime is waiting on an unresolved tool-approval request for this thread. */
+  awaitingApproval?: boolean
+  /** Runtime is waiting on an unanswered ask-user question for this thread. */
+  awaitingUserInput?: boolean
   goal?: CoreThreadGoalJson | null
   todos?: CoreThreadTodoListJson | null
   createdAt: string

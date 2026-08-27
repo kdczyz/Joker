@@ -150,6 +150,7 @@ export type SidePanelState = {
 export type ChatState = {
   route: AppRoute
   settingsReturnRoute: Exclude<AppRoute, 'settings'>
+  settingsReturnThreadId: string | null
   pluginHostRoute: PluginHostRoute
   settingsSection: SettingsRouteSection
   initialSetupOpen: boolean

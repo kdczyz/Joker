@@ -111,8 +111,10 @@ export function toThreadSummary(
   | 'costBudgetUsd' | 'costBudgetWarningSent'
   | 'relation' | 'parentThreadId'
   | 'forkedFromThreadId' | 'forkedFromTitle' | 'forkedAt' | 'forkedFromMessageCount' | 'forkedFromTurnCount'
+  | 'latestTurnStatus'
   | 'goal' | 'todos'
 > {
+  const latestTurn = thread.turns.length > 0 ? thread.turns[thread.turns.length - 1] : undefined
   return {
     id: thread.id,
     title: thread.title,
@@ -144,6 +146,7 @@ export function toThreadSummary(
     ...(thread.forkedAt ? { forkedAt: thread.forkedAt } : {}),
     ...(thread.forkedFromMessageCount !== undefined ? { forkedFromMessageCount: thread.forkedFromMessageCount } : {}),
     ...(thread.forkedFromTurnCount !== undefined ? { forkedFromTurnCount: thread.forkedFromTurnCount } : {}),
+    ...(latestTurn ? { latestTurnStatus: latestTurn.status } : {}),
     ...(thread.goal ? { goal: thread.goal } : {}),
     ...(thread.todos ? { todos: thread.todos } : {}),
     createdAt: thread.createdAt,

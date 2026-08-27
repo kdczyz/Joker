@@ -281,7 +281,8 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
       set((state) => ({
         route: 'settings',
         settingsSection: section,
-        settingsReturnRoute: state.route === 'settings' ? state.settingsReturnRoute : state.route
+        settingsReturnRoute: state.route === 'settings' ? state.settingsReturnRoute : state.route,
+        settingsReturnThreadId: state.route === 'settings' ? state.settingsReturnThreadId : state.activeThreadId
       })),
 
     openPlugins: (host?: PluginHostRoute) =>

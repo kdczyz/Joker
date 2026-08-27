@@ -104,6 +104,7 @@ describe('ArchivedThreadsSettingsSection', () => {
     const html = renderToStaticMarkup(createElement(SettingsSidebar, {
       category: 'archives',
       goBack: () => undefined,
+      goToChat: () => undefined,
       setCategory: () => undefined,
       t
     }))
@@ -125,6 +126,7 @@ describe('ArchivedThreadsSettingsSection', () => {
     const html = renderToStaticMarkup(createElement(SettingsSidebar, {
       category: 'shortcuts',
       goBack: () => undefined,
+      goToChat: () => undefined,
       setCategory: () => undefined,
       t
     }))

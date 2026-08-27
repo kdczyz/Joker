@@ -20,6 +20,7 @@ import type { ForkThreadOptions, ListThreadsOptions, ThreadService } from '../..
 import type { RuntimeError } from './runtime-error.js'
 import type { SessionStore } from '../../ports/session-store.js'
 import type { UserInputGate } from '../../ports/user-input-gate.js'
+import type { ApprovalGate } from '../../ports/approval-gate.js'
 import type { Turn } from '../../contracts/turns.js'
 import type { TurnItem } from '../../contracts/items.js'
 import { placeCompactionsAtTurnEnd } from '../../loop/compaction-history.js'
@@ -55,12 +56,29 @@ const ListThreadsQuery = z.object({
 
 export async function listThreads(
   service: ThreadService,
-  request: Request
+  request: Request,
+  options: { approvalGate?: ApprovalGate; userInputGate?: UserInputGate } = {}
 ): Promise<JsonResponse> {
   const parsed = parseListThreadsOptions(request)
   if (!parsed.ok) return parsed.response
   const threads = await service.list(parsed.options)
-  const payload: ListThreadsResponse = { threads }
+  // Which threads are the runtime still actively waiting on (a live ask-user
+  // prompt or a tool-approval request). This drives the yellow "needs review"
+  // dot in the conversation list; the gate entries disappear once resolved, so
+  // a finished thread never keeps the dot.
+  const awaitingApproval = new Set(
+    options.approvalGate ? options.approvalGate.pending().map((request) => request.threadId) : []
+  )
+  const awaitingUserInput = new Set(
+    options.userInputGate ? options.userInputGate.pending().map((request) => request.threadId) : []
+  )
+  const payload: ListThreadsResponse = {
+    threads: threads.map((thread) => ({
+      ...thread,
+      awaitingApproval: awaitingApproval.has(thread.id),
+      awaitingUserInput: awaitingUserInput.has(thread.id)
+    }))
+  }
   return jsonResponse(payload)
 }
 

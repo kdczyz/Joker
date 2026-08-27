@@ -231,7 +231,9 @@ export const ThreadSchema = z.object({
   todos: ThreadTodoListSchema.optional(),
   createdAt: z.string(),
   updatedAt: z.string(),
-  turns: z.array(TurnSchema).default([])
+  turns: z.array(TurnSchema).default([]),
+  /** Persisted status of the most recent turn, for cheap list-side state dots. */
+  latestTurnStatus: z.string().optional()
 })
 export type ThreadRecord = z.infer<typeof ThreadSchema>
 
@@ -266,12 +268,32 @@ export const ThreadSummarySchema = ThreadSchema.pick({
   forkedAt: true,
   forkedFromMessageCount: true,
   forkedFromTurnCount: true,
+  /**
+   * Status of the most recent turn (if any). Lets the conversation list paint
+   * a stable state dot (running / interrupted / needs-review / completed) from
+   * the persisted record alone, without re-deriving it from live turn items.
+   */
+  latestTurnStatus: true,
   goal: true,
   todos: true,
   createdAt: true,
   updatedAt: true
 })
 export type ThreadSummary = z.infer<typeof ThreadSummarySchema>
+
+export const ThreadSummaryEnvelope = ThreadSummarySchema.extend({
+  /**
+   * The runtime still has an unresolved tool-approval request open for this
+   * thread. Drives the yellow "needs review" dot while the agent waits.
+   */
+  awaitingApproval: z.boolean().optional(),
+  /**
+   * The runtime still has an unanswered ask-user question open for this thread.
+   * Drives the yellow "needs review" dot while the agent waits.
+   */
+  awaitingUserInput: z.boolean().optional()
+})
+export type ThreadSummaryEnvelope = z.infer<typeof ThreadSummaryEnvelope>
 
 export const CreateThreadRequest = z.object({
   title: z.string().optional(),
@@ -402,7 +424,7 @@ export const UpdateThreadRequest = z
 export type UpdateThreadRequest = z.infer<typeof UpdateThreadRequest>
 
 export const ListThreadsResponse = z.object({
-  threads: z.array(ThreadSummarySchema)
+  threads: z.array(ThreadSummaryEnvelope)
 })
 export type ListThreadsResponse = z.infer<typeof ListThreadsResponse>
 

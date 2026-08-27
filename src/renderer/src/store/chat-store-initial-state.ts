@@ -10,6 +10,7 @@ export function createInitialChatStoreState(workingDirectoryLabel: string) {
   return {
     route: (protectedSurfaceRestore === 'settings' ? 'settings' : 'chat') as 'settings' | 'chat',
     settingsReturnRoute: 'chat' as const,
+    settingsReturnThreadId: null as string | null,
     pluginHostRoute: 'chat' as const,
     settingsSection: 'general' as const,
     initialSetupOpen: false,

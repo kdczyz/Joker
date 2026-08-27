@@ -272,7 +272,10 @@ export function buildRouter(runtime: ServerRuntime): Router {
   })
   router.add('GET', '/v1/threads', async (request) => {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()
-    return listThreads(runtime.threadService, request)
+    return listThreads(runtime.threadService, request, {
+      approvalGate: runtime.approvalGate,
+      userInputGate: runtime.userInputGate
+    })
   })
   router.add('POST', '/v1/threads', async (request) => {
     if (!authorize(request, runtime)) return ERRORS.unauthorized()

@@ -30,12 +30,14 @@ type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | '
 export function SettingsSidebar({
   category,
   goBack,
+  goToChat,
   setCategory,
   extensionSettingsAvailable = false,
   t
 }: {
   category: SettingsCategory
   goBack: () => void
+  goToChat: () => void
   setCategory: Dispatch<SetStateAction<SettingsCategory>>
   extensionSettingsAvailable?: boolean
   t: (key: string) => string
@@ -58,7 +60,7 @@ export function SettingsSidebar({
         <button
           type="button"
           data-cursor-spotlight-target
-          onClick={goBack}
+          onClick={goToChat}
           className="ds-no-drag flex items-center gap-2 rounded-xl px-2 py-2 text-[14px] text-ds-muted hover:bg-ds-hover hover:text-ds-ink"
         >
           <ChevronLeft className="h-4 w-4" strokeWidth={1.75} />
@@ -235,7 +237,7 @@ export function SettingsSidebar({
         <button
           type="button"
           data-cursor-spotlight-target
-          onClick={goBack}
+          onClick={goToChat}
           className="group flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition duration-150 hover:bg-ds-hover"
           aria-label={`${accountDisplayName} · ${t('userHome')}`}
         >

@@ -461,11 +461,10 @@ export class ModelStepService {
     // self-review and regenerate if the result is off. Bytes come from the
     // already-persisted attachment/file; the persisted tool output keeps NO base64
     // (only this transient request copy carries it).
-    const forwardHistory = await rehydrateGeneratedImagesForForward(
-      history,
-      (output) => this.deps.turnAttachments.resolveGeneratedImageForForward(output, threadId, thread?.workspace),
-      MAX_FORWARDED_GENERATED_IMAGES
-    )
+    // `activeHistory` may be replaced by a forced compaction below when the
+    // measured request would overflow the model context window, so the image
+    // rehydration and request assembly run inside the retry loop instead.
+    let activeHistory = history
     const runtimeContextInstruction = shouldInjectInitialRuntimeContext({
       stepIndex,
       turnId,
@@ -523,45 +522,94 @@ export class ModelStepService {
           ? [DESIGN_MODE_INSTRUCTION]
           : [])
     ].join('\n\n')
-    const composedRequest = composeModelRequest({
-      threadId,
-      turnId,
-      model,
-      ...(providerId ? { providerId } : {}),
-      ...(accountId ? { accountId } : {}),
-      ...(modelRoute.reasoningEffort ? { reasoningEffort: modelRoute.reasoningEffort } : {}),
-      immutablePrefix: this.deps.prefix,
-      ...(thread.systemPrompt !== undefined ? { threadSystemPrompt: thread.systemPrompt } : {}),
-      ...(modeInstruction ? { modeInstruction } : {}),
-      contextInstructions,
-      history: forwardHistory,
-      attachments,
-      tools: requestToolSpecs,
-      ...(!forceFinalAnswerRecovery && requiredToolName ? { requiredToolName } : {}),
-      ...(this.deps.tokenEconomy ? { tokenEconomy: this.deps.tokenEconomy } : {}),
-      signal
-    })
-    const { request, rawInputTokens, sentInputTokens, tokenEconomy } = composedRequest
-    const inputTokens = sentInputTokens
+    // Retry loop: assemble the request, then verify the measured input fits the
+    // model context window. If it would overflow, first force one compaction
+    // toward the window before giving up (the "measured context overflow"
+    // safety net implemented on top of the estimate-driven auto-compaction
+    // performed earlier via historyCompaction.compactIfNeeded).
+    let composedRequest: ReturnType<typeof composeModelRequest> | undefined
+    let forwardHistory: typeof activeHistory = activeHistory
     const outputTokens = modelCapabilities.maxOutputTokens ?? 0
-    // A configured model context window is authoritative. ContextCompactor's
-    // test/embedding thresholds can intentionally be much smaller than a real
-    // model window to exercise compaction, so use its cap only when capability
-    // metadata is unavailable.
-    const hardCap = modelCapabilities.contextWindowTokens
-      ? Math.floor(modelCapabilities.contextWindowTokens * 0.85)
-      : this.deps.compactor.hardCap(model)
-    if (inputTokens + outputTokens > hardCap) {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      forwardHistory = await rehydrateGeneratedImagesForForward(
+        activeHistory,
+        (output) => this.deps.turnAttachments.resolveGeneratedImageForForward(output, threadId, thread?.workspace),
+        MAX_FORWARDED_GENERATED_IMAGES
+      )
+      composedRequest = composeModelRequest({
+        threadId,
+        turnId,
+        model,
+        ...(providerId ? { providerId } : {}),
+        ...(accountId ? { accountId } : {}),
+        ...(modelRoute.reasoningEffort ? { reasoningEffort: modelRoute.reasoningEffort } : {}),
+        immutablePrefix: this.deps.prefix,
+        ...(thread.systemPrompt !== undefined ? { threadSystemPrompt: thread.systemPrompt } : {}),
+        ...(modeInstruction ? { modeInstruction } : {}),
+        contextInstructions,
+        history: forwardHistory,
+        attachments,
+        tools: requestToolSpecs,
+        ...(!forceFinalAnswerRecovery && requiredToolName ? { requiredToolName } : {}),
+        ...(this.deps.tokenEconomy ? { tokenEconomy: this.deps.tokenEconomy } : {}),
+        signal
+      })
+      const { sentInputTokens } = composedRequest
+      const measuredInput = sentInputTokens
+      const hardCap = modelCapabilities.contextWindowTokens
+        ? Math.floor(modelCapabilities.contextWindowTokens * 0.85)
+        : this.deps.compactor.hardCap(model)
+      if (measuredInput + outputTokens <= hardCap) break
+      if (attempt === 1) {
+        // After a forced compaction the request still overflows. Fail since
+        // there is nothing further auto-compaction can reclaim.
+        await this.deps.events.record({
+          kind: 'error',
+          threadId,
+          turnId,
+          message: `request still exceeds the ${hardCap}-token context cap after forced compaction (${measuredInput} input + ${outputTokens} output budget)`,
+          code: 'context_window_exceeded',
+          severity: 'warning'
+        })
+        return 'failed'
+      }
+      // First overflow: force one compaction toward the model's window, then
+      // re-assemble. Never issues a model summarizer under the forced path.
       await this.deps.events.record({
         kind: 'error',
         threadId,
         turnId,
-        message: `request exceeds the ${hardCap}-token context cap (${inputTokens} input + ${outputTokens} output budget)`,
+        message: `request exceeds the ${hardCap}-token context cap (${measuredInput} input + ${outputTokens} output budget); force-compacting history before retry`,
         code: 'context_window_exceeded',
         severity: 'warning'
       })
-      return 'failed'
+      activeHistory = await this.deps.historyCompaction.compactIfNeeded({
+        items: activeHistory,
+        model,
+        ...(providerId ? { providerId } : {}),
+        ...(accountId ? { accountId } : {}),
+        signal,
+        threadId,
+        turnId,
+        toolSpecs: requestToolSpecs,
+        reserveModelRequest: () => this.deps.budgetGate.reserveAdditionalModelRequest(threadId, turnId),
+        forceBudgetTokens: hardCap
+      })
+      if (signal.aborted) return 'aborted'
+      if (activeHistory.length === history.length) {
+        // Forced compaction made no progress; avoid an infinite loop.
+        await this.deps.events.record({
+          kind: 'error',
+          threadId,
+          turnId,
+          message: `forced compaction could not shrink history below the ${hardCap}-token context cap`,
+          code: 'context_window_exceeded',
+          severity: 'warning'
+        })
+        return 'failed'
+      }
     }
+    const { request, rawInputTokens, sentInputTokens, tokenEconomy } = composedRequest!
     if (tokenEconomy.enabled) {
       await this.deps.recordTokenEconomySavings({
         threadId,

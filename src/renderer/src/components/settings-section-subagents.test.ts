@@ -63,6 +63,7 @@ describe('SubagentsSettingsSection', () => {
     const html = renderToStaticMarkup(createElement(SettingsSidebar, {
       category: 'subagents',
       goBack: () => undefined,
+      goToChat: () => undefined,
       setCategory: () => undefined,
       t
     }))
