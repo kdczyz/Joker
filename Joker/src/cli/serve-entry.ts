@@ -9,7 +9,9 @@ import {
 import { startJokerServe, type JokerServeHandle } from '../server/runtime-factory.js'
 import {
   resolveEventLoopStallThresholdMs,
-  startEventLoopMonitor
+  startEventLoopMonitor,
+  startEventLoopStallDiagnostics,
+  type EventLoopStallDiagnosticsHandle
 } from '../server/event-loop-monitor.js'
 import { installServeCrashHandlers } from './serve-crash-handlers.js'
 import { runExtensionCommand } from './extension-cli.js'
@@ -61,9 +63,20 @@ async function serveMain(argv: readonly string[]): Promise<number> {
   const loopMonitor = startEventLoopMonitor({
     stallThresholdMs: resolveEventLoopStallThresholdMs(process.env)
   })
+  // Attribute any upstream stall to its source frame: the plain monitor can only
+  // say *how long* the loop blocked, by which time the blocking call has already
+  // returned and its stack is gone. The sampling profiler records into the middle
+  // of a synchronous block so reports the offending function (#621).
+  let loopDiagnostics: EventLoopStallDiagnosticsHandle | null = null
+  try {
+    loopDiagnostics = startEventLoopStallDiagnostics()
+  } catch {
+    loopDiagnostics = null
+  }
   await new Promise<void>((resolve) => {
     const stop = () => {
       loopMonitor.stop()
+      loopDiagnostics?.stop()
       void server.close().finally(resolve)
     }
     process.once('SIGTERM', stop)

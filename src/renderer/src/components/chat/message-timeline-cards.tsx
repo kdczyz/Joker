@@ -1,7 +1,7 @@
 import type { ReactElement, RefObject } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { CheckCircle2, ChevronDown, ChevronRight, FileEdit, Hammer, ListTodo, MessageSquareQuote, SearchCode, TriangleAlert } from 'lucide-react'
+import { CheckCircle2, ChevronDown, ChevronRight, ExternalLink, FileEdit, Hammer, ListTodo, MessageSquareQuote, SearchCode, TriangleAlert, X } from 'lucide-react'
 import type { ReviewBlock, ToolBlock } from '../../agent/types'
 import { countDiffStats, sumDiffStats } from '../../lib/diff-stats'
 import { useDeferredRender } from '../../hooks/use-deferred-render'
@@ -182,9 +182,10 @@ export function TurnChangeSummary({
   changes: ToolBlock[]
   viewportRef: RefObject<HTMLDivElement | null>
   compact?: boolean
-}): ReactElement {
+}): ReactElement | null {
   const { t } = useTranslation('common')
   const [expanded, setExpanded] = useState(false)
+  const [dismissed, setDismissed] = useState(false)
   const [activeId, setActiveId] = useState<string | null>(
     () => changes.find((change) => change.detail?.trim())?.id ?? changes[0]?.id ?? null
   )
@@ -213,54 +214,53 @@ export function TurnChangeSummary({
     root: viewportRef
   })
 
+  if (dismissed || changes.length === 0) return null
+
   return (
     <section
-      className={`ds-card-strong overflow-hidden border border-ds-border shadow-[0_16px_40px_rgba(86,103,136,0.08)] ${
-        compact ? 'rounded-[20px]' : 'rounded-[24px]'
-      }`}
+      className="ds-no-drag overflow-hidden rounded-xl border border-ds-border-muted bg-ds-card px-4 py-2.5 shadow-sm transition hover:border-accent/30"
     >
-      <button
-        type="button"
-        onClick={() => setExpanded((value) => !value)}
-        aria-expanded={expanded}
-        className={`flex w-full items-center text-left transition hover:bg-ds-hover/40 ${
-          compact ? 'gap-3 px-4 py-3' : 'gap-4 px-5 py-4'
-        }`}
-      >
-        <span
-          className={`flex shrink-0 items-center justify-center bg-ds-card-muted text-ds-muted ${
-            compact ? 'h-10 w-10 rounded-[14px]' : 'h-12 w-12 rounded-[16px]'
-          }`}
-        >
-          <FileEdit className={compact ? 'h-4.5 w-4.5' : 'h-5 w-5'} strokeWidth={1.85} />
+      <div className="flex items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-ds-hover text-ds-muted">
+          <FileEdit className="h-[18px] w-[18px]" strokeWidth={1.8} />
         </span>
-        <span className="min-w-0 flex-1">
-          <span
-            className={`block font-semibold tracking-[-0.02em] text-ds-ink ${
-              compact ? 'text-[15px]' : 'text-[18px]'
-            }`}
-          >
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          aria-expanded={expanded}
+          className="flex min-w-0 flex-1 items-center gap-1.5 text-left"
+        >
+          <span className="text-[14px] font-semibold text-ds-ink">
             {title}
           </span>
-          {totals ? (
-            <span className={`block font-mono ${compact ? 'mt-0.5 text-[11px]' : 'mt-1 text-[12px]'}`}>
-              <span className="text-ds-diff-added">+{totals.added}</span>
-              <span className="mx-1.5 text-ds-faint">·</span>
-              <span className="text-ds-diff-removed">-{totals.removed}</span>
-            </span>
-          ) : null}
+          <ChevronDown
+            className={`h-4 w-4 shrink-0 text-ds-faint transition-transform ${expanded ? '' : '-rotate-90'}`}
+            strokeWidth={2}
+          />
+        </button>
+        <span className="inline-flex shrink-0 items-center gap-1.5">
+          <span className="font-mono text-[13px] font-semibold text-ds-diff-added">
+            +{totals.added}
+          </span>
+          <span className="font-mono text-[13px] font-semibold text-ds-diff-removed">
+            -{totals.removed}
+          </span>
         </span>
-        {expanded ? (
-          <ChevronDown className="h-4 w-4 shrink-0 text-ds-faint" strokeWidth={1.8} />
-        ) : (
-          <ChevronRight className="h-4 w-4 shrink-0 text-ds-faint" strokeWidth={1.8} />
-        )}
-      </button>
+        <button
+          type="button"
+          onClick={() => setExpanded((value) => !value)}
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-ds-faint transition hover:bg-ds-hover hover:text-ds-ink"
+          aria-label={t('close')}
+          title={t('close')}
+        >
+          <X className="h-4 w-4" strokeWidth={2} />
+        </button>
+      </div>
 
       {expanded ? (
         <div
           ref={deferredBodyRef}
-          className="border-t border-ds-border-muted/70"
+          className="mt-2 border-t border-ds-border-muted/70 pt-2"
           style={{ contentVisibility: 'auto', containIntrinsicSize: compact ? 'auto 180px' : 'auto 280px' }}
         >
           {shouldRenderBody
@@ -277,7 +277,7 @@ export function TurnChangeSummary({
                   aria-expanded={open}
                   className={`flex w-full items-start text-left transition ${
                     open ? 'bg-ds-hover/45' : 'hover:bg-ds-hover/35'
-                  } ${compact ? 'gap-2.5 px-4 py-2.5' : 'gap-3 px-5 py-3'}`}
+                  } ${compact ? 'gap-2.5 px-2 py-2' : 'gap-3 px-3 py-2.5'}`}
                 >
                   <span className="min-w-0 flex-1">
                     <span

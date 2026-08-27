@@ -1758,13 +1758,9 @@ describe('FloatingComposer capability controls', () => {
       })
     )
 
-    expect(html).toContain('2 files changed')
-    expect(html).toContain('src/a.ts')
     expect(html).toContain('+5')
     expect(html).toContain('-5')
-    expect(html).toContain('Preview')
-    expect(html).toContain('Review')
-    expect(html).toContain('aria-label="Close"')
+    expect(html).toContain('ds-composer-diff-stats')
   })
 
   it('renders close button in the changed-files summary banner for dismissing', () => {
@@ -1801,8 +1797,9 @@ describe('FloatingComposer capability controls', () => {
       })
     )
 
-    expect(html).toContain('1 files changed')
-    expect(html).toContain('aria-label="Close"')
+    expect(html).toContain('+3')
+    expect(html).toContain('-1')
+    expect(html).toContain('ds-composer-diff-stats')
   })
 
   it('keeps the empty-session composer interactive in the Electron drag shell', () => {

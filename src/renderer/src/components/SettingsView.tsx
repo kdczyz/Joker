@@ -90,9 +90,6 @@ const MemorySettingsSection = lazy(() =>
 const KeyboardShortcutsSettingsSection = lazy(() =>
   import('./settings-section-shortcuts').then((module) => ({ default: module.KeyboardShortcutsSettingsSection }))
 )
-const ClawSettingsSection = lazy(() =>
-  import('./settings-section-claw').then((module) => ({ default: module.ClawSettingsSection }))
-)
 const UpdatesSettingsSection = lazy(() =>
   import('./settings-section-updates').then((module) => ({ default: module.UpdatesSettingsSection }))
 )
@@ -141,7 +138,7 @@ function SettingsSectionFallback(): ReactElement {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'cloudflare'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'cloudflare'
 type SettingsPatch = AppSettingsPatch
 type InlineNotice = {
   tone: 'success' | 'error' | 'info'
@@ -427,10 +424,6 @@ export function SettingsView(): ReactElement {
       setCategory('archives')
       return
     }
-    if (settingsSection === 'claw') {
-      setCategory('claw')
-      return
-    }
     if (settingsSection === 'shortcuts') {
       setCategory('shortcuts')
       return
@@ -457,7 +450,6 @@ export function SettingsView(): ReactElement {
       settingsSection === 'providers' ||
       settingsSection === 'subagents' ||
       settingsSection === 'archives' ||
-      settingsSection === 'claw' ||
       settingsSection === 'shortcuts' ||
       settingsSection === 'updates' ||
       settingsSection === 'terminal' ||
@@ -1400,7 +1392,6 @@ export function SettingsView(): ReactElement {
             {category === 'worktree' ? <WorktreeSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'memory' ? <MemorySettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'shortcuts' ? <KeyboardShortcutsSettingsSection ctx={settingsSectionContext} /> : null}
-            {category === 'claw' ? <ClawSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'updates' ? <UpdatesSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'terminal' ? <TerminalSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'debug' ? <LlmDebugSettingsSection ctx={settingsSectionContext} /> : null}

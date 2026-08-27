@@ -88,24 +88,25 @@ export const DEFAULT_CONTEXT_THRESHOLDS: ModelContextThresholds = {
   // deliberately assume a *small* window (128k) rather than a large one:
   // an unregistered model is far more likely to be a community/custom
   // endpoint with a modest window than a 256k+ frontier model. Compaction
-  // triggers at 0.75 / 0.85 of the assumed window, so requests are kept
-  // well under 128k — and therefore well under the real window of models
-  // like gpt-oss-120b (131k) — which prevents the provider from computing
-  // a negative max_tokens and 400-ing. Register a profile for custom
-  // endpoints with a different window to opt out of these defaults.
-  softThreshold: 96_000,
-  hardThreshold: 108_800
+  // triggers at 0.65 / 0.80 of the assumed window, leaving ~35k tokens
+  // of headroom for system prompt + tool schemas + context instructions
+  // (which typically consume 15-25k tokens). The previous 0.75/0.85
+  // thresholds left too little headroom: a single large tool result or
+  // a heavy context instruction load could blow past the real window
+  // before the next compaction ran, causing context overflow errors.
+  softThreshold: 83_200,
+  hardThreshold: 102_400
 }
 
 const DEEPSEEK_V4_CONTEXT_WINDOW_TOKENS = 1_000_000
-// Trigger compaction well before the real window is full. Compacting at
-// ~98% (the previous default) left no headroom: a single large tool
-// result could blow past the window before the next compaction ran,
-// which is what caused runaway context growth and dropped tool tables.
-// 0.75 / 0.85 mirrors the "compact before 100%" guidance used by mature
-// coding agents and leaves room for the post-compaction request to fit.
-const DEEPSEEK_V4_SOFT_THRESHOLD_RATIO = 0.75
-const DEEPSEEK_V4_HARD_THRESHOLD_RATIO = 0.85
+// Trigger compaction well before the real window is full. The previous
+// 0.75/0.85 ratios left too little headroom for the overhead of system
+// prompt + tool schemas + context instructions + memory injections.
+// Lowering to 0.65/0.80 adds ~100k tokens of headroom on a 1M window,
+// which prevents the "measured context overflow" safety net from firing
+// on every turn during a heavy tool-use session.
+const DEEPSEEK_V4_SOFT_THRESHOLD_RATIO = 0.65
+const DEEPSEEK_V4_HARD_THRESHOLD_RATIO = 0.80
 const DEFAULT_MODEL_INPUT_MODALITIES: readonly ModelInputModality[] = ['text']
 const DEFAULT_MODEL_OUTPUT_MODALITIES: readonly ModelInputModality[] = ['text']
 const DEFAULT_MODEL_MESSAGE_PARTS: readonly ModelMessagePartSupport[] = ['text']
@@ -138,15 +139,15 @@ export function contextThresholdsForModel(
 ): ModelContextThresholds {
   const profile = resolveModelContextProfile(model, profiles)
   if (!profile) return fallback
-  // Safety cap: never let thresholds exceed 75%/85% of the context
-  // window, even if a config-provided model profile sets them higher
-  // (e.g. 98%/99%). Compacting too late leaves no headroom and lets a
-  // single large turn blow past the real window, causing runaway growth.
+  // Safety cap: never let thresholds exceed 65%/80% of the context
+  // window, even if a config-provided model profile sets them higher.
+  // The previous 75%/85% cap left too little headroom for overhead
+  // (system prompt + tools + context instructions = 15-25k tokens).
   const maxSoft = profile.contextWindowTokens
-    ? Math.floor(profile.contextWindowTokens * 0.75)
+    ? Math.floor(profile.contextWindowTokens * 0.65)
     : profile.softThreshold
   const maxHard = profile.contextWindowTokens
-    ? Math.floor(profile.contextWindowTokens * 0.85)
+    ? Math.floor(profile.contextWindowTokens * 0.80)
     : profile.hardThreshold
   return {
     softThreshold: Math.min(profile.softThreshold, maxSoft),

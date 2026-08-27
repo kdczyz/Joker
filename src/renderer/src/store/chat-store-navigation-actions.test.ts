@@ -79,6 +79,7 @@ function buildHarness(overrides?: {
     busy: false,
     clawChannels: [],
     codeWorkspaceRoots: ['~/.Joker/default_workspace'],
+    composerDrafts: {},
     composerPickList: [],
     createThread,
     currentTurnId: null,
@@ -365,5 +366,34 @@ describe('onClawChannelActivity routes through subscribeThreadEventsLive (not se
 
     expect(subscribeThreadEventsLive).toHaveBeenCalledWith('thr_bot')
     expect(selectThread).not.toHaveBeenCalled()
+  })
+})
+
+describe('setComposerDraft', () => {
+  it('stores unsent text keyed by thread id', () => {
+    const harness = buildHarness()
+    harness.actions.setComposerDraft('thr_1', 'draft text')
+    expect(harness.state.composerDrafts).toEqual({ thr_1: 'draft text' })
+  })
+
+  it('keeps drafts for other threads when updating one', () => {
+    const harness = buildHarness()
+    harness.actions.setComposerDraft('thr_1', 'first')
+    harness.actions.setComposerDraft('thr_2', 'second')
+    expect(harness.state.composerDrafts).toEqual({ thr_1: 'first', thr_2: 'second' })
+  })
+
+  it('clears the draft when given an empty string', () => {
+    const harness = buildHarness()
+    harness.actions.setComposerDraft('thr_1', 'first')
+    harness.actions.setComposerDraft('thr_2', 'second')
+    harness.actions.setComposerDraft('thr_1', '')
+    expect(harness.state.composerDrafts).toEqual({ thr_2: 'second' })
+  })
+
+  it('ignores empty thread ids', () => {
+    const harness = buildHarness()
+    harness.actions.setComposerDraft('', 'orphan text')
+    expect(harness.state.composerDrafts).toEqual({})
   })
 })

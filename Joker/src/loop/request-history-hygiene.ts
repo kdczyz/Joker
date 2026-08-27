@@ -26,6 +26,19 @@ export type RequestHistoryHygieneOptions = {
    * per-result fidelity, even if the cumulative budget is exhausted.
    */
   keepRecentToolResults?: number
+  /**
+   * Cumulative token budget for tool results from PREVIOUS turns only
+   * (excluding the current turn). This prevents historical tool output
+   * from inflating the context window beyond the model's capacity.
+   * Set to 0 to disable cross-turn budgeting (legacy behavior).
+   */
+  maxCrossTurnToolResultTokens?: number
+  /**
+   * Number of most-recent tool results from previous turns that are
+   * always kept at full fidelity, even if the cross-turn budget is
+   * exhausted.
+   */
+  keepRecentCrossTurnToolResults?: number
 }
 
 export type RequestHistoryHygieneScope = {
@@ -42,6 +55,10 @@ const DEFAULT_MAX_ARRAY_ITEMS = 80
 // combined size of all tool results in the sent history.
 const DEFAULT_MAX_CUMULATIVE_TOOL_RESULT_TOKENS = 0
 const DEFAULT_KEEP_RECENT_TOOL_RESULTS = 4
+// Cross-turn budget: bound combined size of historical (non-current-turn)
+// tool results to prevent runaway context growth in long sessions.
+const DEFAULT_MAX_CROSS_TURN_TOOL_RESULT_TOKENS = 0
+const DEFAULT_KEEP_RECENT_CROSS_TURN_TOOL_RESULTS = 0
 const MAX_SIGNAL_LINES = 48
 const MAX_LINE_CHARS = 280
 const LONG_ARGUMENT_PREVIEW_CHARS = 160
@@ -219,6 +236,14 @@ function normalizeOptions(options: RequestHistoryHygieneOptions): Required<Reque
     keepRecentToolResults: Math.max(
       0,
       Math.floor(options.keepRecentToolResults ?? DEFAULT_KEEP_RECENT_TOOL_RESULTS)
+    ),
+    maxCrossTurnToolResultTokens: Math.max(
+      0,
+      Math.floor(options.maxCrossTurnToolResultTokens ?? DEFAULT_MAX_CROSS_TURN_TOOL_RESULT_TOKENS)
+    ),
+    keepRecentCrossTurnToolResults: Math.max(
+      0,
+      Math.floor(options.keepRecentCrossTurnToolResults ?? DEFAULT_KEEP_RECENT_CROSS_TURN_TOOL_RESULTS)
     )
   }
 }

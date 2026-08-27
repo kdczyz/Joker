@@ -17,7 +17,6 @@ import {
   Search,
   ServerCog,
   ShieldCheck,
-  Smartphone,
   TerminalSquare,
   User,
   UsersRound,
@@ -25,7 +24,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthGate'
 
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'cloudflare'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'cloudflare'
 
 export function SettingsSidebar({
   category,
@@ -204,15 +203,6 @@ export function SettingsSidebar({
         >
           <RefreshCw className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('updates')}
-        </button>
-        <button
-          type="button"
-          data-cursor-spotlight-target
-          className={catCls('claw')}
-          onClick={() => setCategory('claw')}
-        >
-          <Smartphone className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
-          {t('claw')}
         </button>
         <button
           type="button"

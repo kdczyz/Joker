@@ -6,7 +6,7 @@ import {
 } from './model-context-profile.js'
 
 describe('contextThresholdsForModel safety cap', () => {
-  it('caps soft/hard thresholds to 75%/85% of the context window', () => {
+  it('caps soft/hard thresholds to 65%/80% of the context window', () => {
     // A config-provided profile that sets thresholds dangerously close to
     // the full window (98%/99%) must be clamped so compaction still has
     // headroom to run before the real window is exceeded.
@@ -24,8 +24,10 @@ describe('contextThresholdsForModel safety cap', () => {
       }
     ]
     const thresholds = contextThresholdsForModel('deepseek-v4-pro', undefined, profiles)
-    expect(thresholds.softThreshold).toBe(750_000)
-    expect(thresholds.hardThreshold).toBe(850_000)
+    // 65%/80% caps leave enough headroom for system prompt + tool schemas
+    // + context instructions (typically 15-25k tokens of overhead).
+    expect(thresholds.softThreshold).toBe(650_000)
+    expect(thresholds.hardThreshold).toBe(800_000)
   })
 
   it('leaves already-safe thresholds untouched', () => {
@@ -84,7 +86,7 @@ describe('per-model endpointFormat', () => {
   it('omits endpointFormat for unknown models so they inherit the provider format', () => {
     const model = modelCapabilitiesForModel('unknown-model', [])
 
-    expect(model.contextWindowTokens).toBe(256_000)
+    expect(model.contextWindowTokens).toBe(128_000)
     expect(model.endpointFormat).toBeUndefined()
   })
 })

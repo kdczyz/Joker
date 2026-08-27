@@ -118,8 +118,20 @@ let trayActionUnsubscribe: (() => void) | null = null
 
 export function createNavigationActions(
   { set, get, sseAbortRef }: StoreActionContext
-): Pick<ChatState, 'openCode' | 'clearActiveThreadSelection' | 'probeRuntime' | 'boot' | 'chooseWorkspace' | 'selectWorkspaceRoot' | 'clearWorkspace' | 'deleteWorkspace' | 'refreshThreads' | 'setThreadSearch' | 'setShowArchivedThreads'> {
+): Pick<ChatState, 'openCode' | 'clearActiveThreadSelection' | 'probeRuntime' | 'boot' | 'chooseWorkspace' | 'selectWorkspaceRoot' | 'clearWorkspace' | 'deleteWorkspace' | 'refreshThreads' | 'setThreadSearch' | 'setShowArchivedThreads' | 'setComposerDraft'> {
   return {
+  setComposerDraft: (threadId, text) => {
+    if (!threadId) return
+    set((state) => {
+      const drafts = { ...state.composerDrafts }
+      if (text) {
+        drafts[threadId] = text
+      } else {
+        delete drafts[threadId]
+      }
+      return { composerDrafts: drafts }
+    })
+  },
   openCode: async () => {
     const state = get()
     const codeThreads = state.threads.filter((thread) =>

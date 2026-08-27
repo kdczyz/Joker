@@ -114,6 +114,13 @@ export type AppRoute = 'chat' | 'design' | 'settings' | 'plugins' | 'extensions'
 export type PluginHostRoute = 'chat' | 'claw'
 
 /**
+ * Synthetic key used in `composerDrafts` for unsent text captured before any
+ * thread exists (e.g. the first message in a workspace). Real thread drafts
+ * are keyed by their thread id, which never collides with this value.
+ */
+export const COMPOSER_DRAFT_PENDING_KEY = '__pending__' as const
+
+/**
  * A side conversation ("by-the-way") running alongside the active
  * thread. It owns its own timeline, composer, busy state, and SSE
  * subscription so it can stream in parallel with the main thread.
@@ -227,6 +234,14 @@ export type ChatState = {
   composerAgentId: string
   disabledSkillIds: string[]
   queuedMessages: QueuedUserMessage[]
+  /**
+   * Unsent composer text keyed by thread id. Persists across view/route
+   * switches (including navigation to Settings, which unmounts Workbench) and
+   * lets each session keep its own draft text. The active thread's draft is
+   * surfaced through the composer input; clearing the input on send removes
+   * the corresponding entry.
+   */
+  composerDrafts: Record<string, string>
   /** Host-authenticated, workspace-scoped context awaiting one main-chat turn. */
   extensionComposerContexts: ExtensionComposerContextEvent[]
   watchTurnCompletion: Record<string, boolean>
@@ -246,6 +261,11 @@ export type ChatState = {
   setComposerReasoningEffort: (effort: ModelReasoningEffort) => void
   setComposerAgentId: (agentId: string) => void
   loadComposerModels: () => Promise<void>
+  /**
+   * Update the unsent composer draft for a thread. Pass an empty string to
+   * clear it (e.g. after the message is sent).
+   */
+  setComposerDraft: (threadId: string, text: string) => void
   setRoute: (r: AppRoute) => void
   openCode: () => Promise<void>
   openSettings: (section?: SettingsRouteSection) => void

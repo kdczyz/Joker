@@ -104,6 +104,7 @@ import { createComposerContextActions } from './chat-store-composer-context-acti
 
 export type { AppRoute, SettingsRouteSection } from './chat-store-types'
 export { CLAW_COMPOSER_MODEL_IDS } from './chat-store-helpers'
+export { COMPOSER_DRAFT_PENDING_KEY } from './chat-store-types'
 
 let sseAbort: AbortController | null = null
 const sseAbortRef = {

@@ -530,7 +530,8 @@ export class ModelStepService {
     let composedRequest: ReturnType<typeof composeModelRequest> | undefined
     let forwardHistory: typeof activeHistory = activeHistory
     const outputTokens = modelCapabilities.maxOutputTokens ?? 0
-    for (let attempt = 0; attempt < 2; attempt++) {
+    const MAX_FORCED_COMPACTION_ATTEMPTS = 3
+    for (let attempt = 0; attempt < MAX_FORCED_COMPACTION_ATTEMPTS; attempt++) {
       forwardHistory = await rehydrateGeneratedImagesForForward(
         activeHistory,
         (output) => this.deps.turnAttachments.resolveGeneratedImageForForward(output, threadId, thread?.workspace),
@@ -560,14 +561,14 @@ export class ModelStepService {
         ? Math.floor(modelCapabilities.contextWindowTokens * 0.85)
         : this.deps.compactor.hardCap(model)
       if (measuredInput + outputTokens <= hardCap) break
-      if (attempt === 1) {
-        // After a forced compaction the request still overflows. Fail since
-        // there is nothing further auto-compaction can reclaim.
+      if (attempt === 2) {
+        // After multiple forced compaction attempts the request still overflows.
+        // Fail since there is nothing further auto-compaction can reclaim.
         await this.deps.events.record({
           kind: 'error',
           threadId,
           turnId,
-          message: `request still exceeds the ${hardCap}-token context cap after forced compaction (${measuredInput} input + ${outputTokens} output budget)`,
+          message: `request still exceeds the ${hardCap}-token context cap after ${attempt + 1} forced compaction attempts (${measuredInput} input + ${outputTokens} output budget)`,
           code: 'context_window_exceeded',
           severity: 'warning'
         })

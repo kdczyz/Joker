@@ -26,6 +26,15 @@ export type SuppressionLevel =
   | typeof SUPPRESS_AUTH
 
 /**
+ * Maximum number of turns a STICKY suppression persists before being
+ * automatically released. After this many turns the context may have
+ * changed enough (new user messages, different tool results) that a
+ * retry is worthwhile. This prevents a single compaction failure from
+ * permanently silencing auto-compaction for the rest of the session.
+ */
+export const STICKY_SUPPRESSION_TTL_TURNS = 3
+
+/**
  * Classifies a compaction failure into the appropriate suppression level.
  */
 export function classifyCompactionFailure(error: {
@@ -58,10 +67,21 @@ export function classifyCompactionFailure(error: {
 }
 
 /**
- * Returns true when auto-compaction should be suppressed at the given level.
+ * Returns true when auto-compaction should be suppressed at the given
+ * level. Pass `turnsSinceSuppressed` to enable TTL-based expiry for
+ * STICKY suppression: after {@link STICKY_SUPPRESSION_TTL_TURNS} turns
+ * the suppression is automatically released so that a retry is attempted
+ * with the (potentially changed) context.
  */
-export function isSuppressed(level: SuppressionLevel): boolean {
-  return level !== SUPPRESS_NONE
+export function isSuppressed(
+  level: SuppressionLevel,
+  turnsSinceSuppressed?: number
+): boolean {
+  if (level === SUPPRESS_NONE) return false
+  if (level === SUPPRESS_STICKY && turnsSinceSuppressed !== undefined) {
+    return turnsSinceSuppressed < STICKY_SUPPRESSION_TTL_TURNS
+  }
+  return true
 }
 
 /**

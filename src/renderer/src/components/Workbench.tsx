@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useChatStore } from '../store/chat-store'
+import { useChatStore, COMPOSER_DRAFT_PENDING_KEY } from '../store/chat-store'
 import type { RightPanelMode } from './chat/WorkbenchTopBar'
 import { WorkbenchLeftSidebar } from './workbench/WorkbenchLeftSidebar'
 import { WorkbenchStageRouter } from './workbench/WorkbenchStageRouter'
@@ -143,7 +143,23 @@ export function Workbench(): ReactElement {
   }), [extensionWorkspaceRoot, i18n.language])
   const extensionContributionLoadContextRef =
     useCommittedExtensionContributionLoadContext(extensionContributionLoadContext)
-  const [input, setInput] = useState('')
+  // Unsent composer text is stored per-thread in the module-level chat store
+  // (composerDrafts) instead of a local useState, so it survives view/route
+  // switches (including opening Settings, which unmounts Workbench) and each
+  // session keeps its own draft that reappears when you switch back to it.
+  // Before a thread exists (e.g. the first message in a workspace) the same
+  // store map is used under a synthetic key so that text is not lost either.
+  const composerDrafts = useChatStore((s) => s.composerDrafts)
+  const setComposerDraft = useChatStore((s) => s.setComposerDraft)
+  const draftKey = activeThreadId ?? COMPOSER_DRAFT_PENDING_KEY
+  const input = composerDrafts[draftKey] ?? ''
+  const setInput = useCallback(
+    (value: string | ((prev: string) => string)): void => {
+      const next = typeof value === 'function' ? value(input) : value
+      setComposerDraft(draftKey, next)
+    },
+    [draftKey, input, setComposerDraft]
+  )
   const [useWorktreePool, setUseWorktreePool] = useState(false)
   const [worktreeBranch, setWorktreeBranch] = useState('')
   const [connectPhoneSidebarOpen, setConnectPhoneSidebarOpen] = useState(false)

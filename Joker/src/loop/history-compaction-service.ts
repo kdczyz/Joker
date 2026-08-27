@@ -26,6 +26,7 @@ import { extractSkillPins } from './context-compactor.js'
 import {
   type SuppressionLevel,
   SUPPRESS_NONE,
+  STICKY_SUPPRESSION_TTL_TURNS,
   clearTurnSuppression,
   clearOnSuccess as clearSuppressOnSuccess,
   classifyCompactionFailure,
@@ -67,11 +68,21 @@ export type HistoryCompactionServiceDeps = {
 export class HistoryCompactionService {
   /** Suppression level carried across calls for a given thread. */
   private suppression: SuppressionLevel = SUPPRESS_NONE
+  /** Number of turns since STICKY suppression was activated. */
+  private turnsSinceSuppressed = 0
+  /** Incremented on each clearTurnSuppression call. */
+  private turnCounter = 0
 
   constructor(private readonly deps: HistoryCompactionServiceDeps) {}
 
   /** Clear suppression at turn boundary (TURN-level clears automatically). */
   clearTurnSuppression(): void {
+    this.turnCounter += 1
+    if (this.suppression === SUPPRESS_NONE) {
+      this.turnsSinceSuppressed = 0
+    } else {
+      this.turnsSinceSuppressed += 1
+    }
     this.suppression = clearTurnSuppression(this.suppression)
   }
 
@@ -81,6 +92,7 @@ export class HistoryCompactionService {
     // suppression level (including STICKY and AUTH) is released. Without this
     // reset a single transient failure would silence auto-compaction forever.
     this.suppression = clearSuppressOnSuccess(this.suppression)
+    this.turnsSinceSuppressed = 0
   }
 
   /** Get the current suppression level for external inspection. */
@@ -109,7 +121,9 @@ export class HistoryCompactionService {
   }): Promise<TurnItem[]> {
     // Skip compaction when suppressed by a previous deterministic failure,
     // unless this is an explicit forced compaction for an overflow budget.
-    if (input.forceBudgetTokens === undefined && isSuppressed(this.suppression)) {
+    // STICKY-level suppression auto-expires after STICKY_SUPPRESSION_TTL_TURNS
+    // turns so that a retry is attempted once the context has changed.
+    if (input.forceBudgetTokens === undefined && isSuppressed(this.suppression, this.turnsSinceSuppressed)) {
       return input.items
     }
     try {
@@ -372,6 +386,7 @@ export class HistoryCompactionService {
       const isContextOverflow = /context.*(length|window|exceed|overflow)/i.test(message)
       const isAuthError = /\b(401|403|auth|unauthorized|forbidden)\b/i.test(message)
       this.suppression = classifyCompactionFailure({ message, isContextOverflow, isAuthError })
+      this.turnsSinceSuppressed = 0
       await this.deps.events.record({
         kind: 'error',
         threadId: input.threadId,

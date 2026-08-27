@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { resolveEventLoopStallThresholdMs, startEventLoopMonitor } from './event-loop-monitor.js'
+import {
+  resolveEventLoopStallThresholdMs,
+  startEventLoopMonitor,
+  startEventLoopStallDiagnostics,
+  summarizeHottestProfileFrames
+} from './event-loop-monitor.js'
 
 describe('startEventLoopMonitor', () => {
   afterEach(() => {
@@ -82,5 +87,49 @@ describe('resolveEventLoopStallThresholdMs', () => {
     expect(resolveEventLoopStallThresholdMs({ JOKER_EVENT_LOOP_STALL_LOG_MS: 'abc' })).toBe(2_000)
     expect(resolveEventLoopStallThresholdMs({ JOKER_EVENT_LOOP_STALL_LOG_MS: '0' })).toBe(2_000)
     expect(resolveEventLoopStallThresholdMs({ JOKER_EVENT_LOOP_STALL_LOG_MS: '-5' })).toBe(2_000)
+  })
+})
+
+describe('summarizeHottestProfileFrames', () => {
+  const node = (id: number, url: string, functionName: string): { id: number; callFrame: { url: string; functionName: string; lineNumber: number } } => ({
+    id,
+    callFrame: { url, functionName, lineNumber: 41 }
+  })
+
+  it('attributes the blocker from samples taken while blocked', () => {
+    const hot = node(1, '/dist/hybrid-thread-store.js', 'syncLoadThread')
+    const profile = {
+      nodes: [
+        node(2, '', 'idle'), // no url → excluded (idle / native)
+        hot,
+        node(3, '/dist/context-estimator.js', 'estimateTokens')
+      ],
+      samples: [1, 1, 1, 3]
+    }
+    expect(summarizeHottestProfileFrames(profile)).toEqual([
+      { functionName: 'syncLoadThread', location: 'hybrid-thread-store.js:42', hits: 3 },
+      { functionName: 'estimateTokens', location: 'context-estimator.js:42', hits: 1 }
+    ])
+  })
+
+  it('returns empty when no sample resolves to a JS frame', () => {
+    expect(
+      summarizeHottestProfileFrames({ nodes: [{ id: 1, callFrame: { url: '', functionName: 'idle' } }], samples: [1, 1] })
+    ).toEqual([])
+  })
+})
+
+describe('startEventLoopStallDiagnostics', () => {
+  it('returns a no-op handle (without opening the inspector) when disabled', () => {
+    const env = { ...process.env, JOKER_DISABLE_EVENT_LOOP_PROFILER: '1' }
+    const original = process.env.JOKER_DISABLE_EVENT_LOOP_PROFILER
+    process.env.JOKER_DISABLE_EVENT_LOOP_PROFILER = env.JOKER_DISABLE_EVENT_LOOP_PROFILER
+    try {
+      const handle = startEventLoopStallDiagnostics({ disable: true })
+      expect(() => handle.stop()).not.toThrow()
+    } finally {
+      if (original === undefined) delete process.env.JOKER_DISABLE_EVENT_LOOP_PROFILER
+      else process.env.JOKER_DISABLE_EVENT_LOOP_PROFILER = original
+    }
   })
 })

@@ -27,7 +27,6 @@ import {
   Plus,
   Puzzle,
   PlayCircle,
-  SearchCode,
   Send,
   Sparkles,
   Square,
@@ -356,20 +355,6 @@ export function FloatingComposer({
   const blocks = useChatStore((s) => s.blocks)
   const resolveUserInput = useChatStore((s) => s.resolveUserInput)
   const compact = variant === 'compact'
-  const [dismissedChangedFilesKey, setDismissedChangedFilesKey] = useState<string | null>(null)
-  const changedFilesFingerprint = useMemo(
-    () => changedFiles.map((f) => `${f.path}:${f.added}:${f.removed}`).join('|'),
-    [changedFiles]
-  )
-  const showChangeSummary =
-    !compact &&
-    route === 'chat' &&
-    changedFiles.length > 0 &&
-    dismissedChangedFilesKey !== changedFilesFingerprint
-  const handleDismissChangeSummary = (): void => {
-    setDismissedChangedFilesKey(changedFilesFingerprint)
-    onDismissChanges?.()
-  }
   // The pending ask-user request for the active thread, surfaced as a panel
   // docked above this composer. The main Chat and Design composers host it, as
   // does Write's only (compact) composer. Other compact side composers would
@@ -433,6 +418,10 @@ export function FloatingComposer({
   const usageChipRef = useRef<HTMLButtonElement>(null)
   const usagePopoverRef = useRef<HTMLDivElement>(null)
   const [usagePopoverPos, setUsagePopoverPos] = useState<{ bottom: number; left: number } | null>(null)
+  const [diffStatsOpen, setDiffStatsOpen] = useState(false)
+  const diffStatsBtnRef = useRef<HTMLButtonElement>(null)
+  const diffStatsPopoverRef = useRef<HTMLDivElement>(null)
+  const [diffStatsPos, setDiffStatsPos] = useState<{ bottom: number; left: number } | null>(null)
 
   useEffect(() => {
     if (!usageChartOpen) return
@@ -476,6 +465,51 @@ export function FloatingComposer({
       document.removeEventListener('mousedown', onPointerDown)
     }
   }, [usageChartOpen])
+
+  // Diff stats popover positioning
+  useEffect(() => {
+    if (!diffStatsOpen) return
+    const updatePosition = () => {
+      const el = diffStatsBtnRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const width = 320
+      let left = rect.left
+      left = Math.min(left, window.innerWidth - width - 16)
+      left = Math.max(16, left)
+      const bottom = Math.max(16, window.innerHeight - rect.top + 8)
+      setDiffStatsPos({ bottom, left })
+    }
+    updatePosition()
+    const frame = window.requestAnimationFrame(updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [diffStatsOpen])
+
+  // Diff stats outside click / Escape
+  useEffect(() => {
+    if (!diffStatsOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setDiffStatsOpen(false)
+    }
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (diffStatsBtnRef.current?.contains(target)) return
+      if (diffStatsPopoverRef.current?.contains(target)) return
+      setDiffStatsOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('mousedown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('mousedown', onPointerDown)
+    }
+  }, [diffStatsOpen])
 
   const effectiveWorkspaceRoot = normalizeWorkspaceRoot(activeThreadWorkspace || workspaceRootOverride || workspaceRoot)
   const clawAgentName =
@@ -522,15 +556,6 @@ export function FloatingComposer({
   const canOpenComposerMenu = showComposerMenuButton
     && (canPickFileReference || canPickDesignReference || canPickLocalFileReference || canTogglePlanMode || canCreateNewThread || canOpenGoalPanel || canRunReview || canToggleWorktreeMode)
   const showToolbarStartControls = showComposerMenuButton || showExecutionSettingsPicker
-  const effectiveChangedFileStats = changedFileStats ?? changedFiles.reduce(
-    (stats, file) => ({
-      added: stats.added + file.added,
-      removed: stats.removed + file.removed
-    }),
-    { added: 0, removed: 0 }
-  )
-  const visibleChangedFiles = changedFiles.slice(0, 3)
-  const hiddenChangedFileCount = Math.max(0, changedFiles.length - visibleChangedFiles.length)
   const stretchModelPicker =
     compact && modelPickerMode === 'combobox' && !showToolbarStartControls && !hideModelPicker
   const draft = useComposerDraft({ input, canCompose: canEditComposer })
@@ -1499,69 +1524,6 @@ export function FloatingComposer({
           onDragOver={handleComposerDragOver}
           onDrop={handleComposerDrop}
         >
-          {showChangeSummary ? (
-            <div className="ds-no-drag mb-1 rounded-2xl border border-ds-border-muted bg-ds-card px-3 py-2 shadow-sm">
-              <div className="flex min-w-0 items-center gap-2">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-ds-hover text-ds-muted">
-                  <FileEdit className="h-4 w-4" strokeWidth={1.8} />
-                </span>
-                <div className="min-w-0 flex-1">
-                  <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 text-[13px] font-semibold text-ds-ink">
-                    <span className="truncate">{t('composerChangedFilesTitle', { count: changedFiles.length })}</span>
-                    <span className="font-mono text-[12px] text-ds-diff-added">
-                      +{effectiveChangedFileStats.added}
-                    </span>
-                    <span className="font-mono text-[12px] text-ds-diff-removed">
-                      -{effectiveChangedFileStats.removed}
-                    </span>
-                  </div>
-                  <div className="mt-1 flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-[12px] text-ds-muted">
-                    {visibleChangedFiles.map((file) => (
-                      <span key={file.path} className="max-w-[220px] truncate" title={file.path}>
-                        {file.path}
-                      </span>
-                    ))}
-                    {hiddenChangedFileCount > 0 ? (
-                      <span className="text-ds-faint">
-                        {t('composerChangedFilesMore', { count: hiddenChangedFileCount })}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  {onOpenChanges ? (
-                    <button
-                      type="button"
-                      onClick={onOpenChanges}
-                      className="rounded-full border border-ds-border bg-ds-card px-3 py-1.5 text-[12px] font-semibold text-ds-ink transition hover:bg-ds-hover"
-                    >
-                      {t('composerOpenChanges')}
-                    </button>
-                  ) : null}
-                  {onReviewChanges ? (
-                    <button
-                      type="button"
-                      disabled={reviewChangesDisabled}
-                      onClick={onReviewChanges}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-ds-border bg-ds-card px-3 py-1.5 text-[12px] font-semibold text-ds-ink transition hover:bg-ds-hover disabled:cursor-not-allowed disabled:opacity-55"
-                    >
-                      <SearchCode className="h-3.5 w-3.5" strokeWidth={1.8} />
-                      {t('composerReviewChanges')}
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={handleDismissChangeSummary}
-                    className="flex h-7 w-7 items-center justify-center rounded-full text-ds-faint transition hover:bg-ds-hover hover:text-ds-ink"
-                    aria-label={t('close')}
-                    title={t('close')}
-                  >
-                    <X className="h-4 w-4" strokeWidth={2} />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : null}
           {contextChips.length > 0 ? (
             <div className="flex flex-wrap items-center gap-2 px-1">
               {contextChips.map((chip) => {
@@ -1981,7 +1943,23 @@ export function FloatingComposer({
                 )}
               </button>
             ) : null}
-
+            {changedFiles.length > 0 ? (
+              <button
+                type="button"
+                ref={diffStatsBtnRef}
+                onClick={() => setDiffStatsOpen((o) => !o)}
+                className="ds-composer-diff-stats ds-no-drag inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-ds-border-muted bg-ds-card px-2.5 py-0.5 text-[12.5px] font-medium shadow-sm transition hover:bg-ds-hover"
+                title={t('composerChangedFilesTitle', { count: changedFiles.length })}
+              >
+                <FileEdit className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.8} />
+                <span className="font-mono font-semibold text-ds-diff-added">
+                  +{changedFiles.reduce((s, f) => s + f.added, 0)}
+                </span>
+                <span className="font-mono font-semibold text-ds-diff-removed">
+                  -{changedFiles.reduce((s, f) => s + f.removed, 0)}
+                </span>
+              </button>
+            ) : null}
           </div>
           {footerHint ? (
             <div className="ds-composer-footer-hint min-w-0 flex-1 text-right text-[12.5px] font-medium text-ds-faint">
@@ -2015,6 +1993,65 @@ export function FloatingComposer({
                 </button>
               </div>
               <ThreadUsageChart series={usageSeries} locale={i18n.language} />
+            </div>,
+            document.body
+          )
+        : null}
+      {diffStatsOpen && diffStatsPos
+        ? createPortal(
+            <div
+              ref={diffStatsPopoverRef}
+              role="dialog"
+              aria-label={t('composerChangedFilesTitle', { count: changedFiles.length })}
+              className="fixed z-[1100] w-[320px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-ds-border bg-ds-card dark:bg-[#202024] p-3 shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
+              style={{
+                bottom: diffStatsPos.bottom,
+                left: diffStatsPos.left,
+                maxHeight: 'min(400px, calc(100vh - 32px))'
+              }}
+            >
+              <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="text-[13px] font-semibold text-ds-ink">
+                  {t('composerChangedFilesTitle', { count: changedFiles.length })}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setDiffStatsOpen(false)}
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-ds-faint transition hover:bg-ds-subtle hover:text-ds-ink"
+                  aria-label={t('composerChangedFilesClose', 'Close')}
+                >
+                  <X className="h-4 w-4" strokeWidth={2} />
+                </button>
+              </div>
+              <div className="overflow-y-auto" style={{ maxHeight: 'min(340px, calc(100vh - 100px))' }}>
+                <ul className="flex flex-col gap-0.5">
+                  {changedFiles.map((file) => (
+                    <li key={file.path}>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setDiffStatsOpen(false)
+                          onOpenChanges?.()
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px] transition hover:bg-ds-subtle"
+                        title={file.path}
+                      >
+                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-ds-hover text-ds-faint">
+                          <FileEdit className="h-3.5 w-3.5" strokeWidth={1.8} />
+                        </span>
+                        <span className="min-w-0 flex-1 truncate text-ds-ink">
+                          {file.path}
+                        </span>
+                        <span className="shrink-0 font-mono text-[12px] tabular-nums">
+                          <span className="text-ds-diff-added">+{file.added}</span>
+                          <span className="mx-0.5 text-ds-faint">/</span>
+                          <span className="text-ds-diff-removed">-{file.removed}</span>
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>,
             document.body
           )

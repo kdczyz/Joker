@@ -5,9 +5,7 @@ import type {
   ModelToolSpec
 } from '../ports/model-client.js'
 import type { ResolvedTurnAttachments } from './turn-execution-types.js'
-import {
-  applyTokenEconomyToRequest,
-  normalizeTokenEconomyConfig,
+import { applyTokenEconomyToRequest, compactToolSpec, normalizeTokenEconomyConfig,
   type NormalizedTokenEconomyConfig,
   type TokenEconomyConfig
 } from './token-economy.js'
@@ -80,7 +78,12 @@ export function composeModelRequest(input: ModelRequestComposerInput): ComposedM
     ...(input.attachments.documents.length
       ? { attachmentDocuments: [...input.attachments.documents] }
       : {}),
-    tools: [...input.tools],
+    // Always compress tool descriptions to reduce per-request token overhead.
+    // compactToolSpec strips filler prose from descriptions while preserving
+    // code identifiers, paths, URLs, and technical terms. This is applied
+    // unconditionally (even without token economy) because tool schemas are
+    // the single largest fixed-cost payload sent every turn.
+    tools: input.tools.map(compactToolSpec),
     ...(input.requiredToolName ? { requiredToolName: input.requiredToolName } : {}),
     ...(input.reasoningEffort ? { reasoningEffort: input.reasoningEffort } : {}),
     abortSignal: input.signal
