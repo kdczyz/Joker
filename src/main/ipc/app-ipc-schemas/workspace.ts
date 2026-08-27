@@ -113,6 +113,13 @@ export const gitCheckpointRestorePayloadSchema = z
   })
   .strict()
 
+export const gitRestoreFilePayloadSchema = z
+  .object({
+    workspaceRoot: workspaceRootSchema,
+    filePath: trimmedString(MAX_PATH_LENGTH)
+  })
+  .strict()
+
 export const worktreeOptionalRootSchema = z.object({
   projectPath: trimmedString(MAX_PATH_LENGTH),
   poolIndex: z.number().int().min(0).max(2),

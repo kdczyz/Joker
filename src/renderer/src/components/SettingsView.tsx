@@ -1322,8 +1322,8 @@ export function SettingsView(): ReactElement {
       />
 
       <div className="ds-settings-stage relative min-h-0 min-w-0 flex-1 overflow-hidden">
-        <div className="ds-no-drag h-full min-h-0 overflow-y-auto px-10 py-10">
-          <div className="mx-auto max-w-3xl">
+        <div className="ds-no-drag h-full min-h-0 overflow-y-auto px-8 py-8">
+          <div>
           {category !== 'extensions' && category !== 'dataMigration' && !activeApiKey.trim() ? (
             <div className="mb-6 rounded-2xl border border-amber-300/80 bg-amber-50/95 px-5 py-4 text-amber-950 shadow-sm dark:border-amber-700/60 dark:bg-amber-950/35 dark:text-amber-100">
               <div className="text-[15px] font-semibold">{t('apiKeyRequiredTitle')}</div>

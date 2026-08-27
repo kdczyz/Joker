@@ -245,6 +245,8 @@ const api = {
     ipcRenderer.invoke('git:checkpoint:create', payload),
   restoreGitCheckpoint: (payload) =>
     ipcRenderer.invoke('git:checkpoint:restore', payload),
+  restoreGitFile: (payload) =>
+    ipcRenderer.invoke('git:restore-file', payload),
   checkoutGitBranchWorktree: (workspaceRoot, branch) =>
     ipcRenderer.invoke('git:checkout-branch-worktree', { workspaceRoot, branch }),
   createGitBranchWorktree: (workspaceRoot, branch) =>

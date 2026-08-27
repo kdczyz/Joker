@@ -617,6 +617,10 @@ export type JokerGuiApi = ExtensionIpcApi & {
     expectedThreadId?: string
     expectedWorkspaceRoot?: string
   }) => Promise<GitCheckpointRestoreResult>
+  restoreGitFile: (params: {
+    workspaceRoot: string
+    filePath: string
+  }) => Promise<{ ok: true }>
   checkoutGitBranchWorktree: (workspaceRoot: string, branch: string) => Promise<GitWorktreeCheckoutResult>
   createGitBranchWorktree: (workspaceRoot: string, branch: string) => Promise<GitWorktreeCheckoutResult>
   listGitBranchWorktrees: (params: {

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { CoreRuntimeInfoJson } from '../../agent/Joker-contract'
-import type { NormalizedThread, RuntimeConnectionStatus } from '../../agent/types'
+import type { AttachmentReference, NormalizedThread, RuntimeConnectionStatus } from '../../agent/types'
 import type { CanvasDocument } from '../../design/canvas/canvas-types'
 import { useDesignWorkspaceStore } from '../../design/design-workspace-store'
 import { isChatAttachmentUploadEnabled } from '../../lib/attachment-upload-availability'
@@ -13,7 +13,8 @@ import {
   removeComposerAttachmentsById,
   updateComposerAttachmentsByScope,
   type ComposerAttachmentScope,
-  type ComposerAttachmentUpdater
+  type ComposerAttachmentUpdater,
+  type ComposerAttachmentsByScope
 } from '../workbench-composer-attachments'
 import { useWorkbenchAttachmentController } from './useWorkbenchAttachmentController'
 import type { RightPanelMode } from '../chat/WorkbenchTopBar'
@@ -24,12 +25,23 @@ type WorkbenchAttachmentRuntimeOptions = {
   canvasDocument?: CanvasDocument
   canvasSelectedIds?: ReadonlySet<string>
   composerMode: 'plan' | 'agent'
+  draftKey: string
   rightPanelMode: RightPanelMode | null
   route: string
   runtimeConnection: RuntimeConnectionStatus
   runtimeInfo: CoreRuntimeInfoJson | null
   threads: NormalizedThread[]
   workspaceRoot: string
+  /**
+   * Per-thread draft attachments loaded from the zustand store so images
+   * survive route/unmount switches and thread switches.
+   */
+  draftAttachments?: AttachmentReference[]
+  /**
+   * Called whenever the chat-scope attachments change so the caller
+   * can persist them under the current draftKey.
+   */
+  onChatAttachmentsChange?: (key: string, attachments: AttachmentReference[]) => void
 }
 
 export function useWorkbenchAttachmentRuntime({
@@ -37,16 +49,20 @@ export function useWorkbenchAttachmentRuntime({
   canvasDocument,
   canvasSelectedIds,
   composerMode,
+  draftKey,
   rightPanelMode,
   route,
   runtimeConnection,
   runtimeInfo,
   threads,
-  workspaceRoot
+  workspaceRoot,
+  draftAttachments,
+  onChatAttachmentsChange
 }: WorkbenchAttachmentRuntimeOptions) {
-  const [composerAttachmentsByScope, setComposerAttachmentsByScope] = useState(
-    createEmptyComposerAttachmentsByScope
-  )
+  const [composerAttachmentsByScope, setComposerAttachmentsByScope] = useState<ComposerAttachmentsByScope>(() => {
+    const chatAttachments = draftAttachments ?? []
+    return { ...createEmptyComposerAttachmentsByScope(), chat: chatAttachments }
+  })
   const [attachmentUploadBusy, setAttachmentUploadBusy] = useState(false)
   const [attachmentUploadError, setAttachmentUploadError] = useState<string | null>(null)
   const composerAttachmentScope = composerAttachmentScopeForSurface(route, rightPanelMode)
@@ -55,6 +71,32 @@ export function useWorkbenchAttachmentRuntime({
   useEffect(() => {
     composerAttachmentScopeRef.current = composerAttachmentScope
   }, [composerAttachmentScope])
+
+  // ── Thread-switch handling ──────────────────────────────────────────
+  // When the user switches threads, Workbench stays mounted so React state
+  // persists.  We must:
+  //   1. Save the CURRENT thread's chat attachments under the OLD draftKey.
+  //   2. Replace React state with the NEW thread's stored attachments.
+  const prevDraftKeyRef = useRef(draftKey)
+  useEffect(() => {
+    if (prevDraftKeyRef.current === draftKey) return
+    const oldKey = prevDraftKeyRef.current
+    prevDraftKeyRef.current = draftKey
+
+    // Read the latest scope map synchronously so we can save the old
+    // thread's attachments before swapping in the new thread's data.
+    let oldChatAttachments: AttachmentReference[] = []
+    setComposerAttachmentsByScope((currentScopeMap) => {
+      oldChatAttachments = currentScopeMap.chat
+      const restored = draftAttachments ?? []
+      return { ...currentScopeMap, chat: restored }
+    })
+    // Persist old thread's attachments under its own key.
+    if (oldChatAttachments.length > 0) {
+      onChatAttachmentsChange?.(oldKey, oldChatAttachments)
+    }
+    setAttachmentUploadError(null)
+  }, [draftKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const composerAttachments = composerAttachmentsByScope[composerAttachmentScope]
   const setComposerAttachmentsForScope = useCallback((
@@ -73,12 +115,17 @@ export function useWorkbenchAttachmentRuntime({
     attachmentStoreAvailable: runtimeInfo?.capabilities.attachments.available
   })
   const webAccessAvailable =
-    runtimeInfo?.capabilities.web.fetch.available === true ||
-    runtimeInfo?.capabilities.web.search.available === true
+    runtimeInfo?.capabilities.web.fetch.available === true || runtimeInfo?.capabilities.web.search.available === true
 
   useEffect(() => {
     setAttachmentUploadError(null)
   }, [composerAttachmentScope])
+
+  // Persist chat-scope attachments to the zustand store whenever they
+  // change so images survive route/unmount switches (e.g. opening Settings).
+  useEffect(() => {
+    onChatAttachmentsChange?.(draftKey, composerAttachmentsByScope.chat)
+  }, [composerAttachmentsByScope.chat, draftKey, onChatAttachmentsChange])
 
   const activeComposerWorkspace = (): string | undefined => {
     const sddDraft = useSddDraftStore.getState().activeDraft

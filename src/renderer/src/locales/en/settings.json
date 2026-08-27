@@ -1641,5 +1641,11 @@
   "cloudAccountDescription": "Your session is verified by Cloudflare edge services. Passwords are stored with salted hashing. Your local code and project files are never uploaded.",
   "tokenRecordTitle": "Token Record",
   "tokenRecordDescription": "Daily token usage, cache hits, and context savings aggregated from your local sessions.",
+  "tokenStatTotalTokens": "Total Tokens",
+  "tokenStatPeakTokens": "Peak Tokens",
+  "tokenStatTotalTurns": "Total Turns",
+  "tokenStatCurrentStreak": "Current Streak",
+  "tokenStatLongestStreak": "Longest Streak",
+  "tokenActivity": "Token Activity",
   "logout": "Sign Out"
 }

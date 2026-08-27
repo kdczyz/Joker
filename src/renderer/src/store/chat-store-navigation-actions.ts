@@ -118,7 +118,7 @@ let trayActionUnsubscribe: (() => void) | null = null
 
 export function createNavigationActions(
   { set, get, sseAbortRef }: StoreActionContext
-): Pick<ChatState, 'openCode' | 'clearActiveThreadSelection' | 'probeRuntime' | 'boot' | 'chooseWorkspace' | 'selectWorkspaceRoot' | 'clearWorkspace' | 'deleteWorkspace' | 'refreshThreads' | 'setThreadSearch' | 'setShowArchivedThreads' | 'setComposerDraft'> {
+): Pick<ChatState, 'openCode' | 'clearActiveThreadSelection' | 'probeRuntime' | 'boot' | 'chooseWorkspace' | 'selectWorkspaceRoot' | 'clearWorkspace' | 'deleteWorkspace' | 'refreshThreads' | 'setThreadSearch' | 'setShowArchivedThreads' | 'setComposerDraft' | 'setComposerDraftAttachments'> {
   return {
   setComposerDraft: (threadId, text) => {
     if (!threadId) return
@@ -130,6 +130,18 @@ export function createNavigationActions(
         delete drafts[threadId]
       }
       return { composerDrafts: drafts }
+    })
+  },
+  setComposerDraftAttachments: (threadId, attachments) => {
+    if (!threadId) return
+    set((state) => {
+      const draftAttachments = { ...state.composerDraftAttachments }
+      if (attachments.length > 0) {
+        draftAttachments[threadId] = attachments
+      } else {
+        delete draftAttachments[threadId]
+      }
+      return { composerDraftAttachments: draftAttachments }
     })
   },
   openCode: async () => {

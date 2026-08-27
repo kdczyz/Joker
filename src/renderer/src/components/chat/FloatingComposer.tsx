@@ -31,6 +31,7 @@ import {
   Sparkles,
   Square,
   Target,
+  RotateCcw,
   Trash2,
   Type as TypeIcon,
   X
@@ -124,6 +125,7 @@ import { FloatingComposerFileMentionMenu } from './FloatingComposerFileMentionMe
 import { useComposerSlashCommandMenu } from './use-composer-slash-command-menu'
 import { FloatingComposerSlashCommandMenu } from './FloatingComposerSlashCommandMenu'
 import { FloatingComposerTodoProgress } from './FloatingComposerTodoProgress'
+import { DiffCounter } from './RollingDigit'
 import { useComposerImageModelSelection } from './use-composer-image-model-selection'
 
 export type { ComposerFileReference } from '../../lib/composer-file-references'
@@ -210,6 +212,7 @@ type Props = {
   onOpenChanges?: () => void
   onReviewChanges?: () => void
   onDismissChanges?: () => void
+  onRevertFile?: (filePath: string) => void
   reviewChangesDisabled?: boolean
   /**
    * When set, the `/btw` slash command is offered. It is omitted from
@@ -328,6 +331,7 @@ export function FloatingComposer({
   onOpenChanges,
   onReviewChanges,
   onDismissChanges,
+  onRevertFile,
   reviewChangesDisabled = false,
   onBtwCommand,
   hideBtwCommand = false,
@@ -1952,12 +1956,8 @@ export function FloatingComposer({
                 title={t('composerChangedFilesTitle', { count: changedFiles.length })}
               >
                 <FileEdit className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.8} />
-                <span className="font-mono font-semibold text-ds-diff-added">
-                  +{changedFiles.reduce((s, f) => s + f.added, 0)}
-                </span>
-                <span className="font-mono font-semibold text-ds-diff-removed">
-                  -{changedFiles.reduce((s, f) => s + f.removed, 0)}
-                </span>
+                <DiffCounter value={changedFiles.reduce((s, f) => s + f.added, 0)} prefix="+" className="text-ds-diff-added" />
+                <DiffCounter value={changedFiles.reduce((s, f) => s + f.removed, 0)} prefix="-" className="text-ds-diff-removed" />
               </button>
             ) : null}
           </div>
@@ -2027,27 +2027,41 @@ export function FloatingComposer({
                 <ul className="flex flex-col gap-0.5">
                   {changedFiles.map((file) => (
                     <li key={file.path}>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDiffStatsOpen(false)
-                          onOpenChanges?.()
-                        }}
-                        className="flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left text-[12.5px] transition hover:bg-ds-subtle"
-                        title={file.path}
-                      >
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-ds-hover text-ds-faint">
-                          <FileEdit className="h-3.5 w-3.5" strokeWidth={1.8} />
-                        </span>
-                        <span className="min-w-0 flex-1 truncate text-ds-ink">
-                          {file.path}
-                        </span>
-                        <span className="shrink-0 font-mono text-[12px] tabular-nums">
-                          <span className="text-ds-diff-added">+{file.added}</span>
-                          <span className="mx-0.5 text-ds-faint">/</span>
-                          <span className="text-ds-diff-removed">-{file.removed}</span>
-                        </span>
-                      </button>
+                      <div className="group flex items-center gap-0 rounded-lg transition hover:bg-ds-subtle">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setDiffStatsOpen(false)
+                            onOpenChanges?.()
+                          }}
+                          className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left text-[12.5px]"
+                          title={file.path}
+                        >
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-ds-hover text-ds-faint">
+                            <FileEdit className="h-3.5 w-3.5" strokeWidth={1.8} />
+                          </span>
+                          <span className="min-w-0 flex-1 truncate text-ds-ink">
+                            {file.path}
+                          </span>
+                          <span className="shrink-0 inline-flex items-center gap-0.5 text-[12px]">
+                            <DiffCounter value={file.added} prefix="+" className="text-ds-diff-added" />
+                            <span className="text-ds-faint">/</span>
+                            <DiffCounter value={file.removed} prefix="-" className="text-ds-diff-removed" />
+                          </span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onRevertFile?.(file.path)
+                          }}
+                          className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg text-ds-faint opacity-0 transition hover:bg-ds-subtle hover:text-ds-diff-removed group-hover:opacity-100"
+                          aria-label={t('composerRevertFile', { path: file.path })}
+                          title={t('composerRevertFile', { path: file.path })}
+                        >
+                          <RotateCcw className="h-3.5 w-3.5" strokeWidth={2} />
+                        </button>
+                      </div>
                     </li>
                   ))}
                 </ul>

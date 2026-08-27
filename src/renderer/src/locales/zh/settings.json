@@ -1641,5 +1641,11 @@
   "cloudAccountDescription": "你的账号会话由 Cloudflare 边缘服务验证，密码加盐哈希存储，本机代码和项目文件不会上传。",
   "tokenRecordTitle": "Token 记录",
   "tokenRecordDescription": "本地会话每日 Token 用量、缓存命中与上下文节省汇总。",
+  "tokenStatTotalTokens": "累计 Token 数",
+  "tokenStatPeakTokens": "峰值 Token 数",
+  "tokenStatTotalTurns": "总对话轮次",
+  "tokenStatCurrentStreak": "当前连续天数",
+  "tokenStatLongestStreak": "最长连续天数",
+  "tokenActivity": "Token 活动",
   "logout": "退出登录"
 }

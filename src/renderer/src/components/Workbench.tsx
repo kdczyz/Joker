@@ -24,6 +24,7 @@ import { useWorkbenchPlanPanelRuntime } from './workbench/useWorkbenchPlanPanelR
 import { useWorkbenchWriteAssistantRuntime } from './workbench/useWorkbenchWriteAssistantRuntime'
 import { useWorkbenchUiRuntime } from './workbench/useWorkbenchUiRuntime'
 import { useWorkbenchAttachmentRuntime } from './workbench/useWorkbenchAttachmentRuntime'
+import type { AttachmentReference } from '../agent/types'
 import { WorkbenchImageAnnotationHost } from './workbench/WorkbenchImageAnnotationHost'
 import { useSddDraftStore } from '../sdd/sdd-draft-store'
 import {
@@ -150,7 +151,9 @@ export function Workbench(): ReactElement {
   // Before a thread exists (e.g. the first message in a workspace) the same
   // store map is used under a synthetic key so that text is not lost either.
   const composerDrafts = useChatStore((s) => s.composerDrafts)
+  const composerDraftAttachments = useChatStore((s) => s.composerDraftAttachments)
   const setComposerDraft = useChatStore((s) => s.setComposerDraft)
+  const setComposerDraftAttachments = useChatStore((s) => s.setComposerDraftAttachments)
   const draftKey = activeThreadId ?? COMPOSER_DRAFT_PENDING_KEY
   const input = composerDrafts[draftKey] ?? ''
   const setInput = useCallback(
@@ -690,12 +693,17 @@ export function Workbench(): ReactElement {
   } = useWorkbenchAttachmentRuntime({
     activeThreadId,
     composerMode,
+    draftKey,
     rightPanelMode,
     route,
     runtimeConnection,
     runtimeInfo,
     threads,
-    workspaceRoot
+    workspaceRoot,
+    draftAttachments: composerDraftAttachments[draftKey],
+    onChatAttachmentsChange: useCallback((key: string, attachments: AttachmentReference[]) => {
+      setComposerDraftAttachments(key, attachments)
+    }, [setComposerDraftAttachments])
   })
 
   const {
@@ -759,7 +767,11 @@ export function Workbench(): ReactElement {
     setUseWorktreePool, createThread, activeSkillWorkspace, reviewActiveThread, updateComposerExecutionSettings,
     openChangesPanel: () => setRightPanelMode(BUILTIN_RIGHT_PANEL_IDS.changes),
     runtimeConnectionReady: runtimeConnection === 'ready',
-    spawnSideConversation, openSideConversationDraft
+    spawnSideConversation, openSideConversationDraft,
+    onRevertFile: (filePath: string) => {
+      if (!workspaceRoot) return
+      void window.JokerGui.restoreGitFile({ workspaceRoot, filePath })
+    }
   })
   const rightPanelSharedProps = buildWorkbenchRightPanelSharedProps({
     input, setInput, mode: composerMode, setMode: setComposerMode, busy, runtimeConnection,

@@ -67,6 +67,7 @@ type UseWorkbenchChatComposerPropsInput = {
   reviewActiveThread: NonNullable<ComposerProps['onReviewCommand']>
   updateComposerExecutionSettings: NonNullable<ComposerProps['onExecutionSettingsChange']>
   openChangesPanel: () => void
+  onRevertFile?: (filePath: string) => void
   runtimeConnectionReady: boolean
   spawnSideConversation: (seedText: string) => void | Promise<unknown>
   openSideConversationDraft: () => void
@@ -132,6 +133,7 @@ export function useWorkbenchChatComposerProps({
   reviewActiveThread,
   updateComposerExecutionSettings,
   openChangesPanel,
+  onRevertFile,
   runtimeConnectionReady,
   spawnSideConversation,
   openSideConversationDraft
@@ -207,6 +209,7 @@ export function useWorkbenchChatComposerProps({
     onReviewCommand: reviewActiveThread,
     onExecutionSettingsChange: updateComposerExecutionSettings,
     onOpenChanges: openChangesPanel,
+    onRevertFile,
     onReviewChanges: () => void reviewActiveThread({ kind: 'uncommittedChanges' }),
     reviewChangesDisabled: busy || !runtimeConnectionReady,
     onBtwCommand: (seedText) => {
@@ -248,6 +251,7 @@ export function useWorkbenchChatComposerProps({
     input,
     interrupt,
     openChangesPanel,
+    onRevertFile,
     openDesignFileTreeSidePanel,
     openFileTreeSidePanel,
     openProvidersSettings,

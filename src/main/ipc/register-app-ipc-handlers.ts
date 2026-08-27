@@ -56,6 +56,7 @@ import {
   gitBranchPayloadSchema,
   gitCheckpointCreatePayloadSchema,
   gitCheckpointRestorePayloadSchema,
+  gitRestoreFilePayloadSchema,
   gitWorktreeRemoveSchema,
   localPdfTextTargetPayloadSchema,
   logErrorPayloadSchema,
@@ -2082,6 +2083,14 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
         }
       }
     })
+  })
+  ipcMain.handle('git:restore-file', async (_, payload: unknown) => {
+    const request = parseIpcPayload('git:restore-file', gitRestoreFilePayloadSchema, payload)
+    const { execFileAsync } = await import('node:child_process')
+    const { promisify } = await import('node:util')
+    const execFile = promisify(execFileAsync)
+    await execFile('git', ['-C', request.workspaceRoot, 'restore', '--', request.filePath], { timeout: 30_000 })
+    return { ok: true as const }
   })
   ipcMain.handle(
     'git:checkout-branch-worktree',

@@ -242,6 +242,12 @@ export type ChatState = {
    * the corresponding entry.
    */
   composerDrafts: Record<string, string>
+  /**
+   * Per-thread composer attachments that survive route/unmount switches.
+   * Mirrors the text-only `composerDrafts` pattern so images and documents
+   * persist alongside unsent text when navigating away (e.g. to Settings).
+   */
+  composerDraftAttachments: Record<string, AttachmentReference[]>
   /** Host-authenticated, workspace-scoped context awaiting one main-chat turn. */
   extensionComposerContexts: ExtensionComposerContextEvent[]
   watchTurnCompletion: Record<string, boolean>
@@ -266,6 +272,8 @@ export type ChatState = {
    * clear it (e.g. after the message is sent).
    */
   setComposerDraft: (threadId: string, text: string) => void
+  /** Update the unsent composer attachments for a thread. */
+  setComposerDraftAttachments: (threadId: string, attachments: AttachmentReference[]) => void
   setRoute: (r: AppRoute) => void
   openCode: () => Promise<void>
   openSettings: (section?: SettingsRouteSection) => void

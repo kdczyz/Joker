@@ -258,13 +258,17 @@ export function useThreadUsageState(
       setState({ usage: null, loading: false, loaded: false })
       return
     }
-    setState({ usage: null, loading: true, loaded: false })
+    setState((prev) => ({
+      usage: prev.loaded ? prev.usage : null,
+      loading: true,
+      loaded: prev.loaded
+    }))
     void loadThreadUsage(threadId)
       .then((usage) => {
         if (!cancelled) setState({ usage, loading: false, loaded: true })
       })
       .catch(() => {
-        if (!cancelled) setState({ usage: null, loading: false, loaded: true })
+        if (!cancelled) setState((prev) => ({ ...prev, loading: false, loaded: true }))
       })
     return () => {
       cancelled = true

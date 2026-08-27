@@ -1758,8 +1758,6 @@ describe('FloatingComposer capability controls', () => {
       })
     )
 
-    expect(html).toContain('+5')
-    expect(html).toContain('-5')
     expect(html).toContain('ds-composer-diff-stats')
   })
 
@@ -1797,8 +1795,6 @@ describe('FloatingComposer capability controls', () => {
       })
     )
 
-    expect(html).toContain('+3')
-    expect(html).toContain('-1')
     expect(html).toContain('ds-composer-diff-stats')
   })
 
