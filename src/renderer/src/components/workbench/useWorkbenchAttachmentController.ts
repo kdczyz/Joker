@@ -131,7 +131,8 @@ export function useWorkbenchAttachmentController({
             mimeType: attachment.mimeType,
             width: attachment.width,
             height: attachment.height,
-            previewUrl: runtimeImagePreviewUrl(result)
+            previewUrl: runtimeImagePreviewUrl(result),
+            ...(result.localFilePath ? { localFilePath: result.localFilePath } : {})
           })
         } else if (typeof provider.uploadAttachment === 'function') {
           const base64Data = arrayBufferToBase64(await file.arrayBuffer())
@@ -206,7 +207,8 @@ export function useWorkbenchAttachmentController({
         mimeType: attachment.mimeType,
         width: attachment.width,
         height: attachment.height,
-        previewUrl: runtimeImagePreviewUrl(result)
+        previewUrl: runtimeImagePreviewUrl(result),
+        ...(result.localFilePath ? { localFilePath: result.localFilePath } : {})
       }
       setComposerAttachmentsForScope(attachmentScope, (current) => {
         const byId = new Map(current.map((item) => [item.id, item]))

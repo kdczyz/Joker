@@ -294,6 +294,8 @@ const api = {
     ipcRenderer.invoke('design:lint-project-design-md', { content }),
   readWorkspaceImage: (options) =>
     ipcRenderer.invoke('file:read-workspace-image', options),
+  readLocalImage: (options) =>
+    ipcRenderer.invoke('file:read-local-image', options),
   readWorkspacePdf: (options) =>
     ipcRenderer.invoke('file:read-workspace-pdf', options),
   readLocalPdfText: (options) =>

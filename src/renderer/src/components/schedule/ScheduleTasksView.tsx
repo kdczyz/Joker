@@ -2,20 +2,14 @@ import type { ReactElement, ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
-  Brain,
-  CalendarClock,
   ChevronDown,
   ChevronUp,
   Clock3,
-  Folder,
-  FolderOpen,
   MessageSquare,
   MoreHorizontal,
   PencilLine,
   Play,
   Plus,
-  Power,
-  Timer,
   Trash2,
   X
 } from 'lucide-react'
@@ -24,16 +18,19 @@ import {
   DEFAULT_SCHEDULE_REASONING_EFFORT,
   SCHEDULE_REASONING_EFFORT_IDS,
   getJokerRuntimeSettings,
+  getModelProviderPreset,
   getModelProviderSettings,
   isComposerChatModelId,
   listNonTextModelIds,
   mergeScheduleSettings,
   modelProfileSupportsTextChat,
   modelProviderModelProfile,
+  modelProviderPresetProfile,
   normalizeScheduleSettings,
   type AppSettingsV1,
   type ClawImChannelV1,
   type ModelProviderModelProfileV1,
+  type ModelProviderProfileV1,
   type ScheduleKind,
   type ScheduleReasoningEffort,
   type ScheduleRuntimeStatus,
@@ -64,6 +61,7 @@ type ScheduleModelProviderOption = {
   label: string
   modelIds: string[]
   modelProfiles?: Record<string, ModelProviderModelProfileV1>
+  free?: boolean
 }
 type TaskDialogState =
   | { mode: 'create'; draft: ScheduledTaskV1 }
@@ -86,24 +84,45 @@ function firstConcreteScheduleModel(modelIds: readonly string[], fallback = DEFA
   return modelIds.find((model) => model.trim() && model.trim().toLowerCase() !== 'auto') ?? fallback
 }
 
+const OPENCODE_ZEN_FREE_PROVIDER_ID = 'opencode-zen'
+
+function scheduleModelProviderOptionFromProfile(
+  provider: ModelProviderProfileV1,
+  nonTextModelIds: string[]
+): ScheduleModelProviderOption | null {
+  const modelIds = provider.models
+    .map((model) => model.trim())
+    .filter((model) =>
+      isComposerChatModelId(model, nonTextModelIds) &&
+      modelProfileSupportsTextChat(modelProviderModelProfile(provider, model))
+    )
+  if (modelIds.length === 0) return null
+  return {
+    providerId: provider.id,
+    label: provider.name.trim() || provider.id,
+    modelIds,
+    modelProfiles: provider.modelProfiles,
+    free: provider.id === OPENCODE_ZEN_FREE_PROVIDER_ID
+  }
+}
+
 export function scheduleModelProviderOptions(settings: AppSettingsV1): ScheduleModelProviderOption[] {
   const nonTextModelIds = listNonTextModelIds(settings)
-  return getModelProviderSettings(settings).providers
-    .map((provider) => {
-      const modelIds = provider.models
-        .map((model) => model.trim())
-        .filter((model) =>
-          isComposerChatModelId(model, nonTextModelIds) &&
-          modelProfileSupportsTextChat(modelProviderModelProfile(provider, model))
-        )
-      return {
-        providerId: provider.id,
-        label: provider.name.trim() || provider.id,
-        modelIds,
-        modelProfiles: provider.modelProfiles
-      }
-    })
-    .filter((provider) => provider.modelIds.length > 0)
+  const options = getModelProviderSettings(settings).providers
+    .map((provider) => scheduleModelProviderOptionFromProfile(provider, nonTextModelIds))
+    .filter((option): option is ScheduleModelProviderOption => option !== null)
+
+  if (!options.some((option) => option.providerId === OPENCODE_ZEN_FREE_PROVIDER_ID)) {
+    const preset = getModelProviderPreset(OPENCODE_ZEN_FREE_PROVIDER_ID)
+    if (preset) {
+      const freeOption = scheduleModelProviderOptionFromProfile(
+        modelProviderPresetProfile(preset, 'public'),
+        nonTextModelIds
+      )
+      if (freeOption) options.unshift(freeOption)
+    }
+  }
+  return options
 }
 
 export function resolveScheduleModelSelection(
@@ -977,7 +996,7 @@ function ScheduleTaskDialog({
     if (preferredImChannel) updateClawChannel(preferredImChannel.id)
   }
   const promptCount = draft.prompt.length
-  const title = dialog.mode === 'create' ? t('scheduleCreateTask') : t('scheduleEditTask')
+  const title = dialog.mode === 'create' ? t('scheduleNewDialogTitle') : t('scheduleEditDialogTitle')
 
   return (
     <div
@@ -993,9 +1012,9 @@ function ScheduleTaskDialog({
           onSubmit()
         }}
         onMouseDown={(event) => event.stopPropagation()}
-        className="flex max-h-[calc(100vh-1rem)] w-full max-w-[760px] flex-col overflow-hidden rounded-[22px] border border-white/55 bg-ds-card shadow-[0_30px_90px_rgba(20,47,95,0.28)] dark:border-white/10"
+        className="flex max-h-[calc(100vh-1rem)] w-full max-w-[540px] flex-col overflow-hidden rounded-[22px] border border-white/55 bg-ds-card shadow-[0_30px_90px_rgba(20,47,95,0.28)] dark:border-white/10"
       >
-        <div className="flex shrink-0 items-center justify-between gap-4 border-b border-ds-border-muted px-6 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-4 px-5 py-3">
           <div className="min-w-0">
             <h2 id="schedule-task-dialog-title" className="truncate text-[17px] font-semibold text-ds-ink">
               {title}
@@ -1012,289 +1031,188 @@ function ScheduleTaskDialog({
           </button>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto px-6 py-4">
-          <div className="grid gap-4">
-            <ScheduleDialogSection
-              icon={<Timer className="h-4 w-4" strokeWidth={1.8} />}
-              title={t('scheduleTaskSectionContent')}
-            >
-              <label className="grid gap-2">
-                <FieldLabel required>{t('scheduleTaskName')}</FieldLabel>
-                <div className="relative">
-                  <input
-                    value={draft.title}
-                    maxLength={50}
-                    onChange={(event) => updateDraft({ title: event.target.value })}
-                    placeholder={t('scheduleTaskNamePlaceholder')}
-                    className="h-10 w-full rounded-xl border border-ds-border bg-ds-main/55 px-3 pr-14 text-[14px] text-ds-ink outline-none transition placeholder:text-ds-faint focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
-                  />
-                  <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[12px] text-ds-faint">
-                    {draft.title.length}/50
-                  </span>
-                </div>
-              </label>
+        <div className="min-h-0 flex-1 overflow-y-auto px-5 py-1">
+          <div className="grid gap-6">
+            <label className="grid gap-1">
+              <input
+                value={draft.title}
+                maxLength={50}
+                onChange={(event) => updateDraft({ title: event.target.value })}
+                placeholder={t('scheduleTaskTitlePlaceholder')}
+                className="h-12 w-full border-0 bg-transparent text-[22px] font-semibold text-ds-ink placeholder:text-ds-faint/60 outline-none"
+              />
+              <span className="text-right text-[11px] text-ds-faint">{draft.title.length}/50</span>
+            </label>
 
-              <label className="grid gap-2">
-                <FieldLabel required>{t('scheduleTaskPrompt')}</FieldLabel>
-                <div className="relative">
-                  <textarea
-                    value={draft.prompt}
-                    maxLength={8_000}
-                    onChange={(event) => updateDraft({ prompt: event.target.value })}
-                    placeholder={t('scheduleTaskPromptPlaceholder')}
-                    className="min-h-[108px] w-full resize-y rounded-xl border border-ds-border bg-ds-main/55 px-3 py-3 pb-8 text-[14px] leading-6 text-ds-ink outline-none transition placeholder:text-ds-faint focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
-                  />
-                  <span className="pointer-events-none absolute bottom-3 right-3 text-[12px] text-ds-faint">
-                    {promptCount}/8000
-                  </span>
-                </div>
-              </label>
-            </ScheduleDialogSection>
+            <label className="grid gap-1">
+              <textarea
+                value={draft.prompt}
+                maxLength={8_000}
+                onChange={(event) => updateDraft({ prompt: event.target.value })}
+                placeholder={t('scheduleTaskPromptDescription')}
+                className="min-h-[120px] w-full resize-y rounded-2xl border border-ds-border bg-ds-main/40 px-4 py-3.5 text-[15px] leading-relaxed text-ds-ink placeholder:text-ds-faint/60 outline-none transition focus:border-accent/45 focus:ring-2 focus:ring-accent/10"
+              />
+              <span className="text-right text-[11px] text-ds-faint">{promptCount}/8000</span>
+            </label>
 
-            <ScheduleDialogSection
-              icon={<Brain className="h-4 w-4" strokeWidth={1.8} />}
-              title={t('scheduleTaskSectionModel')}
-            >
-              <div className="grid gap-4">
-                <div className="grid gap-2">
-                  <FieldLabel>{t('scheduleClientMode')}</FieldLabel>
-                  <div className="grid grid-cols-2 gap-2">
-                    <SegmentButton
-                      selected={clientMode === 'code'}
-                      onClick={() => updateClientMode('code')}
-                    >
-                      {t('scheduleClientModeCode')}
-                    </SegmentButton>
-                    <SegmentButton
-                      selected={clientMode === 'im'}
-                      disabled={imChannels.length === 0}
-                      onClick={() => updateClientMode('im')}
-                    >
-                      {t('scheduleClientModeIm')}
-                    </SegmentButton>
-                  </div>
-                  {imChannels.length === 0 ? (
-                    <p className="text-[12px] leading-5 text-ds-faint">{t('scheduleClientModeImUnavailable')}</p>
-                  ) : null}
-                </div>
+            <SettingsSection title={t('scheduleSectionDetails')}>
+              <SettingsRow label={t('scheduleRunLocation')}>
+                <span className="truncate text-ds-muted">{t('scheduleRunLocationThisDevice')}</span>
+              </SettingsRow>
 
-                {clientMode === 'im' ? (
-                  <label className="grid gap-2">
-                    <FieldLabel>{t('scheduleImClient')}</FieldLabel>
-                    <div className="relative">
-                      <select
-                        value={selectedImDisplayChannel?.id ?? ''}
-                        onChange={(event) => updateClawChannel(event.target.value)}
-                        aria-label={t('scheduleImClient')}
-                        title={selectedImDisplayChannel ? scheduleImChannelOptionLabel(selectedImDisplayChannel, t) : undefined}
-                        className="peer absolute inset-0 z-10 h-10 w-full cursor-pointer opacity-0"
-                      >
-                        {imChannels.map((channel) => (
-                          <option key={channel.id} value={channel.id}>
-                            {scheduleImChannelOptionLabel(channel, t)}
-                          </option>
-                        ))}
-                      </select>
-                      <div className="pointer-events-none flex h-10 w-full items-center gap-3 rounded-xl border border-ds-border bg-ds-main/55 px-3 pr-10 text-[14px] text-ds-ink outline-none transition peer-focus:border-accent/45 peer-focus:ring-2 peer-focus:ring-accent/15">
-                        <span className="min-w-0 flex-1 truncate">
-                          {selectedImDisplayChannel ? clawChannelDisplayName(selectedImDisplayChannel) : ''}
-                        </span>
-                        {selectedImDisplayChannel ? (
-                          <span className="shrink-0 rounded-lg border border-ds-border-muted bg-ds-subtle px-2 py-0.5 text-[12px] font-semibold text-ds-muted">
-                            {scheduleImProviderLabel(selectedImDisplayChannel, t)}
-                          </span>
-                        ) : null}
-                      </div>
-                      <ChevronDown
-                        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ds-faint"
-                        strokeWidth={1.8}
-                        aria-hidden="true"
-                      />
-                    </div>
-                  </label>
-                ) : null}
+              <SettingsSelectRow
+                label={t('scheduleClientMode')}
+                value={clientMode}
+                options={[
+                  { value: 'code', label: t('scheduleClientModeCode') },
+                  { value: 'im', label: t('scheduleClientModeIm') }
+                ]}
+                onChange={(value) => updateClientMode(value)}
+                displayValue={clientMode === 'code' ? t('scheduleClientModeCode') : t('scheduleClientModeIm')}
+              />
 
-                <div className="grid gap-4 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1fr)_minmax(0,2fr)]">
-                  <label className="grid gap-2">
-                    <FieldLabel required>{t('scheduleProvider')}</FieldLabel>
-                    <select
-                      value={modelSelection.providerId}
-                      onChange={(event) => updateModelProvider(event.target.value)}
-                      className="h-10 w-full rounded-xl border border-ds-border bg-ds-main/55 px-3 text-[14px] text-ds-ink outline-none transition focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
-                    >
-                      {modelProviders.map((provider) => (
-                        <option key={provider.providerId} value={provider.providerId}>
-                          {provider.label}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
+              {clientMode === 'im' && imChannels.length > 0 ? (
+                <SettingsSelectRow
+                  label={t('scheduleImClient')}
+                  value={selectedImDisplayChannel?.id ?? ''}
+                  options={imChannels.map((channel) => ({
+                    value: channel.id,
+                    label: scheduleImChannelOptionLabel(channel, t)
+                  }))}
+                  onChange={(value) => updateClawChannel(value)}
+                  displayValue={selectedImDisplayChannel ? clawChannelDisplayName(selectedImDisplayChannel) : ''}
+                />
+              ) : null}
 
-                  <label className="grid gap-2">
-                    <FieldLabel required>{t('scheduleModel')}</FieldLabel>
-                    <select
-                      value={modelSelection.model}
-                      onChange={(event) => updateModel(event.target.value)}
-                      className="h-10 w-full rounded-xl border border-ds-border bg-ds-main/55 px-3 text-[14px] text-ds-ink outline-none transition focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
-                    >
-                      {selectedModelIds.map((model) => (
-                        <option key={model} value={model}>{model}</option>
-                      ))}
-                    </select>
-                  </label>
+              {clientMode === 'im' && imChannels.length === 0 ? (
+                <SettingsHintRow>{t('scheduleClientModeImUnavailable')}</SettingsHintRow>
+              ) : null}
 
-                  <div className="grid gap-2">
-                    <FieldLabel>{t('scheduleReasoning')}</FieldLabel>
-                    <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                      {reasoningOptions.map((effort) => (
-                        <SegmentButton
-                          key={effort}
-                          selected={reasoningSelection === effort}
-                          onClick={() => updateDraft({ reasoningEffort: effort })}
-                        >
-                          {scheduleReasoningLabel(effort, t)}
-                        </SegmentButton>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ScheduleDialogSection>
+              <SettingsSelectRow
+                label={t('scheduleProvider')}
+                value={modelSelection.providerId}
+                options={modelProviders.map((provider) => ({
+                  value: provider.providerId,
+                  label: provider.free ? `${provider.label} · ${t('scheduleProviderFree')}` : provider.label
+                }))}
+                onChange={(value) => updateModelProvider(value)}
+                displayValue={
+                  selectedModelProvider
+                    ? selectedModelProvider.free
+                      ? `${selectedModelProvider.label} · ${t('scheduleProviderFree')}`
+                      : selectedModelProvider.label
+                    : modelSelection.providerId
+                }
+              />
 
-            <ScheduleDialogSection
-              icon={<CalendarClock className="h-4 w-4" strokeWidth={1.8} />}
-              title={t('scheduleTaskSectionTiming')}
-            >
-              <div className="grid gap-4 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)]">
-                <div className="grid gap-2">
-                  <FieldLabel required>{t('scheduleRunAt')}</FieldLabel>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {SCHEDULE_KIND_OPTIONS.map((kind) => (
-                      <SegmentButton
-                        key={kind}
-                        selected={draft.schedule.kind === kind}
-                        onClick={() => updateSchedule({ kind })}
-                      >
-                        {t(`scheduleKind_${kind}`)}
-                      </SegmentButton>
-                    ))}
-                  </div>
-                </div>
+              <SettingsSelectRow
+                label={t('scheduleModel')}
+                value={modelSelection.model}
+                options={selectedModelIds.map((model) => ({
+                  value: model,
+                  label: model
+                }))}
+                onChange={(value) => updateModel(value)}
+              />
 
-                {draft.schedule.kind === 'daily' ? (
-                  <div className="grid gap-2">
-                    <FieldLabel>{t('scheduleDailyTime')}</FieldLabel>
+              {reasoningOptions.length > 0 ? (
+                <SettingsSelectRow
+                  label={t('scheduleReasoning')}
+                  value={reasoningSelection}
+                  options={reasoningOptions.map((effort) => ({
+                    value: effort,
+                    label: scheduleReasoningLabel(effort, t)
+                  }))}
+                  onChange={(value) => updateDraft({ reasoningEffort: value })}
+                  displayValue={scheduleReasoningLabel(reasoningSelection, t)}
+                />
+              ) : null}
+
+              <SettingsWorkspaceRow
+                label={t('scheduleWorkspace')}
+                value={compactHomePathForSettingsDisplay(draft.workspaceRoot)}
+                placeholder={t('scheduleWorkspacePlaceholder')}
+                onClick={onPickWorkspace}
+              />
+
+              <SettingsToggleRow
+                label={t('scheduleTaskEnabled')}
+                checked={draft.enabled}
+                onChange={(checked) => updateDraft({ enabled: checked })}
+              />
+            </SettingsSection>
+
+            <SettingsSection title={t('scheduleSectionFrequency')}>
+              <SettingsSelectRow
+                label={t('scheduleRunAt')}
+                value={draft.schedule.kind}
+                options={SCHEDULE_KIND_OPTIONS.map((kind) => ({
+                  value: kind,
+                  label: t(`scheduleKind_${kind}`)
+                }))}
+                onChange={(value) => updateSchedule({ kind: value as ScheduleKind })}
+                displayValue={t(`scheduleKind_${draft.schedule.kind}`)}
+              />
+
+              {draft.schedule.kind === 'daily' ? (
+                <div className="flex items-center justify-between gap-4 px-4 py-3">
+                  <span className="text-[15px] text-ds-ink">{t('scheduleDailyTime')}</span>
+                  <div className="w-[140px]">
                     <ScheduleTimePicker
                       value={draft.schedule.timeOfDay}
                       onChange={(timeOfDay) => updateSchedule({ timeOfDay })}
                       t={t}
                     />
                   </div>
-                ) : draft.schedule.kind === 'at' ? (
-                  <label className="grid gap-2">
-                    <FieldLabel>{t('scheduleAtTime')}</FieldLabel>
-                    <input
-                      type="datetime-local"
-                      value={dateTimeLocalValueFromIso(draft.schedule.atTime)}
-                      onChange={(event) => updateSchedule({ atTime: isoFromDateTimeLocalValue(event.target.value) })}
-                      className="h-10 w-full rounded-xl border border-ds-border bg-ds-main/55 px-3 text-[14px] text-ds-ink outline-none transition focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
-                    />
-                  </label>
-                ) : draft.schedule.kind === 'interval' ? (
-                  <label className="grid gap-2">
-                    <FieldLabel>{t('scheduleEveryMinutes')}</FieldLabel>
-                    <input
-                      type="number"
-                      min={1}
-                      max={10080}
-                      value={draft.schedule.everyMinutes}
-                      onChange={(event) => updateSchedule({ everyMinutes: Number(event.target.value) })}
-                      className="h-10 w-full rounded-xl border border-ds-border bg-ds-main/55 px-3 text-[14px] text-ds-ink outline-none transition focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
-                    />
-                  </label>
-                ) : (
-                  <div className="flex min-h-10 items-center rounded-xl bg-ds-subtle px-3 text-[13px] text-ds-muted">
-                    {t('scheduleManualHint')}
-                  </div>
-                )}
-              </div>
-            </ScheduleDialogSection>
-
-            <ScheduleDialogSection
-              icon={<Folder className="h-4 w-4" strokeWidth={1.8} />}
-              title={t('scheduleTaskSectionEnvironment')}
-            >
-              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_180px]">
-                <label className="grid gap-2">
-                  <FieldLabel>{t('scheduleWorkspace')}</FieldLabel>
-                  <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_138px]">
-                    <input
-                      value={compactHomePathForSettingsDisplay(draft.workspaceRoot)}
-                      onChange={(event) =>
-                        updateDraft({ workspaceRoot: expandHomePathForSettingsUse(event.target.value) })}
-                      placeholder={t('scheduleWorkspacePlaceholder')}
-                      className="h-10 w-full rounded-xl border border-ds-border bg-ds-main/55 px-3 text-[14px] text-ds-ink outline-none transition placeholder:text-ds-faint focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
-                    />
-                    <button
-                      type="button"
-                      onClick={onPickWorkspace}
-                      className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-ds-border bg-ds-card px-3 text-[13px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
-                    >
-                      <FolderOpen className="h-4 w-4" strokeWidth={1.75} />
-                      {draft.workspaceRoot.trim() ? t('changeWorkspace') : t('selectWorkspace')}
-                    </button>
-                  </div>
-                </label>
-
-                <div className="grid gap-2">
-                  <FieldLabel>{t('scheduleTaskEnabled')}</FieldLabel>
-                  <button
-                    type="button"
-                    onClick={() => updateDraft({ enabled: !draft.enabled })}
-                    className="flex h-10 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-main/55 px-3 text-[13px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
-                    aria-pressed={draft.enabled}
-                  >
-                    <span className="inline-flex min-w-0 items-center gap-2">
-                      <Power className="h-4 w-4 shrink-0" strokeWidth={1.8} />
-                      <span className="truncate">{t('scheduleTaskEnabled')}</span>
-                    </span>
-                    <span className={`relative h-5 w-9 shrink-0 rounded-full transition ${draft.enabled ? 'bg-ds-ink' : 'bg-ds-border-strong'}`}>
-                      <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition ${draft.enabled ? 'left-[18px]' : 'left-0.5'}`} />
-                    </span>
-                  </button>
                 </div>
-              </div>
-              <div className="grid gap-4 md:grid-cols-[160px_minmax(0,1fr)]">
-                <label className="grid gap-2">
-                  <FieldLabel>{t('scheduleTaskPriority')}</FieldLabel>
+              ) : draft.schedule.kind === 'at' ? (
+                <label className="flex items-center justify-between gap-4 px-4 py-3">
+                  <span className="text-[15px] text-ds-ink">{t('scheduleAtTime')}</span>
                   <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={draft.priority ?? 0}
-                    onChange={(event) => updateDraft({ priority: Number(event.target.value) })}
-                    className="h-10 w-full rounded-xl border border-ds-border bg-ds-main/55 px-3 text-[14px] text-ds-ink outline-none transition focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
+                    type="datetime-local"
+                    value={dateTimeLocalValueFromIso(draft.schedule.atTime)}
+                    onChange={(event) => updateSchedule({ atTime: isoFromDateTimeLocalValue(event.target.value) })}
+                    className="h-9 w-[180px] rounded-xl border border-ds-border bg-ds-main/55 px-2 text-[14px] text-ds-ink outline-none transition focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
                   />
                 </label>
-                <div className="grid gap-2">
-                  <FieldLabel>{t('scheduleTaskIsolation')}</FieldLabel>
-                  <button
-                    type="button"
-                    onClick={() => updateDraft({ useWorktree: !draft.useWorktree })}
-                    className="flex h-10 items-center justify-between gap-3 rounded-xl border border-ds-border bg-ds-main/55 px-3 text-[13px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
-                    aria-pressed={Boolean(draft.useWorktree)}
-                  >
-                    <span>{t('scheduleTaskUseWorktree')}</span>
-                    <span className={`relative h-5 w-9 shrink-0 rounded-full transition ${draft.useWorktree ? 'bg-ds-ink' : 'bg-ds-border-strong'}`}>
-                      <span className={`absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition ${draft.useWorktree ? 'left-[18px]' : 'left-0.5'}`} />
-                    </span>
-                  </button>
+              ) : draft.schedule.kind === 'interval' ? (
+                <label className="flex items-center justify-between gap-4 px-4 py-3">
+                  <span className="text-[15px] text-ds-ink">{t('scheduleEveryMinutes')}</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={10080}
+                    value={draft.schedule.everyMinutes}
+                    onChange={(event) => updateSchedule({ everyMinutes: Number(event.target.value) })}
+                    className="h-9 w-[120px] rounded-xl border border-ds-border bg-ds-main/55 px-3 text-[14px] text-ds-ink outline-none transition focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
+                  />
+                </label>
+              ) : (
+                <div className="px-4 py-3 text-[13px] text-ds-muted">
+                  {t('scheduleManualHint')}
                 </div>
-              </div>
+              )}
+            </SettingsSection>
+
+            <SettingsSection title={t('scheduleAdvancedSection')}>
+              <SettingsNumberRow
+                label={t('scheduleTaskPriority')}
+                value={draft.priority ?? 0}
+                min={0}
+                max={100}
+                onChange={(value) => updateDraft({ priority: value })}
+              />
+
+              <SettingsToggleRow
+                label={t('scheduleTaskUseWorktree')}
+                checked={Boolean(draft.useWorktree)}
+                onChange={(checked) => updateDraft({ useWorktree: checked })}
+              />
+
               {tasks.some((task) => task.id !== draft.id) ? (
-                <div className="grid gap-2">
-                  <FieldLabel>{t('scheduleTaskDependencies')}</FieldLabel>
-                  <div className="grid max-h-32 gap-2 overflow-y-auto rounded-xl border border-ds-border bg-ds-main/35 p-3 sm:grid-cols-2">
+                <div className="px-4 py-3">
+                  <div className="mb-2 text-[13px] font-medium text-ds-ink">{t('scheduleTaskDependencies')}</div>
+                  <div className="grid max-h-32 gap-2 overflow-y-auto sm:grid-cols-2">
                     {tasks.filter((task) => task.id !== draft.id).map((task) => {
                       const selected = (draft.dependsOn ?? []).includes(task.id)
                       return (
@@ -1315,7 +1233,7 @@ function ScheduleTaskDialog({
                   </div>
                 </div>
               ) : null}
-            </ScheduleDialogSection>
+            </SettingsSection>
           </div>
 
           {error ? (
@@ -1325,99 +1243,166 @@ function ScheduleTaskDialog({
           ) : null}
         </div>
 
-        <div className="flex shrink-0 flex-wrap items-center justify-between gap-3 border-t border-ds-border-muted bg-ds-card px-6 py-3">
+        <div className="flex shrink-0 items-center justify-between gap-3 border-t border-ds-border-muted bg-ds-card px-5 py-3">
           <button
             type="button"
             onClick={onOpenSettings}
-            className="inline-flex h-8 items-center gap-2 rounded-xl px-3 text-[13px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
+            className="inline-flex h-9 items-center gap-2 rounded-xl px-3 text-[13px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
           >
             <MoreHorizontal className="h-4 w-4" strokeWidth={1.8} />
             {t('scheduleAdvancedSettings')}
           </button>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={onClose}
-              className="h-8 rounded-xl border border-ds-border bg-ds-card px-4 text-[13px] font-medium text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
-            >
-              {t('cancel')}
-            </button>
-            <button
-              type="submit"
-              className="h-8 rounded-xl bg-ds-userbubble px-5 text-[13px] font-semibold text-ds-userbubbleFg transition hover:opacity-90"
-            >
-              {t('confirm')}
-            </button>
-          </div>
+          <button
+            type="submit"
+            className="h-9 rounded-xl bg-ds-userbubble px-5 text-[13px] font-semibold text-ds-userbubbleFg transition hover:opacity-90"
+          >
+            {dialog.mode === 'create' ? t('scheduleCreateButton') : t('scheduleSaveButton')}
+          </button>
         </div>
       </form>
     </div>
   )
 }
 
-function ScheduleDialogSection({
-  icon,
-  title,
-  children
-}: {
-  icon: ReactElement
-  title: string
-  children: ReactNode
-}): ReactElement {
+function SettingsSection({ title, children }: { title: string; children: ReactNode }): ReactElement {
   return (
-    <section className="grid gap-3 border-t border-ds-border-muted pt-4 first:border-t-0 first:pt-0">
-      <div className="flex items-center gap-2 text-[13px] font-semibold text-ds-ink">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-lg bg-ds-subtle text-ds-muted">
-          {icon}
-        </span>
-        <span>{title}</span>
+    <section className="grid gap-2">
+      <h3 className="px-1 text-[13px] font-medium text-ds-faint">{title}</h3>
+      <div className="overflow-hidden rounded-2xl border border-ds-border bg-ds-card divide-y divide-ds-border-muted">
+        {children}
       </div>
-      {children}
     </section>
   )
 }
 
-function FieldLabel({
-  children,
-  required = false
-}: {
-  children: ReactNode
-  required?: boolean
-}): ReactElement {
+function SettingsRow({ label, children }: { label: string; children: ReactNode }): ReactElement {
   return (
-    <span className="flex min-h-5 items-center gap-1 text-[13px] font-medium text-ds-ink">
-      <span className="min-w-0 truncate">{children}</span>
-      {required ? <span className="text-red-500">*</span> : null}
-    </span>
+    <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <span className="text-[15px] text-ds-ink">{label}</span>
+      <div className="flex min-w-0 items-center gap-2 text-[15px] text-ds-muted">
+        {children}
+      </div>
+    </div>
   )
 }
 
-function SegmentButton({
-  selected,
-  disabled = false,
-  onClick,
-  children
+function SettingsHintRow({ children }: { children: ReactNode }): ReactElement {
+  return (
+    <div className="px-4 py-3 text-[13px] leading-5 text-ds-faint">
+      {children}
+    </div>
+  )
+}
+
+function SettingsSelectRow<T extends string>({
+  label,
+  value,
+  options,
+  onChange,
+  displayValue
 }: {
-  selected: boolean
-  disabled?: boolean
+  label: string
+  value: T
+  options: { value: T; label: string }[]
+  onChange: (value: T) => void
+  displayValue?: string
+}): ReactElement {
+  return (
+    <label className="group relative flex cursor-pointer items-center justify-between gap-4 px-4 py-3">
+      <span className="text-[15px] text-ds-ink">{label}</span>
+      <div className="flex min-w-0 items-center gap-2 text-[15px] text-ds-muted">
+        <span className="truncate">{displayValue ?? value}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-ds-faint" strokeWidth={1.8} />
+      </div>
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value as T)}
+        className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
+        aria-label={label}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>{option.label}</option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
+function SettingsWorkspaceRow({
+  label,
+  value,
+  placeholder,
+  onClick
+}: {
+  label: string
+  value: string
+  placeholder: string
   onClick: () => void
-  children: ReactNode
 }): ReactElement {
   return (
     <button
       type="button"
-      disabled={disabled}
       onClick={onClick}
-      className={`h-9 min-w-0 rounded-xl border px-2.5 text-[12.5px] font-semibold transition ${
-        selected
-          ? 'border-accent/45 bg-accent/10 text-ds-ink shadow-sm'
-          : disabled
-            ? 'cursor-not-allowed border-ds-border bg-ds-subtle text-ds-faint opacity-60'
-            : 'border-ds-border bg-ds-main/55 text-ds-muted hover:bg-ds-hover hover:text-ds-ink'
-      }`}
+      className="flex w-full items-center justify-between gap-4 px-4 py-3 text-left"
     >
-      <span className="block truncate">{children}</span>
+      <span className="text-[15px] text-ds-ink">{label}</span>
+      <div className="flex min-w-0 items-center gap-2 text-[15px] text-ds-muted">
+        <span className="truncate">{value.trim() || placeholder}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 text-ds-faint" strokeWidth={1.8} />
+      </div>
     </button>
+  )
+}
+
+function SettingsToggleRow({
+  label,
+  checked,
+  onChange
+}: {
+  label: string
+  checked: boolean
+  onChange: (checked: boolean) => void
+}): ReactElement {
+  return (
+    <div className="flex items-center justify-between gap-4 px-4 py-3">
+      <span className="text-[15px] text-ds-ink">{label}</span>
+      <button
+        type="button"
+        onClick={() => onChange(!checked)}
+        className={`relative h-6 w-11 shrink-0 rounded-full transition ${checked ? 'bg-ds-ink' : 'bg-ds-border-strong'}`}
+        aria-pressed={checked}
+      >
+        <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition ${checked ? 'left-[22px]' : 'left-0.5'}`} />
+      </button>
+    </div>
+  )
+}
+
+function SettingsNumberRow({
+  label,
+  value,
+  min,
+  max,
+  onChange
+}: {
+  label: string
+  value: number
+  min?: number
+  max?: number
+  onChange: (value: number) => void
+}): ReactElement {
+  return (
+    <label className="flex items-center justify-between gap-4 px-4 py-3">
+      <span className="text-[15px] text-ds-ink">{label}</span>
+      <input
+        type="number"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(event) => onChange(Number(event.target.value))}
+        className="h-9 w-[100px] rounded-xl border border-ds-border bg-ds-main/55 px-3 text-[14px] text-ds-ink outline-none transition focus:border-accent/45 focus:ring-2 focus:ring-accent/15"
+      />
+    </label>
   )
 }
 

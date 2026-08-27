@@ -517,6 +517,7 @@ function UserFileReferenceChips({
 
 type TimelineMediaReference = GeneratedFileReference & {
   id?: string
+  localFilePath?: string
 }
 
 function readMediaString(raw: Record<string, unknown>, ...keys: string[]): string | undefined {
@@ -669,6 +670,7 @@ function mergeMediaReferences(
 type MediaPreviewRequest =
   | { key: string; id: string; mode: 'attachment' }
   | { key: string; path: string; mode: 'workspace-image' }
+  | { key: string; localFilePath: string; mode: 'local-file' }
 
 type GeneratedMediaScrollAvailability = {
   canScrollBackward: boolean
@@ -707,7 +709,18 @@ function useMediaPreviewUrls(media: TimelineMediaReference[]): Record<string, st
       media
         .map((item) => {
           const key = mediaKey(item)
-          if (item.previewUrl || resolvedPreviewUrls[key] || failedPreviewIds[key]) return null
+          if (resolvedPreviewUrls[key] || failedPreviewIds[key]) return null
+          if (
+            (item as TimelineMediaReference).localFilePath &&
+            typeof window.JokerGui?.readLocalImage === 'function'
+          ) {
+            return {
+              key,
+              localFilePath: (item as TimelineMediaReference).localFilePath!,
+              mode: 'local-file'
+            } satisfies MediaPreviewRequest
+          }
+          if (item.previewUrl) return null
           if (item.id && !item.artifactId && (mediaIsImage(item) || mediaIsVideo(item) || !item.mimeType)) {
             return { key, id: item.id, mode: 'attachment' } satisfies MediaPreviewRequest
           }
@@ -722,7 +735,9 @@ function useMediaPreviewUrls(media: TimelineMediaReference[]): Record<string, st
     .map((request) =>
       request.mode === 'attachment'
         ? `attachment:${request.id}`
-        : `workspace-image:${request.path}`
+        : request.mode === 'local-file'
+          ? `local-file:${request.localFilePath}`
+          : `workspace-image:${request.path}`
     )
     .join('\n')
 
@@ -733,6 +748,11 @@ function useMediaPreviewUrls(media: TimelineMediaReference[]): Record<string, st
     void Promise.all(
       previewRequests.map(async (request) => {
         try {
+          if (request.mode === 'local-file' && typeof window.JokerGui?.readLocalImage === 'function') {
+            const result = await window.JokerGui.readLocalImage({ path: request.localFilePath })
+            if (result.ok && result.dataUrl) return { key: request.key, previewUrl: result.dataUrl }
+            return { key: request.key, failed: true as const }
+          }
           if (request.mode === 'attachment' && request.id && typeof provider.getAttachmentContent === 'function') {
             const content = await provider.getAttachmentContent(request.id, {
               ...(activeThreadId ? { threadId: activeThreadId } : {}),
@@ -1066,7 +1086,7 @@ function MediaAttachmentGallery({
       <MediaPreviewTile
         key={key}
         media={item}
-        previewUrl={item.previewUrl ?? resolvedPreviewUrls[key]}
+        previewUrl={resolvedPreviewUrls[key] ?? item.previewUrl}
         variant={variant}
       />
     )

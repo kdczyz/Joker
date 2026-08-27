@@ -19,6 +19,7 @@ type ScheduleModelProviderOption = {
   providerId: string
   label: string
   modelIds: string[]
+  free?: boolean
 }
 
 function splitLooseList(value: string): string[] {
@@ -175,7 +176,7 @@ export function ScheduleDefaultsDialog({
             >
               {fallbackProviders.map((provider) => (
                 <option key={provider.providerId || provider.label} value={provider.providerId}>
-                  {provider.label}
+                  {provider.free ? `${provider.label} · ${t('scheduleProviderFree')}` : provider.label}
                 </option>
               ))}
             </select>

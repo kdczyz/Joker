@@ -670,6 +670,7 @@ export type JokerGuiApi = ExtensionIpcApi & {
   readWorkspaceFile: (options: WorkspaceFileTarget) => Promise<WorkspaceFileReadResult>
   lintProjectDesignMd: (content: string) => Promise<ProjectDesignMdOfficialLintResult>
   readWorkspaceImage: (options: WorkspaceFileTarget) => Promise<WorkspaceImageReadResult>
+  readLocalImage: (options: { path: string }) => Promise<{ ok: boolean; dataUrl?: string; mimeType?: string; size?: number; message?: string }>
   readWorkspacePdf: (options: WorkspaceFileTarget) => Promise<WorkspacePdfReadResult>
   readLocalPdfText: (options: LocalPdfTextTarget) => Promise<LocalPdfTextReadResult>
   saveWorkspaceFileAs: (payload: WorkspaceFileSaveAsPayload) => Promise<WorkspaceFileSaveAsResult>

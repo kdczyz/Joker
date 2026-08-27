@@ -28,6 +28,8 @@ export type AttachmentReference = {
   textPreview?: string
   documentText?: string
   previewUrl?: string
+  /** Absolute path to a local file with the original (or high-quality) image data. */
+  localFilePath?: string
 }
 
 export type GeneratedFileReference = {

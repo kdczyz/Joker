@@ -2213,6 +2213,41 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
       parseIpcPayload('file:read-workspace-image', workspaceFileTargetPayloadSchema, payload)
     )
   )
+  ipcMain.handle('file:read-local-image', async (_, payload: unknown) => {
+    const parsed = payload as { path?: string }
+    const filePath = typeof parsed?.path === 'string' ? parsed.path : ''
+    if (!filePath) return { ok: false, message: 'No file path provided.' }
+    try {
+      const fileInfo = await stat(filePath)
+      if (fileInfo.isDirectory()) return { ok: false, message: 'Cannot preview a directory.' }
+      if (fileInfo.size > 20 * 1024 * 1024)
+        return { ok: false, message: 'This image is too large to preview.' }
+      const ext = (filePath.split('.').pop() || '').toLowerCase()
+      const mimeMap: Record<string, string> = {
+        png: 'image/png',
+        jpg: 'image/jpeg',
+        jpeg: 'image/jpeg',
+        gif: 'image/gif',
+        webp: 'image/webp',
+        bmp: 'image/bmp',
+        svg: 'image/svg+xml',
+        tiff: 'image/tiff',
+        tif: 'image/tiff',
+        avif: 'image/avif'
+      }
+      const mimeType = mimeMap[ext]
+      if (!mimeType) return { ok: false, message: 'Unsupported image type.' }
+      const bytes = await readFile(filePath)
+      return {
+        ok: true,
+        dataUrl: `data:${mimeType};base64,${bytes.toString('base64')}`,
+        mimeType,
+        size: fileInfo.size
+      }
+    } catch (error) {
+      return { ok: false, message: error instanceof Error ? error.message : String(error) }
+    }
+  })
   ipcMain.handle('file:read-workspace-pdf', async (_, payload: unknown) =>
     readWorkspacePdf(
       parseIpcPayload('file:read-workspace-pdf', workspaceFileTargetPayloadSchema, payload)

@@ -52,5 +52,7 @@ export type RuntimeImageAttachmentUploadResult =
       attachment: RuntimeImageAttachmentMetadata
       preview: RuntimeImageAttachmentTextFallback
       compression: RuntimeImageAttachmentCompression
+      /** Absolute path to the persisted original-quality image on local disk. */
+      localFilePath?: string
     }
   | { ok: false; message: string }

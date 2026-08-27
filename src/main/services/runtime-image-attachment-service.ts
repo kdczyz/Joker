@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { mkdir, readFile, stat, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { basename, join } from 'node:path'
-import { clipboard } from 'electron'
+import { clipboard, app } from 'electron'
 import sharp from 'sharp'
 import { z } from 'zod'
 import type { RuntimeRequestResult } from '../../shared/Joker-gui-api'
@@ -157,6 +157,7 @@ export async function uploadRuntimeImageAttachment(
     const parsed = attachmentUploadResponseSchema.parse(JSON.parse(response.body))
     const { textFallback: _textFallback, ...attachment } = parsed.attachment
     void _textFallback
+    const localFilePath = await persistOriginalImage(source.data, source.name)
     return {
       ok: true,
       attachment,
@@ -166,7 +167,8 @@ export async function uploadRuntimeImageAttachment(
         outputBytes: prepared.upload.data.byteLength,
         fallbackBytes: prepared.fallback.data.byteLength,
         wasCompressed: prepared.upload.wasCompressed
-      }
+      },
+      ...(localFilePath ? { localFilePath } : {})
     }
   } catch (error) {
     return { ok: false, message: error instanceof Error ? error.message : String(error) }
@@ -423,4 +425,59 @@ function runtimeResponseError(response: RuntimeRequestResult, fallback: string):
     // Use the bounded fallback below for non-JSON runtime errors.
   }
   return `${fallback} (HTTP ${response.status})`
+}
+
+const ORIGINALS_DIR = 'sent-images'
+const MAX_ORIGINALS_ON_DISK = 500
+
+function storageDir(): string {
+  return join(app.getPath('userData'), ORIGINALS_DIR)
+}
+
+async function persistOriginalImage(data: Buffer, name: string | undefined): Promise<string | undefined> {
+  try {
+    const dir = storageDir()
+    await mkdir(dir, { recursive: true })
+    const ext = guessImageExtension(name)
+    const fileName = `${randomUUID()}${ext}`
+    const filePath = join(dir, fileName)
+    await writeFile(filePath, data, { mode: 0o600 })
+    await pruneOriginalsOnDisk(dir)
+    return filePath
+  } catch {
+    return undefined
+  }
+}
+
+async function pruneOriginalsOnDisk(dir: string): Promise<void> {
+  try {
+    const entries = await readdir(dir, { withFileTypes: true })
+    const files = entries.filter((e) => e.isFile()).map((e) => join(dir, e.name))
+    if (files.length <= MAX_ORIGINALS_ON_DISK) return
+    const stats = await Promise.all(
+      files.map(async (filePath) => {
+        try {
+          const s = await stat(filePath)
+          return { filePath, mtimeMs: s.mtimeMs }
+        } catch {
+          return { filePath, mtimeMs: 0 }
+        }
+      })
+    )
+    stats.sort((a, b) => a.mtimeMs - b.mtimeMs)
+    const toRemove = stats.slice(0, files.length - MAX_ORIGINALS_ONDisk)
+    await Promise.allSettled(
+      toRemove.map(async ({ filePath }) => {
+        const { unlink } = await import('node:fs/promises')
+        await unlink(filePath).catch(() => undefined)
+      })
+    )
+  } catch {
+    // Best-effort: never block upload on cleanup.
+  }
+}
+
+function guessImageExtension(name: string | undefined): string {
+  const match = name?.match(/\.(jpe?g|png|gif|webp|bmp|tiff?|avif)$/i)
+  return match ? `.${match[1].toLowerCase()}` : '.bin'
 }
