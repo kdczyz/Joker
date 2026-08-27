@@ -14,6 +14,8 @@ export interface CloudflareCredentials {
   refreshToken?: string | null
   scope: string
   user: CloudflareUser
+  /** Epoch ms when the access token expires (undefined when unknown). */
+  expiresAt?: number
 }
 
 const STORE_FILE = 'cloudflare-auth.json'

@@ -340,7 +340,7 @@ export function reduceChatProjection(
       }
       return {
         ...flushed,
-        blocks: [...baseBlocks, block],
+        blocks: context.upsertRuntimeError(baseBlocks, block),
         error: context.clearRecoveringError(state.error)
       }
     }

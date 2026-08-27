@@ -54,7 +54,7 @@ describe('SubagentsSettingsSection', () => {
     }))
 
     expect(html).toContain('data-testid="subagent-settings-editor"')
-    expect(html).toContain('data-model="deepseek-v4-pro"')
+    expect(html).toContain('data-model="deepseek-v4-flash-free"')
     expect(html).toContain('data-on-patch="function"')
     expect(html).toContain('data-variant="settings"')
   })

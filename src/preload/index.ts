@@ -195,6 +195,13 @@ const api = {
     ipcRenderer.invoke('cloudflare:set-client-id', { clientId }),
   cloudflareClearClientId: () =>
     ipcRenderer.invoke('cloudflare:clear-client-id'),
+  // --- Cloudflare MCP（官方远程 API MCP，复用 OAuth 凭据） ---
+  cloudflareEnableMcp: () =>
+    ipcRenderer.invoke('cloudflare:mcp:enable'),
+  cloudflareDisableMcp: () =>
+    ipcRenderer.invoke('cloudflare:mcp:disable'),
+  cloudflareMcpStatus: () =>
+    ipcRenderer.invoke('cloudflare:mcp:status'),
   ensurePptMaster: () => ipcRenderer.invoke('ppt-master:ensure'),
   openSkillRoot: (rootPath) =>
     ipcRenderer.invoke('skill:open-root', rootPath),

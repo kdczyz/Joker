@@ -5,7 +5,7 @@ description = "本地客户端 agent，可连接 AI 并在审批策略约束下�
 
 [ai]
 provider_config = "config/providers.json"
-active_provider = "nvidia"
+active_provider = "mimo"
 temperature = 0.3
 max_tokens = 16384
 

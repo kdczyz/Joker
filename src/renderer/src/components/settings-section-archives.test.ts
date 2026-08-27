@@ -118,7 +118,7 @@ describe('ArchivedThreadsSettingsSection', () => {
     expect(permissionsIndex).toBe(-1)
     expect(archivesIndex).toBeGreaterThan(subagentsIndex)
     expect(migrationIndex).toBeGreaterThan(archivesIndex)
-    expect(html.match(/data-cursor-spotlight-target/g)?.length).toBe(19)
+    expect(html.match(/data-cursor-spotlight-target/g)?.length).toBe(18)
   })
 
   it('keeps settings tabs scrollable without pushing the footer away', () => {

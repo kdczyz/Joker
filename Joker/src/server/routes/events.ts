@@ -181,7 +181,11 @@ export function buildEventStreamResponse(input: {
         if (closed) return
         if (replayOverflowed) {
           controller.enqueue(encoder.encode(
-            'event: error\ndata: {"message":"SSE replay overflow; reconnect from the last event cursor."}\n\n'
+            `event: error\ndata: ${JSON.stringify({
+              message: 'SSE replay overflow; reconnect from the last event cursor.',
+              code: 'sse_replay_overflow',
+              lastDeliveredSeq
+            })}\n\n`
           ))
           close()
           return

@@ -539,7 +539,7 @@ export function DesignSidebar({
                 <SidebarCommandRow
                   icon={<Settings className="h-4 w-4" strokeWidth={1.75} />}
                   label={t('settings')}
-                  onClick={() => onOpenSettings('design')}
+                  onClick={() => onOpenSettings('general')}
                   variant="footer"
                 />
               </div>

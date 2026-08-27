@@ -22,6 +22,7 @@ export type OpenChildThreadHandler = (threadId: string) => void
 const KNOWN_POSE_IDS = new Set([
   'general',
   'explore',
+  'component-designer',
   'design-reviewer',
   'over-engineering-reviewer',
   'code-review',

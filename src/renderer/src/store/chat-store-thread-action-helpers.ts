@@ -60,13 +60,16 @@ export function composerSelectionForThread(
   }
 }
 
+const MAX_SSE_RECONNECT_DEPTH = 5
+
 export function subscribeThreadEventsWithRecovery(
   provider: AgentProvider,
   threadId: string,
   sinceSeq: number,
   sink: ThreadEventSink,
   signal: AbortSignal,
-  get: ChatStoreGet
+  get: ChatStoreGet,
+  depth = 0
 ): void {
   void provider.subscribeThreadEvents(threadId, sinceSeq, sink, signal)
     .catch(() => undefined)
@@ -74,6 +77,15 @@ export function subscribeThreadEventsWithRecovery(
       if (signal.aborted) return
       const state = get()
       if (state.activeThreadId !== threadId || !state.busy) return
+      // SSE 流关闭（分页回放结束或连接断开）。如果深度未超限且 lastSeq 已推进，
+      // 用当前 cursor 轻量重连 SSE，避免每次走完整的 HTTP getThreadDetail。
+      if (depth < MAX_SSE_RECONNECT_DEPTH && state.lastSeq > sinceSeq) {
+        const ac = new AbortController()
+        signal.addEventListener('abort', () => ac.abort())
+        subscribeThreadEventsWithRecovery(provider, threadId, state.lastSeq, sink, ac.signal, get, depth + 1)
+        return
+      }
+      // 降级到完整恢复（HTTP getThreadDetail + 重新订阅）
       void state.recoverActiveTurn()
     })
 }

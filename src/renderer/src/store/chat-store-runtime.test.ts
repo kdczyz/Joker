@@ -44,6 +44,7 @@ function makeSinkHarness(overrides: Partial<ChatState> = {}): {
     turnDurationByUserId: {},
     turnReasoningFirstAtByUserId: {},
     turnReasoningLastAtByUserId: {},
+    turnTtftMsByUserId: {},
     watchTurnCompletion: {},
     unreadThreadIds: {},
     queuedMessages: [],

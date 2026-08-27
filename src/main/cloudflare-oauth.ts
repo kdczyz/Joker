@@ -22,21 +22,30 @@ import { getCloudflareClientId } from './services/cloudflare-credential-store'
  *   (Manage Account → OAuth clients); there is no global public client we can
  *   embed, so the user must supply their own `client_id` (or set
  *   `CLOUDFLARE_OAUTH_CLIENT_ID` at build/run time).
- * - Identity scopes `openid profile email` return profile data at userinfo.
+ * - Identity scope `openid` returns subject (sub) at userinfo. Cloudflare's
+ *   OAuth server ONLY supports scopes_supported: ["openid", "offline_access",
+ *   "offline"] (confirmed via /.well-known/openid-configuration). The `email`
+ *   and `profile` scopes are NOT supported and will trigger:
+ *   "The OAuth 2.0 Client is not allowed to request scope 'email'".
+ *   We request `openid` (sub) + `offline_access` (refresh_token grant).
+ *   User profile (email, name, avatar) is fetched from the Cloudflare API
+ *   `/client/v4/user` which the access token can call directly.
  */
 
 const CLOUDFLARE_AUTHORIZE_URL = 'https://dash.cloudflare.com/oauth2/auth'
 const CLOUDFLARE_TOKEN_URL = 'https://dash.cloudflare.com/oauth2/token'
-const CLOUDFLARE_USERINFO_URL = 'https://dash.cloudflare.com/oauth2/userinfo'
 const CLOUDFLARE_REVOKE_URL = 'https://dash.cloudflare.com/oauth2/revoke'
 const CLOUDFLARE_OAUTH_HOST = '127.0.0.1'
 const CLOUDFLARE_OAUTH_PORT = Number(process.env.CLOUDFLARE_OAUTH_PORT ?? 41824)
 const CLOUDFLARE_OAUTH_CALLBACK_PATH = '/cloudflare-oauth/callback'
 const CLOUDFLARE_OAUTH_TIMEOUT_MS = 120 * 1000
-// 身份 scope：userinfo 返回资料需要 openid；profile/email 提供展示字段。
-// Cloudflare OAuth client 创建时必须勾选对应 scope（Manage Account → OAuth
-// clients → Select permission scopes），否则 authorize 会返回 invalid_scope。
-const CLOUDFLARE_OAUTH_SCOPE = 'openid profile email'
+// 身份 scope：Cloudflare 的 OAuth 服务端只支持 openid / offline_access / offline
+// （确认来源：/.well-known/openid-configuration → scopes_supported）。
+// 请求 email / profile 会报 "scope ... not allowed"，因为后端根本不认识。
+// 所以只请求 openid（拿到 sub）+ offline_access（拿到 refresh_token 用于续期）。
+// email / name / avatar 通过 Cloudflare API /client/v4/user 获取（access token
+// 本身就是 API 的 Bearer token，无需额外授权）。
+const CLOUDFLARE_OAUTH_SCOPE = 'openid offline_access'
 
 // 当前正在运行的回调 server（一对一）。用于用户在授权途中关闭浏览器后，
 // 再次点击登录时能强制清理上一轮的残留监听，避免端口被占用而无法再次登录。
@@ -75,6 +84,8 @@ export interface CloudflareOAuthCredentials {
   refreshToken?: string | null
   scope: string
   user: CloudflareUser
+  /** Epoch ms when the access token expires (undefined when the token response lacks expires_in). */
+  expiresAt?: number
 }
 
 export type CloudflareOAuthResult =
@@ -139,7 +150,9 @@ async function postForm(url: string, body: Record<string, string>): Promise<Reco
 }
 
 async function fetchCloudflareUser(accessToken: string): Promise<CloudflareUser> {
-  const res = await fetch(CLOUDFLARE_USERINFO_URL, {
+  // OIDC /oauth2/userinfo 只返回 { sub }（claims_supported: ["sub"]）。
+  // 用 access token 直接调 Cloudflare REST API 拿完整资料：email / name / avatar。
+  const res = await fetch('https://api.cloudflare.com/client/v4/user', {
     headers: {
       Authorization: `Bearer ${accessToken}`,
       Accept: 'application/json'
@@ -149,13 +162,17 @@ async function fetchCloudflareUser(accessToken: string): Promise<CloudflareUser>
     throw new Error(`Cloudflare 用户信息获取失败 (${res.status})`)
   }
   const data = (await res.json()) as Record<string, unknown>
-  const str = (key: string): string | null => (typeof data[key] === 'string' && data[key] ? (data[key] as string) : null)
+  const result = (data.result && typeof data.result === 'object' ? data.result : data) as Record<string, unknown>
+  const str = (key: string): string | null => (typeof result[key] === 'string' && result[key] ? (result[key] as string) : null)
+  const firstName = str('first_name') ?? str('firstName')
+  const lastName = str('last_name') ?? str('lastName')
+  const fullName = [firstName, lastName].filter(Boolean).join(' ')
   return {
-    sub: str('sub') ?? str('id') ?? String(data.user_id ?? ''),
+    sub: str('id') ?? str('sub') ?? String(result.user_id ?? ''),
     email: str('email'),
-    emailVerified: data.email_verified === true,
-    name: str('name') ?? str('full_name'),
-    preferredUsername: str('preferred_username') ?? str('username') ?? str('login'),
+    emailVerified: typeof result.email_verified === 'boolean' ? result.email_verified : true,
+    name: str('name') ?? str('full_name') ?? (fullName || null),
+    preferredUsername: str('username') ?? str('login'),
     picture: str('picture') ?? str('avatar_url')
   }
 }
@@ -277,6 +294,13 @@ export async function startCloudflareOAuth(
               typeof tokens.refresh_token === 'string' && tokens.refresh_token
                 ? (tokens.refresh_token as string)
                 : null
+            const expiresIn =
+              typeof tokens.expires_in === 'number' && Number.isFinite(tokens.expires_in)
+                ? tokens.expires_in
+                : typeof tokens.expires_in === 'string' && Number.isFinite(Number(tokens.expires_in))
+                  ? Number(tokens.expires_in)
+                  : undefined
+            const expiresAt = expiresIn && expiresIn > 0 ? Date.now() + expiresIn * 1000 : undefined
             const user = await fetchCloudflareUser(accessToken)
             res
               .writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' })
@@ -286,7 +310,8 @@ export async function startCloudflareOAuth(
               accessToken,
               refreshToken,
               scope,
-              user
+              user,
+              expiresAt
             })
           })
           .catch((err: unknown) => {
@@ -330,6 +355,42 @@ export async function startCloudflareOAuth(
     cleanup()
     return { ok: false, message: error instanceof Error ? error.message : String(error) }
   }
+}
+
+/**
+ * Refresh a Cloudflare OAuth access token via the `refresh_token` grant
+ * (RFC 6749 §6). Requires the OAuth client to have the Refresh Token grant
+ * enabled and the original authorization to include `offline_access`.
+ *
+ * @returns the fresh access token (and rotated refresh token when the server
+ * returns one), or throws on failure.
+ */
+export async function refreshCloudflareToken(
+  refreshToken: string,
+  clientId: string
+): Promise<{ accessToken: string; refreshToken?: string | null; expiresAt?: number }> {
+  const body: Record<string, string> = {
+    grant_type: 'refresh_token',
+    refresh_token: refreshToken,
+    client_id: clientId
+  }
+  const tokens = await postForm(CLOUDFLARE_TOKEN_URL, body)
+  const accessToken = tokens.access_token as string | undefined
+  if (!accessToken) {
+    throw new Error(`Cloudflare OAuth 刷新令牌失败：${JSON.stringify(tokens).slice(0, 400)}`)
+  }
+  const nextRefresh =
+    typeof tokens.refresh_token === 'string' && tokens.refresh_token
+      ? (tokens.refresh_token as string)
+      : null
+  const expiresIn =
+    typeof tokens.expires_in === 'number' && Number.isFinite(tokens.expires_in)
+      ? tokens.expires_in
+      : typeof tokens.expires_in === 'string' && Number.isFinite(Number(tokens.expires_in))
+        ? Number(tokens.expires_in)
+        : undefined
+  const expiresAt = expiresIn && expiresIn > 0 ? Date.now() + expiresIn * 1000 : undefined
+  return { accessToken, refreshToken: nextRefresh, expiresAt }
 }
 
 /**

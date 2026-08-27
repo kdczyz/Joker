@@ -72,12 +72,6 @@ import { useActiveExtensionWorkspaceRoot } from '../extensions/active-extension-
 const ProvidersSettingsSection = lazy(() =>
   import('./settings-section-providers').then((module) => ({ default: module.ProvidersSettingsSection }))
 )
-const DesignSettingsSection = lazy(() =>
-  import('./settings-section-design').then((module) => ({ default: module.DesignSettingsSection }))
-)
-const MediaGenerationSettingsSection = lazy(() =>
-  import('./settings-section-media-generation').then((module) => ({ default: module.MediaGenerationSettingsSection }))
-)
 const AgentsSettingsSection = lazy(() =>
   import('./settings-section-agents').then((module) => ({ default: module.AgentsSettingsSection }))
 )
@@ -117,9 +111,6 @@ const ProfileSettingsSection = lazy(() =>
 const WriteDebugLogModal = lazy(() =>
   import('./settings-debug-log').then((module) => ({ default: module.WriteDebugLogModal }))
 )
-const BackendSettingsSection = lazy(() =>
-  import('./settings-section-backend').then((module) => ({ default: module.BackendSettingsSection }))
-)
 const WebSearchSettingsSection = lazy(() =>
   import('./settings-section-web-search').then((module) => ({ default: module.WebSearchSettingsSection }))
 )
@@ -150,7 +141,7 @@ function SettingsSectionFallback(): ReactElement {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch' | 'github' | 'cloudflare'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'cloudflare'
 type SettingsPatch = AppSettingsPatch
 type InlineNotice = {
   tone: 'success' | 'error' | 'info'
@@ -423,18 +414,6 @@ export function SettingsView(): ReactElement {
       setCategory('providers')
       return
     }
-    if (settingsSection === 'design') {
-      setCategory('design')
-      return
-    }
-    if (settingsSection === 'imageGeneration') {
-      setCategory('mediaGeneration')
-      return
-    }
-    if (settingsSection === 'mediaGeneration') {
-      setCategory('mediaGeneration')
-      return
-    }
     if (settingsSection === 'permissions') {
       setCategory('agents')
       return
@@ -475,9 +454,6 @@ export function SettingsView(): ReactElement {
     if (
       settingsSection === 'general' ||
       settingsSection === 'providers' ||
-      settingsSection === 'design' ||
-      settingsSection === 'imageGeneration' ||
-      settingsSection === 'mediaGeneration' ||
       settingsSection === 'subagents' ||
       settingsSection === 'archives' ||
       settingsSection === 'claw' ||
@@ -1401,12 +1377,9 @@ export function SettingsView(): ReactElement {
           ) : null}
           <Suspense fallback={<SettingsSectionFallback />}>
             {category === 'providers' ? <ProvidersSettingsSection ctx={settingsSectionContext} /> : null}
-            {category === 'design' ? <DesignSettingsSection ctx={settingsSectionContext} /> : null}
-            {category === 'mediaGeneration' ? <MediaGenerationSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'agents' ? (
               <LoadedAgentsSettingsSection ctx={settingsSectionContext} onReady={markAgentsSectionReady} />
             ) : null}
-            {category === 'backend' ? <BackendSettingsSection /> : null}
             {category === 'subagents' ? <SubagentsSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'archives' ? <ArchivedThreadsSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'worktree' ? <WorktreeSettingsSection ctx={settingsSectionContext} /> : null}

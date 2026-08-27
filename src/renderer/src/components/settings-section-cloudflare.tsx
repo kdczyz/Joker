@@ -15,6 +15,17 @@ export function CloudflareSettingsSection(): ReactElement {
   const [error, setError] = useState('')
   const [clientId, setClientId] = useState('')
   const [clientIdLoaded, setClientIdLoaded] = useState(false)
+  const [mcpEnabled, setMcpEnabled] = useState(false)
+  const [mcpBusy, setMcpBusy] = useState(false)
+
+  const loadMcpStatus = useCallback(async (): Promise<void> => {
+    try {
+      const r = await window.JokerGui.cloudflareMcpStatus()
+      setMcpEnabled(r.enabled)
+    } catch {
+      setMcpEnabled(false)
+    }
+  }, [])
 
   const loadAccount = useCallback(async (): Promise<void> => {
     setLoading(true)
@@ -26,8 +37,9 @@ export function CloudflareSettingsSection(): ReactElement {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
+      void loadMcpStatus()
     }
-  }, [])
+  }, [loadMcpStatus])
 
   useEffect(() => {
     void loadAccount()
@@ -71,6 +83,28 @@ export function CloudflareSettingsSection(): ReactElement {
       await loadAccount()
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err))
+    }
+  }
+
+  const toggleMcp = async (): Promise<void> => {
+    setMcpBusy(true)
+    setError('')
+    try {
+      if (mcpEnabled) {
+        await window.JokerGui.cloudflareDisableMcp()
+        setMcpEnabled(false)
+      } else {
+        const r = await window.JokerGui.cloudflareEnableMcp()
+        if (!r.ok) {
+          setError(r.message ?? '启用 Cloudflare MCP 失败')
+          return
+        }
+        setMcpEnabled(true)
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err))
+    } finally {
+      setMcpBusy(false)
     }
   }
 
@@ -160,6 +194,31 @@ export function CloudflareSettingsSection(): ReactElement {
                 http://127.0.0.1:41824/cloudflare-oauth/callback
               </code>
             </div>
+          </div>
+        }
+      />
+      <SettingRow
+        title={t('cloudflareMcpTitle')}
+        description={t('cloudflareMcpDesc')}
+        wideControl
+        control={
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              disabled={mcpBusy || !status?.connected}
+              onClick={() => void toggleMcp()}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#f6821f] px-4 py-2.5 text-[14px] font-semibold text-white transition hover:bg-[#e6781a] disabled:opacity-60 sm:w-auto"
+            >
+              {mcpBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Cloud className="h-4 w-4" />}
+              {mcpEnabled ? t('cloudflareMcpDisable') : t('cloudflareMcpEnable')}
+            </button>
+            <span className="text-[12px] text-ds-faint">
+              {!status?.connected
+                ? t('cloudflareMcpLoginFirst')
+                : mcpEnabled
+                  ? t('cloudflareMcpEnabledState')
+                  : t('cloudflareMcpDisabledState')}
+            </span>
           </div>
         }
       />

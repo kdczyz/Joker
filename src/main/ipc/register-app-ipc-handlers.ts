@@ -165,6 +165,11 @@ import {
   revokeCloudflareToken
 } from '../cloudflare-oauth'
 import {
+  enableCloudflareMcp,
+  disableCloudflareMcp,
+  isCloudflareMcpEnabled
+} from '../cloudflare-mcp'
+import {
   storeCloudflareCredentials,
   getCloudflareCredentials,
   clearCloudflareCredentials,
@@ -1302,6 +1307,20 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   ipcMain.handle('cloudflare:clear-client-id', async () => {
     await clearCloudflareClientId()
     return { ok: true }
+  })
+
+  // --- Cloudflare MCP（官方远程 API MCP，复用 OAuth 凭据） ---
+  ipcMain.handle('cloudflare:mcp:enable', async () => {
+    return enableCloudflareMcp()
+  })
+
+  ipcMain.handle('cloudflare:mcp:disable', async () => {
+    await disableCloudflareMcp()
+    return { ok: true }
+  })
+
+  ipcMain.handle('cloudflare:mcp:status', async () => {
+    return { enabled: await isCloudflareMcpEnabled() }
   })
 
   ipcMain.handle('github:list-repos', async () => {

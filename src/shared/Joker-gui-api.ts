@@ -580,6 +580,10 @@ export type JokerGuiApi = ExtensionIpcApi & {
   cloudflareGetClientId: () => Promise<{ clientId: string | null }>
   cloudflareSetClientId: (clientId: string) => Promise<{ ok: boolean }>
   cloudflareClearClientId: () => Promise<{ ok: boolean }>
+  /** 启用官方远程 Cloudflare API MCP（复用已授权 OAuth 凭据作为 Bearer）。 */
+  cloudflareEnableMcp: () => Promise<{ ok: boolean; message?: string }>
+  cloudflareDisableMcp: () => Promise<{ ok: boolean }>
+  cloudflareMcpStatus: () => Promise<{ enabled: boolean }>
   /** Install/repair the managed PPT Master skill and its isolated Python environment. */
   ensurePptMaster: () => Promise<PptMasterEnsureResult>
   openSkillRoot: (rootPath: string) => Promise<PathOpenResult>

@@ -40,7 +40,7 @@ export function extractCompactionStateSnapshot(
       case 'tool_call': {
         // 只统计真正的写操作：read ≠ modified，把 read 路径混入会误导后续
         // 模型去“继续编辑”只读过的文件。
-        if (item.toolName === 'write' || item.toolName === 'edit') {
+        if (['write', 'edit', 'patch', 'create', 'rename', 'delete', 'move', 'copy'].includes(item.toolName)) {
           const path = extractPathFromArguments(item.arguments)
           if (path) editedFiles.add(path)
         }

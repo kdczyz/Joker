@@ -21,16 +21,24 @@ const { cloudflareCallbackUrl, revokeCloudflareToken, startCloudflareOAuth } = a
 const TOKEN_RESPONSE = {
   access_token: 'cf-access-token-123',
   refresh_token: 'cf-refresh-456',
-  scope: 'openid profile email',
+  scope: 'openid offline_access',
   token_type: 'Bearer'
 }
 
-const USERINFO = {
-  sub: 'user-0001',
-  email: 'ada@example.com',
-  email_verified: true,
-  name: 'Ada Lovelace',
-  preferred_username: 'ada'
+// Mock /client/v4/user response — Cloudflare REST API format。
+const CF_USER_API = {
+  success: true,
+  errors: [],
+  messages: [],
+  result: {
+    id: 'user-0001',
+    email: 'ada@example.com',
+    email_verified: true,
+    firstName: 'Ada',
+    lastName: 'Lovelace',
+    username: 'ada',
+    avatarUrl: 'https://example.com/avatar.png'
+  }
 }
 
 function mockFetch(): ReturnType<typeof vi.fn> {
@@ -39,8 +47,8 @@ function mockFetch(): ReturnType<typeof vi.fn> {
     if (url.includes('/oauth2/token')) {
       return new Response(JSON.stringify(TOKEN_RESPONSE), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
-    if (url.includes('/oauth2/userinfo')) {
-      return new Response(JSON.stringify(USERINFO), { status: 200, headers: { 'Content-Type': 'application/json' } })
+    if (url.includes('/client/v4/user')) {
+      return new Response(JSON.stringify(CF_USER_API), { status: 200, headers: { 'Content-Type': 'application/json' } })
     }
     if (url.includes('/oauth2/revoke')) {
       return new Response('{}', { status: 200 })

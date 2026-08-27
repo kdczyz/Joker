@@ -1,5 +1,5 @@
 {
-  "activeProvider": "nvidia",
+  "activeProvider": "mimo",
   "providers": {
     "nvidia": {
       "type": "openai-compatible",

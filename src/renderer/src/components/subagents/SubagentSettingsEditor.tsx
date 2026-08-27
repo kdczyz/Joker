@@ -81,10 +81,11 @@ async function loadCapabilityCatalog(): Promise<CapabilityCatalog> {
 }
 
 /** Joker's REAL built-in delegatable subagents (mirror Joker/src/delegation/builtin-profiles.ts). */
-const BUILTIN_IDS = new Set(['general', 'explore', 'design-reviewer', 'over-engineering-reviewer'])
+const BUILTIN_IDS = new Set(['general', 'explore', 'component-designer', 'design-reviewer', 'over-engineering-reviewer'])
 const BUILTIN_AGENTS: JokerSubagentProfileV1[] = [
   { id: 'general', enabled: true, name: '', mode: 'subagent', toolPolicy: 'inherit', color: '#3b82d8' },
   { id: 'explore', enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly', color: '#1d9e75' },
+  { id: 'component-designer', enabled: true, name: '', mode: 'subagent', toolPolicy: 'inherit', color: '#8b5cf6' },
   { id: 'design-reviewer', enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly', color: '#7f77dd' },
   { id: 'over-engineering-reviewer', enabled: true, name: '', mode: 'subagent', toolPolicy: 'readOnly', color: '#e8943a' }
 ]

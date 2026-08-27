@@ -1,7 +1,31 @@
 import type { Dispatch, ReactElement, SetStateAction } from 'react'
-import { Archive, AudioLines, Bot, BrainCircuit, Bug, ChevronLeft, Cloud, GitBranch, Github, Globe, Keyboard, Layers, Palette, Puzzle, RefreshCw, Search, ServerCog, Settings, ShieldCheck, Smartphone, TerminalSquare, User, UsersRound, PackageOpen } from 'lucide-react'
+import {
+  Archive,
+  Bot,
+  BrainCircuit,
+  Bug,
+  ChevronLeft,
+  ChevronRight,
+  Cloud,
+  GitBranch,
+  Github,
+  Globe,
+  Keyboard,
+  Layers,
+  Puzzle,
+  RefreshCw,
+  Search,
+  ServerCog,
+  ShieldCheck,
+  Smartphone,
+  TerminalSquare,
+  User,
+  UsersRound,
+  PackageOpen
+} from 'lucide-react'
+import { useAuth } from '../auth/AuthGate'
 
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'design' | 'mediaGeneration' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'backend' | 'webSearch' | 'github' | 'cloudflare'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'claw' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'cloudflare'
 
 export function SettingsSidebar({
   category,
@@ -16,6 +40,10 @@ export function SettingsSidebar({
   extensionSettingsAvailable?: boolean
   t: (key: string) => string
 }): ReactElement {
+  const auth = useAuth()
+  const accountDisplayName = auth.user.displayName
+  const accountInitials = auth.user.displayName.slice(0, 2).toUpperCase()
+  const accountIsGuest = Boolean(auth.user.isGuest)
   const catCls = (c: SettingsCategory): string =>
     `flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-[14px] font-medium transition ${
       category === c
@@ -106,38 +134,11 @@ export function SettingsSidebar({
         <button
           type="button"
           data-cursor-spotlight-target
-          className={catCls('design')}
-          onClick={() => setCategory('design')}
-        >
-          <Palette className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
-          {t('design')}
-        </button>
-        <button
-          type="button"
-          data-cursor-spotlight-target
-          className={catCls('mediaGeneration')}
-          onClick={() => setCategory('mediaGeneration')}
-        >
-          <AudioLines className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
-          {t('mediaGeneration')}
-        </button>
-        <button
-          type="button"
-          data-cursor-spotlight-target
           className={catCls('agents')}
           onClick={() => setCategory('agents')}
         >
           <Bot className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('agents')}
-        </button>
-        <button
-          type="button"
-          data-cursor-spotlight-target
-          className={catCls('backend')}
-          onClick={() => setCategory('backend')}
-        >
-          <RefreshCw className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
-          {t('backend')}
         </button>
         <button
           type="button"
@@ -231,15 +232,29 @@ export function SettingsSidebar({
         </button>
       </nav>
       <div className="ds-no-drag shrink-0 border-t border-ds-border p-3">
-        <div className="flex items-center gap-2 rounded-xl px-2 py-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-ds-subtle text-ds-muted">
-            <Settings className="h-4 w-4" strokeWidth={1.75} />
+        <button
+          type="button"
+          data-cursor-spotlight-target
+          onClick={goBack}
+          className="group flex w-full items-center gap-2.5 rounded-xl px-2 py-2 text-left transition duration-150 hover:bg-ds-hover"
+          aria-label={`${accountDisplayName} · ${t('userHome')}`}
+        >
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-[#8470ed] to-[#5aa7dc] text-[11px] font-semibold text-white shadow-[0_2px_8px_rgba(111,93,221,0.3)]">
+            {accountInitials}
           </div>
-          <div className="min-w-0 text-[12px] text-ds-muted">
-            <div className="truncate font-medium text-ds-ink">Joker</div>
-            <div className="truncate">{t('settingsFooter')}</div>
+          <div className="min-w-0 flex-1">
+            <div className="truncate text-[13px] font-medium text-ds-ink">
+              {accountIsGuest ? t('guestAccount') : accountDisplayName}
+            </div>
+            <div className="truncate text-[11px] text-ds-faint">
+              {accountIsGuest ? t('guestDescription') : t('userHome')}
+            </div>
           </div>
-        </div>
+          <ChevronRight
+            className="h-4 w-4 shrink-0 text-ds-faint transition group-hover:translate-x-0.5 group-hover:text-ds-ink"
+            strokeWidth={1.75}
+          />
+        </button>
       </div>
     </aside>
   )

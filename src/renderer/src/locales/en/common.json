@@ -2978,6 +2978,10 @@
       "explore": {
         "name": "Explore",
         "desc": "Read-only · find & search code"
+      },
+      "component-designer": {
+        "name": "Component designer",
+        "desc": "Builds single-component HTML prototypes · never touches production code"
       }
     },
     "builtin": "Built-in"

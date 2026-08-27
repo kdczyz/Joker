@@ -2978,6 +2978,10 @@
       "explore": {
         "name": "探索代理",
         "desc": "只读 · 查找文件、搜索代码"
+      },
+      "component-designer": {
+        "name": "组件交互设计",
+        "desc": "生成单组件 HTML 交互稿 · 不碰生产源码"
       }
     },
     "builtin": "内置"

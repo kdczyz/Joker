@@ -32,6 +32,7 @@ vi.mock('react-i18next', () => ({
       subagentsAutomaticRoles: 'Automatic model roles',
       'subagentsPanel.role.general.name': 'General',
       'subagentsPanel.role.explore.name': 'Explore',
+      'subagentsPanel.role.component-designer.name': 'Component designer',
       'subagentsPanel.role.design-reviewer.name': 'Design review',
       'subagentsPanel.role.over-engineering-reviewer.name': 'Over-engineering review'
     }[key] ?? fallback ?? key)

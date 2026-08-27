@@ -142,8 +142,8 @@ async function healSessionItemsForFinishedTurns(
   for (const item of healedItems) {
     try {
       await sessionStore.updateItem(thread.id, item.id, item)
-    } catch {
-      // Healing is best-effort; the response still uses the repaired view.
+    } catch (error) {
+      console.warn(`[Joker] failed to heal session item ${item.id} for thread ${thread.id}:`, error)
     }
   }
   return nextItems

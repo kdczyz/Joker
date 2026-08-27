@@ -166,7 +166,7 @@ export function useWorkbenchRightPanelElement({
           contextChips: designValue.contextChips,
           onRemoveContextChip: designValue.onRemoveContextChip,
           onSend: () => designValue.onSendPrompt(designValue.input),
-          onOpenSettings: (section) => openSettings((section ?? 'design') as SettingsRouteSection),
+          onOpenSettings: (section) => openSettings((section ?? 'general') as SettingsRouteSection),
           onNewConversation: () => {
             const designStore = useDesignWorkspaceStore.getState()
             const root = designStore.workspaceRoot || designValue.fallbackWorkspaceRoot
