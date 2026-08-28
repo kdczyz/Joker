@@ -108,7 +108,12 @@ export function findRecoverableClawThread(
     .filter((thread) => clawThreadTitleLooksManaged(thread.title))
     .sort((a, b) => updatedAtMs(b) - updatedAtMs(a))
   return (
-    candidates.find((thread) => thread.title.trim().startsWith(CLAW_MANAGED_INSTRUCTIONS_HEADING)) ??
+    // The managed-instructions heading matches regardless of channel: with
+    // several IM devices bound it would happily claim another device's thread,
+    // so only trust it when this is the only configured channel.
+    (channels.length <= 1
+      ? candidates.find((thread) => thread.title.trim().startsWith(CLAW_MANAGED_INSTRUCTIONS_HEADING))
+      : undefined) ??
     candidates.find((thread) => titleMatchesClawChannel(thread, channel)) ??
     null
   )
@@ -194,6 +199,21 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
     sseAbortRef,
     clearBusyWatchdog
   } = options
+  // Persist a change to one channel from a FRESH settings snapshot. Inbound
+  // phone messages patch the other channels' conversation bindings on the
+  // main-process side while this renderer works, and `claw.channels` is merged
+  // as a whole array — writing back a snapshot captured before those awaits
+  // would roll the other devices' bindings back and break sidebar switching.
+  const persistChannelUpdate = async (
+    channelId: string,
+    updateChannel: (channel: ClawImChannelV1) => ClawImChannelV1
+  ): Promise<ReturnType<typeof rendererRuntimeClient.setSettings>> => {
+    const fresh = await rendererRuntimeClient.getSettings({ forceRefresh: true })
+    const nextChannels = fresh.claw.channels.map((item) =>
+      item.id === channelId ? updateChannel(item) : item
+    )
+    return rendererRuntimeClient.setSettings({ claw: { channels: nextChannels } })
+  }
   // Opening a Claw channel performs several asynchronous lookups before it
   // reaches selectThread.  A startup refresh can therefore finish after a
   // user clicks another channel and re-select the old conversation.  Keep a
@@ -345,7 +365,7 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
         return
       }
       if (typeof window.JokerGui === 'undefined') return
-      const settings = await rendererRuntimeClient.getSettings()
+      const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
       if (!isLatestSelection()) return
       const channels = settings.claw.channels
       const channel = channels.find((item) => item.id === channelId)
@@ -383,10 +403,9 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
         if (!latestConversation) {
           if (configuredThreadId) {
             const now = new Date().toISOString()
-            const nextChannels = channels.map((item) =>
-              item.id === channel.id ? { ...item, threadId: '', updatedAt: now } : item
+            const saved = await persistChannelUpdate(channel.id, (item) =>
+              ({ ...item, threadId: '', updatedAt: now })
             )
-            const saved = await rendererRuntimeClient.setSettings({ claw: { channels: nextChannels } })
             emitRendererSettingsChanged(saved)
             set({ clawChannels: saved.claw.channels })
           }
@@ -425,12 +444,9 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
         threadId !== configuredThreadId
       ) {
         const now = new Date().toISOString()
-        const nextChannels = channels.map((item) =>
-          item.id === channel.id
-            ? channelWithClawThreadMapping(item, threadId, now, latestConversation?.id)
-            : item
+        const saved = await persistChannelUpdate(channel.id, (item) =>
+          channelWithClawThreadMapping(item, threadId, now, latestConversation?.id)
         )
-        const saved = await rendererRuntimeClient.setSettings({ claw: { channels: nextChannels } })
         emitRendererSettingsChanged(saved)
         set({ clawChannels: saved.claw.channels })
       }
@@ -456,7 +472,7 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
         return
       }
       if (typeof window.JokerGui === 'undefined') return
-      const settings = await rendererRuntimeClient.getSettings()
+      const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
       if (!isLatestSelection()) return
       const channels = settings.claw.channels
       const channel = channels.find((item) => item.id === channelId)
@@ -522,12 +538,9 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
       }))
       if (!conversation.localThreadId.trim() || targetThreadId !== configuredThreadId) {
         const now = new Date().toISOString()
-        const nextChannels = channels.map((item) =>
-          item.id === channel.id
-            ? channelWithClawThreadMapping(item, targetThreadId, now, conversation.id)
-            : item
+        const saved = await persistChannelUpdate(channel.id, (item) =>
+          channelWithClawThreadMapping(item, targetThreadId, now, conversation.id)
         )
-        const saved = await rendererRuntimeClient.setSettings({ claw: { channels: nextChannels } })
         if (!isLatestSelection()) return
         set({ clawChannels: saved.claw.channels })
       }
@@ -539,7 +552,7 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
 
     deleteClawChannel: async (channelId) => {
       if (typeof window.JokerGui === 'undefined') return
-      const settings = await rendererRuntimeClient.getSettings()
+      const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
       const channel = settings.claw.channels.find((item) => item.id === channelId)
       const channels = settings.claw.channels.filter((item) => item.id !== channelId)
       const saved = await rendererRuntimeClient.setSettings({ claw: { channels } })
@@ -572,7 +585,7 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
         return
       }
       if (typeof window.JokerGui === 'undefined') return
-      const settings = await rendererRuntimeClient.getSettings()
+      const settings = await rendererRuntimeClient.getSettings({ forceRefresh: true })
       const channel = settings.claw.channels.find((item) => item.id === channelId)
       if (!channel) return
       const provider = getProvider()
@@ -586,21 +599,16 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
           mode: 'agent'
         })
         const now = new Date().toISOString()
-        const channels = settings.claw.channels.map((item) =>
-          item.id === channel.id
-            ? {
-                ...item,
-                threadId: thread.id,
-                conversations: item.conversations.map((conversation) => ({
-                  ...conversation,
-                  localThreadId: thread.id,
-                  updatedAt: now
-                })),
-                updatedAt: now
-              }
-            : item
-        )
-        const saved = await rendererRuntimeClient.setSettings({ claw: { channels } })
+        const saved = await persistChannelUpdate(channel.id, (item) => ({
+          ...item,
+          threadId: thread.id,
+          conversations: item.conversations.map((conversation) => ({
+            ...conversation,
+            localThreadId: thread.id,
+            updatedAt: now
+          })),
+          updatedAt: now
+        }))
         emitRendererSettingsChanged(saved)
         set((state) => ({
           route: 'claw',
@@ -630,19 +638,13 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
       if (typeof window.JokerGui === 'undefined') return
       const normalized = normalizeClawComposerModel(model)
       const normalizedProviderId = providerId?.trim() ?? ''
-      const settings = await rendererRuntimeClient.getSettings()
       const now = new Date().toISOString()
-      const channels = settings.claw.channels.map((channel) =>
-        channel.id === channelId
-          ? {
-              ...channel,
-              model: normalized,
-              ...(normalizedProviderId ? { providerId: normalizedProviderId } : {}),
-              updatedAt: now
-            }
-          : channel
-      )
-      const saved = await rendererRuntimeClient.setSettings({ claw: { channels } })
+      const saved = await persistChannelUpdate(channelId, (item) => ({
+        ...item,
+        model: normalized,
+        ...(normalizedProviderId ? { providerId: normalizedProviderId } : {}),
+        updatedAt: now
+      }))
       emitRendererSettingsChanged(saved)
       set({
         clawChannels: saved.claw.channels,

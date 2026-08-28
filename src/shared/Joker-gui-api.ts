@@ -509,6 +509,7 @@ export type JokerGuiApi = ExtensionIpcApi & {
   runClawTask: (taskId: string) => Promise<ClawRunResult>
   getScheduleStatus: () => Promise<ScheduleRuntimeStatus>
   runScheduleTask: (taskId: string) => Promise<ScheduleRunResult>
+  stopScheduleTask: (taskId: string) => Promise<ScheduleRunResult>
   getWorkflowStatus: () => Promise<WorkflowRuntimeStatus>
   runWorkflow: (workflowId: string, input?: unknown) => Promise<WorkflowRunResult>
   stopWorkflow: (workflowId: string) => Promise<WorkflowRunResult>

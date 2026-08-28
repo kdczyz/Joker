@@ -106,6 +106,9 @@ const WebSearchSettingsSection = lazy(() =>
 const GithubSettingsSection = lazy(() =>
   import('./settings-section-github').then((module) => ({ default: module.GithubSettingsSection }))
 )
+const ClawSettingsSection = lazy(() =>
+  import('./settings-section-claw').then((module) => ({ default: module.ClawSettingsSection }))
+)
 
 
 function LoadedAgentsSettingsSection({
@@ -128,7 +131,7 @@ function SettingsSectionFallback(): ReactElement {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'extensions' | 'dataMigration' | 'webSearch' | 'github'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'claw'
 type SettingsPatch = AppSettingsPatch
 type InlineNotice = {
   tone: 'success' | 'error' | 'info'
@@ -415,6 +418,10 @@ export function SettingsView(): ReactElement {
     }
     if (settingsSection === 'dataMigration') {
       setCategory('dataMigration')
+      return
+    }
+    if (settingsSection === 'claw') {
+      setCategory('claw')
       return
     }
     setCategory('agents')
@@ -1375,6 +1382,7 @@ export function SettingsView(): ReactElement {
             {category === 'dataMigration' ? <DataMigrationSettingsSection /> : null}
             {category === 'webSearch' ? <WebSearchSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'github' ? <GithubSettingsSection /> : null}
+            {category === 'claw' ? <ClawSettingsSection ctx={settingsSectionContext} /> : null}
 
           </Suspense>
           </div>

@@ -8,6 +8,8 @@ import {
   DEFAULT_WRITE_INLINE_COMPLETION_MODEL,
   DEFAULT_WRITE_INLINE_LONG_COMPLETION_MAX_TOKENS,
   DEFAULT_JOKER_DATA_DIR,
+  UI_FONT_SCALE_MIN,
+  UI_FONT_SCALE_MAX,
   WRITE_INLINE_COMPLETION_MODEL_IDS,
   isJokerRuntimeInsecure
 } from '@shared/app-settings'
@@ -272,6 +274,29 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
                   }
                 />
 
+
+                <SettingRow
+                  title={t('fontScale')}
+                  description={t('fontScaleDesc')}
+                  control={
+                    <div className="grid w-full min-w-0 gap-2 md:max-w-md">
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="range"
+                          min={UI_FONT_SCALE_MIN}
+                          max={UI_FONT_SCALE_MAX}
+                          step={0.01}
+                          value={form.uiFontScale}
+                          className="h-2 flex-1 cursor-pointer rounded-full accent-accent"
+                          onChange={(e) => update({ uiFontScale: Number(e.target.value) })}
+                        />
+                        <span className="min-w-[56px] text-right text-[13px] font-medium tabular-nums text-ds-ink">
+                          {t('fontScaleCurrent', { value: `${Math.round(form.uiFontScale * 100)}%` })}
+                        </span>
+                      </div>
+                    </div>
+                  }
+                />
 
                 <SettingRow
                   title={t('workspaceRoot')}

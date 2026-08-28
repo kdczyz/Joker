@@ -69,7 +69,12 @@ export function ClawStepContent({ ctx }: { ctx: Record<string, any> }): ReactEle
     showSecret,
     startOfficialInstallQr,
     t,
-    updateAgentProfile
+    updateAgentProfile,
+    telegramTokenMode,
+    telegramBotToken,
+    telegramChatIds,
+    setTelegramBotToken,
+    setTelegramChatIds
   } = ctx
   const installTargets = effectiveProvider === 'weixin'
     ? ['weixin'] as const
@@ -265,6 +270,37 @@ export function ClawStepContent({ ctx }: { ctx: Record<string, any> }): ReactEle
                           <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" strokeWidth={1.9} />
                           <span>{requiresOfficialInstall ? t('clawAddImOfficialBindingHint') : t('clawAddImPayloadHint')}</span>
                         </div>
+                        {telegramTokenMode ? (
+                          <div className="mt-4 space-y-3">
+                            <label className="block min-w-0">
+                              <span className="mb-1.5 block text-[12px] font-semibold text-ds-muted">
+                                {t('connectPhoneTelegramBotTokenLabel')}
+                              </span>
+                              <input
+                                type="password"
+                                value={telegramBotToken}
+                                onChange={(event) => setTelegramBotToken(event.target.value)}
+                                placeholder={t('connectPhoneTelegramBotTokenPlaceholder')}
+                                className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2.5 text-[13px] text-ds-ink outline-none transition focus:border-accent/60"
+                              />
+                            </label>
+                            <label className="block min-w-0">
+                              <span className="mb-1.5 block text-[12px] font-semibold text-ds-muted">
+                                {t('connectPhoneTelegramAllowedChatsLabel')}
+                              </span>
+                              <input
+                                type="text"
+                                value={telegramChatIds}
+                                onChange={(event) => setTelegramChatIds(event.target.value)}
+                                placeholder={t('connectPhoneTelegramAllowedChatsPlaceholder')}
+                                className="w-full rounded-xl border border-ds-border bg-ds-card px-3 py-2.5 text-[13px] text-ds-ink outline-none transition focus:border-accent/60"
+                              />
+                              <span className="mt-1.5 block text-[12px] leading-5 text-ds-faint">
+                                {t('connectPhoneTelegramAllowedChatsHint')}
+                              </span>
+                            </label>
+                          </div>
+                        ) : null}
                       </div>
 
                       <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-ds-border-muted bg-ds-main/45 p-5">

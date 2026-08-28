@@ -950,6 +950,13 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
     return scheduleRuntime.runTask(normalizedTaskId)
   })
 
+  ipcMain.handle('schedule:task:stop', async (_, taskId: unknown): Promise<ScheduleRunResult> => {
+    const normalizedTaskId = parseIpcPayload('schedule:task:stop', streamIdSchema, taskId)
+    const scheduleRuntime = getScheduleRuntime()
+    if (!scheduleRuntime) return { ok: false, message: 'Schedule runtime is not initialized.' }
+    return scheduleRuntime.stopTask(normalizedTaskId)
+  })
+
   ipcMain.handle('workflow:status', async (): Promise<WorkflowRuntimeStatus> =>
     getWorkflowRuntime()?.status() ?? {
       runningWorkflowIds: [],

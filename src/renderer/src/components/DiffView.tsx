@@ -59,7 +59,7 @@ function parseDiff(patch: string, override?: string): ParsedDiff {
   return { filePath, added, removed, hunkOffset }
 }
 
-function badgeFor(name: string | null): { label: string; tone: string } {
+export function badgeFor(name: string | null): { label: string; tone: string } {
   if (!name) return { label: 'TXT', tone: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-500/15 dark:text-zinc-300' }
   for (const b of LANG_BADGES) if (b.test.test(name)) return { label: b.label, tone: b.tone }
   return { label: 'TXT', tone: 'bg-zinc-100 text-zinc-700 dark:bg-zinc-500/15 dark:text-zinc-300' }

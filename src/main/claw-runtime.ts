@@ -2201,6 +2201,35 @@ export class ClawRuntime {
   }
 
   /**
+   * Pushes a scheduled task's final result to its configured IM channel
+   * (phone side). Scheduled turns are headless — unlike IM-inbound turns
+   * nobody is waiting on the response window — so the Schedule runtime
+   * calls this once the turn completes. No-op when the channel is gone,
+   * the platform bridge is down, or there is nothing to send.
+   */
+  async pushScheduledResult(
+    settings: AppSettingsV1,
+    input: { channelId: string; threadId: string; text: string }
+  ): Promise<void> {
+    const channel = settings.claw.channels.find((item) => item.id === input.channelId.trim())
+    if (!channel || !input.text.trim()) return
+    if (!this.imTransport.canPush(channel)) return
+    // Scheduled turns have no inbound session; fall back to the channel's
+    // latest bound conversation (or its channel-level remoteSession inside
+    // sendText) as the push target.
+    const latestChatId = [...channel.conversations]
+      .filter((item) => item.chatId.trim())
+      .sort((left, right) => Date.parse(right.updatedAt) - Date.parse(left.updatedAt))[0]
+      ?.chatId.trim() ?? ''
+    await this.imTransport.sendText({
+      channel,
+      remoteSession: latestChatId ? { chatId: latestChatId } : undefined,
+      text: input.text,
+      context: { purpose: 'schedule-task-result', channelId: channel.id, threadId: input.threadId }
+    })
+  }
+
+  /**
    * Entry point for inbound Telegram updates. The {@link TelegramRuntime}
    * long-poll loop calls this with a normalized payload per private-chat
    * message. Mirrors {@link handleFeishuMessage}: welcome, slash commands,

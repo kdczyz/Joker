@@ -217,6 +217,25 @@ export function clawCredentialLabelKey(hint: string): string {
   }
 }
 
+export function translateTelegramError(
+  t: (key: string) => string,
+  code: string | undefined,
+  fallback: string
+): string {
+  switch (code) {
+    case 'invalid_format':
+      return t('connectPhoneTelegramErrorInvalidFormat')
+    case 'rejected':
+      return t('connectPhoneTelegramErrorRejected')
+    case 'network':
+      return t('connectPhoneTelegramErrorNetwork')
+    case 'unknown':
+      return t('connectPhoneTelegramErrorUnknown')
+    default:
+      return fallback
+  }
+}
+
 export function copyTextFallback(text: string): boolean {
   const textarea = document.createElement('textarea')
   const selection = document.getSelection()

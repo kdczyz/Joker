@@ -40,6 +40,15 @@ export type ScheduleRuntimeDeps = {
   runtimeRequest: RuntimeRequestFn
   logError: (category: string, message: string, detail?: unknown) => void
   powerSaveBlocker?: PowerSaveBlockerLike
+  /**
+   * Pushes a completed scheduled turn's result to the task's configured IM
+   * channel (phone side). Optional because it is provided by the Claw
+   * runtime's IM transport router; headless tests may omit it.
+   */
+  pushResultToIm?: (
+    settings: AppSettingsV1,
+    input: { channelId: string; threadId: string; text: string }
+  ) => Promise<void>
 }
 
 export type ThreadRecordJson = {

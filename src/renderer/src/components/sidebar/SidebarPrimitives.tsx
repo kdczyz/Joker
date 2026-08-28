@@ -5,7 +5,7 @@ import type {
   ReactElement,
   ReactNode
 } from 'react'
-import { ChevronRight, Command, PanelLeftClose, PanelLeftOpen, Search, X } from 'lucide-react'
+import { ChevronRight, Command, PanelLeft, Search, X } from 'lucide-react'
 
 function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
@@ -22,7 +22,6 @@ type SidebarTitlebarToggleButtonProps = {
   title: string
   ariaLabel?: string
   onClick: () => void
-  collapsed?: boolean
   className?: string
   children?: ReactNode
 }
@@ -31,7 +30,6 @@ export function SidebarTitlebarToggleButton({
   title,
   ariaLabel,
   onClick,
-  collapsed = false,
   className,
   children
 }: SidebarTitlebarToggleButtonProps): ReactElement {
@@ -43,11 +41,7 @@ export function SidebarTitlebarToggleButton({
       aria-label={ariaLabel ?? title}
       className={cx('ds-titlebar-sidebar-toggle ds-no-drag', className)}
     >
-      {children ?? (collapsed ? (
-        <PanelLeftOpen className="h-4 w-4" strokeWidth={1.75} />
-      ) : (
-        <PanelLeftClose className="h-4 w-4" strokeWidth={1.75} />
-      ))}
+      {children ?? <PanelLeft className="h-4 w-4" strokeWidth={1.75} />}
     </button>
   )
 }

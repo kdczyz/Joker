@@ -1,16 +1,26 @@
 import type { ReactElement } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FileEdit, Loader2, PanelRightClose } from 'lucide-react'
-import type { GitDiffStatResult } from '@shared/git-changes'
-import { formatFilePathForDisplay } from '../lib/diff-stats'
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Copy,
+  FileEdit,
+  Loader2,
+  PanelRightClose,
+  RefreshCw
+} from 'lucide-react'
+import type { GitDiffStatFile, GitDiffStatResult } from '@shared/git-changes'
 import { useChatStore } from '../store/chat-store'
-import { DiffView } from './DiffView'
+import { badgeFor } from './DiffView'
+import { InspectorFileDiff } from './InspectorFileDiff'
 
 /**
- * Right-side change inspector — every file that differs from the remote
- * (upstream) branch, straight from git. Selecting a row reveals the file's
- * unified patch, whether the change came from this session or elsewhere.
+ * Right-side change inspector styled like an editor review pane: a list of
+ * changed files (badge, name, dimmed folder, +/- stats) where the selected
+ * file expands inline into a syntax-highlighted diff with collapsible runs
+ * of unmodified lines.
  */
 export function ChangeInspector({
   className,
@@ -27,6 +37,9 @@ export function ChangeInspector({
   const [stat, setStat] = useState<GitDiffStatResult | null>(null)
   const [patch, setPatch] = useState<string | null>(null)
   const [patchLoading, setPatchLoading] = useState(false)
+  const [expandedPath, setExpandedPath] = useState<string | null>(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const [copiedPath, setCopiedPath] = useState<string | null>(null)
   const patchRequestRef = useRef(0)
 
   const files = useMemo(() => (stat?.ok === true ? stat.files : []), [stat])
@@ -41,6 +54,12 @@ export function ChangeInspector({
     }
   }, [workspaceRoot])
 
+  const handleRefresh = useCallback(async (): Promise<void> => {
+    setRefreshing(true)
+    await refresh()
+    setRefreshing(false)
+  }, [refresh])
+
   useEffect(() => {
     setStat(null)
     setPatch(null)
@@ -48,6 +67,11 @@ export function ChangeInspector({
     const interval = window.setInterval(() => void refresh(), 10_000)
     return () => window.clearInterval(interval)
   }, [refresh])
+
+  // Follow store selection: picking a file expands its inline diff.
+  useEffect(() => {
+    setExpandedPath(selectedId)
+  }, [selectedId])
 
   useEffect(() => {
     const path = selectedId
@@ -76,11 +100,30 @@ export function ChangeInspector({
   const active = files.find((file) => file.path === selectedId) ?? files[files.length - 1] ?? null
   const hasChanges = files.length > 0
 
+  const toggleRow = (file: GitDiffStatFile): void => {
+    if (expandedPath === file.path) {
+      setExpandedPath(null)
+      return
+    }
+    selectInspectorItem(file.path)
+  }
+
+  const copyPatch = async (file: GitDiffStatFile): Promise<void> => {
+    if (file.path !== active?.path || !patch) return
+    try {
+      await navigator.clipboard.writeText(patch)
+      setCopiedPath(file.path)
+      window.setTimeout(() => setCopiedPath((current) => (current === file.path ? null : current)), 1400)
+    } catch {
+      /* clipboard unavailable */
+    }
+  }
+
   return (
     <aside
       className={`ds-no-drag ds-panel-ghost flex flex-col border-l border-ds-border-muted backdrop-blur-xl ${className ?? ''}`}
     >
-      <div className="flex min-h-[58px] shrink-0 items-center gap-3 border-b border-ds-border-muted px-3 py-3">
+      <div className="flex shrink-0 items-center gap-2 border-b border-ds-border-muted px-3 py-2.5">
         <button
           type="button"
           onClick={onCollapse}
@@ -90,16 +133,25 @@ export function ChangeInspector({
         >
           <PanelRightClose className="h-4 w-4" strokeWidth={1.85} />
         </button>
-        <div className="min-w-0 flex-1">
-          <div className="text-[11px] font-semibold tracking-wide text-ds-muted">
-            {t('inspectorTitle')}
-          </div>
-          <div className="mt-1 truncate text-[11px] text-ds-faint">
-            {hasChanges
-              ? t('inspectorSummaryFiles', { count: files.length })
-              : t('inspectorEmpty')}
-          </div>
+        <div
+          className="flex items-center gap-2 rounded-lg bg-ds-hover px-2.5 py-1.5 text-[12px] text-ds-muted"
+          title={t('inspectorSummaryFiles', { count: files.length })}
+        >
+          <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-ds-diff-added" />
+          {t('inspectorUncommitted')}
         </div>
+        <div className="flex-1" />
+        <button
+          type="button"
+          onClick={() => void handleRefresh()}
+          className="flex shrink-0 items-center gap-1.5 rounded-lg px-2 py-1.5 text-[12px] text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
+        >
+          <RefreshCw
+            className={`h-3.5 w-3.5 ${refreshing ? 'animate-spin' : ''}`}
+            strokeWidth={1.85}
+          />
+          {t('inspectorRefresh')}
+        </button>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
@@ -114,65 +166,104 @@ export function ChangeInspector({
             </div>
           </div>
         ) : (
-          <>
-            <div className="max-h-[42%] min-h-0 overflow-y-auto py-2">
-              <ul className="divide-y divide-ds-border-muted/60">
-                {files.map((file) => {
-                  const displayPath = formatFilePathForDisplay(file.path, workspaceRoot)
-                  const selected = active?.path === file.path
-                  return (
-                    <li key={file.path}>
-                      <button
-                        type="button"
-                        onClick={() => selectInspectorItem(file.path)}
-                        className={`flex w-full items-start gap-2 px-4 py-2.5 text-left transition ${
-                          selected ? 'bg-ds-hover text-ds-ink' : 'text-ds-ink hover:bg-ds-hover/70'
-                        }`}
-                        title={file.path}
-                      >
-                        <FileEdit
-                          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ds-muted"
-                          strokeWidth={1.75}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="truncate text-[12px] text-ds-ink">
-                            {displayPath ?? file.path}
-                          </div>
-                          {file.added > 0 || file.removed > 0 ? (
-                            <div className="mt-0.5 flex gap-2 text-[10px] font-mono">
-                              <span className="text-ds-diff-added">+{file.added}</span>
-                              <span className="text-ds-diff-removed">-{file.removed}</span>
-                            </div>
-                          ) : (
-                            <div className="mt-0.5 text-[10px] text-ds-faint">
-                              {t('inspectorNewFile')}
-                            </div>
-                          )}
-                        </div>
-                        {selected && patchLoading ? (
-                          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-ds-faint" strokeWidth={2} />
-                        ) : null}
-                      </button>
-                    </li>
-                  )
-                })}
-              </ul>
-            </div>
+          <div className="min-h-0 flex-1 overflow-y-auto">
+            {files.map((file) => {
+              const selected = active?.path === file.path
+              const expanded = expandedPath === file.path
+              const badge = badgeFor(file.path)
+              const name = file.path.split(/[/\\]/).pop() ?? file.path
+              const nameIndex = file.path.lastIndexOf(name)
+              const dir = nameIndex > 0 ? file.path.slice(0, nameIndex) : ''
+              const copied = copiedPath === file.path
+              return (
+                <div key={file.path}>
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => selectInspectorItem(file.path)}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault()
+                        selectInspectorItem(file.path)
+                      }
+                    }}
+                    className={`group flex w-full cursor-pointer items-center gap-2 px-3 py-2 transition ${
+                      selected ? 'bg-ds-hover' : 'hover:bg-ds-hover/60'
+                    }`}
+                    title={file.path}
+                  >
+                    <span
+                      className={`flex h-5 w-6 shrink-0 items-center justify-center rounded text-[9px] font-bold ${badge.tone}`}
+                    >
+                      {badge.label}
+                    </span>
+                    <span className="max-w-[45%] shrink-0 truncate text-[12.5px] text-ds-ink">
+                      {name}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate text-[12px] text-ds-faint">{dir}</span>
+                    {file.added > 0 || file.removed > 0 ? (
+                      <span className="flex shrink-0 gap-2 font-mono text-[12px] tabular-nums">
+                        <span className="text-ds-diff-added">+{file.added}</span>
+                        <span className="text-ds-diff-removed">-{file.removed}</span>
+                      </span>
+                    ) : (
+                      <span className="shrink-0 text-[11px] text-ds-faint">
+                        {t('inspectorNewFile')}
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        void copyPatch(file)
+                      }}
+                      className={`shrink-0 rounded p-0.5 text-ds-faint transition hover:text-ds-ink ${
+                        selected && patch ? 'opacity-0 group-hover:opacity-100' : 'invisible'
+                      }`}
+                      aria-label="Copy diff"
+                      title="Copy diff"
+                    >
+                      {copied ? (
+                        <Check className="h-3.5 w-3.5 text-ds-diff-added" strokeWidth={2} />
+                      ) : (
+                        <Copy className="h-3.5 w-3.5" strokeWidth={1.8} />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(event) => {
+                        event.stopPropagation()
+                        toggleRow(file)
+                      }}
+                      className="shrink-0 rounded p-0.5 text-ds-faint transition hover:text-ds-ink"
+                      aria-label={file.path}
+                      aria-expanded={expanded}
+                    >
+                      {expanded ? (
+                        <ChevronUp className="h-4 w-4" strokeWidth={2} />
+                      ) : (
+                        <ChevronDown className="h-4 w-4" strokeWidth={2} />
+                      )}
+                    </button>
+                  </div>
 
-            <div className="ds-panel-strip flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-t border-ds-border-muted">
-              {patch ? (
-                <DiffView patch={patch} maxHeight={9999} className="h-full min-w-0 rounded-none border-0" />
-              ) : (
-                <div className="ds-surface-soft flex h-full items-center justify-center border border-dashed border-ds-border-muted px-4 py-6 text-center text-[11px] leading-6 text-ds-muted">
-                  {patchLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin text-ds-faint" strokeWidth={2} />
-                  ) : (
-                    t('inspectorSelectHint')
-                  )}
+                  {expanded && selected ? (
+                    patchLoading ? (
+                      <div className="flex items-center justify-center gap-2 border-y border-ds-border-muted/60 px-4 py-6 text-[11px] text-ds-faint">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={2} />
+                      </div>
+                    ) : patch ? (
+                      <InspectorFileDiff patch={patch} filePath={file.path} />
+                    ) : (
+                      <div className="border-y border-ds-border-muted/60 px-4 py-5 text-center text-[11px] text-ds-faint">
+                        {t('inspectorSelectHint')}
+                      </div>
+                    )
+                  ) : null}
                 </div>
-              )}
-            </div>
-          </>
+              )
+            })}
+          </div>
         )}
       </div>
     </aside>

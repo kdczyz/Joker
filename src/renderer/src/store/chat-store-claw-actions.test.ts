@@ -86,6 +86,18 @@ describe('chat-store Claw actions helpers', () => {
     expect(recovered?.id).toBe('old-content-thread')
   })
 
+  it('does not claim another device thread via the channel-agnostic heading when several devices are bound', () => {
+    const itemA = channel({ id: 'channel-a', label: 'Feishu Agent01' })
+    const itemB = channel({ id: 'channel-b', label: 'WeChat Joker' })
+    const recovered = findRecoverableClawThread(
+      [thread('managed-thread', `${CLAW_MANAGED_INSTRUCTIONS_HEADING} DeepSeek GUI scheduled-task tools`, '2026-06-01T00:05:00.000Z')],
+      [itemA, itemB],
+      itemB
+    )
+
+    expect(recovered).toBeNull()
+  })
+
   it('writes recovered provider thread ids back to both channel and conversation', () => {
     const now = '2026-06-01T00:03:00.000Z'
     const next = channelWithClawThreadMapping(channel(), 'Joker-thread', now, 'conversation-1')
@@ -215,8 +227,7 @@ describe('chat-store Claw actions helpers', () => {
     })
   })
 
-  it('does not let a slower empty-channel lookup clear the newer selection', async () => {
-    rendererRuntimeClient.invalidateSettings()
+  it('does not let a slower empty-channel lookup clear the newer selection', async () => {    rendererRuntimeClient.invalidateSettings()
     const first = channel({
       id: 'channel-a',
       threadId: 'thread-a',
@@ -289,6 +300,130 @@ describe('chat-store Claw actions helpers', () => {
     expect(selectThread).toHaveBeenCalledTimes(1)
     expect(selectThread).toHaveBeenCalledWith('thread-b')
     expect(state.activeClawChannelId).toBe('channel-b')
+  })
+
+  it('keeps another device fresh thread binding when persisting a channel switch', async () => {
+    rendererRuntimeClient.invalidateSettings()
+    const base = {
+      workspaceRoot: '/Users/zxy/project',
+      claw: {
+        enabled: true,
+        im: { enabled: true, provider: 'feishu' as const, workspaceRoot: '/Users/zxy/project' },
+        channels: [] as ClawImChannelV1[]
+      }
+    }
+    const channelA = channel({
+      id: 'channel-a',
+      label: 'WeChat A',
+      threadId: '',
+      conversations: [{
+        ...channel().conversations[0],
+        id: 'conversation-a',
+        chatId: 'chat-a',
+        localThreadId: ''
+      }]
+    })
+    const channelBStale = channel({
+      id: 'channel-b',
+      label: 'WeChat B',
+      threadId: 'thr-old-b',
+      conversations: [{
+        ...channel().conversations[0],
+        id: 'conversation-b',
+        chatId: 'chat-b',
+        localThreadId: 'thr-old-b'
+      }]
+    })
+    // Snapshot captured by the renderer before a phone message arrived on
+    // device B and the main process rebound its conversation to a new thread.
+    const beforePhoneMessage: typeof base = {
+      ...base,
+      claw: { ...base.claw, channels: [channelA, channelBStale] }
+    }
+    const afterPhoneMessage: typeof base = {
+      ...base,
+      claw: {
+        ...base.claw,
+        channels: [
+          channelA,
+          channel({
+            id: 'channel-b',
+            label: 'WeChat B',
+            threadId: 'thr-new-b',
+            conversations: [{
+              ...channel().conversations[0],
+              id: 'conversation-b',
+              chatId: 'chat-b',
+              latestMessageId: 'message-2',
+              localThreadId: 'thr-new-b'
+            }]
+          })
+        ]
+      }
+    }
+    let getSettingsCalls = 0
+    const JokerGui = {
+      getSettings: vi.fn(async () => {
+        getSettingsCalls += 1
+        return getSettingsCalls === 1 ? beforePhoneMessage : afterPhoneMessage
+      }),
+      setSettings: vi.fn(async (patch: { claw?: { channels?: ClawImChannelV1[] } }) => ({
+        ...afterPhoneMessage,
+        claw: {
+          ...afterPhoneMessage.claw,
+          ...(patch.claw ?? {}),
+          channels: patch.claw?.channels ?? afterPhoneMessage.claw.channels
+        }
+      }))
+    }
+    vi.stubGlobal('window', { JokerGui })
+
+    const createdThread = thread('thr-created-a', '[Claw:WeChat A]')
+    const provider = {
+      createThread: vi.fn(async () => createdThread),
+      getThreadDetail: vi.fn(),
+      deleteThread: vi.fn()
+    }
+    const selectThread = vi.fn(async () => undefined)
+    let state: Record<string, unknown> = {
+      runtimeConnection: 'ready',
+      route: 'claw',
+      clawChannels: beforePhoneMessage.claw.channels,
+      activeClawChannelId: '',
+      threads: [],
+      selectThread,
+      error: null
+    }
+    const set = vi.fn((partial: Record<string, unknown> | ((current: typeof state) => Record<string, unknown>)) => {
+      const patch = typeof partial === 'function' ? partial(state) : partial
+      state = { ...state, ...patch }
+    })
+    const actions = createClawActions({
+      set: set as never,
+      get: (() => state) as never,
+      i18n: { t: (key: string) => key },
+      getProvider: () => provider,
+      newClawChannel: vi.fn() as never,
+      normalizeClawComposerModel: (raw: string) => raw as never,
+      activeClawChannel: vi.fn() as never,
+      normalizeWorkspaceRoot: (workspaceRoot?: string | null) => workspaceRoot?.trim() ?? '',
+      formatRuntimeError: (error: unknown) => error instanceof Error ? error.message : String(error),
+      shouldOpenSettingsForError: () => false,
+      clearedThreadSelection: vi.fn() as never,
+      sseAbortRef: { current: null },
+      clearBusyWatchdog: vi.fn()
+    })
+
+    await actions.selectClawChannel('channel-a')
+
+    const savedPatch = JokerGui.setSettings.mock.calls[0][0] as { claw: { channels: ClawImChannelV1[] } }
+    expect(savedPatch.claw.channels.find((item) => item.id === 'channel-b')).toMatchObject({
+      threadId: 'thr-new-b'
+    })
+    expect(savedPatch.claw.channels.find((item) => item.id === 'channel-a')).toMatchObject({
+      threadId: 'thr-created-a'
+    })
+    expect(selectThread).toHaveBeenCalledWith('thr-created-a')
   })
 
   it('saves the resolved provider and model when changing a Claw channel model', async () => {

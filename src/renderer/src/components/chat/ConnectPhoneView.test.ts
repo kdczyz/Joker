@@ -172,8 +172,9 @@ describe('ConnectPhoneView', () => {
       })
     )
 
+    expect(html).toContain('Bind Device')
+    expect(html).toContain('Enabled')
     expect(html).toContain('Phone connection settings')
-    expect(html).toContain('Disconnect phone')
   })
 
   it('uses themed surface buttons instead of hard-coded black hover states', () => {
@@ -195,9 +196,9 @@ describe('ConnectPhoneView', () => {
     )
 
     expect(pageHtml).not.toContain('hover:bg-black')
+    expect(pageHtml).toContain('TELE')
     expect(sidebarHtml).not.toContain('hover:bg-black')
     expect(sidebarHtml).toContain('hover:bg-ds-hover')
-    expect(sidebarHtml).toContain('TELE')
   })
 
   it('keeps the IM list above the phone connection panel in the sidebar', () => {

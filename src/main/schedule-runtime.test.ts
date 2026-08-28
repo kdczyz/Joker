@@ -142,12 +142,17 @@ function createStore(initial: AppSettingsV1) {
   }
 }
 
-function createRuntime(initial: AppSettingsV1, runtimeRequest = vi.fn()) {
+function createRuntime(
+  initial: AppSettingsV1,
+  runtimeRequest = vi.fn(),
+  extraDeps: Record<string, unknown> = {}
+) {
   const store = createStore(initial)
   const runtime = new ScheduleRuntime({
     store: store as never,
     runtimeRequest: runtimeRequest as never,
-    logError: vi.fn()
+    logError: vi.fn(),
+    ...extraDeps
   })
   return { runtime, store, runtimeRequest }
 }
@@ -578,6 +583,214 @@ describe('ScheduleRuntime', () => {
       waitForResult: true,
       responseTimeoutMs: 2_000
     })).rejects.toThrow('Agent turn failed.')
+  })
+
+  it('pushes the completed result to the task IM channel after monitored completion', async () => {
+    const channel = makeClawChannel()
+    const task = makeTask({ clawChannelId: channel.id, title: 'Daily report' })
+    const runtimeRequest = vi.fn(async (_settings, path, init) => {
+      if (path === '/v1/threads/thr_1' && init?.method === 'PATCH') {
+        return { ok: true, status: 200, body: '{}' }
+      }
+      if (path === '/v1/threads/thr_1' && init?.method === 'GET') {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({
+            id: 'thr_1',
+            status: 'idle',
+            turns: [
+              {
+                id: 'turn_1',
+                status: 'completed',
+                items: [{ kind: 'assistant_text', text: 'final scheduled reply' }]
+              }
+            ]
+          })
+        }
+      }
+      throw new Error(`unexpected path ${path}`)
+    })
+    const pushResultToIm = vi.fn(async (_settings: AppSettingsV1, input: { channelId: string; threadId: string; text: string }) => undefined)
+    const { runtime, store } = createRuntime(settingsWith([task]), runtimeRequest, { pushResultToIm })
+
+    await (runtime as unknown as {
+      monitorTaskTurn: (taskId: string, threadId: string, turnId: string) => Promise<void>
+    }).monitorTaskTurn('task-1', 'thr_1', 'turn_1')
+
+    expect(pushResultToIm).toHaveBeenCalledTimes(1)
+    expect(pushResultToIm.mock.calls[0][1]).toEqual({
+      channelId: channel.id,
+      threadId: 'thr_1',
+      text: 'Daily report\n\nfinal scheduled reply'
+    })
+    expect(store.read().schedule.tasks[0]?.lastStatus).toBe('success')
+  })
+
+  it('pushes a failure note to the IM channel when the monitored turn fails', async () => {
+    const channel = makeClawChannel()
+    const task = makeTask({ clawChannelId: channel.id, title: 'Daily report' })
+    const runtimeRequest = vi.fn(async (_settings, path, init) => {
+      if (path === '/v1/threads/thr_1' && init?.method === 'PATCH') {
+        return { ok: true, status: 200, body: '{}' }
+      }
+      if (path === '/v1/threads/thr_1' && init?.method === 'GET') {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({
+            id: 'thr_1',
+            status: 'idle',
+            turns: [{ id: 'turn_1', status: 'failed', items: [] }]
+          })
+        }
+      }
+      throw new Error(`unexpected path ${path}`)
+    })
+    const pushResultToIm = vi.fn(async (_settings: AppSettingsV1, input: { channelId: string; threadId: string; text: string }) => undefined)
+    const { runtime, store } = createRuntime(settingsWith([task]), runtimeRequest, { pushResultToIm })
+
+    await (runtime as unknown as {
+      monitorTaskTurn: (taskId: string, threadId: string, turnId: string) => Promise<void>
+    }).monitorTaskTurn('task-1', 'thr_1', 'turn_1')
+
+    expect(pushResultToIm).toHaveBeenCalledTimes(1)
+    expect(pushResultToIm.mock.calls[0][1]).toMatchObject({
+      channelId: channel.id,
+      threadId: 'thr_1'
+    })
+    expect(pushResultToIm.mock.calls[0][1].text).toContain('Daily report')
+    expect(pushResultToIm.mock.calls[0][1].text).toContain('⚠️')
+    expect(store.read().schedule.tasks[0]?.lastStatus).toBe('error')
+  })
+
+  it('does not push results for tasks without an IM channel binding', async () => {
+    const task = makeTask({ clawChannelId: '' })
+    const runtimeRequest = vi.fn(async (_settings, path, init) => {
+      if (path === '/v1/threads/thr_1' && init?.method === 'PATCH') {
+        return { ok: true, status: 200, body: '{}' }
+      }
+      if (path === '/v1/threads/thr_1' && init?.method === 'GET') {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({
+            id: 'thr_1',
+            status: 'idle',
+            turns: [
+              { id: 'turn_1', status: 'completed', items: [{ kind: 'assistant_text', text: 'done' }] }
+            ]
+          })
+        }
+      }
+      throw new Error(`unexpected path ${path}`)
+    })
+    const pushResultToIm = vi.fn(async (_settings: AppSettingsV1, input: { channelId: string; threadId: string; text: string }) => undefined)
+    const { runtime } = createRuntime(settingsWith([task]), runtimeRequest, { pushResultToIm })
+
+    await (runtime as unknown as {
+      monitorTaskTurn: (taskId: string, threadId: string, turnId: string) => Promise<void>
+    }).monitorTaskTurn('task-1', 'thr_1', 'turn_1')
+
+    expect(pushResultToIm).not.toHaveBeenCalled()
+  })
+
+  it('stops a queued task without touching the runtime', async () => {
+    const task = makeTask({ lastStatus: 'queued' })
+    const runtimeRequest = vi.fn()
+    const { runtime, store } = createRuntime(settingsWith([task]), runtimeRequest)
+
+    await expect(runtime.stopTask(task.id)).resolves.toMatchObject({ ok: true })
+    const saved = store.read().schedule.tasks[0]
+    expect(saved?.lastStatus).toBe('idle')
+    expect(saved?.lastMessage).toBe('Task stopped by user.')
+    expect(runtimeRequest).not.toHaveBeenCalled()
+  })
+
+  it('interrupts the live turn when stopping a running task', async () => {
+    const task = makeTask({ lastStatus: 'running', lastThreadId: 'thr_1' })
+    const runtimeRequest = vi.fn(async (_settings, path, init) => {
+      if (path === '/v1/threads/thr_1' && init?.method === 'GET') {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({
+            id: 'thr_1',
+            status: 'running',
+            turns: [
+              { id: 'turn_done', status: 'completed', items: [] },
+              { id: 'turn_live', status: 'running', items: [] }
+            ]
+          })
+        }
+      }
+      if (path === '/v1/threads/thr_1/turns/turn_live/interrupt' && init?.method === 'POST') {
+        return { ok: true, status: 200, body: '{}' }
+      }
+      throw new Error(`unexpected path ${path}`)
+    })
+    const { runtime, store } = createRuntime(settingsWith([task]), runtimeRequest)
+    ;(runtime as unknown as { runningTaskIds: Set<string> }).runningTaskIds.add(task.id)
+
+    await expect(runtime.stopTask(task.id)).resolves.toMatchObject({ ok: true })
+    const interruptCall = runtimeRequest.mock.calls.find(([, path]) =>
+      String(path).endsWith('/turns/turn_live/interrupt')
+    )
+    expect(interruptCall).toBeDefined()
+    // 中断请求发出后,任务记录由 monitorTaskTurn 收尾,这里不应提前改写。
+    expect(store.read().schedule.tasks[0]?.lastStatus).toBe('running')
+  })
+
+  it('finalizes the task record when stopping a running task with no live turn', async () => {
+    const task = makeTask({ lastStatus: 'running', lastThreadId: 'thr_gone' })
+    const runtimeRequest = vi.fn(async (_settings, path) => {
+      if (path === '/v1/threads/thr_gone') {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({ id: 'thr_gone', status: 'idle', turns: [] })
+        }
+      }
+      throw new Error(`unexpected path ${path}`)
+    })
+    const { runtime, store } = createRuntime(settingsWith([task]), runtimeRequest)
+    ;(runtime as unknown as { runningTaskIds: Set<string> }).runningTaskIds.add(task.id)
+
+    await expect(runtime.stopTask(task.id)).resolves.toMatchObject({ ok: true })
+    const saved = store.read().schedule.tasks[0]
+    expect(saved?.lastStatus).toBe('idle')
+    expect(saved?.lastMessage).toBe('Task stopped by user.')
+  })
+
+  it('reports a user stop instead of an error when the interrupted turn fails', async () => {
+    const task = makeTask({ lastStatus: 'running', lastThreadId: 'thr_1' })
+    const runtimeRequest = vi.fn(async (_settings, path, init) => {
+      if (path === '/v1/threads/thr_1' && init?.method === 'PATCH') {
+        return { ok: true, status: 200, body: '{}' }
+      }
+      if (path === '/v1/threads/thr_1' && init?.method === 'GET') {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({
+            id: 'thr_1',
+            status: 'idle',
+            turns: [{ id: 'turn_1', status: 'failed', items: [] }]
+          })
+        }
+      }
+      throw new Error(`unexpected path ${path}`)
+    })
+    const { runtime, store } = createRuntime(settingsWith([task]), runtimeRequest)
+    ;(runtime as unknown as { userStopRequested: Set<string> }).userStopRequested.add(task.id)
+
+    await (runtime as unknown as {
+      monitorTaskTurn: (taskId: string, threadId: string, turnId: string) => Promise<void>
+    }).monitorTaskTurn('task-1', 'thr_1', 'turn_1')
+
+    const saved = store.read().schedule.tasks[0]
+    expect(saved?.lastStatus).toBe('error')
+    expect(saved?.lastMessage).toBe('Task stopped by user.')
   })
 
   it('disables one-time tasks after monitored completion', async () => {

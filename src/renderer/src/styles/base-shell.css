@@ -639,6 +639,10 @@ body.ds-workbench-resizing .ds-workbench-left-sidebar-clip {
   .ds-workbench-left-sidebar-clip {
     transition: none;
   }
+
+  .ds-workbench-sidebar-toggle-anchor {
+    transition: none;
+  }
 }
 
 /* 展开/收起侧边栏按钮:贴着 macOS 原生红绿灯右侧自适应定位。
@@ -651,6 +655,10 @@ body.ds-workbench-resizing .ds-workbench-left-sidebar-clip {
   top: calc(8px / var(--ds-ui-scale, 1));
   left: calc(18px / var(--ds-ui-scale, 1));
   z-index: 40;
+  /* 全屏↔窗口化时平滑滑到新位置;点击展开/收起本身不产生任何位移(图标单一静态) */
+  transition:
+    top 0.28s cubic-bezier(0.32, 0.72, 0.24, 1),
+    left 0.28s cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 
 /* 按钮 28px 视觉 + 负 margin 扩大命中区到 38px,避免贴近拖拽区边缘时点击被吞 */
@@ -2949,15 +2957,8 @@ body.ds-workbench-resizing webview {
 }
 
 @container (max-width: 760px) {
-  .chat-topbar {
-    margin-top: 0.875rem;
-    min-height: 42px;
-  }
-
-  .chat-topbar-grid {
-    padding-block: 0.35rem;
-  }
-
+  /* 顶栏是悬浮层,margin/min-height/padding 在任何断点都保持一致,
+     否则窄窗口下标题会与左上角侧边栏按钮错位 */
   .session-meta-usage,
   .session-meta-usage-separator {
     display: none;
@@ -2982,15 +2983,6 @@ body.ds-workbench-resizing webview {
     gap: 0.875rem;
     padding-top: 0.5rem;
     padding-bottom: 0.75rem;
-  }
-
-  .chat-topbar {
-    margin-top: 0.875rem;
-    min-height: 42px;
-  }
-
-  .chat-topbar-grid {
-    padding-block: 0.35rem;
   }
 
   .ds-chat-stage .ds-floating-composer {
@@ -5054,4 +5046,10 @@ body.ds-workbench-resizing webview {
     animation: none !important;
     transition-duration: 0ms !important;
   }
+}
+
+/* Change inspector inline diff: shiki dual-theme tokens carry their light
+   color inline; swap to the dark palette variables on the dark theme. */
+html[data-theme='dark'] .ds-inspector-diff .ds-diff-code span {
+  color: var(--shiki-dark, inherit) !important;
 }

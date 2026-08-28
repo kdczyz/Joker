@@ -84,6 +84,8 @@ export class ScheduleRuntime {
   private readonly activeTasks = new Set<Promise<unknown>>()
   private stopped = false
   private stopPromise: Promise<void> | null = null
+  /** Tasks whose running turn the user asked to stop; the monitor finalizes the record with a stop note. */
+  private readonly userStopRequested = new Set<string>()
 
   constructor(deps: ScheduleRuntimeDeps) {
     this.deps = deps
@@ -120,6 +122,7 @@ export class ScheduleRuntime {
     this.stopPowerSaveBlocker()
     this.queuedTaskIds.clear()
     this.queuedTaskModes.clear()
+    this.userStopRequested.clear()
     for (const taskId of [...this.taskCompletions.keys()]) {
       this.resolveTaskCompletion(taskId, { ok: false, message: 'Schedule runtime stopped.' })
     }
@@ -175,6 +178,112 @@ export class ScheduleRuntime {
       return { ok: true, threadId: '', queued: true, message: 'Task queued.' }
     }
     return completion
+  }
+
+  /**
+   * Manual stop for a queued or running task (the schedule view's stop
+   * button). Queued tasks are dropped from the queue; running turns are
+   * interrupted via the runtime and the monitor finalizes the task record
+   * with a stop note instead of an error.
+   */
+  async stopTask(taskId: string): Promise<ScheduleRunResult> {
+    if (this.stopped) return { ok: false, message: 'Schedule runtime stopped.' }
+    const settings = await this.deps.store.load()
+    const task = settings.schedule.tasks.find((item) => item.id === taskId)
+    if (!task) return { ok: false, message: 'Task not found.' }
+
+    if (!this.runningTaskIds.has(taskId)) {
+      if (
+        !this.queuedTaskIds.has(taskId) &&
+        task.lastStatus !== 'queued' &&
+        task.lastStatus !== 'running'
+      ) {
+        return { ok: false, message: 'Task is not running.' }
+      }
+      // Queued (or a stale running marker left by a restart): drop it without
+      // interrupting anything.
+      this.queuedTaskIds.delete(taskId)
+      this.queuedTaskModes.delete(taskId)
+      await this.updateTask(taskId, (current) => ({
+        ...current,
+        lastStatus: 'idle',
+        lastMessage: 'Task stopped by user.',
+        updatedAt: new Date().toISOString()
+      }))
+      this.resolveTaskCompletion(taskId, { ok: false, message: 'Task stopped by user.' })
+      void this.drainQueue()
+      return { ok: true, threadId: task.lastThreadId, message: 'Task stopped.' }
+    }
+
+    this.userStopRequested.add(taskId)
+    const interrupted = await this.interruptRunningTurn(settings, taskId, task.lastThreadId)
+    if (interrupted) return { ok: true, threadId: task.lastThreadId, message: 'Task stop requested.' }
+    // No live turn to interrupt (e.g. the turn finished between checks, or the
+    // thread id is gone). Finalize the record here so the GUI does not stay
+    // stuck on running; the monitor (if any) will still resolve the deferred.
+    this.runningTaskIds.delete(taskId)
+    await this.updateTask(taskId, (current) => ({
+      ...current,
+      lastStatus: 'idle',
+      lastMessage: 'Task stopped by user.',
+      updatedAt: new Date().toISOString()
+    }))
+    this.resolveTaskCompletion(taskId, { ok: false, message: 'Task stopped by user.' })
+    void this.drainQueue()
+    return { ok: true, threadId: task.lastThreadId, message: 'Task stopped.' }
+  }
+
+  private async interruptRunningTurn(
+    settings: AppSettingsV1,
+    taskId: string,
+    threadId: string
+  ): Promise<boolean> {
+    if (!threadId.trim()) return false
+    try {
+      const detail = await this.deps.runtimeRequest(
+        settings,
+        `/v1/threads/${encodeURIComponent(threadId)}`,
+        { method: 'GET' }
+      )
+      if (!detail.ok) return false
+      const parsed = parseJsonObject(detail.body)
+      const turns = Array.isArray(parsed?.turns) ? parsed.turns : []
+      let turnId = ''
+      for (let index = turns.length - 1; index >= 0; index -= 1) {
+        const turn = nestedRecord(turns[index])
+        const status = asString(turn?.status)
+        if (
+          asString(turn?.id) &&
+          (status === 'running' || status === 'in_progress' || status === 'started' || status === 'queued')
+        ) {
+          turnId = asString(turn?.id)
+          break
+        }
+      }
+      if (!turnId) return false
+      const response = await this.deps.runtimeRequest(
+        settings,
+        `/v1/threads/${encodeURIComponent(threadId)}/turns/${encodeURIComponent(turnId)}/interrupt`,
+        { method: 'POST', body: JSON.stringify({ discard: false }) }
+      )
+      if (!response.ok) {
+        this.deps.logError('schedule-task', 'Failed to interrupt the running turn for a manual stop.', {
+          taskId,
+          threadId,
+          turnId,
+          message: response.body
+        })
+        return false
+      }
+      return true
+    } catch (error) {
+      this.deps.logError('schedule-task', 'Failed to stop the running scheduled turn', {
+        message: error instanceof Error ? error.message : String(error),
+        taskId,
+        threadId
+      })
+      return false
+    }
   }
 
   private createTaskCompletion(taskId: string): Promise<ScheduleRunResult> {
@@ -733,25 +842,67 @@ export class ScheduleRuntime {
         lastThreadId: threadId,
         updatedAt: finishedAt.toISOString()
       }))
+      this.pushResultToChannelIfConfigured(settings, task, taskId, threadId, text)
     } catch (error) {
       if (this.stopped) return
+      // A user-requested stop interrupts the turn and surfaces here as a turn
+      // failure; report it as a deliberate stop instead of an error.
+      const stoppedByUser = this.userStopRequested.delete(taskId)
       const message = error instanceof Error ? error.message : String(error)
       const finishedAt = new Date()
+      const settings = await this.deps.store.load()
+      const task = settings.schedule.tasks.find((item) => item.id === taskId)
+      const lastMessage = stoppedByUser ? 'Task stopped by user.' : message
       await this.updateTask(taskId, (current) => ({
         ...current,
         ...(current.schedule.kind === 'at' ? { enabled: false } : {}),
         nextRunAt: current.schedule.kind === 'at' ? '' : computeScheduleNextRunAt(current, finishedAt),
         lastStatus: 'error',
-        lastMessage: message,
+        lastMessage,
         lastThreadId: threadId || current.lastThreadId,
         updatedAt: finishedAt.toISOString()
       }))
+      // 让手机端也知道任务失败了,而不是默默无消息。
+      this.pushResultToChannelIfConfigured(
+        settings,
+        task,
+        taskId,
+        threadId,
+        task ? `${task.title}\n\n⚠️ ${lastMessage}` : ''
+      )
       this.deps.logError('schedule-task', 'Scheduled task failed', { message, taskId, threadId })
     } finally {
+      this.userStopRequested.delete(taskId)
       this.runningTaskIds.delete(taskId)
       await this.releaseTaskWorktree(taskId)
       void this.drainQueue()
     }
+  }
+
+  /**
+   * Fire-and-forget push of a scheduled turn's result to the task's IM
+   * channel. Tasks without a channel binding (desktop-only) are skipped.
+   */
+  private pushResultToChannelIfConfigured(
+    settings: AppSettingsV1,
+    task: ScheduledTaskV1 | undefined,
+    taskId: string,
+    threadId: string,
+    text: string
+  ): void {
+    if (!task || !task.clawChannelId.trim() || !text.trim()) return
+    this.deps.pushResultToIm?.(settings, {
+      channelId: task.clawChannelId,
+      threadId,
+      text: `${task.title}\n\n${text}`
+    }).catch((error) => {
+      this.deps.logError('schedule-task', 'Failed to push scheduled task result to IM channel', {
+        message: error instanceof Error ? error.message : String(error),
+        taskId,
+        channelId: task.clawChannelId,
+        threadId
+      })
+    })
   }
 
   private async releaseTaskWorktree(taskId: string): Promise<void> {

@@ -10,6 +10,7 @@ import {
   PencilLine,
   Play,
   Plus,
+  Square,
   Trash2,
   X
 } from 'lucide-react'
@@ -638,6 +639,16 @@ export function ScheduleTasksView({
     await load()
   }
 
+  const stopTask = async (taskId: string): Promise<void> => {
+    if (typeof window.JokerGui?.stopScheduleTask !== 'function') return
+    const result = await window.JokerGui.stopScheduleTask(taskId)
+    if (!result.ok) {
+      setError(result.message)
+      return
+    }
+    await load()
+  }
+
   const toggleKeepAwake = async (value: boolean): Promise<void> => {
     await persistSchedule({ keepAwake: value })
   }
@@ -789,16 +800,27 @@ export function ScheduleTasksView({
                             <MessageSquare className="h-4 w-4" strokeWidth={1.8} />
                           </button>
                         ) : null}
-                        <button
-                          type="button"
-                          onClick={() => void runTask(task.id)}
-                          disabled={busy}
-                          className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink disabled:cursor-not-allowed disabled:opacity-45"
-                          title={t('scheduleRunNow')}
-                          aria-label={t('scheduleRunNow')}
-                        >
-                          <Play className="h-4 w-4" strokeWidth={1.8} />
-                        </button>
+                        {busy ? (
+                          <button
+                            type="button"
+                            onClick={() => void stopTask(task.id)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ds-muted transition hover:bg-red-500/10 hover:text-red-600"
+                            title={t('scheduleStopNow')}
+                            aria-label={t('scheduleStopNow')}
+                          >
+                            <Square className="h-3.5 w-3.5" strokeWidth={1.8} />
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => void runTask(task.id)}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-ds-muted transition hover:bg-ds-hover hover:text-ds-ink"
+                            title={t('scheduleRunNow')}
+                            aria-label={t('scheduleRunNow')}
+                          >
+                            <Play className="h-4 w-4" strokeWidth={1.8} />
+                          </button>
+                        )}
                         <button
                           type="button"
                           onClick={() => openEditDialog(task)}

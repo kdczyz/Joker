@@ -1729,7 +1729,14 @@ app.whenReady().then(async () => {
   })
   traceStartup('logger configured')
   syncCheckpointCleanupTimer(initial)
-  scheduleRuntime = createScheduleRuntime({ store, runtimeRequest, logError, powerSaveBlocker })
+  scheduleRuntime = createScheduleRuntime({
+    store,
+    runtimeRequest,
+    logError,
+    powerSaveBlocker,
+    pushResultToIm: (settings, input) =>
+      clawRuntime?.pushScheduledResult(settings, input) ?? Promise.resolve()
+  })
   scheduleRuntime.sync(initial)
   workflowRuntime = createWorkflowRuntime({ store, runtimeRequest, logError, powerSaveBlocker })
   workflowRuntime.sync(initial)

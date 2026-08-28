@@ -17,11 +17,12 @@ import {
   ShieldCheck,
   User,
   UsersRound,
-  PackageOpen
+  PackageOpen,
+  Smartphone
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthGate'
 
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'extensions' | 'dataMigration' | 'webSearch' | 'github'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'claw'
 
 export function SettingsSidebar({
   category,
@@ -90,6 +91,15 @@ export function SettingsSidebar({
         >
           <Github className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('github')}
+        </button>
+        <button
+          type="button"
+          data-cursor-spotlight-target
+          className={catCls('claw')}
+          onClick={() => setCategory('claw')}
+        >
+          <Smartphone className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
+          {t('claw')}
         </button>
         <button
           type="button"

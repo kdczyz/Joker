@@ -961,7 +961,7 @@ export function Workbench(): ReactElement {
       />
 
       {/* 聊天窗口:圆角面板浮在整块磨砂玻璃上(图二样式),留白处露出玻璃,无对比色中缝 */}
-      <div className={`flex min-h-0 min-w-0 flex-1 flex-col p-2 transition-[padding] duration-300 ease-out ${leftSidebarCollapsed || activeExtensionCenterView?.point === 'views.fullPage' ? '' : 'pl-0'}`}>
+      <div className={`flex min-h-0 min-w-0 flex-1 flex-col p-2 transition-[padding] duration-300 ease-[cubic-bezier(0.32,0.72,0.24,1)] ${leftSidebarCollapsed || activeExtensionCenterView?.point === 'views.fullPage' ? '' : 'pl-0'}`}>
         <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-ds-canvas shadow-sm">
           {activeExtensionCenterView ? (
             <main className="ds-stage-surface relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -1098,7 +1098,6 @@ export function Workbench(): ReactElement {
       <div className="ds-workbench-sidebar-toggle-anchor ds-no-drag">
         <SidebarTitlebarToggleButton
           onClick={toggleLeftSidebar}
-          collapsed={leftSidebarCollapsed}
           title={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
           ariaLabel={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
         />

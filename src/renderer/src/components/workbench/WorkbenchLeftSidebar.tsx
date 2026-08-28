@@ -97,7 +97,7 @@ export function WorkbenchLeftSidebar({
         aria-hidden={collapsed}
       >
         <div
-          className={`ds-workbench-left-sidebar h-full transition-[opacity,transform] duration-300 ease-out ${
+          className={`ds-workbench-left-sidebar h-full transition-[opacity,transform] duration-300 ease-[cubic-bezier(0.32,0.72,0.24,1)] ${
             collapsed ? 'opacity-0 -translate-x-3' : 'opacity-100 translate-x-0'
           }`}
           style={{ width: width / LEFT_SIDEBAR_ZOOM }}

@@ -288,6 +288,64 @@ export function languageFromFilePath(path: string): string {
   return FILE_EXTENSION_LANGUAGES[extension] ?? ''
 }
 
+export type DiffToken = {
+  content: string
+  color?: string
+  /** Dark-theme custom properties (`--shiki-dark`, …) emitted for dual themes. */
+  htmlStyle?: Record<string, string>
+  fontStyle?: number
+}
+
+const MAX_DIFF_TOKEN_CACHE_ENTRIES = 40
+const diffTokensCache = new Map<string, DiffToken[][]>()
+
+function plainDiffTokens(code: string): DiffToken[][] {
+  return code.split('\n').map((line) => [{ content: line || ' ' }])
+}
+
+/**
+ * Tokenizes pre-split diff lines (without +/- markers) so each row can render
+ * syntax-colored spans while keeping its own row background. Falls back to
+ * unstyled tokens for unknown languages or oversized patches.
+ */
+export async function highlightDiffTokens(
+  code: string,
+  language: string
+): Promise<DiffToken[][]> {
+  const normalized = normalizeCodeLanguage(language)
+  const cacheKey = `${normalized || 'plain'}\u0000${code}`
+  const cached = diffTokensCache.get(cacheKey)
+  if (cached) return cached
+
+  if (!normalized || code.length > MAX_HIGHLIGHT_CHARS) return plainDiffTokens(code)
+
+  try {
+    const { codeToTokens } = await loadShiki()
+    const result = await codeToTokens(code, {
+      lang: normalized as Parameters<typeof codeToTokens>[1]['lang'],
+      themes: SHIKI_THEMES
+    })
+    const lines: DiffToken[][] = result.tokens.map((line) =>
+      line.map((token) => ({
+        content: token.content,
+        color: token.color,
+        htmlStyle: token.htmlStyle,
+        fontStyle: token.fontStyle
+      }))
+    )
+    diffTokensCache.delete(cacheKey)
+    diffTokensCache.set(cacheKey, lines)
+    while (diffTokensCache.size > MAX_DIFF_TOKEN_CACHE_ENTRIES) {
+      const oldestKey = diffTokensCache.keys().next().value
+      if (oldestKey === undefined) break
+      diffTokensCache.delete(oldestKey)
+    }
+    return lines
+  } catch {
+    return plainDiffTokens(code)
+  }
+}
+
 export async function highlightCodeHtml(code: string, language: string): Promise<string> {
   const normalized = normalizeCodeLanguage(language)
   const cacheKey = highlightCacheKey(code, normalized)

@@ -55,7 +55,8 @@ import {
   formatClawInstallError,
   isOfficialInstallProvider,
   clawInstallTargetLabel,
-  clawPayloadQrTitleKey
+  clawPayloadQrTitleKey,
+  translateTelegramError
 } from './SidebarClawDialogHelpers'
 import { ClawConfigureOverview, ClawDialogFooter, ClawManageSelection } from './SidebarClawDialogSections'
 import { ClawStepContent } from './SidebarClawDialogStepContent'
@@ -131,6 +132,8 @@ export function ClawAddImDialog({
     error: ''
   })
   const [platformCredential, setPlatformCredential] = useState<ClawImPlatformCredentialV1 | undefined>()
+  const [telegramBotToken, setTelegramBotToken] = useState('')
+  const [telegramChatIds, setTelegramChatIds] = useState('')
   const installPollTimerRef = useRef<ReturnType<typeof window.setInterval> | null>(null)
   const installCountdownTimerRef = useRef<ReturnType<typeof window.setInterval> | null>(null)
   const installAttemptRef = useRef(0)
@@ -210,6 +213,11 @@ export function ClawAddImDialog({
         replyRules: existingChannel.agentProfile.replyRules || ''
       })
       setPlatformCredential(existingChannel.platformCredential)
+      const telegramCredential = existingChannel.platformCredential?.kind === 'telegram'
+        ? existingChannel.platformCredential
+        : null
+      setTelegramBotToken(telegramCredential?.botToken ?? '')
+      setTelegramChatIds(telegramCredential?.allowedChatIds ?? '')
     } else {
       const target = provider === 'weixin' ? 'weixin' : 'feishu'
       setOfficialInstallTarget(target)
@@ -225,6 +233,8 @@ export function ClawAddImDialog({
         replyRules: ''
       })
       setPlatformCredential(undefined)
+      setTelegramBotToken('')
+      setTelegramChatIds('')
     }
     return cancelInstallAttempt
   }, [cancelInstallAttempt, existingChannel, provider])
@@ -473,6 +483,29 @@ export function ClawAddImDialog({
     }
   }
 
+  const resolveTelegramCredential = async (): Promise<ClawImPlatformCredentialV1 | undefined> => {
+    const trimmedToken = telegramBotToken.trim()
+    if (!trimmedToken) {
+      setError(t('connectPhoneTelegramTokenRequired'))
+      return undefined
+    }
+    const result = await window.JokerGui.connectTelegramBot(
+      trimmedToken,
+      telegramChatIds.trim() || undefined
+    )
+    if (!result.ok) {
+      setError(translateTelegramError(t, result.code, result.message))
+      return undefined
+    }
+    return {
+      kind: 'telegram',
+      botToken: trimmedToken,
+      allowedChatIds: telegramChatIds.trim(),
+      ...(result.botUsername ? { botUsername: result.botUsername } : {}),
+      createdAt: new Date().toISOString()
+    }
+  }
+
   const handleAdd = async (): Promise<void> => {
     if (busy) return
     if (noVisibleProvider) return
@@ -483,6 +516,11 @@ export function ClawAddImDialog({
     setBusy(true)
     setError(null)
     try {
+      let credential: ClawImPlatformCredentialV1 | undefined = resolvedPlatformCredential
+      if (selectedOption.connectionMode === 'telegram-token') {
+        credential = await resolveTelegramCredential()
+        if (!credential) return
+      }
       await onAddProvider(provider, {
         name: agentProfile.name.trim(),
         description: agentProfile.description.trim(),
@@ -490,7 +528,7 @@ export function ClawAddImDialog({
         personality: agentProfile.personality,
         userContext: agentProfile.userContext,
         replyRules: agentProfile.replyRules
-      }, resolvedPlatformCredential, {
+      }, credential, {
         model: channelModel,
         workspaceRoot: channelWorkspaceRoot.trim(),
         enabled: channelEnabled,
@@ -522,6 +560,11 @@ export function ClawAddImDialog({
     setBusy(true)
     setError(null)
     try {
+      let credential: ClawImPlatformCredentialV1 | undefined = resolvedPlatformCredential
+      if (selectedOption.connectionMode === 'telegram-token') {
+        credential = await resolveTelegramCredential()
+        if (!credential) return
+      }
       await onAddProvider(existingChannel.provider, {
         name: agentProfile.name.trim(),
         description: agentProfile.description.trim(),
@@ -529,7 +572,7 @@ export function ClawAddImDialog({
         personality: agentProfile.personality,
         userContext: agentProfile.userContext,
         replyRules: agentProfile.replyRules
-      }, resolvedPlatformCredential, {
+      }, credential, {
         channelId: existingChannel.id,
         model: channelModel,
         workspaceRoot: channelWorkspaceRoot.trim(),
@@ -570,8 +613,11 @@ export function ClawAddImDialog({
   }
 
   const requiresOfficialInstall = selectedOption.connectionMode === 'official-install-qr'
+  const telegramTokenMode = selectedOption.connectionMode === 'telegram-token'
   const submitDisabled =
-    busy || noVisibleProvider || noEditableChannel || (requiresOfficialInstall && !resolvedPlatformCredential)
+    busy || noVisibleProvider || noEditableChannel ||
+    (requiresOfficialInstall && !resolvedPlatformCredential) ||
+    (telegramTokenMode && !telegramBotToken.trim())
   const activeStepConfig =
     CLAW_DIALOG_STEPS.find((step) => step.id === activeStep) ?? CLAW_DIALOG_STEPS[0]
   const activeStepIndex = CLAW_DIALOG_STEPS.findIndex((step) => step.id === activeStep)
@@ -643,7 +689,8 @@ export function ClawAddImDialog({
     primaryActionLabel, providerConfigured, providerListTitle, qrValue, requiresOfficialInstall, resolvedPlatformCredential, responseTimeoutSec, returnToManageSelection, runMode, imApprovalPolicy, imSandboxMode,
     secret, selectedChannelId, selectedCredentialHints, selectedOption, setActiveStep, setAdvancedSettingsOpen, setEndpoint, setChannelEnabled, setChannelModel, setChannelWorkspaceRoot,
     setImEnabled, setImPath, setImPort, setOfficialInstallTarget, setResponseTimeoutSec, setRunMode, setImApprovalPolicy, setImSandboxMode, setSecret, setShowSecret, showSecret, startOfficialInstallQr,
-    submitDisabled, t, updateAgentProfile
+    submitDisabled, t, updateAgentProfile,
+    telegramTokenMode, telegramBotToken, telegramChatIds, setTelegramBotToken, setTelegramChatIds
   }
 
   return (
