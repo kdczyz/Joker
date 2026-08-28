@@ -46,8 +46,6 @@ type CreateAppActionsOptions = {
   applyTheme: (theme: AppSettingsV1['theme']) => void
   applyUiFontScale: (scale: AppSettingsV1['uiFontScale']) => void
   applyChatContentMaxWidth: (widthPx: AppSettingsV1['chatContentMaxWidthPx']) => void
-  applyCursorSpotlight: (enabled: boolean) => void
-  applyCursorSpotlightColor: (color: AppSettingsV1['cursorSpotlightColor']) => void
   applyDocumentLocale: (locale: AppSettingsV1['locale']) => void
   workspaceLabelFromPath: (workspaceRoot: string) => string
   normalizeWorkspaceRoot: (workspaceRoot?: string | null) => string
@@ -89,8 +87,6 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
     applyTheme,
     applyUiFontScale,
     applyChatContentMaxWidth,
-    applyCursorSpotlight,
-    applyCursorSpotlightColor,
     applyDocumentLocale,
     workspaceLabelFromPath,
     normalizeWorkspaceRoot
@@ -330,8 +326,6 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
       applyTheme(settings.theme)
       applyUiFontScale(settings.uiFontScale)
       applyChatContentMaxWidth(settings.chatContentMaxWidthPx)
-      applyCursorSpotlight(settings.cursorSpotlight !== false)
-      applyCursorSpotlightColor(settings.cursorSpotlightColor)
       set({
         workspaceRoot,
         workspaceLabel: workspaceLabelFromPath(workspaceRoot),

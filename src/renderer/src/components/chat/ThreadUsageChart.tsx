@@ -317,7 +317,7 @@ function ChartPage({
 
         return (
           <div
-            className={`pointer-events-none absolute z-10 w-[min(14.5rem,80%)] ${xTransform} ${yTransform} rounded-xl border border-ds-border bg-white/98 dark:bg-[#202024] p-2.5 text-[12px] shadow-[0_14px_38px_rgba(20,47,95,0.16)] backdrop-blur-xl transition-transform duration-75`}
+            className={`pointer-events-none absolute z-10 w-[min(14.5rem,80%)] ${xTransform} ${yTransform} rounded-xl border border-ds-border bg-white/98 dark:bg-[#212322] p-2.5 text-[12px] shadow-[0_14px_38px_rgba(20,47,95,0.16)] backdrop-blur-xl transition-transform duration-75`}
             style={{
               left: `${xPercent}%`,
               top: `${yPercent}%`

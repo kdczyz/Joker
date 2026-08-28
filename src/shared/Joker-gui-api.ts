@@ -18,6 +18,7 @@ import type {
 } from './app-settings'
 import type { EditorListResult, EditorOpenResult, OpenEditorPathOptions } from './editor'
 import type { GitBranchesResult, GitBranchWorktreesResult, GitWorktreeCheckoutResult } from './git-branches'
+import type { GitCommitResult, GitDiffStatResult, GitPushResult } from './git-changes'
 import type { GitCheckpointCreateResult, GitCheckpointRestoreResult } from './git-checkpoint'
 import type {
   MergeResult,
@@ -605,6 +606,14 @@ export type JokerGuiApi = ExtensionIpcApi & {
   ) => Promise<JokerProjectConfigFileResult>
   openJokerProjectConfigDir: (workspaceRoot: string) => Promise<PathOpenResult>
   getGitBranches: (workspaceRoot: string) => Promise<GitBranchesResult>
+  getGitDiffStat: (workspaceRoot: string) => Promise<GitDiffStatResult>
+  commitGitChanges: (params: {
+    workspaceRoot: string
+    message?: string
+    includeUnstaged?: boolean
+    push?: boolean
+  }) => Promise<GitCommitResult>
+  pushGitChanges: (workspaceRoot: string) => Promise<GitPushResult>
   switchGitBranch: (workspaceRoot: string, branch: string) => Promise<GitBranchesResult>
   createAndSwitchGitBranch: (workspaceRoot: string, branch: string) => Promise<GitBranchesResult>
   createGitCheckpoint: (params: {

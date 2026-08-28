@@ -404,8 +404,8 @@ html[data-theme='dark'] .ds-markdown .ds-code-block-html > pre span {
 }
 
 html[data-theme='dark'] .ds-code-sidebar {
-  --ds-code-sidebar-editor-bg: #141417;
-  --ds-code-sidebar-gutter-bg: #19191d;
+  --ds-code-sidebar-editor-bg: #151617;
+  --ds-code-sidebar-gutter-bg: #1b1c1c;
   --ds-code-sidebar-active-line-bg: rgba(255, 255, 255, 0.08);
 }
 

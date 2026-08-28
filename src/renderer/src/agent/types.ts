@@ -333,7 +333,7 @@ export type ChatBlock =
       meta?: RuntimeDisclosureMetadata
     }
   | { kind: 'assistant'; id: string; turnId?: string; createdAt?: string; text: string }
-  | { kind: 'reasoning'; id: string; createdAt?: string; text: string }
+  | { kind: 'reasoning'; id: string; createdAt?: string; text: string; durationMs?: number }
   | ToolBlock
   | CompactionBlock
   | ReviewBlock

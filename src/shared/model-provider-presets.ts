@@ -23,20 +23,20 @@ import {
 export type ModelProviderPresetId =
   | 'litellm'
   | 'longcat'
+  | 'claude-subscription'
   | 'zhipu-coding-plan'
   | 'zai-coding-plan'
   | 'kimi-code'
   | 'volcengine-coding-plan'
   | 'opencode-go'
   | 'opencode-zen'
-  | 'codex'
-  | 'claude-subscription'
   | 'moonshot-cn'
   | 'moonshot-global'
   | 'xiaomi'
   | 'minimax'
   | 'aliyun'
   | 'tencentcloud'
+  | typeof CHATGPT_SUBSCRIPTION_PROVIDER_ID
   | 'vercel-ai-gateway'
 
 export const TOKEN_PLAN_PROVIDER_ID_SUFFIX = '-token-plan'
@@ -740,6 +740,16 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
     apiKeyUrl: 'https://vercel.com/ai-gateway'
   }
 ]
+
+/**
+ * 「添加供应商」菜单里作为模板提供的预设。白名单之外的预设不再出现在模板菜单,
+ * 但仍保留在 MODEL_PROVIDER_PRESETS 中:Joker-free 免费通道依赖 opencode-zen
+ * 预设,存量用户档案的模型档案补全 / Token Plan 解析也依赖这些条目。
+ */
+export const ADDABLE_MODEL_PROVIDER_PRESET_IDS: ReadonlySet<ModelProviderPresetId> = new Set<ModelProviderPresetId>([
+  'claude-subscription',
+  CHATGPT_SUBSCRIPTION_PROVIDER_ID
+])
 
 export function getModelProviderPreset(id: string): ModelProviderPreset | null {
   return MODEL_PROVIDER_PRESETS.find((preset) => preset.id === id) ?? null

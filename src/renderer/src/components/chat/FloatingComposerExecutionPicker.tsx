@@ -208,7 +208,7 @@ export function FloatingComposerExecutionPicker({
         ref={menuRef}
         role="menu"
         style={menuStyle}
-        className="ds-composer-permission-menu fixed z-50 overflow-hidden rounded-2xl border border-ds-border bg-white p-2 text-[13px] text-ds-ink shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#202024]"
+        className="ds-composer-permission-menu fixed z-50 overflow-hidden rounded-2xl border border-ds-border bg-white p-2 text-[13px] text-ds-ink shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#212322]"
       >
         {APPROVAL_OPTIONS.map((option) => (
           <ExecutionRow

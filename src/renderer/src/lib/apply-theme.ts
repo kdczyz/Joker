@@ -1,6 +1,5 @@
 import {
   documentLanguageForAppLocale,
-  DEFAULT_CURSOR_SPOTLIGHT_COLOR,
   normalizeChatContentMaxWidth,
   normalizeUiFontScale,
   writeFontStackFor,
@@ -56,59 +55,6 @@ export function applyUiFontScale(scale: UiFontScale): void {
 export function applyChatContentMaxWidth(widthPx: ChatContentMaxWidthPx): void {
   const root = document.documentElement
   root.style.setProperty('--ds-chat-content-max-width', `${normalizeChatContentMaxWidth(widthPx)}px`)
-}
-
-export function applyCursorSpotlight(enabled: boolean): void {
-  document.documentElement.dataset.cursorSpotlight = enabled ? 'on' : 'off'
-}
-
-type Rgb = { r: number; g: number; b: number }
-
-const CURSOR_SPOTLIGHT_RGB_PROPS = [
-  '--ds-cursor-spotlight-rgb',
-  '--ds-cursor-spotlight-edge-rgb',
-  '--ds-cursor-spotlight-dark-rgb',
-  '--ds-cursor-spotlight-dark-edge-rgb'
-] as const
-
-export function applyCursorSpotlightColor(color: string | null | undefined): void {
-  const rootStyle = document.documentElement.style
-  const normalized = normalizeHexColor(color)
-  if (normalized === DEFAULT_CURSOR_SPOTLIGHT_COLOR) {
-    for (const prop of CURSOR_SPOTLIGHT_RGB_PROPS) rootStyle.removeProperty(prop)
-    return
-  }
-
-  const rgb = parseHexColor(normalized)
-  rootStyle.setProperty('--ds-cursor-spotlight-rgb', rgbString(rgb))
-  rootStyle.setProperty('--ds-cursor-spotlight-edge-rgb', rgbString(mixRgb(rgb, { r: 0, g: 0, b: 0 }, 0.16)))
-  rootStyle.setProperty('--ds-cursor-spotlight-dark-rgb', rgbString(mixRgb(rgb, { r: 0, g: 0, b: 0 }, 0.12)))
-  rootStyle.setProperty('--ds-cursor-spotlight-dark-edge-rgb', rgbString(mixRgb(rgb, { r: 255, g: 255, b: 255 }, 0.24)))
-}
-
-function normalizeHexColor(value: string | null | undefined): string {
-  const color = typeof value === 'string' ? value.trim().toLowerCase() : ''
-  return /^#[0-9a-f]{6}$/.test(color) ? color : DEFAULT_CURSOR_SPOTLIGHT_COLOR
-}
-
-function parseHexColor(color: string): Rgb {
-  return {
-    r: Number.parseInt(color.slice(1, 3), 16),
-    g: Number.parseInt(color.slice(3, 5), 16),
-    b: Number.parseInt(color.slice(5, 7), 16)
-  }
-}
-
-function mixRgb(from: Rgb, to: Rgb, amount: number): Rgb {
-  return {
-    r: Math.round(from.r + (to.r - from.r) * amount),
-    g: Math.round(from.g + (to.g - from.g) * amount),
-    b: Math.round(from.b + (to.b - from.b) * amount)
-  }
-}
-
-function rgbString(rgb: Rgb): string {
-  return `${rgb.r} ${rgb.g} ${rgb.b}`
 }
 
 /**

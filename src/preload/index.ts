@@ -237,6 +237,12 @@ const api = {
     ipcRenderer.invoke('Joker:project-config:open-dir', { workspaceRoot }),
   getGitBranches: (workspaceRoot) =>
     ipcRenderer.invoke('git:branches', workspaceRoot),
+  getGitDiffStat: (workspaceRoot) =>
+    ipcRenderer.invoke('git:diff-stat', workspaceRoot),
+  commitGitChanges: (payload) =>
+    ipcRenderer.invoke('git:commit', payload),
+  pushGitChanges: (workspaceRoot) =>
+    ipcRenderer.invoke('git:push', workspaceRoot),
   switchGitBranch: (workspaceRoot, branch) =>
     ipcRenderer.invoke('git:switch-branch', { workspaceRoot, branch }),
   createAndSwitchGitBranch: (workspaceRoot, branch) =>

@@ -322,12 +322,6 @@ describe('app-ipc-schemas', () => {
     })).toThrow()
   })
 
-  it('accepts the cursor spotlight preference', () => {
-    expect(settingsPatchSchema.parse({ cursorSpotlight: false }).cursorSpotlight).toBe(false)
-    expect(settingsPatchSchema.parse({ cursorSpotlightColor: ' #FF8800 ' }).cursorSpotlightColor).toBe('#FF8800')
-    expect(() => settingsPatchSchema.parse({ cursorSpotlightColor: 'blue' })).toThrow()
-  })
-
   it('accepts media generation settings and provider capability patches', () => {
     const payload = settingsPatchSchema.parse({
       provider: {

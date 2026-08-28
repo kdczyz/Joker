@@ -49,13 +49,44 @@ export function flushLiveProjection(
   const nextBlocks = [...state.blocks]
   const createdAt = new Date(now).toISOString()
   if (state.liveReasoning.trim()) {
-    nextBlocks.push({ kind: 'reasoning', id: `r-${now}`, createdAt, text: state.liveReasoning })
+    const reasoningBlock: Extract<ChatBlock, { kind: 'reasoning' }> = {
+      kind: 'reasoning',
+      id: `r-${now}`,
+      createdAt,
+      text: state.liveReasoning
+    }
+    const durationMs = liveReasoningSegmentDurationMs(state, now)
+    if (typeof durationMs === 'number') reasoningBlock.durationMs = durationMs
+    nextBlocks.push(reasoningBlock)
   }
   if (state.liveAssistant.trim()) {
     nextBlocks.push({ kind: 'assistant', id: `a-${now}`, createdAt, text: state.liveAssistant })
   }
   if (nextBlocks.length === state.blocks.length) return base
-  return { ...base, blocks: nextBlocks, liveReasoning: '', liveAssistant: '' }
+  return {
+    ...base,
+    blocks: nextBlocks,
+    liveReasoning: '',
+    liveAssistant: '',
+    liveReasoningStartedAt: null,
+    liveReasoningEndedAt: null
+  }
+}
+
+/**
+ * Wall-clock span of the current live reasoning segment. The last reasoning
+ * delta bounds the segment; when only one delta arrived (end === start), fall
+ * back to the flush moment — the segment ran at least until the runtime moved
+ * on to the next event (tool call / turn completion).
+ */
+function liveReasoningSegmentDurationMs(state: ChatState, now: number): number | undefined {
+  const { liveReasoningStartedAt, liveReasoningEndedAt } = state
+  if (typeof liveReasoningStartedAt !== 'number') return undefined
+  const end =
+    typeof liveReasoningEndedAt === 'number' && liveReasoningEndedAt > liveReasoningStartedAt
+      ? liveReasoningEndedAt
+      : now
+  return Math.max(0, end - liveReasoningStartedAt)
 }
 
 /** Pure state projection for normalized actions; browser work is emitted elsewhere. */
@@ -98,12 +129,19 @@ export function reduceChatProjection(
           ? event.itemId
           : optimisticUserId
       const startedAt = runtimeEventStartedAt(event.createdAt, context.now)
+      // Clear acknowledged status-dot so the breathing light re-appears
+      // when this new turn reaches a terminal state.
+      const nextAcknowledged = { ...state.acknowledgedStatusDotThreadIds }
+      if (state.activeThreadId) {
+        delete nextAcknowledged[state.activeThreadId]
+      }
       return {
         ...flushed,
         blocks: upsertUserBlock(reconciledBlocks, event),
         busy: true,
         currentTurnId: event.turnId ?? state.currentTurnId,
         currentTurnUserId,
+        acknowledgedStatusDotThreadIds: nextAcknowledged,
         turnStartedAtByUserId: backgroundNotice
           ? state.turnStartedAtByUserId
           : {
@@ -127,6 +165,8 @@ export function reduceChatProjection(
       let liveReasoning = state.liveReasoning
       let liveAssistant = state.liveAssistant
       let liveDeltaSeqFloor = state.liveDeltaSeqFloor
+      let liveReasoningStartedAt = state.liveReasoningStartedAt
+      let liveReasoningEndedAt = state.liveReasoningEndedAt
       let reasoningFirst = state.turnReasoningFirstAtByUserId
       let reasoningLast = state.turnReasoningLastAtByUserId
       let ttft = state.turnTtftMsByUserId
@@ -138,6 +178,12 @@ export function reduceChatProjection(
           liveDeltaSeqFloor = delta.seq
         }
         if (delta.kind === 'agent_reasoning') {
+          // An empty buffer means a fresh reasoning segment (previous one was
+          // flushed by a tool/approval event); re-anchor the segment clock.
+          if (!liveReasoning.trim() || typeof liveReasoningStartedAt !== 'number') {
+            liveReasoningStartedAt = context.now
+          }
+          liveReasoningEndedAt = context.now
           liveReasoning += delta.text
           sawReasoning = true
         } else {
@@ -162,6 +208,12 @@ export function reduceChatProjection(
         ...(liveReasoning !== state.liveReasoning ? { liveReasoning } : {}),
         ...(liveAssistant !== state.liveAssistant ? { liveAssistant } : {}),
         ...(liveDeltaSeqFloor !== state.liveDeltaSeqFloor ? { liveDeltaSeqFloor } : {}),
+        ...(liveReasoningStartedAt !== state.liveReasoningStartedAt
+          ? { liveReasoningStartedAt }
+          : {}),
+        ...(liveReasoningEndedAt !== state.liveReasoningEndedAt
+          ? { liveReasoningEndedAt }
+          : {}),
         ...(reasoningFirst !== state.turnReasoningFirstAtByUserId
           ? { turnReasoningFirstAtByUserId: reasoningFirst }
           : {}),
@@ -503,6 +555,8 @@ export function reduceChatProjection(
         lastSeq: Math.max(state.lastSeq, snapshot.latestSeq),
         liveReasoning: '',
         liveAssistant: '',
+        liveReasoningStartedAt: null,
+        liveReasoningEndedAt: null,
         activeThreadGoal: snapshot.goal ?? state.activeThreadGoal,
         activeThreadTodos: snapshot.todos ?? state.activeThreadTodos,
         error: context.clearRecoveringError(state.error)
@@ -517,12 +571,17 @@ export function reduceChatProjection(
         ...(state.busy ? { busy: false } : {})
       })
       const threadId = state.activeThreadId
-      if (!threadId) return patch
-      const watchTurnCompletion = { ...state.watchTurnCompletion }
-      const unreadThreadIds = { ...state.unreadThreadIds }
-      delete watchTurnCompletion[threadId]
-      delete unreadThreadIds[threadId]
-      return { ...patch, watchTurnCompletion, unreadThreadIds }
+      if (threadId) {
+        const watchTurnCompletion = { ...state.watchTurnCompletion }
+        const unreadThreadIds = { ...state.unreadThreadIds }
+        delete watchTurnCompletion[threadId]
+        delete unreadThreadIds[threadId]
+        // Do NOT auto-acknowledge the just-finished turn here: leave the
+        // terminal breathing light visible so the result reads as "new".
+        // The user dismisses it by clicking/switching the thread (selectThread).
+        return { ...patch, watchTurnCompletion, unreadThreadIds }
+      }
+      return patch
     }
     case 'turn_failed': {
       const message = context.formatRuntimeError(action.error)
@@ -545,6 +604,8 @@ export function reduceChatProjection(
         const unreadThreadIds = { ...state.unreadThreadIds }
         delete watchTurnCompletion[state.activeThreadId]
         delete unreadThreadIds[state.activeThreadId]
+        // Do NOT auto-acknowledge here (see turn_completed): the breathing
+        // light for an aborted/failed turn stays visible until the user clicks.
         patch.watchTurnCompletion = watchTurnCompletion
         patch.unreadThreadIds = unreadThreadIds
       }

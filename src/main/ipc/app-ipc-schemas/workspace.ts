@@ -97,6 +97,15 @@ export const gitBranchPayloadSchema = z
   })
   .strict()
 
+export const gitCommitPayloadSchema = z
+  .object({
+    workspaceRoot: workspaceRootSchema,
+    message: z.string().max(4_000).optional(),
+    includeUnstaged: z.boolean().optional(),
+    push: z.boolean().optional()
+  })
+  .strict()
+
 export const gitCheckpointCreatePayloadSchema = z
   .object({
     workspaceRoot: workspaceRootSchema,

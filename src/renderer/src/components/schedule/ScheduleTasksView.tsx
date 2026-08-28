@@ -44,7 +44,6 @@ import {
   compactHomePathForSettingsDisplay,
   expandHomePathForSettingsUse
 } from '../../lib/settings-home-paths'
-import { SidebarTitlebarToggleButton } from '../sidebar/SidebarPrimitives'
 import { ScheduleDefaultsDialog } from './ScheduleDefaultsDialog'
 import { createScheduleRefreshCoordinator } from './schedule-refresh-coordinator'
 
@@ -402,7 +401,6 @@ function statusTone(status: ScheduledTaskV1['lastStatus']): string {
 
 export function ScheduleTasksView({
   leftSidebarCollapsed,
-  onToggleLeftSidebar,
   onOpenThread
 }: Props): ReactElement {
   const { t } = useTranslation('common')
@@ -651,11 +649,6 @@ export function ScheduleTasksView({
                 leftSidebarCollapsed ? 'ds-window-controls-collapsed-titlebar-inset' : ''
               }`}
             >
-              <SidebarTitlebarToggleButton
-                onClick={onToggleLeftSidebar}
-                title={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-                ariaLabel={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-              />
               <h1 className="min-w-0 flex-1 truncate text-[15px] font-medium text-ds-muted">
                 {t('schedule')}
               </h1>

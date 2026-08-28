@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { DEFAULT_COMPOSER_MODEL_IDS } from './default-composer-models'
 import {
-  DEFAULT_DEEPSEEK_BASE_URL,
+  ADDABLE_MODEL_PROVIDER_PRESET_IDS,
   defaultClawSettings,
   defaultKeyboardShortcuts,
   defaultJokerRuntimeSettings,
@@ -1258,7 +1258,7 @@ describe('model provider settings', () => {
     expect(resolved.apiKey).toBe('')
   })
 
-  it('preserves a cleared default base URL while resolving the official runtime endpoint', () => {
+  it('keeps a cleared default base URL but still resolves the built-in free endpoint', () => {
     const state = settings()
     const normalized = normalizeModelProviderSettings({
       ...state.provider,
@@ -1279,15 +1279,25 @@ describe('model provider settings', () => {
 
     expect(normalized.baseUrl).toBe('')
     expect(normalized.providers.find((provider) => provider.id === 'deepseek')?.baseUrl).toBe('')
-    expect(resolveModelProviderBaseUrl({ ...state, provider: normalized })).toBe(DEFAULT_DEEPSEEK_BASE_URL)
+    // 没有存档的默认供应商档案时,回退到内置的 Joker-free 免费预设,保证运行时开箱可用。
+    expect(resolveModelProviderBaseUrl({ ...state, provider: normalized }))
+      .toBe(getModelProviderPreset('opencode-zen')?.baseUrl ?? '')
   })
 
-  it('has no built-in default composer model IDs', () => {
-    expect(DEFAULT_COMPOSER_MODEL_IDS).toEqual([])
+  it('keeps the built-in free composer model IDs in sync with the Joker-free preset', () => {
+    expect(DEFAULT_COMPOSER_MODEL_IDS).toEqual([...(getModelProviderPreset('opencode-zen')?.models ?? [])])
   })
 })
 
 describe('provider presets', () => {
+  it('offers only the Claude/ChatGPT subscription presets as add-provider templates', () => {
+    expect([...ADDABLE_MODEL_PROVIDER_PRESET_IDS].sort()).toEqual(['claude-subscription', 'codex'])
+    // 未列入白名单的预设仍保留在 MODEL_PROVIDER_PRESETS 里:免费通道、存量档案的
+    // 模型档案补全和 Token Plan 解析都依赖它们,只是不再作为模板出现在添加菜单。
+    expect(getModelProviderPreset('opencode-zen')).not.toBeNull()
+    expect(getModelProviderPreset('xiaomi')).not.toBeNull()
+  })
+
   it('includes optional LiteLLM and Vercel AI Gateway presets', () => {
     const litellm = getModelProviderPreset('litellm')
     const vercel = getModelProviderPreset('vercel-ai-gateway')

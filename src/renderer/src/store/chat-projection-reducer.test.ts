@@ -252,4 +252,40 @@ describe('chat projection reducer', () => {
     expect(projected.lastSeq).toBe(8)
     expect(projected.error).toBeNull()
   })
+
+  it('measures each reasoning segment when live work flushes around tool calls', () => {
+    const initial: ChatState = {
+      ...state(),
+      busy: true,
+      currentTurnUserId: 'user_1',
+      turnStartedAtByUserId: {},
+      turnDurationByUserId: {},
+      turnReasoningFirstAtByUserId: {},
+      turnReasoningLastAtByUserId: {},
+      turnTtftMsByUserId: {}
+    }
+    const at = (ms: number) => ({ ...context, now: NOW + ms })
+    let current: ChatState = initial
+    const step = (action: RuntimeProjectionAction, ms: number): void => {
+      current = { ...current, ...reduceChatProjection(current, action, at(ms)) }
+    }
+
+    step({ type: 'deltas_received', deltas: [{ text: 'first thought', kind: 'agent_reasoning' }] }, 0)
+    step({ type: 'deltas_received', deltas: [{ text: ' continues', kind: 'agent_reasoning' }] }, 4000)
+    // A tool event flushes the live reasoning segment into a durable block.
+    step({
+      type: 'tool_updated',
+      payload: { itemId: 'tool_1', summary: 'read: a.ts', status: 'success', toolKind: 'tool_call' }
+    }, 5000)
+    step({ type: 'deltas_received', deltas: [{ text: 'second thought', kind: 'agent_reasoning' }] }, 6000)
+    step({ type: 'turn_completed' }, 9000)
+
+    const reasoningBlocks = current.blocks.filter((block) => block.kind === 'reasoning')
+    expect(reasoningBlocks).toHaveLength(2)
+    const [first, second] = reasoningBlocks as Array<Extract<typeof reasoningBlocks[number], { kind: 'reasoning' }>>
+    expect(first.text).toBe('first thought continues')
+    expect(first.durationMs).toBe(4000)
+    expect(second.text).toBe('second thought')
+    expect(second.durationMs).toBe(3000)
+  })
 })

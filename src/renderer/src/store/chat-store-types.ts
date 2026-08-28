@@ -108,7 +108,6 @@ export type SettingsRouteSection =
   | 'easterEgg'
   | 'claw'
   | 'updates'
-  | 'terminal'
   | 'dataMigration'
 export type AppRoute = 'chat' | 'design' | 'settings' | 'plugins' | 'extensions' | 'claw' | 'schedule' | 'workflow'
 export type PluginHostRoute = 'chat' | 'claw'
@@ -182,6 +181,10 @@ export type ChatState = {
   blocks: ChatBlock[]
   liveReasoning: string
   liveAssistant: string
+  /** Start timestamp of the current live reasoning segment (first delta); null when idle. */
+  liveReasoningStartedAt: number | null
+  /** Last reasoning-delta timestamp of the current live reasoning segment. */
+  liveReasoningEndedAt: number | null
   lastSeq: number
   /**
    * Highest delta `seq` (per-thread, monotonic) already folded into the live
@@ -252,6 +255,13 @@ export type ChatState = {
   extensionComposerContexts: ExtensionComposerContextEvent[]
   watchTurnCompletion: Record<string, boolean>
   unreadThreadIds: Record<string, boolean>
+  /**
+   * Thread ids whose terminal status-dot (completed / interrupted /
+   * needs-review) has been "read" by the user (thread was active while
+   * in that state). The breathing light is suppressed until a new turn
+   * starts and clears this flag.
+   */
+  acknowledgedStatusDotThreadIds: Record<string, boolean>
   /**
    * Side conversations opened via `/btw`. The main thread selection
    * and subscription are never touched by these entries.

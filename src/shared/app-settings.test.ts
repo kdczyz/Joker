@@ -7,7 +7,6 @@ import {
   DEFAULT_JOKER_DATA_DIR,
   DEFAULT_JOKER_MODEL,
   DEFAULT_LOG_RETENTION_DAYS,
-  DEFAULT_CURSOR_SPOTLIGHT_COLOR,
   DEFAULT_GIT_BRANCH_PREFIX,
   DEFAULT_APPROVAL_POLICY,
   DEFAULT_SANDBOX_MODE,
@@ -468,36 +467,6 @@ describe('app behavior settings', () => {
     expect(current.appBehavior.closeAction).toBe('ask')
     expect(mergeAppBehaviorSettings(current.appBehavior, { closeToTray: true }).closeAction).toBe('tray')
     expect(mergeAppBehaviorSettings(current.appBehavior, { closeToTray: false }).closeAction).toBe('quit')
-  })
-})
-
-describe('cursor spotlight settings', () => {
-  it('defaults the interaction effect on and preserves an explicit opt-out', () => {
-    expect(normalizeAppSettings({
-      ...settings(),
-      cursorSpotlight: undefined
-    }).cursorSpotlight).toBe(true)
-    expect(normalizeAppSettings({
-      ...settings(),
-      cursorSpotlight: false
-    }).cursorSpotlight).toBe(false)
-  })
-
-  it('defaults, preserves, and validates the interaction effect color', () => {
-    expect(normalizeAppSettings({
-      ...settings(),
-      cursorSpotlightColor: undefined
-    }).cursorSpotlightColor).toBe(DEFAULT_CURSOR_SPOTLIGHT_COLOR)
-
-    expect(normalizeAppSettings({
-      ...settings(),
-      cursorSpotlightColor: '  #FF8800  '
-    }).cursorSpotlightColor).toBe('#ff8800')
-
-    expect(normalizeAppSettings({
-      ...settings(),
-      cursorSpotlightColor: 'not-a-color'
-    }).cursorSpotlightColor).toBe(DEFAULT_CURSOR_SPOTLIGHT_COLOR)
   })
 })
 

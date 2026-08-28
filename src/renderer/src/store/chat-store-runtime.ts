@@ -368,7 +368,21 @@ export function flushLiveBlocks(state: ChatState, base: Partial<ChatState> = {})
   const now = Date.now()
   const createdAt = new Date(now).toISOString()
   if (state.liveReasoning.trim()) {
-    nextBlocks.push({ kind: 'reasoning', id: `r-${now}`, createdAt, text: state.liveReasoning })
+    const reasoningBlock: Extract<ChatBlock, { kind: 'reasoning' }> = {
+      kind: 'reasoning',
+      id: `r-${now}`,
+      createdAt,
+      text: state.liveReasoning
+    }
+    const { liveReasoningStartedAt, liveReasoningEndedAt } = state
+    if (typeof liveReasoningStartedAt === 'number') {
+      const end =
+        typeof liveReasoningEndedAt === 'number' && liveReasoningEndedAt > liveReasoningStartedAt
+          ? liveReasoningEndedAt
+          : now
+      reasoningBlock.durationMs = Math.max(0, end - liveReasoningStartedAt)
+    }
+    nextBlocks.push(reasoningBlock)
   }
   if (state.liveAssistant.trim()) {
     nextBlocks.push({ kind: 'assistant', id: `a-${now}`, createdAt, text: state.liveAssistant })
@@ -378,7 +392,9 @@ export function flushLiveBlocks(state: ChatState, base: Partial<ChatState> = {})
     ...base,
     blocks: nextBlocks,
     liveReasoning: '',
-    liveAssistant: ''
+    liveAssistant: '',
+    liveReasoningStartedAt: null,
+    liveReasoningEndedAt: null
   }
 }
 

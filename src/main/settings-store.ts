@@ -8,7 +8,6 @@ import {
   DEFAULT_GUI_UPDATE_CHANNEL,
   DEFAULT_CHECKPOINT_CLEANUP_ENABLED,
   DEFAULT_CHECKPOINT_CLEANUP_INTERVAL_DAYS,
-  DEFAULT_CURSOR_SPOTLIGHT_COLOR,
   DEFAULT_GIT_BRANCH_PREFIX,
   DEFAULT_LOG_RETENTION_DAYS,
   DEFAULT_WRITE_WORKSPACE_ROOT,
@@ -235,8 +234,6 @@ const defaultSettings = (): AppSettingsV1 => ({
   theme: 'system',
   uiFontScale: DEFAULT_UI_FONT_SCALE,
   chatContentMaxWidthPx: DEFAULT_CHAT_CONTENT_MAX_WIDTH_PX,
-  cursorSpotlight: true,
-  cursorSpotlightColor: DEFAULT_CURSOR_SPOTLIGHT_COLOR,
   provider: defaultModelProviderSettings(),
   agents: {
     Joker: defaultJokerRuntimeSettings()

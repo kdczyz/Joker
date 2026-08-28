@@ -1273,8 +1273,6 @@ const settingsPatchObjectSchema = z.object({
   theme: themeSchema.optional(),
   uiFontScale: uiFontScaleSchema.optional(),
   chatContentMaxWidthPx: chatContentMaxWidthSchema.optional(),
-  cursorSpotlight: z.boolean().optional(),
-  cursorSpotlightColor: hexColorSchema.optional(),
   provider: modelProviderPatchSchema.optional(),
   agents: z.object({
     Joker: JokerRuntimePatchSchema.optional()
@@ -1297,6 +1295,8 @@ const settingsPatchObjectSchema = z.object({
   workflow: workflowSettingsPatchSchema.optional(),
   design: designSettingsPatchSchema.optional(),
   terminal: terminalSettingsPatchSchema.optional(),
+  cursorSpotlight: z.boolean().optional(),
+  cursorSpotlightColor: hexColorSchema.optional(),
   codePromptPrefix: z.string().max(MAX_CHANNEL_TEXT_LENGTH).optional(),
   disabledSkillIds: z.array(trimmedString(128)).max(512).optional()
 }).strict()

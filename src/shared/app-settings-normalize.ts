@@ -258,8 +258,8 @@ export function normalizeCheckpointCleanupSettings(
 
 export function normalizeCursorSpotlightColor(value: unknown): string {
   if (typeof value !== 'string') return DEFAULT_CURSOR_SPOTLIGHT_COLOR
-  const color = value.trim()
-  return /^#[0-9a-fA-F]{6}$/.test(color) ? color.toLowerCase() : DEFAULT_CURSOR_SPOTLIGHT_COLOR
+  const color = value.trim().toLowerCase()
+  return /^#[0-9a-fA-F]{6}$/.test(color) ? color : DEFAULT_CURSOR_SPOTLIGHT_COLOR
 }
 
 function normalizeDisabledSkillIds(value: unknown): string[] {

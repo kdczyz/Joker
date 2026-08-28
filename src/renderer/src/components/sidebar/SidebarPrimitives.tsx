@@ -5,7 +5,7 @@ import type {
   ReactElement,
   ReactNode
 } from 'react'
-import { ChevronRight, Command, PanelLeft, Search, X } from 'lucide-react'
+import { ChevronRight, Command, PanelLeftClose, PanelLeftOpen, Search, X } from 'lucide-react'
 
 function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
@@ -15,7 +15,6 @@ type SidebarFrameProps = {
   title: string
   children: ReactNode
   footer?: ReactNode
-  onCollapse?: () => void
   className?: string
 }
 
@@ -23,6 +22,7 @@ type SidebarTitlebarToggleButtonProps = {
   title: string
   ariaLabel?: string
   onClick: () => void
+  collapsed?: boolean
   className?: string
   children?: ReactNode
 }
@@ -31,6 +31,7 @@ export function SidebarTitlebarToggleButton({
   title,
   ariaLabel,
   onClick,
+  collapsed = false,
   className,
   children
 }: SidebarTitlebarToggleButtonProps): ReactElement {
@@ -42,7 +43,11 @@ export function SidebarTitlebarToggleButton({
       aria-label={ariaLabel ?? title}
       className={cx('ds-titlebar-sidebar-toggle ds-no-drag', className)}
     >
-      {children ?? <PanelLeft className="h-4 w-4" strokeWidth={1.75} />}
+      {children ?? (collapsed ? (
+        <PanelLeftOpen className="h-4 w-4" strokeWidth={1.75} />
+      ) : (
+        <PanelLeftClose className="h-4 w-4" strokeWidth={1.75} />
+      ))}
     </button>
   )
 }
@@ -51,7 +56,6 @@ export function SidebarFrame({
   title,
   children,
   footer,
-  onCollapse,
   className
 }: SidebarFrameProps): ReactElement {
   return (
@@ -62,16 +66,9 @@ export function SidebarFrame({
       )}
     >
       <div className="ds-sidebar-titlebar-spacer shrink-0 pb-1 pt-1.5">
-        <div className="ds-sidebar-titlebar-row flex min-h-[30px] items-start justify-between">
+        {/* 收起/展开按钮由 Workbench 固定锚定在红绿灯右侧,这里仅保留安全区占位 */}
+        <div className="ds-sidebar-titlebar-row flex min-h-[30px] items-start">
           <div aria-hidden className="ds-titlebar-safe-block min-w-[80px]" />
-          {onCollapse ? (
-            <SidebarTitlebarToggleButton
-              onClick={onCollapse}
-              title={title}
-              ariaLabel={title}
-              className="ds-sidebar-titlebar-toggle mt-[4px]"
-            />
-          ) : null}
         </div>
       </div>
 
@@ -391,7 +388,7 @@ export function SidebarTreeRow({
       {rail && active ? (
         <span
           aria-hidden
-          className="absolute bottom-1.5 left-0.5 top-1.5 w-[3px] rounded-full bg-[#18181b] shadow-[0_0_6px_rgba(0,0,0,0.2)] transition dark:bg-white dark:shadow-[0_0_8px_rgba(255,255,255,0.4)]"
+          className="absolute bottom-1.5 left-0.5 top-1.5 w-[3px] rounded-full bg-[#18181b] transition dark:bg-white"
         />
       ) : null}
       <button
@@ -407,8 +404,7 @@ export function SidebarTreeRow({
         style={buttonStyle}
       >
         {children}
-      </button>
-      {trailing ? <div className={trailingWrapClass}>{trailing}</div> : null}
+      </button>      {trailing ? <div className={trailingWrapClass}>{trailing}</div> : null}
       {actions ? (
         <div className={actionsWrapClass}>
           <div className={cx('flex shrink-0 items-center gap-0.5 transition', actionsClass)}>

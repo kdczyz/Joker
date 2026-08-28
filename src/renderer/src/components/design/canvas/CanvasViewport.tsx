@@ -37,7 +37,6 @@ import {
   selectHtmlFramesForOverlay
 } from './HtmlFrameOverlay'
 import { htmlFrameOverlayCanMountAtZoom } from './html-frame/html-frame-helpers'
-import { SidebarTitlebarToggleButton } from '../../sidebar/SidebarPrimitives'
 import {
   canvasViewportStorageKey,
   createCanvasTool,
@@ -112,8 +111,6 @@ export function CanvasViewport({
   baseDir,
   designSystemBaseDir,
   surface = 'design',
-  leftSidebarCollapsed,
-  onToggleLeftSidebar,
   busy = false,
   onOpenAgentSettings,
   syncHtmlScreens = false,
@@ -506,21 +503,6 @@ export function CanvasViewport({
             : '16px'
         } as React.CSSProperties}
       >
-        <div className="pointer-events-none absolute left-3 top-3 z-40 flex min-w-0 items-start">
-          <div
-            className={`pointer-events-auto flex min-w-0 items-center gap-2 ${
-              leftSidebarCollapsed ? 'ds-window-controls-safe-inset' : ''
-            }`}
-          >
-            {onToggleLeftSidebar ? (
-              <SidebarTitlebarToggleButton
-                onClick={onToggleLeftSidebar}
-                title={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-                ariaLabel={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-              />
-            ) : null}
-          </div>
-        </div>
         <div
           className="pointer-events-none absolute right-3 top-1/2 z-40 -translate-y-1/2"
           style={{ transform: `translateY(-50%) scale(${uiScale})`, transformOrigin: 'right center' }}

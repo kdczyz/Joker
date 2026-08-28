@@ -19,6 +19,7 @@ import type {
   VideoGenerationProtocol
 } from '@shared/app-settings'
 import {
+  ADDABLE_MODEL_PROVIDER_PRESET_IDS,
   DEFAULT_IMAGE_GENERATION_PROTOCOL,
   DEFAULT_MUSIC_GENERATION_PROTOCOL,
   DEFAULT_MODEL_PROVIDER_ID,
@@ -1625,7 +1626,9 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
     )
   }
 
-  const addMenuEntries = MODEL_PROVIDER_PRESETS.flatMap((preset) => {
+  const addMenuEntries = MODEL_PROVIDER_PRESETS
+    .filter((preset) => ADDABLE_MODEL_PROVIDER_PRESET_IDS.has(preset.id))
+    .flatMap((preset) => {
     const entries: {
       preset: ModelProviderPreset
       mode: 'api' | 'token-plan'
@@ -1722,16 +1725,24 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
                     role="menu"
                     className="absolute left-0 right-0 z-20 mt-1 max-h-[min(60vh,420px)] overflow-y-auto rounded-xl border border-ds-border bg-ds-card p-1 shadow-lg"
                   >
-                    <div className="px-2.5 pb-1 pt-1 text-[11px] font-semibold text-ds-faint">
-                      {t('modelProviderGroupPlans')}
-                    </div>
-                    {planAddEntries.map(renderAddEntry)}
-                    <div className="my-1 border-t border-ds-border-muted" />
-                    <div className="px-2.5 pb-1 text-[11px] font-semibold text-ds-faint">
-                      {t('modelProviderGroupApi')}
-                    </div>
-                    {apiAddEntries.map(renderAddEntry)}
-                    <div className="my-1 border-t border-ds-border-muted" />
+                    {planAddEntries.length > 0 ? (
+                      <>
+                        <div className="px-2.5 pb-1 pt-1 text-[11px] font-semibold text-ds-faint">
+                          {t('modelProviderGroupPlans')}
+                        </div>
+                        {planAddEntries.map(renderAddEntry)}
+                        <div className="my-1 border-t border-ds-border-muted" />
+                      </>
+                    ) : null}
+                    {apiAddEntries.length > 0 ? (
+                      <>
+                        <div className="px-2.5 pb-1 pt-1 text-[11px] font-semibold text-ds-faint">
+                          {t('modelProviderGroupApi')}
+                        </div>
+                        {apiAddEntries.map(renderAddEntry)}
+                        <div className="my-1 border-t border-ds-border-muted" />
+                      </>
+                    ) : null}
                     <button
                       type="button"
                       role="menuitem"

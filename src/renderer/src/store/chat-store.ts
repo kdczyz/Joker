@@ -5,8 +5,6 @@ import { rendererRuntimeClient } from '../agent/runtime-client'
 import i18n from '../i18n'
 import {
   applyChatContentMaxWidth,
-  applyCursorSpotlight,
-  applyCursorSpotlightColor,
   applyDocumentLocale,
   applyTheme,
   applyUiFontScale
@@ -158,8 +156,6 @@ export const useChatStore = create<ChatState>((set, get) => ({
     applyTheme,
     applyUiFontScale,
     applyChatContentMaxWidth,
-    applyCursorSpotlight,
-    applyCursorSpotlightColor,
     applyDocumentLocale,
     workspaceLabelFromPath,
     normalizeWorkspaceRoot: (workspaceRoot) => normalizeWorkspaceRoot(workspaceRoot ?? undefined)

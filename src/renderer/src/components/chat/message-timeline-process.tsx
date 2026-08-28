@@ -132,6 +132,35 @@ function getReasoningSectionText(section: ProcessSection): string {
     .join('\n\n')
 }
 
+/** Total measured wall-clock time of a reasoning section's flushed segments. */
+function reasoningSectionDurationMs(section: ProcessSection): number | undefined {
+  if (section.kind !== 'reasoning') return undefined
+  let total = 0
+  let sawDuration = false
+  for (const block of section.blocks) {
+    if (block.kind !== 'reasoning' || typeof block.durationMs !== 'number') continue
+    total += block.durationMs
+    sawDuration = true
+  }
+  return sawDuration ? total : undefined
+}
+
+/**
+ * Last non-empty line of a streaming reasoning text, with HTML comments and
+ * light markdown emphasis stripped — used as the live one-line preview on the
+ * active "正在思考" row while the full text stays collapsed.
+ */
+function latestReasoningLine(text: string): string {
+  const withoutComments = text.replace(/<!--[\s\S]*?(?:-->|$)/g, ' ')
+  const lines = withoutComments.split(/\r?\n/)
+  for (let index = lines.length - 1; index >= 0; index -= 1) {
+    const line = lines[index]?.trim()
+    if (!line) continue
+    return line.replace(/\*\*|__|`/g, '').trim()
+  }
+  return ''
+}
+
 function sectionHasDetails(
   section: ProcessSection,
   t: (key: string, opts?: Record<string, unknown>) => string
@@ -248,17 +277,19 @@ export function ProcessSectionRow({
   const defaultExpanded =
     (processing && hasError) ||
     sectionHasPendingApproval(section) ||
-    (active && section.kind === 'reasoning') ||
     (processing && section.kind === 'execution' && sectionHasRequestUserInput(section))
   const forceExpanded = sectionHasPendingApproval(section)
   const expanded = hasDetails && (forceExpanded || (userExpanded ?? defaultExpanded))
   const title = describeProcessSection(section, t, {
     processing,
     reasoningDurationMs,
-    singleReasoningSection
+    singleReasoningSection,
+    sectionDurationMs: reasoningSectionDurationMs(section)
   })
   const SectionIcon = processSectionIcon(section)
   const reasoningText = section.kind === 'reasoning' ? getReasoningSectionText(section) : ''
+  const activeReasoningLine =
+    section.kind === 'reasoning' && active ? latestReasoningLine(reasoningText) : ''
   const canToggleSection = hasDetails && !forceExpanded
   const showActiveError = active && hasError
   const shouldDeferDetails = section.kind !== 'subagent'
@@ -315,7 +346,12 @@ export function ProcessSectionRow({
             </span>
           ) : null}
           {SectionIcon ? <ProcessGlyph Icon={SectionIcon} /> : null}
-          <span className={active && !hasError ? 'ds-shiny-text' : ''}>{title}</span>
+          <span className={`shrink-0 whitespace-nowrap ${active && !hasError ? 'ds-shiny-text' : ''}`}>{title}</span>
+          {activeReasoningLine ? (
+            <span className="min-w-0 flex-auto truncate text-[12.5px] font-normal text-ds-faint">
+              <span className="opacity-60">· </span>{activeReasoningLine}
+            </span>
+          ) : null}
           {expanded ? (
             <ChevronDown className="h-3.5 w-3.5 shrink-0 opacity-45" strokeWidth={1.8} />
           ) : (
@@ -334,7 +370,12 @@ export function ProcessSectionRow({
             </span>
           ) : null}
           {SectionIcon ? <ProcessGlyph Icon={SectionIcon} /> : null}
-          <span className={active && !hasError ? 'ds-shiny-text' : ''}>{title}</span>
+          <span className={`shrink-0 whitespace-nowrap ${active && !hasError ? 'ds-shiny-text' : ''}`}>{title}</span>
+          {activeReasoningLine ? (
+            <span className="min-w-0 flex-auto truncate text-[12.5px] font-normal text-ds-faint">
+              <span className="opacity-60">· </span>{activeReasoningLine}
+            </span>
+          ) : null}
         </div>
       )}
 
@@ -674,11 +715,18 @@ function describeProcessSection(
     processing: boolean
     reasoningDurationMs?: number
     singleReasoningSection: boolean
+    sectionDurationMs?: number
   }
 ): string {
   if (section.kind === 'reasoning') {
     if (opts.processing && isProcessSectionActive(section, true)) {
-      return t('thinkingNow')
+      return t('thinkingActive')
+    }
+    // Prefer the measured duration of this specific reasoning segment; fall
+    // back to the turn-level span only when it is the turn's sole section
+    // (older threads flushed before per-segment timing existed).
+    if (typeof opts.sectionDurationMs === 'number' && opts.sectionDurationMs >= 1000) {
+      return t('reasoningWithDuration', { duration: formatDuration(opts.sectionDurationMs) })
     }
     if (
       opts.singleReasoningSection &&

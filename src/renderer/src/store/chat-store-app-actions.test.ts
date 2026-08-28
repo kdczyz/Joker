@@ -89,8 +89,6 @@ function buildHarness(fetchModelsResult: FetchModelsResult): {
       applyTheme: () => undefined,
       applyUiFontScale: () => undefined,
       applyChatContentMaxWidth: () => undefined,
-      applyCursorSpotlight: () => undefined,
-      applyCursorSpotlightColor: () => undefined,
       applyDocumentLocale: () => undefined,
       workspaceLabelFromPath: (workspaceRoot) => workspaceRoot,
       normalizeWorkspaceRoot: (workspaceRoot) => workspaceRoot?.trim() ?? ''

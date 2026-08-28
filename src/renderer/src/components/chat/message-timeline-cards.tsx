@@ -340,12 +340,12 @@ export function WorkMetaRow({
 }): ReactElement {
   const { t } = useTranslation('common')
 
-  /* ── Processing state: liquid glass orb + "Thinking…" ── */
+  /* ── Processing state: liquid glass orb + "Working…" ── */
   if (processing) {
     const label =
       typeof durationMs === 'number'
-        ? `${t('thinkingNow')} ${formatDuration(durationMs)}`
-        : t('thinkingNow')
+        ? `${t('workingNow')} ${formatDuration(durationMs)}`
+        : t('workingNow')
 
     const orbContent = (
       <div className="flex w-full items-center justify-between gap-3">

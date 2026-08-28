@@ -14,6 +14,7 @@ import {
   FolderPlus,
   GitBranch,
   Loader2,
+  MoreVertical,
   Pin,
   PinOff,
   RotateCcw,
@@ -158,6 +159,7 @@ type ThreadRowProps = {
   locale: string
   showRunning: boolean
   showUnread: boolean
+  statusDotAcknowledged: boolean
   onSelect: () => void
   onContextMenu: (event: ReactMouseEvent<HTMLDivElement>) => void
   onPreviewOpen: (
@@ -178,6 +180,7 @@ type ThreadRowProps = {
   onArchive: () => void
   onDelete: () => void
   onRestore: () => void
+  onOpenMenu?: (x: number, y: number) => void
 }
 
 export function ThreadRow({
@@ -188,6 +191,7 @@ export function ThreadRow({
   locale,
   showRunning,
   showUnread,
+  statusDotAcknowledged,
   onSelect,
   onContextMenu,
   onPreviewOpen,
@@ -203,7 +207,8 @@ export function ThreadRow({
   onPin,
   onArchive,
   onDelete,
-  onRestore
+  onRestore,
+  onOpenMenu
 }: ThreadRowProps): ReactElement {
   const { t } = useTranslation('common')
   const showUnreadDot = showUnread && !showRunning
@@ -236,52 +241,31 @@ export function ThreadRow({
   return (
     <SidebarTreeRow
       active={active}
+      activeVariant="outline"
       actionsVisibility={deleting ? 'visible' : 'hidden'}
       actionsLayout="overlay"
       actions={(
-        <div className="flex items-center gap-0.5 rounded-[6px] bg-white/80 p-0.5 backdrop-blur-[2px] shadow-sm dark:bg-[#18181b]/80">
-          {!archived ? (
-            <SidebarIconButton
-              onClick={onPin}
-              disabled={deleting}
-              tone="accent"
-              title={pinned ? t('sidebarThreadUnpin') : t('sidebarThreadPin')}
-              ariaLabel={pinned ? t('sidebarThreadUnpin') : t('sidebarThreadPin')}
-              active={pinned}
-              className="h-5.5 w-5.5 rounded-[5px]"
-              stopPropagation
-            >
-              {pinned
-                ? <PinOff className="h-3 w-3" strokeWidth={2} />
-                : <Pin className="h-3 w-3" strokeWidth={2} />}
-            </SidebarIconButton>
-          ) : null}
-          <SidebarIconButton
-            onClick={archived ? onRestore : onArchive}
+        <div className="flex items-center gap-0.5 rounded-[6px] bg-white/70 p-0.5 backdrop-blur-[3px] dark:bg-white/[0.06]">
+        <button
+            type="button"
+            data-cursor-spotlight-target
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={(event) => {
+              event.stopPropagation()
+              if (onOpenMenu) {
+                const rect = (event.currentTarget as HTMLElement).getBoundingClientRect()
+                onOpenMenu(rect.left, rect.bottom + 4)
+              }
+            }}
             disabled={deleting}
-            tone="accent"
-            title={archived ? t('sidebarThreadRestore') : t('sidebarThreadArchive')}
-            ariaLabel={archived ? t('sidebarThreadRestore') : t('sidebarThreadArchive')}
-            className="h-5.5 w-5.5 rounded-[5px]"
-            stopPropagation
+            title={t('sidebarThreadMoreActions')}
+            aria-label={t('sidebarThreadMoreActions')}
+            className={`flex h-5.5 w-5.5 items-center justify-center rounded-[5px] transition hover:bg-[var(--ds-sidebar-row-hover)] hover:text-[#1f1f1f] dark:hover:text-white ${
+              deleting ? 'opacity-60' : ''
+            }`}
           >
-            {deleting
-              ? <Loader2 className="h-3 w-3 animate-spin" strokeWidth={2} />
-              : archived
-                ? <RotateCcw className="h-3 w-3" strokeWidth={2} />
-                : <Archive className="h-3 w-3" strokeWidth={2} />}
-          </SidebarIconButton>
-          <SidebarIconButton
-            onClick={onDelete}
-            disabled={deleting}
-            tone="danger"
-            title={t('sidebarThreadDelete')}
-            ariaLabel={t('sidebarThreadDelete')}
-            className="h-5.5 w-5.5 rounded-[5px]"
-            stopPropagation
-          >
-            <Trash2 className="h-3 w-3" strokeWidth={2} />
-          </SidebarIconButton>
+            <MoreVertical className="h-3 w-3" strokeWidth={2} />
+          </button>
         </div>
       )}
       className={`min-h-[32px] ${
@@ -309,7 +293,20 @@ export function ThreadRow({
       onMouseLeave={onPreviewClose}
     >
       <span className="flex min-w-0 flex-1 items-center gap-1.5">
-        {pinned ? <Pin className="h-3 w-3 shrink-0 text-[#18181b] dark:text-white" strokeWidth={2.2} /> : null}
+        <span aria-hidden className="grid w-3.5 shrink-0 place-items-center">
+          {pinned ? (
+            <Pin className="h-3 w-3 text-[#18181b] dark:text-white" strokeWidth={2.2} />
+          ) : (
+            <ThreadActivityDot
+              status={statusDot}
+              statusLabel={statusDotLabel}
+              running={showRunning}
+              unread={showUnreadDot}
+              unreadLabel={t('sidebarThreadUnread')}
+              acknowledged={statusDotAcknowledged}
+            />
+          )}
+        </span>
         {worktreeRecord ? (
           <span
             className="inline-grid h-4.5 w-4.5 shrink-0 place-items-center rounded-full border border-black/10 bg-black/[0.04] text-ds-muted dark:border-white/15 dark:bg-white/[0.06]"
@@ -319,7 +316,7 @@ export function ThreadRow({
             <GitBranch className="h-2.5 w-2.5" strokeWidth={2} />
           </span>
         ) : null}
-        <span className={`min-w-0 flex-1 truncate text-[12.5px] leading-tight ${
+        <span className={`min-w-0 flex-1 truncate text-[13px] leading-tight ${
           active
             ? 'font-medium text-[#18181b] dark:text-white'
             : showUnreadDot
@@ -334,13 +331,16 @@ export function ThreadRow({
           <span className="shrink-0 text-right text-[11px] leading-tight text-[#8a8a93] tabular-nums dark:text-[#83838c]">
             {updatedLabel}
           </span>
-          <ThreadActivityDot
-            status={statusDot}
-            statusLabel={statusDotLabel}
-            running={showRunning}
-            unread={showUnreadDot}
-            unreadLabel={t('sidebarThreadUnread')}
-          />
+          {pinned ? (
+            <ThreadActivityDot
+              status={statusDot}
+              statusLabel={statusDotLabel}
+              running={showRunning}
+              unread={showUnreadDot}
+              unreadLabel={t('sidebarThreadUnread')}
+              acknowledged={statusDotAcknowledged}
+            />
+          ) : null}
         </span>
       </span>
     </SidebarTreeRow>
@@ -352,19 +352,33 @@ function ThreadActivityDot({
   statusLabel,
   running,
   unread,
-  unreadLabel
+  unreadLabel,
+  acknowledged
 }: {
   status: ThreadStatusDot
   statusLabel: string
   running: boolean
   unread: boolean
   unreadLabel: string
+  acknowledged: boolean
 }): ReactElement | null {
-  // Terminal derived states (completed / interrupted / needs-review) take
-  // priority over the `running` prop so that the correct colored dot is
-  // shown even while showRunning hasn't settled yet (e.g. thread.status
-  // from the backend is still 'running' briefly after a turn completes).
-  if (status === 'interrupted' || status === 'needs-review' || status === 'completed') {
+  // Live execution is the authoritative signal for the pulsing blue dot: an
+  // active turn (active+busy) or a background turn still finishing
+  // (watchTurnCompletion). Relying on this instead of the persisted
+  // `thread.status === 'running'` keeps the blue light from getting stuck on
+  // after a turn completes (the summary can lag behind the local state).
+  if (running) {
+    return (
+      <span className="relative flex h-2.5 w-2.5 shrink-0 items-center justify-center">
+        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
+        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-blue-500" />
+      </span>
+    )
+  }
+  // Terminal derived states (completed / interrupted / needs-review) show a
+  // colored breathing light until the user acknowledges (已读 / clicks the
+  // thread). When acknowledged, the breathing light is suppressed.
+  if ((status === 'interrupted' || status === 'needs-review' || status === 'completed') && !acknowledged) {
     const pulse = THREAD_STATUS_DOT_PULSE[status]
     return (
       <span className="relative flex h-2.5 w-2.5 shrink-0 items-center justify-center">
@@ -378,16 +392,6 @@ function ThreadActivityDot({
           title={statusLabel}
           aria-label={statusLabel}
         />
-      </span>
-    )
-  }
-  // Active execution: blue ping/pulse so an in-flight turn reads as live
-  // even before the latest-turn status has settled.
-  if (running || status === 'running') {
-    return (
-      <span className="relative flex h-2.5 w-2.5 shrink-0 items-center justify-center">
-        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-blue-400 opacity-75" />
-        <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-blue-500" />
       </span>
     )
   }

@@ -14,7 +14,6 @@ import { WorkbenchTopActions } from '../chat/WorkbenchTopBar'
 import { ActiveUiPluginStagePresentation } from '../chat/UiPluginStagePresentation'
 import { DevPreviewLaunchCard } from '../DevPreviewLaunchCard'
 import { SessionHeader } from '../SessionHeader'
-import { SidebarTitlebarToggleButton } from '../sidebar/SidebarPrimitives'
 import type { JsonValue } from '@joker-code/extension-api'
 import type { RegisteredContribution } from '../../extensions/contribution-registry'
 import { DeclarativeActionBar } from '../../extensions/ControlledContributionSurfaces'
@@ -94,7 +93,6 @@ export function WorkbenchChatStage({
   terminalWorkspaceRoot,
   terminalHeight,
   rightWorkspaceExpanded,
-  onToggleLeftSidebar,
   onRetryConnection,
   onOpenSettings,
   onSelectSuggestion,
@@ -124,18 +122,13 @@ export function WorkbenchChatStage({
       <div
         className={`${stageInsetClass} ds-ui-plugin-stage-content relative z-[3] flex min-h-0 min-w-0 flex-1 flex-col`}
       >
-        <header className="chat-topbar ds-topbar-surface relative z-10 flex w-full shrink-0 items-stretch overflow-visible">
+        <header className="chat-topbar ds-chat-topbar-floating ds-topbar-surface absolute inset-x-0 top-0 z-20 flex w-full shrink-0 items-stretch overflow-visible">
           <div className="chat-topbar-grid grid w-full min-w-0 items-center gap-2.5 px-3 py-2 sm:px-4 md:pl-5 md:pr-2">
             <div
               className={`chat-topbar-session flex min-w-0 items-center gap-2.5 ${
                 leftSidebarCollapsed ? 'ds-window-controls-collapsed-titlebar-inset' : ''
               }`}
             >
-              <SidebarTitlebarToggleButton
-                onClick={onToggleLeftSidebar}
-                title={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-                ariaLabel={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-              />
               <SessionHeader compact className="min-w-0 flex-1" />
             </div>
             <div className="chat-topbar-actions flex min-w-0 flex-wrap items-center justify-end gap-2 self-center">
@@ -161,7 +154,7 @@ export function WorkbenchChatStage({
             </div>
           </div>
         </header>
-        <div className="relative flex min-h-0 min-w-0 flex-1 flex-col">
+        <div className="ds-chat-topbar-float-gap relative flex min-h-0 min-w-0 flex-1 flex-col">
           <LazyMessageTimeline
             fallback={<WorkbenchPaneFallback />}
             blocks={blocks}
@@ -194,7 +187,7 @@ export function WorkbenchChatStage({
             onExtensionCommand={onExtensionCommand}
           />
         </div>
-        <div className="ds-composer-dock ds-no-drag relative flex shrink-0 justify-center px-2 pb-3 pt-0 sm:px-4 md:px-6 lg:px-8">
+        <div className="ds-composer-dock ds-no-drag relative flex shrink-0 justify-center px-2 pb-1 pt-0 sm:px-4 md:px-6 lg:px-8">
           {showReturnBar ? (
             <SubagentReturnBar
               parentTitle={returnParentTitle}

@@ -15,7 +15,6 @@ import {
 } from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
-import { SidebarTitlebarToggleButton } from '../components/sidebar/SidebarPrimitives'
 import { ExtensionAccountManagement } from './ExtensionAccountManagement'
 import { extensionHostIconUrl } from './contribution-registry'
 import {
@@ -53,9 +52,7 @@ export function extensionCardLogoUrl(extensionId: string, icon?: string): string
 }
 
 export function ExtensionManagementCenter({
-  leftSidebarCollapsed,
   workspaceRoot,
-  onToggleLeftSidebar,
   onOpenIntegrations,
   onOpenView
 }: {
@@ -170,11 +167,6 @@ export function ExtensionManagementCenter({
   return (
     <section className="ds-extension-center flex h-full min-h-0 flex-1 flex-col bg-ds-main" aria-label={copy('Joker 扩展管理中心', 'Joker Extension Center')}>
       <header className="ds-drag flex h-14 shrink-0 items-center gap-3 border-b border-ds-border-muted px-4">
-        <SidebarTitlebarToggleButton
-          onClick={onToggleLeftSidebar}
-          title={leftSidebarCollapsed ? copy('展开侧栏', 'Expand sidebar') : copy('收起侧栏', 'Collapse sidebar')}
-          ariaLabel={leftSidebarCollapsed ? copy('展开侧栏', 'Expand sidebar') : copy('收起侧栏', 'Collapse sidebar')}
-        />
         <Puzzle className="h-5 w-5 text-accent" aria-hidden />
         <div className="min-w-0 flex-1">
           <h1 className="truncate text-[15px] font-semibold text-ds-ink">{copy('扩展', 'Extensions')}</h1>

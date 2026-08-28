@@ -768,7 +768,7 @@ export function FloatingComposerModelPicker({
             role="menu"
             aria-label={t('composerReasoning')}
             style={submenuStyle}
-            className="fixed z-[1001] overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#202024]"
+            className="fixed z-[1001] overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#212322]"
           >
             <div className="px-2.5 pb-1 pt-1 text-[11px] font-bold uppercase tracking-[0.08em] text-ds-faint">
               {t('composerReasoning')}
@@ -793,7 +793,7 @@ export function FloatingComposerModelPicker({
             role="menu"
             aria-label={t('composerImageModel')}
             style={submenuStyle}
-            className="fixed z-[1001] overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#202024]"
+            className="fixed z-[1001] overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#212322]"
           >
             <div className="px-2.5 pb-1 pt-1 text-[11px] font-bold uppercase tracking-[0.08em] text-ds-faint">
               {t('composerImageModel')}
@@ -828,7 +828,7 @@ export function FloatingComposerModelPicker({
             role="menu"
             aria-label={activeProviderGroup.label}
             style={submenuStyle}
-            className="fixed z-[1001] overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#202024]"
+            className="fixed z-[1001] overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#212322]"
           >
             <div className="px-2.5 pb-1 pt-1 text-[11px] font-bold uppercase tracking-[0.08em] text-ds-faint">
               {t('composerModel')}
@@ -964,7 +964,7 @@ export function FloatingComposerModelPicker({
           </button>
         ) : null}
 
-        {renderMenu('fixed z-[1000] overflow-x-hidden overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_22px_64px_rgba(20,47,95,0.18)] dark:bg-[#202024]')}
+        {renderMenu('fixed z-[1000] overflow-x-hidden overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_22px_64px_rgba(20,47,95,0.18)] dark:bg-[#212322]')}
         {renderSplitReasoningPopover()}
       </div>
     )
@@ -1008,7 +1008,7 @@ export function FloatingComposerModelPicker({
             <ChevronDown className="h-3.5 w-3.5" strokeWidth={1.8} />
           </span>
         </button>
-        {renderMenu('fixed z-[1000] overflow-x-hidden overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[12.5px] shadow-[0_18px_50px_rgba(20,47,95,0.16)] dark:bg-[#202024]')}
+        {renderMenu('fixed z-[1000] overflow-x-hidden overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[12.5px] shadow-[0_18px_50px_rgba(20,47,95,0.16)] dark:bg-[#212322]')}
       </div>
     )
   }
@@ -1046,7 +1046,7 @@ export function FloatingComposerModelPicker({
       </button>
 
       {menuOpen && canOpenModelControls ? (
-        renderMenu('fixed z-[1000] overflow-x-hidden overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_22px_64px_rgba(20,47,95,0.18)] dark:bg-[#202024]')
+        renderMenu('fixed z-[1000] overflow-x-hidden overflow-y-auto rounded-xl border border-ds-border bg-white p-1.5 text-[13px] text-ds-muted shadow-[0_22px_64px_rgba(20,47,95,0.18)] dark:bg-[#212322]')
       ) : null}
     </div>
   )

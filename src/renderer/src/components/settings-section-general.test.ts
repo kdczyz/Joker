@@ -29,8 +29,6 @@ function baseCtx(): Record<string, unknown> {
       uiFontScale: 0.88,
     chatContentMaxWidthPx: 896,
       workspaceRoot: '~/data/code/python/Kook-Voices',
-      cursorSpotlight: true,
-      cursorSpotlightColor: '#3b82f6',
       appBehavior: {
         openAtLogin: false,
         startMinimized: false,

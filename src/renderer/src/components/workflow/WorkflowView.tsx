@@ -17,7 +17,6 @@ import {
 } from '@shared/app-settings'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { confirmDialog } from '../../lib/confirm-dialog'
-import { SidebarTitlebarToggleButton } from '../sidebar/SidebarPrimitives'
 import { parseWorkflowDsl, serializeWorkflowDsl } from '@shared/workflow-dsl'
 import { WorkflowEditorView } from './WorkflowEditorView'
 import { WorkflowHookTriggers } from './WorkflowHookTriggers'
@@ -46,7 +45,7 @@ function formatDateTime(value: string, fallback: string): string {
   return Number.isFinite(date.getTime()) ? date.toLocaleString() : fallback
 }
 
-export function WorkflowView({ leftSidebarCollapsed, onToggleLeftSidebar }: Props): ReactElement {
+export function WorkflowView({ leftSidebarCollapsed }: Props): ReactElement {
   const { t } = useTranslation('common')
   const [settings, setSettings] = useState<AppSettingsV1 | null>(null)
   const [status, setStatus] = useState<WorkflowRuntimeStatus | null>(null)
@@ -378,11 +377,6 @@ export function WorkflowView({ leftSidebarCollapsed, onToggleLeftSidebar }: Prop
                 leftSidebarCollapsed ? 'ds-window-controls-collapsed-titlebar-inset' : ''
               }`}
             >
-              <SidebarTitlebarToggleButton
-                onClick={onToggleLeftSidebar}
-                title={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-                ariaLabel={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-              />
               <h1 className="min-w-0 flex-1 truncate text-[15px] font-medium text-ds-muted">
                 {t('workflow')}
               </h1>

@@ -89,56 +89,68 @@ export function WorkbenchLeftSidebar({
   onNewConversation,
   onBeginResize
 }: WorkbenchLeftSidebarProps): ReactElement | null {
-  if (collapsed) return null
   return (
     <>
-      <div className="min-h-0 shrink-0 ds-workbench-left-sidebar" style={{ width: width / LEFT_SIDEBAR_ZOOM }}>
-        {extensionView ? (
-          <ExtensionViewOutlet
-            contribution={extensionView}
-            workspaceRoot={workspaceRoot}
-            onClose={onCloseExtensionView}
-          />
-        ) : (
-          <Sidebar
-            threads={codeThreads}
-            activeThreadId={activeThreadId}
-            activeView={sidebarView}
-            connectPhoneSidebarOpen={connectPhoneSidebarOpen}
-            pluginsActive={route === 'plugins'}
-            extensionsActive={extensionsActive}
-            runtimeReady={runtimeReady}
-            threadSearch={threadSearch}
-            showArchivedThreads={showArchivedThreads}
-            onThreadSearchChange={onThreadSearchChange}
-            onSelectThread={onSelectThread}
-            onRenameThread={onRenameThread}
-            onPinThread={onPinThread}
-            onArchiveThread={onArchiveThread}
-            onDeleteThread={onDeleteThread}
-            onRestoreThread={onRestoreThread}
-            onNewChat={onNewChat}
-            onNewChatInWorkspace={onNewChatInWorkspace}
-            onNewRequirement={onNewRequirement}
-            onOpenRequirementDraft={onOpenRequirementDraft}
-            onOpenSettings={onOpenSettings}
-            onOpenPlugins={onOpenPlugins}
-            onOpenExtensions={onOpenExtensions}
-            onToggleTheme={onToggleTheme}
-            onToggleConnectPhone={onToggleConnectPhone}
-            onCodeOpen={onCodeOpen}
-            onScheduleOpen={onScheduleOpen}
-            onWorkflowOpen={onWorkflowOpen}
-            onNewConversation={onNewConversation}
-          />
-        )}
-      </div>
       <div
-        role="separator"
-        aria-orientation="vertical"
-        className="ds-workbench-divider ds-no-drag relative z-20 shrink-0 cursor-col-resize"
-        onPointerDown={onBeginResize}
-      />
+        className={`ds-workbench-left-sidebar-clip min-h-0 shrink-0 overflow-hidden ${collapsed ? 'pointer-events-none' : ''}`}
+        style={{ width: collapsed ? 0 : width }}
+        aria-hidden={collapsed}
+      >
+        <div
+          className={`ds-workbench-left-sidebar h-full transition-[opacity,transform] duration-300 ease-out ${
+            collapsed ? 'opacity-0 -translate-x-3' : 'opacity-100 translate-x-0'
+          }`}
+          style={{ width: width / LEFT_SIDEBAR_ZOOM }}
+        >
+          {extensionView ? (
+            <ExtensionViewOutlet
+              contribution={extensionView}
+              workspaceRoot={workspaceRoot}
+              onClose={onCloseExtensionView}
+            />
+          ) : (
+            <Sidebar
+              threads={codeThreads}
+              activeThreadId={activeThreadId}
+              activeView={sidebarView}
+              connectPhoneSidebarOpen={connectPhoneSidebarOpen}
+              pluginsActive={route === 'plugins'}
+              extensionsActive={extensionsActive}
+              runtimeReady={runtimeReady}
+              threadSearch={threadSearch}
+              showArchivedThreads={showArchivedThreads}
+              onThreadSearchChange={onThreadSearchChange}
+              onSelectThread={onSelectThread}
+              onRenameThread={onRenameThread}
+              onPinThread={onPinThread}
+              onArchiveThread={onArchiveThread}
+              onDeleteThread={onDeleteThread}
+              onRestoreThread={onRestoreThread}
+              onNewChat={onNewChat}
+              onNewChatInWorkspace={onNewChatInWorkspace}
+              onNewRequirement={onNewRequirement}
+              onOpenRequirementDraft={onOpenRequirementDraft}
+              onOpenSettings={onOpenSettings}
+              onOpenPlugins={onOpenPlugins}
+              onOpenExtensions={onOpenExtensions}
+              onToggleTheme={onToggleTheme}
+              onToggleConnectPhone={onToggleConnectPhone}
+              onCodeOpen={onCodeOpen}
+              onScheduleOpen={onScheduleOpen}
+              onWorkflowOpen={onWorkflowOpen}
+              onNewConversation={onNewConversation}
+            />
+          )}
+        </div>
+      </div>
+      {collapsed ? null : (
+        <div
+          role="separator"
+          aria-orientation="vertical"
+          className="ds-workbench-divider ds-no-drag relative z-20 shrink-0 cursor-col-resize"
+          onPointerDown={onBeginResize}
+        />
+      )}
     </>
   )
 }

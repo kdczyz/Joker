@@ -34,7 +34,6 @@ import {
   type McpMarketplaceOverlay,
   type McpMarketplaceOverlayStatus
 } from './plugin-marketplace-runtime'
-import { SidebarTitlebarToggleButton } from './sidebar/SidebarPrimitives'
 
 type PluginKind = 'mcp' | 'skill'
 type PluginFilter = 'all' | 'recommended' | 'installed'
@@ -887,7 +886,7 @@ export function recommendedMarketplaceItemIds(): string[] {
   return RECOMMENDED_ITEMS.map((item) => item.id)
 }
 
-export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSidebar }: Props): ReactElement {
+export function PluginMarketplaceView({ leftSidebarCollapsed }: Props): ReactElement {
   const { t } = useTranslation('common')
   const workspaceRoot = normalizeWorkspaceRoot(useChatStore((s) => s.workspaceRoot))
   const [activeKind, setActiveKind] = useState<PluginKind>('mcp')
@@ -1391,11 +1390,6 @@ export function PluginMarketplaceView({ leftSidebarCollapsed, onToggleLeftSideba
                 leftSidebarCollapsed ? 'ds-window-controls-collapsed-titlebar-inset' : ''
               }`}
             >
-              <SidebarTitlebarToggleButton
-                onClick={onToggleLeftSidebar}
-                title={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-                ariaLabel={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-              />
               <h1 className="sr-only">{t('plugins')}</h1>
             </div>
           </div>

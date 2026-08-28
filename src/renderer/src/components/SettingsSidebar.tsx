@@ -3,7 +3,6 @@ import {
   Archive,
   Bot,
   BrainCircuit,
-  Bug,
   ChevronLeft,
   ChevronRight,
   GitBranch,
@@ -16,14 +15,13 @@ import {
   Search,
   ServerCog,
   ShieldCheck,
-  TerminalSquare,
   User,
   UsersRound,
   PackageOpen
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthGate'
 
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'extensions' | 'dataMigration' | 'webSearch' | 'github'
 
 export function SettingsSidebar({
   category,
@@ -193,24 +191,6 @@ export function SettingsSidebar({
         >
           <RefreshCw className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('updates')}
-        </button>
-        <button
-          type="button"
-          data-cursor-spotlight-target
-          className={catCls('terminal')}
-          onClick={() => setCategory('terminal')}
-        >
-          <TerminalSquare className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
-          {t('terminal')}
-        </button>
-        <button
-          type="button"
-          data-cursor-spotlight-target
-          className={catCls('debug')}
-          onClick={() => setCategory('debug')}
-        >
-          <Bug className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
-          {t('debug')}
         </button>
       </nav>
       <div className="ds-no-drag shrink-0 border-t border-ds-border p-3">

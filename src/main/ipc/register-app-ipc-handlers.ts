@@ -55,6 +55,7 @@ import {
   defaultPathSchema,
   gitBranchPayloadSchema,
   gitCheckpointCreatePayloadSchema,
+  gitCommitPayloadSchema,
   gitCheckpointRestorePayloadSchema,
   gitRestoreFilePayloadSchema,
   gitWorktreeRemoveSchema,
@@ -205,10 +206,13 @@ import type { WorkflowRuntime } from '../workflow-runtime'
 import { checkWorkflowCode } from '../workflow-runtime'
 import {
   checkoutGitBranchWorktree,
+  commitGitChanges,
   createAndSwitchGitBranch,
   createGitBranchWorktree,
   getGitBranches,
+  getGitDiffStat,
   listGitBranchWorktrees,
+  pushGitChanges,
   removeGitBranchWorktree,
   switchGitBranch
 } from '../services/git-service'
@@ -2032,6 +2036,16 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 
   ipcMain.handle('git:branches', async (_, workspaceRoot: unknown) =>
     getGitBranches(parseIpcPayload('git:branches', workspaceRootSchema, workspaceRoot))
+  )
+  ipcMain.handle('git:diff-stat', async (_, workspaceRoot: unknown) =>
+    getGitDiffStat(parseIpcPayload('git:diff-stat', workspaceRootSchema, workspaceRoot))
+  )
+  ipcMain.handle('git:commit', async (_, payload: unknown) => {
+    const request = parseIpcPayload('git:commit', gitCommitPayloadSchema, payload)
+    return commitGitChanges(request)
+  })
+  ipcMain.handle('git:push', async (_, workspaceRoot: unknown) =>
+    pushGitChanges(parseIpcPayload('git:push', workspaceRootSchema, workspaceRoot))
   )
   ipcMain.handle(
     'git:switch-branch',

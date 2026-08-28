@@ -73,6 +73,7 @@ export const THREAD_STATUS_DOT_COLOR: Record<ThreadStatusDot, string> = {
 
 export const THREAD_STATUS_DOT_PULSE: Partial<Record<ThreadStatusDot, string>> = {
   running: 'bg-blue-400',
+  interrupted: 'bg-red-400',
   'needs-review': 'bg-amber-400',
   completed: 'bg-emerald-400'
 }

@@ -4,8 +4,6 @@ import { rendererRuntimeClient } from '../agent/runtime-client'
 import i18n from '../i18n'
 import {
   applyChatContentMaxWidth,
-  applyCursorSpotlight,
-  applyCursorSpotlightColor,
   applyTheme,
   applyUiFontScale,
 } from '../lib/apply-theme'
@@ -274,8 +272,6 @@ export function createNavigationActions(
         applyTheme(settings.theme)
         applyUiFontScale(settings.uiFontScale)
         applyChatContentMaxWidth(settings.chatContentMaxWidthPx)
-        applyCursorSpotlight(settings.cursorSpotlight !== false)
-        applyCursorSpotlightColor(settings.cursorSpotlightColor)
         await get().applyI18nFromSettings(settings.locale)
         if (!runtimeStatusUnsubscribe && typeof window.JokerGui.onRuntimeStatus === 'function') {
           runtimeStatusUnsubscribe = window.JokerGui.onRuntimeStatus((status) => {

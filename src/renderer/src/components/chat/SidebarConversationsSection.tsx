@@ -19,6 +19,10 @@ import {
   ThreadRenameDialog,
   sortSidebarThreads
 } from './SidebarProjectsSection'
+import {
+  ThreadContextMenu,
+  type ThreadContextMenuState
+} from './SidebarProjectOverlays'
 import { useChatStore } from '../../store/chat-store'
 import {
   SIDEBAR_THREAD_DRAG_DATA_KEY,
@@ -68,6 +72,7 @@ export function SidebarConversationsSection({
   const locale = i18n.language
   const watchTurnCompletion = useChatStore((s) => s.watchTurnCompletion)
   const unreadThreadIds = useChatStore((s) => s.unreadThreadIds)
+  const acknowledgedStatusDotThreadIds = useChatStore((s) => s.acknowledgedStatusDotThreadIds)
 
   const [collapsed, setCollapsed] = useState(true)
   const [searchOpen, setSearchOpen] = useState(false)
@@ -77,6 +82,7 @@ export function SidebarConversationsSection({
   const [sidebarOrder, setSidebarOrder] = useState<SidebarOrderRegistry>(() => readSidebarOrderRegistry())
   const [draggingThreadId, setDraggingThreadId] = useState<string | null>(null)
   const [dropTarget, setDropTarget] = useState<{ threadId: string; position: SidebarDropPosition } | null>(null)
+  const [threadContextMenu, setThreadContextMenu] = useState<ThreadContextMenuState | null>(null)
 
   const conversationOrderScopePath = conversationRoot.trim() || defaultConversationWorkspaceRoot()
   const conversationOrderScope = sidebarThreadOrderScope(conversationOrderScopePath)
@@ -293,6 +299,7 @@ export function SidebarConversationsSection({
               locale={locale}
               showRunning={watchTurnCompletion[thread.id] === true}
               showUnread={unreadThreadIds[thread.id] === true}
+              statusDotAcknowledged={acknowledgedStatusDotThreadIds[thread.id] === true}
               onSelect={() => onSelectThread(thread.id)}
               onContextMenu={noOp}
               onPreviewOpen={noOp}
@@ -310,9 +317,27 @@ export function SidebarConversationsSection({
               onArchive={() => handleArchive(thread.id)}
               onDelete={() => void handleDelete(thread.id)}
               onRestore={() => void onRestoreThread(thread.id)}
+              onOpenMenu={(x, y) => setThreadContextMenu({ thread, x, y })}
             />
           ))}
         </div>
+      ) : null}
+
+      {threadContextMenu ? (
+        <ThreadContextMenu
+          state={threadContextMenu}
+          busy={deletingThreadIds[threadContextMenu.thread.id] === true}
+          moveDisabled
+          onClose={() => setThreadContextMenu(null)}
+          onMove={() => {}}
+          onPin={() => void handlePin(threadContextMenu.thread.id, threadContextMenu.thread.pinned !== true)}
+          onRename={() => openRename(threadContextMenu.thread)}
+          onSummarize={() => {}}
+          onArchive={() => void handleArchive(threadContextMenu.thread.id)}
+          onDelete={() => void handleDelete(threadContextMenu.thread.id)}
+          onRestore={() => void onRestoreThread(threadContextMenu.thread.id)}
+          t={t}
+        />
       ) : null}
 
       {renameState ? (

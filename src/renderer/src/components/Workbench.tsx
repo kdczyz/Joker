@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useChatStore, COMPOSER_DRAFT_PENDING_KEY } from '../store/chat-store'
 import type { RightPanelMode } from './chat/WorkbenchTopBar'
 import { WorkbenchLeftSidebar } from './workbench/WorkbenchLeftSidebar'
+import { SidebarTitlebarToggleButton } from './sidebar/SidebarPrimitives'
 import { WorkbenchStageRouter } from './workbench/WorkbenchStageRouter'
 import { useWorkbenchComposerCapabilities } from './workbench/useWorkbenchComposerCapabilities'
 import { useWorkbenchFileTreeController } from './workbench/useWorkbenchFileTreeController'
@@ -893,7 +894,7 @@ export function Workbench(): ReactElement {
   return (
     <div
       ref={shellRef}
-      className="ds-workbench-shell ds-drag flex h-full min-h-0 w-full min-w-0 bg-ds-main"
+      className="ds-workbench-shell ds-drag relative flex h-full min-h-0 w-full min-w-0 bg-ds-main"
       onContextMenu={(event) => {
         if (
           event.defaultPrevented ||
@@ -957,8 +958,9 @@ export function Workbench(): ReactElement {
         onBeginResize={beginLeftResize}
       />
 
-      <div className={`flex min-h-0 min-w-0 flex-1 flex-col p-2 ${leftSidebarCollapsed || activeExtensionCenterView?.point === 'views.fullPage' ? '' : 'pl-0'}`}>
-        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-ds-canvas shadow-sm border border-ds-border-muted">
+      {/* 聊天窗口:圆角面板浮在整块磨砂玻璃上(图二样式),留白处露出玻璃,无对比色中缝 */}
+      <div className={`flex min-h-0 min-w-0 flex-1 flex-col p-2 transition-[padding] duration-300 ease-out ${leftSidebarCollapsed || activeExtensionCenterView?.point === 'views.fullPage' ? '' : 'pl-0'}`}>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-2xl bg-ds-canvas shadow-sm">
           {activeExtensionCenterView ? (
             <main className="ds-stage-surface relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
               <div className="ds-stage-route-host relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
@@ -1088,6 +1090,17 @@ export function Workbench(): ReactElement {
           )}
         onClose={() => setWorkspaceContextMenu(null)}
       />
+
+      {/* 展开/收起侧边栏:固定锚定在红绿灯右侧,展开与收起时位置不变。
+          放在 shell 最后一个子节点,确保点击不被任何兄弟层拦截 */}
+      <div className="ds-workbench-sidebar-toggle-anchor ds-no-drag">
+        <SidebarTitlebarToggleButton
+          onClick={toggleLeftSidebar}
+          collapsed={leftSidebarCollapsed}
+          title={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
+          ariaLabel={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
+        />
+      </div>
     </div>
   )
 }

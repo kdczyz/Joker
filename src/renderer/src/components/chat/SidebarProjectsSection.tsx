@@ -9,8 +9,8 @@ import {
   ChevronDown,
   ChevronRight,
   Folder,
-  FolderPlus,
   FolderOpen,
+  FolderPlus,
   Plus,
   Search
 } from 'lucide-react'
@@ -116,6 +116,7 @@ type SidebarProjectsSectionProps = {
   busy: boolean
   watchTurnCompletion: Record<string, boolean>
   unreadThreadIds: Record<string, boolean>
+  acknowledgedStatusDotThreadIds: Record<string, boolean>
   locale: string
   onPickWorkspace: () => void
   onRemoveWorkspace: (workspacePath: string) => Promise<void>
@@ -155,6 +156,7 @@ export function SidebarProjectsSection({
   busy,
   watchTurnCompletion,
   unreadThreadIds,
+  acknowledgedStatusDotThreadIds,
   locale,
   onPickWorkspace,
   onRemoveWorkspace,
@@ -1071,7 +1073,6 @@ export function SidebarProjectsSection({
 
         {displayGroups.map(([workspacePath, list]) => {
           const folderName = workspaceLabelFromPath(workspacePath)
-          const workspaceContext = workspaceContextLabel(workspacePath, folderName)
           const isCollapsed = collapsed[workspacePath] === true
           const isDragOver =
             dragOverWorkspace !== null
@@ -1129,7 +1130,7 @@ export function SidebarProjectsSection({
                 actionsVisibility="hidden"
                 actionsLayout="overlay"
                 actions={
-                  <div className="flex items-center gap-0.5 rounded-[5px] bg-white/80 p-0.5 backdrop-blur-[2px] shadow-sm dark:bg-[#18181b]/80">
+                  <div className="flex items-center gap-0.5 rounded-[5px] bg-white/70 p-0.5 backdrop-blur-[3px] dark:bg-white/[0.06]">
                     <SidebarIconButton
                       onClick={() => onCreateThreadInWorkspace(workspacePath)}
                       title={t('sidebarWorkspaceNewThread')}
@@ -1145,18 +1146,13 @@ export function SidebarProjectsSection({
                 {isCollapsed ? (
                   <Folder className="h-3.5 w-3.5 shrink-0 text-[#71717a] dark:text-[#a1a1aa]" strokeWidth={1.9} />
                 ) : (
-                  <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#18181b] dark:text-white" strokeWidth={1.9} />
+                  <FolderOpen className="h-3.5 w-3.5 shrink-0 text-[#71717a] dark:text-[#a1a1aa]" strokeWidth={1.9} />
                 )}
-                <span className="min-w-0 flex-1 truncate font-medium text-[#18181b] dark:text-[#f4f4f5]">{folderName}</span>
-                {workspaceContext ? (
-                  <span className="min-w-0 max-w-[40%] shrink truncate rounded-[4px] border border-black/[0.06] bg-black/[0.03] px-1 py-0.2 text-[10.5px] font-normal text-ds-faint transition group-hover:opacity-0 group-focus-within:opacity-0 dark:border-white/[0.08] dark:bg-white/[0.04]">
-                    {workspaceContext}
-                  </span>
-                ) : null}
+                <span className="min-w-0 flex-1 truncate font-medium text-[#18181b] dark:text-[#e4e4e7]">{folderName}</span>
               </SidebarTreeRow>
 
               {!isCollapsed ? (
-                <div className="relative ml-2 mt-0.5 space-y-[2px] border-l border-black/[0.06] pl-2 dark:border-white/[0.08]">
+                <div className="relative ml-3.5 mt-0.5 space-y-px pl-1.5">
                   <SddDraftHistoryRows
                     items={draftHistory}
                     activeDraftId={activeSddDraftId}
@@ -1167,24 +1163,12 @@ export function SidebarProjectsSection({
                     t={t}
                   />
                   {sortedThreads.length === 0 && draftHistory.length === 0 ? (
-                    <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-                      <div className="text-[12px] leading-5 text-ds-faint">
-                        {searchQuery.trim()
-                          ? t('sidebarSearchEmpty')
-                          : showArchived
-                            ? t('sidebarArchiveEmpty')
-                            : t('sidebarWorkspaceEmpty')}
-                      </div>
-                      {!showArchived && !searchQuery.trim() ? (
-                        <button
-                          type="button"
-                          data-cursor-spotlight-target
-                          onClick={() => onCreateThreadInWorkspace(workspacePath)}
-                          className="shrink-0 rounded-[5px] border border-black/[0.06] bg-black/[0.02] px-2 py-0.5 text-[11px] font-medium text-ds-faint transition hover:bg-black/[0.05] hover:text-[#18181b] dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:text-white"
-                        >
-                          {t('sidebarWorkspaceNewThread')}
-                        </button>
-                      ) : null}
+                    <div className="px-2 py-1.5 text-[12px] leading-5 text-ds-faint">
+                      {searchQuery.trim()
+                        ? t('sidebarSearchEmpty')
+                        : showArchived
+                          ? t('sidebarArchiveEmpty')
+                          : t('sidebarWorkspaceEmpty')}
                     </div>
                   ) : (
                     visibleThreads.map((thread) => (
@@ -1196,13 +1180,13 @@ export function SidebarProjectsSection({
                         deleting={deletingThreadIds[thread.id] === true}
                         locale={locale}
                         showRunning={
-                          thread.status?.trim().toLowerCase() === 'running' ||
                           (activeThreadId === thread.id && busy) ||
                           watchTurnCompletion[thread.id] === true
                         }
                         showUnread={
                           unreadThreadIds[thread.id] === true && activeThreadId !== thread.id
                         }
+                        statusDotAcknowledged={acknowledgedStatusDotThreadIds[thread.id] === true}
                         onSelect={() => onSelectThread(thread.id)}
                         onContextMenu={(event) => openThreadContextMenu(event, thread)}
                         onPreviewOpen={openThreadPreview}
@@ -1225,6 +1209,12 @@ export function SidebarProjectsSection({
                         onArchive={() => void handleArchiveThread(thread)}
                         onDelete={() => void handleDeleteThread(thread)}
                         onRestore={() => void handleRestoreThread(thread)}
+                        onOpenMenu={(x, y) => setThreadContextMenu({
+                          thread,
+                          worktreeRecord: worktreeRecordForSidebarThread(thread, threadWorktrees),
+                          x,
+                          y
+                        })}
                       />
                     ))
                   )}
@@ -1324,13 +1314,4 @@ export function SidebarProjectsSection({
       ) : null}
     </div>
   )
-}
-
-function workspaceContextLabel(workspacePath: string, folderName: string): string {
-  const normalized = workspacePath.replace(/[/\\]+$/, '')
-  const parts = normalized.split(/[/\\]/).filter(Boolean)
-  if (parts.length < 2) return ''
-  const parent = parts[parts.length - 2] ?? ''
-  if (!parent || parent.toLowerCase() === folderName.toLowerCase()) return ''
-  return parent
 }

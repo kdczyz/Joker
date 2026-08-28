@@ -95,7 +95,6 @@ function settings(): AppSettingsV1 {
     theme: 'system',
     uiFontScale: 0.82,
     chatContentMaxWidthPx: 896,
-    cursorSpotlight: true,
     provider: defaultModelProviderSettings(),
     agents: {
       Joker: {

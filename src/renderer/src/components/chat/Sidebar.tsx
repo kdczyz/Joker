@@ -5,18 +5,16 @@ import { useAuth } from '../../auth/AuthGate'
 import {
   ChevronRight,
   Clock3,
-  FileQuestion,
   LayoutGrid,
   Moon,
   Plus,
-  Puzzle,
   Smartphone,
   Sun,
   Workflow
 } from 'lucide-react'
 import type { NormalizedThread } from '../../agent/types'
 import { useChatStore, type SettingsRouteSection } from '../../store/chat-store'
-import { resolveSddRequirementWorkspace, type SddDraft } from '../../sdd/sdd-draft-store'
+import { type SddDraft } from '../../sdd/sdd-draft-store'
 import type {
   ClawImChannelV1,
 } from '@shared/app-settings'
@@ -29,7 +27,6 @@ import { ConnectPhoneSidebarPanel } from './ConnectPhoneView'
 import { SidebarProjectsSection } from './SidebarProjectsSection'
 import { SidebarConversationsSection } from './SidebarConversationsSection'
 import { WorkspaceModeTabs } from './WorkspaceModeTabs'
-import { workspaceLabelFromPath } from '../../lib/workspace-label'
 import {
   SidebarCommandRow,
   SidebarFrame,
@@ -123,6 +120,7 @@ export function Sidebar({
   const busy = useChatStore((s) => s.busy)
   const watchTurnCompletion = useChatStore((s) => s.watchTurnCompletion)
   const unreadThreadIds = useChatStore((s) => s.unreadThreadIds)
+  const acknowledgedStatusDotThreadIds = useChatStore((s) => s.acknowledgedStatusDotThreadIds)
   const clawChannels = useChatStore((s) => s.clawChannels)
   const activeClawChannelId = useChatStore((s) => s.activeClawChannelId)
   const selectClawChannel = useChatStore((s) => s.selectClawChannel)
@@ -130,7 +128,7 @@ export function Sidebar({
   const deleteClawChannel = useChatStore((s) => s.deleteClawChannel)
   const resetClawChannelSession = useChatStore((s) => s.resetClawChannelSession)
   const [imDialogMode, setImDialogMode] = useState<ClawImDialogMode | null>(null)
-  const requirementWorkspace = resolveSddRequirementWorkspace(threads, activeThreadId, workspaceRoot)
+  const requirementWorkspace = undefined
 
   const activeClawChannel = useMemo(
     () => clawChannels.find((channel) => channel.id === activeClawChannelId) ?? clawChannels[0] ?? null,
@@ -180,38 +178,19 @@ export function Sidebar({
           onCodeOpen={onCodeOpen}
         />
 
-        {activeView !== 'claw' && activeView !== 'schedule' && activeView !== 'workflow' ? (
-          <div className="flex flex-col gap-1 pt-0.5">
-            <SidebarCommandRow
-              icon={<Plus className="h-4 w-4" strokeWidth={2.2} />}
-              label={t('newAgent')}
-              shortcut="⌘N"
-              onClick={runtimeReady ? onNewChat : undefined}
-              disabled={!runtimeReady}
-              disabledHint={t('runtimeActionNeedsConnection')}
-              variant="hero"
-            />
-            <SidebarCommandRow
-              icon={<FileQuestion className="h-4 w-4" strokeWidth={1.8} />}
-              label={t('sddNewRequirement')}
-              onClick={runtimeReady ? onNewRequirement : undefined}
-              disabled={!runtimeReady}
-              disabledHint={t('runtimeActionNeedsConnection')}
-              variant="subtle"
-              trailing={requirementWorkspace ? (
-                <span
-                  className="max-w-[88px] truncate rounded-[5px] border border-black/[0.06] bg-black/[0.03] px-1.5 py-0.5 text-[11px] font-medium text-ds-faint dark:border-white/[0.08] dark:bg-white/[0.05]"
-                  title={requirementWorkspace}
-                >
-                  {workspaceLabelFromPath(requirementWorkspace)}
-                </span>
-              ) : null}
-            />
-          </div>
-        ) : null}
+        <div className="flex flex-col gap-1 pt-0.5">
+          <SidebarCommandRow
+            icon={<Plus className="h-4 w-4" strokeWidth={2.2} />}
+            label={t('newAgent')}
+            shortcut="⌘N"
+            onClick={runtimeReady ? onNewChat : undefined}
+            disabled={!runtimeReady}
+            disabledHint={t('runtimeActionNeedsConnection')}
+            variant="hero"
+          />
+        </div>
 
-        {/* 紧凑快捷工具网格 */}
-        <div className="mt-1 grid grid-cols-2 gap-1 rounded-[10px] border border-black/[0.05] bg-black/[0.02] p-1 dark:border-white/[0.06] dark:bg-white/[0.02]">
+        <div className="mt-1 flex flex-col gap-1 rounded-[10px] border border-black/[0.05] bg-black/[0.02] p-1 dark:border-white/[0.06] dark:bg-white/[0.02]">
           <button
             type="button"
             data-cursor-spotlight-target
@@ -228,19 +207,6 @@ export function Sidebar({
           <button
             type="button"
             data-cursor-spotlight-target
-            onClick={onOpenExtensions}
-            className={`group flex min-h-[30px] items-center gap-1.5 rounded-[7px] px-2 py-1 text-[12px] transition duration-150 ${
-              extensionsActive
-                ? 'bg-white font-medium text-[#18181b] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:bg-white/[0.12] dark:text-white'
-                : 'text-[#606066] hover:bg-black/[0.04] hover:text-[#18181b] dark:text-[#9e9ea6] dark:hover:bg-white/[0.06] dark:hover:text-white'
-            }`}
-          >
-            <Puzzle className="h-3.5 w-3.5 shrink-0 text-[#606066] transition group-hover:text-[#18181b] dark:text-[#9e9ea6] dark:group-hover:text-white" strokeWidth={1.8} />
-            <span className="truncate">{i18n.language.toLowerCase().startsWith('zh') ? '扩展' : 'Extensions'}</span>
-          </button>
-          <button
-            type="button"
-            data-cursor-spotlight-target
             onClick={onScheduleOpen}
             className={`group flex min-h-[30px] items-center gap-1.5 rounded-[7px] px-2 py-1 text-[12px] transition duration-150 ${
               activeView === 'schedule'
@@ -250,19 +216,6 @@ export function Sidebar({
           >
             <Clock3 className="h-3.5 w-3.5 shrink-0 text-[#606066] transition group-hover:text-[#18181b] dark:text-[#9e9ea6] dark:group-hover:text-white" strokeWidth={1.8} />
             <span className="truncate">{t('schedule')}</span>
-          </button>
-          <button
-            type="button"
-            data-cursor-spotlight-target
-            onClick={onWorkflowOpen}
-            className={`group flex min-h-[30px] items-center gap-1.5 rounded-[7px] px-2 py-1 text-[12px] transition duration-150 ${
-              activeView === 'workflow'
-                ? 'bg-white font-medium text-[#18181b] shadow-[0_1px_3px_rgba(0,0,0,0.06)] dark:bg-white/[0.12] dark:text-white'
-                : 'text-[#606066] hover:bg-black/[0.04] hover:text-[#18181b] dark:text-[#9e9ea6] dark:hover:bg-white/[0.06] dark:hover:text-white'
-            }`}
-          >
-            <Workflow className="h-3.5 w-3.5 shrink-0 text-[#606066] transition group-hover:text-[#18181b] dark:text-[#9e9ea6] dark:group-hover:text-white" strokeWidth={1.8} />
-            <span className="truncate">{t('workflowCreate')}</span>
           </button>
         </div>
       </div>
@@ -310,6 +263,7 @@ export function Sidebar({
           busy={busy}
           watchTurnCompletion={watchTurnCompletion}
           unreadThreadIds={unreadThreadIds}
+          acknowledgedStatusDotThreadIds={acknowledgedStatusDotThreadIds}
           locale={i18n.language}
           onPickWorkspace={() => void chooseWorkspace()}
           onRemoveWorkspace={deleteWorkspace}
@@ -339,6 +293,7 @@ export function Sidebar({
         busy={busy}
         watchTurnCompletion={watchTurnCompletion}
         unreadThreadIds={unreadThreadIds}
+        acknowledgedStatusDotThreadIds={acknowledgedStatusDotThreadIds}
         locale={i18n.language}
         onPickWorkspace={() => void chooseWorkspace()}
         onRemoveWorkspace={deleteWorkspace}

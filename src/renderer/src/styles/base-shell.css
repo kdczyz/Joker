@@ -94,12 +94,6 @@
   --ds-scrollbar-thumb: rgba(0, 0, 0, 0.24);
   --ds-scrollbar-thumb-hover: rgba(0, 0, 0, 0.34);
   --ds-selection: rgba(42, 42, 46, 0.16);
-  --ds-cursor-spotlight-rgb: 28 28 31;
-  --ds-cursor-spotlight-edge-rgb: 0 0 0;
-  --ds-cursor-spotlight-dark-rgb: 200 200 204;
-  --ds-cursor-spotlight-dark-edge-rgb: 150 150 155;
-  --ds-cursor-spotlight: rgb(var(--ds-cursor-spotlight-rgb) / 0.28);
-  --ds-cursor-spotlight-edge: rgb(var(--ds-cursor-spotlight-edge-rgb) / 0.1);
   --ds-shadow-card-soft: 0 10px 28px rgba(0, 0, 0, 0.06);
   --ds-shadow-card-strong: 0 14px 36px rgba(0, 0, 0, 0.09);
   --ds-shadow-chip: inset 0 1px 0 rgba(255, 255, 255, 0.78);
@@ -134,13 +128,14 @@
 }
 
 [data-theme='dark'] {
-  /* 黑白灰配色:暗色主题 = 中性深灰底 + 浅灰文字/主色,仅保留少量低饱和语义色 */
-  --bg-app: #0b0b0d;
-  --bg-sidebar: #111114;
-  --bg-canvas: #0e0e11;
+  /* 黑白灰配色:暗色主题 = 中性深灰底 + 浅灰文字/主色,仅保留少量低饱和语义色
+     深色基准:侧边栏 #292A2A(磨砂玻璃),聊天页/画布 #161616 */
+  --bg-app: #161616;
+  --bg-sidebar: #2b2a2b;
+  --bg-canvas: #161616;
   --surface-1: rgba(255, 255, 255, 0.045);
-  --surface-2: #19191d;
-  --surface-3: #202024;
+  --surface-2: #1b1c1c;
+  --surface-3: #212322;
   --border-soft: rgba(255, 255, 255, 0.12);
   --border-strong: rgba(255, 255, 255, 0.2);
   --text-primary: #f4f4f5;
@@ -153,7 +148,7 @@
   --ds-bg-canvas: var(--bg-canvas);
   --ds-surface-card: var(--surface-1);
   --ds-surface-elevated: var(--surface-2);
-  --ds-surface-subtle: #19191d;
+  --ds-surface-subtle: #1b1c1c;
   --ds-surface-hover: rgba(255, 255, 255, 0.06);
   --ds-border: var(--border-soft);
   --ds-border-muted: rgba(255, 255, 255, 0.07);
@@ -181,12 +176,14 @@
   --ds-shadow-panel: 0 22px 58px rgba(0, 0, 0, 0.4);
   --ds-shadow-composer: 0 28px 78px rgba(0, 0, 0, 0.5),
     0 0 0 1px rgba(255, 255, 255, 0.06);
-  --ds-stage-gradient: #0e0e11;
-  --ds-topbar-bg: rgba(25, 25, 29, 0.86);
+  --ds-stage-gradient: #161616;
+  --ds-topbar-bg: rgba(33, 34, 34, 0.82);
   --ds-topbar-shadow:
     0 18px 44px rgba(0, 0, 0, 0.28);
-  --ds-sidebar-gradient: rgba(17, 17, 20, 0.96);
-  --ds-sidebar-haze: none;
+  --ds-sidebar-gradient:
+    linear-gradient(180deg, rgba(46, 47, 47, 0.9) 0%, rgba(43, 44, 44, 0.9) 46%, rgba(39, 40, 40, 0.92) 100%);
+  --ds-sidebar-haze:
+    radial-gradient(120% 46% at 50% -6%, rgba(255, 255, 255, 0.07), transparent 62%);
   --ds-sidebar-border: rgba(255, 255, 255, 0.1);
   --ds-sidebar-shadow:
     0 24px 64px rgba(0, 0, 0, 0.45),
@@ -198,31 +195,29 @@
   --ds-sidebar-field-focus: rgba(255, 255, 255, 0.07);
   --ds-sidebar-divider: rgba(255, 255, 255, 0.1);
   --ds-card-soft:
-    linear-gradient(180deg, rgba(25, 25, 29, 0.94), rgba(16, 16, 19, 0.9));
+    linear-gradient(180deg, rgba(26, 28, 28, 0.94), rgba(18, 19, 19, 0.9));
   --ds-card-strong:
-    linear-gradient(180deg, rgba(32, 32, 36, 0.98), rgba(20, 20, 23, 0.96));
-  --ds-card-muted: rgba(25, 25, 29, 0.86);
+    linear-gradient(180deg, rgba(33, 35, 35, 0.98), rgba(22, 23, 23, 0.96));
+  --ds-card-muted: rgba(26, 28, 28, 0.86);
   --ds-card-ghost: rgba(11, 11, 13, 0.72);
   --ds-card-hover:
-    linear-gradient(180deg, rgba(38, 38, 42, 0.98), rgba(24, 24, 27, 0.96));
-  --ds-chip-bg: rgba(25, 25, 29, 0.94);
-  --ds-chip-muted-bg: #19191d;
-  --ds-chip-hover: rgba(32, 32, 36, 0.98);
+    linear-gradient(180deg, rgba(39, 41, 41, 0.98), rgba(26, 27, 27, 0.96));
+  --ds-chip-bg: rgba(27, 28, 28, 0.94);
+  --ds-chip-muted-bg: #1b1c1c;
+  --ds-chip-hover: rgba(33, 35, 35, 0.98);
   --ds-chip-border: rgba(255, 255, 255, 0.12);
   --ds-chip-active:
     linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.09));
-  --ds-kbd-bg: rgba(25, 25, 29, 0.94);
-  --ds-code-bg: #19191d;
+  --ds-kbd-bg: rgba(27, 28, 28, 0.94);
+  --ds-code-bg: #1b1c1c;
   --ds-inline-code-bg: rgba(255, 255, 255, 0.07);
   --ds-inline-code-hover-bg: rgba(255, 255, 255, 0.12);
-  --ds-pre-bg: #141417;
-  --ds-code-block-bg: #101013;
-  --ds-table-head-bg: rgba(25, 25, 29, 0.94);
+  --ds-pre-bg: #151617;
+  --ds-code-block-bg: #111212;
+  --ds-table-head-bg: rgba(27, 28, 28, 0.94);
   --ds-scrollbar-thumb: rgba(180, 180, 186, 0.26);
   --ds-scrollbar-thumb-hover: rgba(200, 200, 206, 0.36);
   --ds-selection: rgba(228, 228, 231, 0.2);
-  --ds-cursor-spotlight: rgb(var(--ds-cursor-spotlight-dark-rgb) / 0.2);
-  --ds-cursor-spotlight-edge: rgb(var(--ds-cursor-spotlight-dark-edge-rgb) / 0.08);
   --ds-shadow-card-soft: 0 16px 42px rgba(0, 0, 0, 0.28);
   --ds-shadow-card-strong: 0 22px 56px rgba(0, 0, 0, 0.36);
   --ds-shadow-chip: inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -232,12 +227,64 @@
   background: none;
 }
 
+/* 深色磨砂玻璃:#292A2A 半透明渐变 + 背景模糊。
+   铺在工作台/设置页外壳上,聊天/设置窗口四周留白(含圆角缺口)露出这块玻璃;
+   侧边栏区域由下方规则垫平为舞台基底色 */
+[data-theme='dark'] :is(.ds-workbench-shell, .ds-settings-surface) {
+  background:
+    var(--ds-sidebar-haze),
+    var(--ds-sidebar-gradient);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+}
+
+/* 侧边栏底板:#2B2A2B 灰色底板(与右侧 #161616 面板形成对比),并去掉中间分割线 */
+[data-theme='dark'] :is(.ds-sidebar-shell, .ds-settings-sidebar) {
+  background: var(--bg-sidebar, #2b2a2b);
+  border-right-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+/* macOS:主窗口启用了系统 vibrancy(见主进程 createWindow),
+   body → 工作台外壳 → 侧边栏整条链路全透明(亮/暗色通用),
+   由系统磨砂透出桌面光线;工作台外壳垫一层半透明底色控制整体透明度,
+   数值越大越不透明。聊天面板自身不透明(bg-ds-canvas),悬浮在磨砂背景之上 */
+:root[data-platform='darwin'] body {
+  background-color: transparent;
+}
+
+:root[data-platform='darwin'] body::before {
+  background: transparent;
+}
+
+:root[data-platform='darwin'] body::after {
+  background: none;
+}
+
+:root[data-platform='darwin'] .ds-workbench-shell {
+  background: rgba(246, 247, 249, 0.6);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+:root[data-platform='darwin'][data-theme='dark'] .ds-workbench-shell {
+  background: rgba(41, 42, 42, 0.6);
+}
+
+:root[data-platform='darwin'] :is(.ds-sidebar-shell, .ds-settings-sidebar) {
+  background: transparent;
+  border-right-color: transparent;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
 [data-theme='dark'] .ds-composer-shell::after {
   border-color: rgba(255, 255, 255, 0.08);
 }
 
 [data-theme='dark'] body::before {
-  background: #0b0b0d;
+  background: #161616;
 }
 
 [data-theme='dark'] body::after {
@@ -540,52 +587,10 @@ html {
   color: #ffffff;
 }
 
-[data-cursor-spotlight-target] {
-  --spotlight-x: 50%;
-  --spotlight-y: 50%;
-}
-
-[data-cursor-spotlight='on'] [data-cursor-spotlight-target]:is(:hover, :focus-visible, :focus-within),
-[data-cursor-spotlight='on'] .ds-windows-menu-button.is-open {
-  background-image: radial-gradient(
-    150px circle at var(--spotlight-x) var(--spotlight-y),
-    var(--ds-cursor-spotlight),
-    var(--ds-cursor-spotlight-edge) 38%,
-    transparent 72%
-  );
-  background-repeat: no-repeat;
-}
-
-[data-cursor-spotlight='on'] .ds-windows-titlebar[data-cursor-spotlight-target]:hover {
-  background-image:
-    radial-gradient(
-      260px circle at var(--spotlight-x) var(--spotlight-y),
-      var(--ds-cursor-spotlight),
-      var(--ds-cursor-spotlight-edge) 38%,
-      transparent 72%
-    ),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(246, 248, 251, 0.72));
-}
-
-[data-cursor-spotlight='off'] [data-cursor-spotlight-target] {
-  background-image: none;
-}
-
 [data-theme='dark'] .ds-windows-titlebar {
   background:
-    linear-gradient(180deg, rgba(25, 25, 29, 0.92), rgba(14, 14, 17, 0.82)),
+    linear-gradient(180deg, rgba(27, 28, 28, 0.92), rgba(16, 17, 17, 0.82)),
     var(--ds-bg-main);
-}
-
-[data-theme='dark'][data-cursor-spotlight='on'] .ds-windows-titlebar[data-cursor-spotlight-target]:hover {
-  background-image:
-    radial-gradient(
-      260px circle at var(--spotlight-x) var(--spotlight-y),
-      var(--ds-cursor-spotlight),
-      var(--ds-cursor-spotlight-edge) 38%,
-      transparent 72%
-    ),
-    linear-gradient(180deg, rgba(25, 25, 29, 0.92), rgba(14, 14, 17, 0.82));
 }
 
 [data-theme='dark'] .ds-window-control-btn--close:hover {
@@ -619,6 +624,55 @@ body {
    (组件渲染时已把内联 width 除以该系数,故净占用宽度不变,不会挤压右侧)。 */
 .ds-workbench-left-sidebar {
   zoom: var(--ds-ui-scale-sidebar);
+}
+
+/* 侧边栏收起/展开的宽度过渡;拖拽调宽时关闭,避免手感和指针脱节 */
+.ds-workbench-left-sidebar-clip {
+  transition: width 0.3s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+body.ds-workbench-resizing .ds-workbench-left-sidebar-clip {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ds-workbench-left-sidebar-clip {
+    transition: none;
+  }
+}
+
+/* 展开/收起侧边栏按钮:固定锚定在窗口左上角红绿灯右侧,
+   与侧边栏标题栏几何一致(padding 10px + 安全区 80px + 间距),
+   侧边栏展开或收起时位置都不变。 */
+.ds-workbench-sidebar-toggle-anchor {
+  position: absolute;
+  top: 8px;
+  left: 18px;
+  z-index: 40;
+}
+
+/* 按钮加大到 28px,并用负 margin 扩大命中区,避免贴近拖拽区边缘时点击被吞 */
+.ds-workbench-sidebar-toggle-anchor .ds-titlebar-sidebar-toggle {
+  height: 28px;
+  width: 28px;
+  padding: 5px;
+  margin: -5px;
+}
+
+:root[data-platform='darwin'] .ds-workbench-sidebar-toggle-anchor {
+  top: 12px;
+  left: 122px;
+}
+
+/* 聊天顶栏悬浮固定:顶栏浮在消息流上方,内容从其下方滚过 */
+.ds-chat-topbar-floating {
+  background: color-mix(in srgb, var(--ds-bg-canvas, #fff) 76%, transparent);
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+}
+
+.ds-chat-topbar-float-gap {
+  padding-top: calc(1rem + 46px + 0.9rem);
 }
 
 body::before {
@@ -773,7 +827,7 @@ pre {
 }
 
 [data-theme='dark'] .ds-chat-composer {
-  background: rgba(25, 25, 29, 0.97);
+  background: rgba(28, 29, 29, 0.97);
   border-color: rgba(255, 255, 255, 0.12);
   box-shadow:
     0 24px 68px rgba(0, 0, 0, 0.36),
@@ -4199,7 +4253,7 @@ body.ds-workbench-resizing webview {
 
 [data-theme='dark'] .ds-runtime-wake-shell {
   background:
-    linear-gradient(180deg, rgba(25, 25, 29, 0.94), rgba(20, 20, 23, 0.9)),
+    linear-gradient(180deg, rgba(27, 28, 28, 0.94), rgba(21, 22, 22, 0.9)),
     linear-gradient(120deg, rgba(255, 255, 255, 0.06), transparent 42%, rgba(255, 255, 255, 0.04));
   box-shadow:
     0 24px 70px rgba(0, 0, 0, 0.36),

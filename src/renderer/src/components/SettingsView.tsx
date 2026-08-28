@@ -27,8 +27,6 @@ import type {
 import type { WriteInlineCompletionDebugEntry } from '@shared/write-inline-completion'
 import {
   applyChatContentMaxWidth,
-  applyCursorSpotlight,
-  applyCursorSpotlightColor,
   applyTheme,
   applyUiFontScale,
   applyWriteTypography
@@ -93,12 +91,6 @@ const KeyboardShortcutsSettingsSection = lazy(() =>
 const UpdatesSettingsSection = lazy(() =>
   import('./settings-section-updates').then((module) => ({ default: module.UpdatesSettingsSection }))
 )
-const TerminalSettingsSection = lazy(() =>
-  import('./settings-section-terminal').then((module) => ({ default: module.TerminalSettingsSection }))
-)
-const LlmDebugSettingsSection = lazy(() =>
-  import('./settings-section-llm-debug').then((module) => ({ default: module.LlmDebugSettingsSection }))
-)
 const DataMigrationSettingsSection = lazy(() =>
   import('./settings-section-data-migration').then((module) => ({ default: module.DataMigrationSettingsSection }))
 )
@@ -136,7 +128,7 @@ function SettingsSectionFallback(): ReactElement {
 }
 
 type SaveStatus = 'idle' | 'saving' | 'saved' | 'error'
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'debug' | 'terminal' | 'extensions' | 'dataMigration' | 'webSearch' | 'github'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'extensions' | 'dataMigration' | 'webSearch' | 'github'
 type SettingsPatch = AppSettingsPatch
 type InlineNotice = {
   tone: 'success' | 'error' | 'info'
@@ -255,8 +247,6 @@ export function SettingsView(): ReactElement {
   const formJoker = form ? getJokerRuntimeSettings(form) : null
   const formPort = formJoker?.port
   const formGuiUpdateChannel = form?.guiUpdate?.channel
-  const formCursorSpotlight = form?.cursorSpotlight
-  const formCursorSpotlightColor = form?.cursorSpotlightColor
   const markAgentsSectionReady = useCallback(() => setAgentsSectionReady(true), [])
   const settingsPlatform = typeof window !== 'undefined' ? window.JokerGui?.platform ?? '' : ''
   const settingsHomeDir = typeof window !== 'undefined' ? window.JokerGui?.homeDir ?? '' : ''
@@ -332,13 +322,6 @@ export function SettingsView(): ReactElement {
     applyUiFontScale(formUiFontScale)
     applyChatContentMaxWidth(formChatContentMaxWidthPx)
   }, [formTheme, formUiFontScale, formChatContentMaxWidthPx])
-
-  useEffect(() => {
-    if (typeof formCursorSpotlight === 'boolean') {
-      applyCursorSpotlight(formCursorSpotlight)
-    }
-    applyCursorSpotlightColor(formCursorSpotlightColor)
-  }, [formCursorSpotlight, formCursorSpotlightColor])
 
   // Live-preview the Write editor typography as the form changes, mirroring the
   // theme/scale preview above.
@@ -430,10 +413,6 @@ export function SettingsView(): ReactElement {
       setCategory('updates')
       return
     }
-    if (settingsSection === 'terminal') {
-      setCategory('terminal')
-      return
-    }
     if (settingsSection === 'dataMigration') {
       setCategory('dataMigration')
       return
@@ -450,7 +429,6 @@ export function SettingsView(): ReactElement {
       settingsSection === 'archives' ||
       settingsSection === 'shortcuts' ||
       settingsSection === 'updates' ||
-      settingsSection === 'terminal' ||
       settingsSection === 'dataMigration' ||
       category !== 'agents'
     ) {
@@ -1319,7 +1297,9 @@ export function SettingsView(): ReactElement {
         t={t}
       />
 
-      <div className="ds-settings-stage relative min-h-0 min-w-0 flex-1 overflow-hidden">
+      {/* 右侧内容区:与聊天窗口一致的圆角浮动面板,留白处露出玻璃 */}
+      <div className="ds-settings-stage relative min-h-0 min-w-0 flex-1 pb-2 pr-2 pt-2">
+        <div className="h-full min-h-0 overflow-hidden rounded-2xl bg-ds-canvas shadow-sm">
         <div className="ds-no-drag h-full min-h-0 overflow-y-auto px-8 py-8">
           <div>
           {category !== 'extensions' && category !== 'dataMigration' && !activeApiKey.trim() ? (
@@ -1391,14 +1371,14 @@ export function SettingsView(): ReactElement {
             {category === 'memory' ? <MemorySettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'shortcuts' ? <KeyboardShortcutsSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'updates' ? <UpdatesSettingsSection ctx={settingsSectionContext} /> : null}
-            {category === 'terminal' ? <TerminalSettingsSection ctx={settingsSectionContext} /> : null}
-            {category === 'debug' ? <LlmDebugSettingsSection ctx={settingsSectionContext} /> : null}
+
             {category === 'dataMigration' ? <DataMigrationSettingsSection /> : null}
             {category === 'webSearch' ? <WebSearchSettingsSection ctx={settingsSectionContext} /> : null}
             {category === 'github' ? <GithubSettingsSection /> : null}
 
           </Suspense>
           </div>
+        </div>
         </div>
       </div>
       {category !== 'extensions' && category !== 'dataMigration' && saveStatus === 'error' && saveError ? (

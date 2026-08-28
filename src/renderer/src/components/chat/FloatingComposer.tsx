@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useMemo,
   useRef,
@@ -12,7 +13,6 @@ import {
 } from 'react'
 import {
   BarChart3,
-  FileEdit,
   FileText,
   Folder,
   GitBranch,
@@ -31,18 +31,20 @@ import {
   Sparkles,
   Square,
   Target,
-  RotateCcw,
   Trash2,
   Type as TypeIcon,
+  Wrench,
   X
 } from 'lucide-react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import type { ModelProviderModelGroup } from '@shared/Joker-gui-api'
+import type { GitDiffStatResult } from '@shared/git-changes'
 import type { AttachmentReference, ReviewTarget } from '../../agent/types'
 import { useChatStore } from '../../store/chat-store'
 import { CodexUsageBadge } from './CodexUsageBadge'
 import { ThreadUsageChart } from './ThreadUsageChart'
+import { GitToolsPanel } from './GitToolsPanel'
 import type { AppRoute } from '../../store/chat-store-types'
 import { normalizeWorkspaceRoot } from '../../lib/workspace-path'
 import {
@@ -117,6 +119,8 @@ import { useComposerDraft } from './use-composer-draft'
 import { usePromptOptimizationSettings, useSpeechToTextSettings, useVoiceDictation } from './use-voice-dictation'
 import { VoiceRecordingStrip } from './VoiceRecordingStrip'
 import type { ComposerChangedFile } from '../../lib/composer-change-summary'
+
+const EMPTY_CHANGED_FILES: ComposerChangedFile[] = []
 import type { DesignComposerContext } from '../../design/design-composer-context'
 export { calculateComposerMenuScrollTop } from './composer-menu-scroll'
 import { useComposerFileMentions } from './use-composer-file-mentions'
@@ -235,7 +239,6 @@ const EMPTY_MODEL_GROUPS: ModelProviderModelGroup[] = []
 const EMPTY_ATTACHMENTS: AttachmentReference[] = []
 const EMPTY_CONTEXT_CHIPS: DesignComposerContext[] = []
 const EMPTY_FILE_REFERENCES: ComposerFileReference[] = []
-const EMPTY_CHANGED_FILES: ComposerChangedFile[] = []
 const EMPTY_SKILL_COMMANDS: NonNullable<Props['skillCommands']> = []
 
 export function formatGoalElapsedSeconds(seconds: number): string {
@@ -305,8 +308,6 @@ export function FloatingComposer({
   extraFileMentionCandidates = EMPTY_FILE_REFERENCES,
   executionSettings = null,
   executionSettingsApplying = false,
-  changedFiles = EMPTY_CHANGED_FILES,
-  changedFileStats = null,
   skillCommands = EMPTY_SKILL_COMMANDS,
   disabledSkillIds,
   onPickAttachments,
@@ -328,10 +329,10 @@ export function FloatingComposer({
   onToggleWorktreeMode,
   onReviewCommand,
   onExecutionSettingsChange,
+  changedFiles = EMPTY_CHANGED_FILES,
+  changedFileStats = null,
   onOpenChanges,
   onReviewChanges,
-  onDismissChanges,
-  onRevertFile,
   reviewChangesDisabled = false,
   onBtwCommand,
   hideBtwCommand = false,
@@ -422,10 +423,56 @@ export function FloatingComposer({
   const usageChipRef = useRef<HTMLButtonElement>(null)
   const usagePopoverRef = useRef<HTMLDivElement>(null)
   const [usagePopoverPos, setUsagePopoverPos] = useState<{ bottom: number; left: number } | null>(null)
-  const [diffStatsOpen, setDiffStatsOpen] = useState(false)
-  const diffStatsBtnRef = useRef<HTMLButtonElement>(null)
-  const diffStatsPopoverRef = useRef<HTMLDivElement>(null)
-  const [diffStatsPos, setDiffStatsPos] = useState<{ bottom: number; left: number } | null>(null)
+  const [gitToolsOpen, setGitToolsOpen] = useState(false)
+  const gitToolsBtnRef = useRef<HTMLButtonElement>(null)
+  const gitToolsPopoverRef = useRef<HTMLDivElement>(null)
+  const [gitToolsPos, setGitToolsPos] = useState<{ bottom: number; left: number } | null>(null)
+  const [gitStat, setGitStat] = useState<GitDiffStatResult | null>(null)
+  const [gitStatTick, setGitStatTick] = useState(0)
+  const refreshGitStat = useCallback(() => setGitStatTick((tick) => tick + 1), [])
+
+  useEffect(() => {
+    if (!gitToolsOpen) return
+    const updatePosition = () => {
+      const el = gitToolsBtnRef.current
+      if (!el) return
+      const rect = el.getBoundingClientRect()
+      const width = 320
+      let left = rect.right - width
+      left = Math.min(left, window.innerWidth - width - 16)
+      left = Math.max(16, left)
+      const bottom = Math.max(16, window.innerHeight - rect.top + 8)
+      setGitToolsPos({ bottom, left })
+    }
+    updatePosition()
+    const frame = window.requestAnimationFrame(updatePosition)
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+    return () => {
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
+    }
+  }, [gitToolsOpen])
+
+  useEffect(() => {
+    if (!gitToolsOpen) return
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setGitToolsOpen(false)
+    }
+    const onPointerDown = (event: MouseEvent) => {
+      const target = event.target as Node
+      if (gitToolsBtnRef.current?.contains(target)) return
+      if (gitToolsPopoverRef.current?.contains(target)) return
+      setGitToolsOpen(false)
+    }
+    document.addEventListener('keydown', onKeyDown)
+    document.addEventListener('mousedown', onPointerDown)
+    return () => {
+      document.removeEventListener('keydown', onKeyDown)
+      document.removeEventListener('mousedown', onPointerDown)
+    }
+  }, [gitToolsOpen])
 
   useEffect(() => {
     if (!usageChartOpen) return
@@ -470,52 +517,46 @@ export function FloatingComposer({
     }
   }, [usageChartOpen])
 
-  // Diff stats popover positioning
-  useEffect(() => {
-    if (!diffStatsOpen) return
-    const updatePosition = () => {
-      const el = diffStatsBtnRef.current
-      if (!el) return
-      const rect = el.getBoundingClientRect()
-      const width = 320
-      let left = rect.left
-      left = Math.min(left, window.innerWidth - width - 16)
-      left = Math.max(16, left)
-      const bottom = Math.max(16, window.innerHeight - rect.top + 8)
-      setDiffStatsPos({ bottom, left })
-    }
-    updatePosition()
-    const frame = window.requestAnimationFrame(updatePosition)
-    window.addEventListener('scroll', updatePosition, true)
-    window.addEventListener('resize', updatePosition)
-    return () => {
-      window.cancelAnimationFrame(frame)
-      window.removeEventListener('scroll', updatePosition, true)
-      window.removeEventListener('resize', updatePosition)
-    }
-  }, [diffStatsOpen])
-
-  // Diff stats outside click / Escape
-  useEffect(() => {
-    if (!diffStatsOpen) return
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setDiffStatsOpen(false)
-    }
-    const onPointerDown = (event: MouseEvent) => {
-      const target = event.target as Node
-      if (diffStatsBtnRef.current?.contains(target)) return
-      if (diffStatsPopoverRef.current?.contains(target)) return
-      setDiffStatsOpen(false)
-    }
-    document.addEventListener('keydown', onKeyDown)
-    document.addEventListener('mousedown', onPointerDown)
-    return () => {
-      document.removeEventListener('keydown', onKeyDown)
-      document.removeEventListener('mousedown', onPointerDown)
-    }
-  }, [diffStatsOpen])
-
   const effectiveWorkspaceRoot = normalizeWorkspaceRoot(activeThreadWorkspace || workspaceRootOverride || workspaceRoot)
+
+  // Poll the real Git working-tree stat so the Git 工具 chip reflects the
+  // repository state (not just this session's tracked changes).
+  useEffect(() => {
+    const root = effectiveWorkspaceRoot
+    if (!root || typeof window.JokerGui?.getGitDiffStat !== 'function') return
+    let cancelled = false
+    const load = async (): Promise<void> => {
+      try {
+        const next = await window.JokerGui.getGitDiffStat(root)
+        if (!cancelled) setGitStat(next)
+      } catch {
+        // Keep the previous stat on transient IPC failures.
+      }
+    }
+    void load()
+    const interval = window.setInterval(load, 10_000)
+    return () => {
+      cancelled = true
+      window.clearInterval(interval)
+    }
+  }, [effectiveWorkspaceRoot, gitStatTick, gitToolsOpen])
+
+  // When the Git diff-stat IPC isn't available yet (e.g. the app hasn't been
+  // fully restarted since the preload/main update), fall back to this
+  // session's tracked change summary so the footer chip still shows up.
+  const gitStatIpcAvailable =
+    typeof window !== 'undefined' && typeof window.JokerGui?.getGitDiffStat === 'function'
+  const sessionStatFallback =
+    !gitStatIpcAvailable && changedFiles.length > 0
+      ? {
+          added: changedFiles.reduce((sum, file) => sum + file.added, 0),
+          removed: changedFiles.reduce((sum, file) => sum + file.removed, 0)
+        }
+      : null
+  const footerStat =
+    gitStat?.ok && gitStat.fileCount > 0
+      ? { added: gitStat.added, removed: gitStat.removed }
+      : sessionStatFallback
   const clawAgentName =
     activeClawChannel?.agentProfile.name.trim()
     || activeClawChannel?.label.trim()
@@ -1214,7 +1255,7 @@ export function FloatingComposer({
         <div className="pointer-events-none absolute inset-x-0 bottom-full z-30 mb-2 flex flex-col items-center gap-2">
           {runtimeReady ? <BackgroundShellOverlay /> : null}
           {showGoalFloater && activeThreadGoal && !pendingUserInputBlock ? (
-            <div className="pointer-events-auto flex min-h-11 w-full max-w-[46rem] items-center gap-2 rounded-full border border-ds-border bg-white px-3 py-1.5 text-ds-muted shadow-[0_12px_34px_rgba(20,47,95,0.10)] backdrop-blur-xl dark:bg-[#202024]">
+            <div className="pointer-events-auto flex min-h-11 w-full max-w-[46rem] items-center gap-2 rounded-full border border-ds-border bg-white px-3 py-1.5 text-ds-muted shadow-[0_12px_34px_rgba(20,47,95,0.10)] backdrop-blur-xl dark:bg-[#212322]">
               <Target className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.9} />
               <div className="flex min-w-0 flex-1 items-center gap-1.5 text-[13px] leading-5">
                 <span className="shrink-0 font-semibold text-ds-ink">
@@ -1277,7 +1318,7 @@ export function FloatingComposer({
         {composerMenuOpen && slashQuery == null ? (
           <div
             ref={composerMenuPanelRef}
-            className="absolute bottom-12 left-1 z-40 w-48 overflow-hidden rounded-[18px] border border-ds-border bg-white py-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#202024]"
+            className="absolute bottom-12 left-1 z-40 w-48 overflow-hidden rounded-[18px] border border-ds-border bg-white py-1.5 text-[13px] text-ds-muted shadow-[0_18px_48px_rgba(20,47,95,0.16)] dark:bg-[#212322]"
           >
             {fileReferenceEnabled ? (
               <button
@@ -1432,7 +1473,7 @@ export function FloatingComposer({
         {goalPanelOpen && slashQuery == null && !pendingUserInputBlock ? (
           <div
             ref={goalPanelRef}
-            className="absolute inset-x-2 bottom-full z-30 mb-3 overflow-hidden rounded-[26px] border border-ds-border bg-white p-3 shadow-[0_18px_52px_rgba(20,47,95,0.14)] backdrop-blur-xl dark:bg-[#202024]"
+            className="absolute inset-x-2 bottom-full z-30 mb-3 overflow-hidden rounded-[26px] border border-ds-border bg-white p-3 shadow-[0_18px_52px_rgba(20,47,95,0.14)] backdrop-blur-xl dark:bg-[#212322]"
           >
             <div className="flex items-start gap-3">
               <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-ds-border-muted text-ds-muted">
@@ -1865,7 +1906,7 @@ export function FloatingComposer({
                 onClick={() => setUsageChartOpen((value) => !value)}
                 aria-haspopup="dialog"
                 aria-expanded={usageChartOpen}
-                className="ds-composer-usage ds-no-drag inline-flex min-h-7 max-w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 overflow-visible rounded-lg border border-ds-border-muted bg-ds-card dark:bg-[#202024] px-2.5 py-0.5 text-[12.5px] font-medium leading-5 text-ds-muted shadow-sm transition hover:border-accent/40 hover:text-ds-ink"
+                className="ds-composer-usage ds-no-drag inline-flex min-h-7 max-w-full min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 overflow-visible rounded-lg border border-ds-border-muted bg-ds-card dark:bg-[#212322] px-2.5 py-0.5 text-[12.5px] font-medium leading-5 text-ds-muted shadow-sm transition hover:border-accent/40 hover:text-ds-ink"
                 title={
                   threadUsage
                     ? t(
@@ -1947,17 +1988,18 @@ export function FloatingComposer({
                 )}
               </button>
             ) : null}
-            {changedFiles.length > 0 ? (
+            {footerStat ? (
               <button
                 type="button"
-                ref={diffStatsBtnRef}
-                onClick={() => setDiffStatsOpen((o) => !o)}
+                ref={gitToolsBtnRef}
+                onClick={() => setGitToolsOpen((o) => !o)}
                 className="ds-composer-diff-stats ds-no-drag inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-ds-border-muted bg-ds-card px-2.5 py-0.5 text-[12.5px] font-medium shadow-sm transition hover:bg-ds-hover"
-                title={t('composerChangedFilesTitle', { count: changedFiles.length })}
+                title={t('gitToolsTitle')}
               >
-                <FileEdit className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.8} />
-                <DiffCounter value={changedFiles.reduce((s, f) => s + f.added, 0)} prefix="+" className="text-ds-diff-added" />
-                <DiffCounter value={changedFiles.reduce((s, f) => s + f.removed, 0)} prefix="-" className="text-ds-diff-removed" />
+                <Wrench className="h-3.5 w-3.5 shrink-0 text-ds-faint" strokeWidth={1.8} />
+                <span className="shrink-0">{t('gitToolsTitle')}</span>
+                <DiffCounter value={footerStat.added} prefix="+" className="text-ds-diff-added" />
+                <DiffCounter value={footerStat.removed} prefix="-" className="text-ds-diff-removed" />
               </button>
             ) : null}
           </div>
@@ -1974,7 +2016,7 @@ export function FloatingComposer({
               ref={usagePopoverRef}
               role="dialog"
               aria-label={t('usageChartTitle')}
-              className="fixed z-[1100] w-[360px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-ds-border bg-ds-card dark:bg-[#202024] p-4 shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
+              className="fixed z-[1100] w-[360px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-ds-border bg-ds-card dark:bg-[#212322] p-4 shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
               style={{
                 bottom: usagePopoverPos.bottom,
                 left: usagePopoverPos.left,
@@ -1997,75 +2039,28 @@ export function FloatingComposer({
             document.body
           )
         : null}
-      {diffStatsOpen && diffStatsPos
+      {gitToolsOpen && gitToolsPos
         ? createPortal(
             <div
-              ref={diffStatsPopoverRef}
+              ref={gitToolsPopoverRef}
               role="dialog"
-              aria-label={t('composerChangedFilesTitle', { count: changedFiles.length })}
-              className="fixed z-[1100] w-[320px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-ds-border bg-ds-card dark:bg-[#202024] p-3 shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
+              aria-label={t('gitToolsTitle')}
+              className="fixed z-[1100] overflow-visible rounded-2xl border border-ds-border bg-ds-card dark:bg-[#212322] shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
               style={{
-                bottom: diffStatsPos.bottom,
-                left: diffStatsPos.left,
-                maxHeight: 'min(400px, calc(100vh - 32px))'
+                bottom: gitToolsPos.bottom,
+                left: gitToolsPos.left,
+                maxHeight: 'min(460px, calc(100vh - 32px))'
               }}
             >
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-[13px] font-semibold text-ds-ink">
-                  {t('composerChangedFilesTitle', { count: changedFiles.length })}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setDiffStatsOpen(false)}
-                  className="inline-flex h-7 w-7 items-center justify-center rounded-lg text-ds-faint transition hover:bg-ds-subtle hover:text-ds-ink"
-                  aria-label={t('composerChangedFilesClose', 'Close')}
-                >
-                  <X className="h-4 w-4" strokeWidth={2} />
-                </button>
-              </div>
-              <div className="overflow-y-auto" style={{ maxHeight: 'min(340px, calc(100vh - 100px))' }}>
-                <ul className="flex flex-col gap-0.5">
-                  {changedFiles.map((file) => (
-                    <li key={file.path}>
-                      <div className="group flex items-center gap-0 rounded-lg transition hover:bg-ds-subtle">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setDiffStatsOpen(false)
-                            onOpenChanges?.()
-                          }}
-                          className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1.5 text-left text-[12.5px]"
-                          title={file.path}
-                        >
-                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-ds-hover text-ds-faint">
-                            <FileEdit className="h-3.5 w-3.5" strokeWidth={1.8} />
-                          </span>
-                          <span className="min-w-0 flex-1 truncate text-ds-ink">
-                            {file.path}
-                          </span>
-                          <span className="shrink-0 inline-flex items-center gap-0.5 text-[12px]">
-                            <DiffCounter value={file.added} prefix="+" className="text-ds-diff-added" />
-                            <span className="text-ds-faint">/</span>
-                            <DiffCounter value={file.removed} prefix="-" className="text-ds-diff-removed" />
-                          </span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            onRevertFile?.(file.path)
-                          }}
-                          className="shrink-0 flex h-7 w-7 items-center justify-center rounded-lg text-ds-faint opacity-0 transition hover:bg-ds-subtle hover:text-ds-diff-removed group-hover:opacity-100"
-                          aria-label={t('composerRevertFile', { path: file.path })}
-                          title={t('composerRevertFile', { path: file.path })}
-                        >
-                          <RotateCcw className="h-3.5 w-3.5" strokeWidth={2} />
-                        </button>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <GitToolsPanel
+                workspaceRoot={effectiveWorkspaceRoot}
+                stat={gitStat}
+                onOpenChanges={() => {
+                  setGitToolsOpen(false)
+                  onOpenChanges?.()
+                }}
+                onRefreshStat={refreshGitStat}
+              />
             </div>,
             document.body
           )

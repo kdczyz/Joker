@@ -704,11 +704,11 @@ describe('MessageTimeline Joker runtime metadata smoke', () => {
     expect(html).not.toContain('read detail should stay tucked away')
   })
 
-  it('expands active reasoning so the current process is visible', () => {
+  it('streams only the latest reasoning line while thinking is active', () => {
     const block: ChatBlock = {
       kind: 'reasoning',
       id: 'live-reasoning',
-      text: '**current reasoning summary**\n\n<!-- -->'
+      text: '**earlier reasoning thought**\n\ncurrent reasoning summary\n\n<!-- -->'
     }
 
     const html = renderToStaticMarkup(
@@ -724,8 +724,31 @@ describe('MessageTimeline Joker runtime metadata smoke', () => {
     expect(html).toContain('ds-shiny-text')
     expect(html).not.toContain('ds-work-logo')
     expect(html).toContain('current reasoning summary')
+    // Earlier thinking stays collapsed; only the newest line is previewed.
+    expect(html).not.toContain('earlier reasoning thought')
     expect(html).not.toContain('&lt;!-- --&gt;')
     expect(block.text).toContain('<!-- -->')
+  })
+
+  it('shows the measured duration on a completed reasoning row', () => {
+    const block: ChatBlock = {
+      kind: 'reasoning',
+      id: 'r-1',
+      text: 'worked through the plan',
+      durationMs: 7000
+    }
+
+    const html = renderToStaticMarkup(
+      createElement(ProcessSectionRow, {
+        section: { id: 'reasoning', kind: 'reasoning', blocks: [block] },
+        processing: false,
+        singleReasoningSection: true,
+        workspaceRoot: '/tmp/project',
+        viewportRef: { current: null }
+      })
+    )
+
+    expect(html).toContain('Thought for 7s')
   })
 
   it('keeps same-batch tool calls collapsed by default', () => {

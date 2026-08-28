@@ -1126,6 +1126,9 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
   traceStartup('createWindow:start')
   const preloadPath = resolvePreloadPath(__dirname)
   const usesDesktopTitleBar = process.platform === 'win32' || process.platform === 'linux'
+  // macOS 下启用系统原生磨砂(vibrancy):侧边栏透明区域可以透出桌面光线。
+  // 渲染层的透明化 CSS 以 :root[data-platform='darwin'][data-theme='dark'] 匹配,其他平台不受影响。
+  const usesNativeVibrancy = process.platform === 'darwin'
   const window = new BrowserWindow({
     width: 1280,
     height: 840,
@@ -1136,6 +1139,7 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
     trafficLightPosition: process.platform === 'darwin' ? { x: 31, y: 22 } : undefined,
     autoHideMenuBar: usesDesktopTitleBar,
     show: false,
+    ...(usesNativeVibrancy ? { vibrancy: 'under-window', backgroundColor: '#00000000' } : {}),
     webPreferences: {
       preload: preloadPath,
       contextIsolation: true,
@@ -1617,6 +1621,8 @@ app.whenReady().then(async () => {
   traceStartup('settings load:start')
   const initial = await store.load()
   traceStartup('settings load:done')
+  // vibrancy 材质跟随 nativeTheme 外观:亮色主题需同步为 light,透出的才是白色磨砂而非黑色
+  nativeTheme.themeSource = initial.theme
   const extensionDescriptors = new ExtensionDescriptorResolver(async (path, method, body) => {
     const settings = await store.load()
     return runtimeRequest(settings, path, { method, body })
@@ -1815,6 +1821,7 @@ app.whenReady().then(async () => {
     syncLoginItemSettings(saved)
     syncTray(saved)
     syncCheckpointCleanupTimer(saved)
+    nativeTheme.themeSource = saved.theme
     requestExtensionWorkbenchEnvironmentPublish()
     return saved
   }
@@ -1827,6 +1834,7 @@ app.whenReady().then(async () => {
 
   const saveSettingsPatch = async (partial: AppSettingsPatch): Promise<AppSettingsV1> => {
     const saved = await store.patch(preserveRuntimeTokenForFullSettingsSnapshot(await store.load(), partial))
+    nativeTheme.themeSource = saved.theme
     requestExtensionWorkbenchEnvironmentPublish()
     return saved
   }
@@ -2032,3 +2040,4 @@ app.on('before-quit', (event) => {
       app.quit()
     })
 })
+

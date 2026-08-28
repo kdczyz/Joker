@@ -49,7 +49,6 @@ import {
   WRITE_EXPORT_NOTICE_MS,
   type WriteNotice
 } from '../write/write-workspace-view-utils'
-import { SidebarTitlebarToggleButton } from '../sidebar/SidebarPrimitives'
 
 const SDD_AUTOSAVE_MS = 650
 const PROTOTYPE_POLL_INTERVAL_MS = 4_000
@@ -293,7 +292,6 @@ export function SddAssistantToggleButton({
 export function SddDraftEditorView({
   leftSidebarCollapsed,
   assistantOpen,
-  onToggleLeftSidebar,
   onToggleAssistant,
   onAssistantQuote,
   onPrototypeTurn,
@@ -1070,13 +1068,6 @@ export function SddDraftEditorView({
                 leftSidebarCollapsed ? 'ds-window-controls-collapsed-titlebar-inset' : ''
               }`}
             >
-              {leftSidebarCollapsed ? (
-                <SidebarTitlebarToggleButton
-                  onClick={onToggleLeftSidebar}
-                  title={t('sidebarExpand')}
-                  ariaLabel={t('sidebarExpand')}
-                />
-              ) : null}
               <span className="sdd-draft-file-icon flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent/10 text-accent">
                 <FileText className="h-4 w-4" strokeWidth={1.9} />
               </span>

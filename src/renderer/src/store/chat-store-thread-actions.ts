@@ -16,6 +16,7 @@ import {
   shouldAutoTitleThread
 } from '../lib/thread-title'
 import { filterThreadsForSidebar } from '../lib/thread-sidebar-visibility'
+import { threadStatusDotForThread } from '../components/chat/thread-status-dot'
 import {
   enrichThreadsWithForkInfo,
   forgetThreadFork,
@@ -428,6 +429,16 @@ export function createThreadActions(
     }
     const nextUnread = { ...get().unreadThreadIds }
     delete nextUnread[id]
+    // Acknowledge the terminal status-dot so the breathing light
+    // (completed / interrupted / needs-review) disappears on click.
+    let nextAcknowledged = { ...get().acknowledgedStatusDotThreadIds }
+    const selectThreadTarget = get().threads.find((t) => t.id === id)
+    if (selectThreadTarget) {
+      const dot = threadStatusDotForThread(selectThreadTarget)
+      if (dot === 'completed' || dot === 'interrupted' || dot === 'needs-review') {
+        nextAcknowledged[id] = true
+      }
+    }
 
     sseAbortRef.current?.abort()
     sseAbortRef.current = null
@@ -491,6 +502,7 @@ export function createThreadActions(
       set({
         watchTurnCompletion: nextWatch,
         unreadThreadIds: nextUnread,
+        acknowledgedStatusDotThreadIds: nextAcknowledged,
         activeThreadId: id,
         activeThreadRelation: threadRelation ?? 'primary',
         activeThreadParentId: threadParentId ?? null,

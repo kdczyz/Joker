@@ -10,6 +10,12 @@ import type {
   GitBranchWorktreesResult,
   GitWorktreeCheckoutResult
 } from '../../shared/git-branches'
+import type {
+  GitCommitResult,
+  GitDiffStatFile,
+  GitDiffStatResult,
+  GitPushResult
+} from '../../shared/git-changes'
 import { findNearestGitRoot } from './git-discovery'
 
 const execFileAsync = promisify(execFile)
@@ -336,4 +342,170 @@ export async function removeGitBranchWorktree(params: {
   const cwd = await resolveGitCwd(params.workspaceRoot)
   if (!cwd) throw new Error('No working directory selected.')
   await runGit(cwd, ['worktree', 'remove', '--force', params.worktreePath], 30_000)
+}
+
+type ParsedDiffStat = {
+  added: number
+  removed: number
+  files: GitDiffStatFile[]
+}
+
+function parseNumStat(stdout: string): ParsedDiffStat {
+  const files: GitDiffStatFile[] = []
+  let added = 0
+  let removed = 0
+  for (const line of stdout.split('\n')) {
+    const trimmed = line.trim()
+    if (!trimmed) continue
+    // Format: "<added>\t<removed>\t<path>" where either count may be "-"
+    // for binary files.
+    const match = /^(\d+|-)\t(\d+|-)\t(.+)$/.exec(trimmed)
+    if (!match) continue
+    const fileAdded = match[1] === '-' ? 0 : Number.parseInt(match[1], 10)
+    const fileRemoved = match[2] === '-' ? 0 : Number.parseInt(match[2], 10)
+    added += fileAdded
+    removed += fileRemoved
+    files.push({ path: match[3], added: fileAdded, removed: fileRemoved })
+  }
+  return { added, removed, files }
+}
+
+function buildCommitSuggestion(files: GitDiffStatFile[]): string {
+  const busiest = [...files]
+    .sort((a, b) => b.added + b.removed - (a.added + a.removed))
+    .slice(0, 3)
+    .map((file) => file.path.split('/').slice(-2).join('/'))
+  if (busiest.length === 0) return ''
+  return `Update ${busiest.join(', ')}`
+}
+
+async function parseUncommittedFileCount(cwd: string): Promise<number> {
+  const { stdout } = await runGit(cwd, ['status', '--porcelain=v1', '--untracked-files=normal'])
+  const paths = new Set<string>()
+  for (const line of stdout.split('\n')) {
+    if (line.trim().length < 4) continue
+    paths.add(line.slice(3).trim())
+  }
+  return paths.size
+}
+
+function countStatusSections(stdout: string): { staged: number; unstaged: number; untracked: number } {
+  let staged = 0
+  let unstaged = 0
+  let untracked = 0
+  for (const line of stdout.split('\n')) {
+    if (line.trim().length < 2) continue
+    const x = line[0]
+    const y = line[1]
+    if (x === '?' && y === '?') {
+      untracked += 1
+      continue
+    }
+    if (x !== ' ') staged += 1
+    if (y !== ' ') unstaged += 1
+  }
+  return { staged, unstaged, untracked }
+}
+
+export async function getGitDiffStat(workspaceRoot: string): Promise<GitDiffStatResult> {
+  const cwd = await resolveGitCwd(workspaceRoot)
+  if (!cwd) {
+    return { ok: false, reason: 'no_workspace', message: 'No working directory selected.' }
+  }
+  try {
+    await runGit(cwd, ['rev-parse', '--git-dir'])
+    let combined: ParsedDiffStat = { added: 0, removed: 0, files: [] }
+    try {
+      combined = parseNumStat((await runGit(cwd, ['diff', '--numstat', 'HEAD'], 20_000)).stdout)
+    } catch {
+      // Fresh repository without any commit yet — HEAD doesn't exist, so fall
+      // back to the worktree-only diff.
+      combined = parseNumStat((await runGit(cwd, ['diff', '--numstat'], 20_000)).stdout)
+    }
+    const status = countStatusSections(
+      (await runGit(cwd, ['status', '--porcelain=v1', '--untracked-files=normal'])).stdout
+    )
+    const fileCount = await parseUncommittedFileCount(cwd)
+    return {
+      ok: true,
+      added: combined.added,
+      removed: combined.removed,
+      fileCount,
+      stagedFiles: status.staged,
+      unstagedFiles: status.unstaged,
+      untrackedFiles: status.untracked,
+      files: combined.files,
+      suggestion: buildCommitSuggestion(combined.files)
+    }
+  } catch (error) {
+    return gitStatFailure(error)
+  }
+}
+
+function gitChangeFailure(error: unknown): GitCommitResult {
+  const message = error instanceof Error ? error.message : String(error)
+  if (/nothing to commit/i.test(message)) {
+    return {
+      ok: false,
+      reason: 'nothing_to_commit',
+      message: 'There are no staged changes to commit.'
+    }
+  }
+  const fallback = gitFailure(error)
+  return fallback.ok
+    ? { ok: false, reason: 'error', message }
+    : { ok: false, reason: fallback.reason, message: fallback.message }
+}
+
+function gitStatFailure(error: unknown): GitDiffStatResult {
+  const fallback = gitFailure(error)
+  return fallback.ok
+    ? { ok: false, reason: 'error', message: String(error) }
+    : { ok: false, reason: fallback.reason, message: fallback.message }
+}
+
+export async function commitGitChanges(params: {
+  workspaceRoot: string
+  message?: string
+  includeUnstaged?: boolean
+  push?: boolean
+}): Promise<GitCommitResult> {
+  const cwd = await resolveGitCwd(params.workspaceRoot)
+  if (!cwd) {
+    return { ok: false, reason: 'no_workspace', message: 'No working directory selected.' }
+  }
+  try {
+    await runGit(cwd, ['rev-parse', '--git-dir'])
+    const diff = await getGitDiffStat(cwd)
+    const message = params.message?.trim() || (diff.ok ? diff.suggestion : '')
+    if (!message) return { ok: false, reason: 'nothing_to_commit', message: 'There are no changes to commit.' }
+    if (params.includeUnstaged) {
+      await runGit(cwd, ['add', '-A'], 60_000)
+    }
+    await runGit(cwd, ['commit', '-m', message], 60_000)
+    const commitHash = (await runGit(cwd, ['rev-parse', '--short', 'HEAD'])).stdout.trim()
+    let pushed = false
+    if (params.push) {
+      await runGit(cwd, ['push'], 120_000)
+      pushed = true
+    }
+    return { ok: true, commitHash, pushed }
+  } catch (error) {
+    return gitChangeFailure(error)
+  }
+}
+
+export async function pushGitChanges(workspaceRoot: string): Promise<GitPushResult> {
+  const cwd = await resolveGitCwd(workspaceRoot)
+  if (!cwd) {
+    return { ok: false, reason: 'no_workspace', message: 'No working directory selected.' }
+  }
+  try {
+    const { stdout, stderr } = await runGit(cwd, ['push'], 120_000)
+    return { ok: true, output: (stdout + '\n' + stderr).trim() }
+  } catch (error) {
+    const result = gitFailure(error)
+    if (result.ok) return { ok: false, reason: 'error', message: String(error) }
+    return { ok: false, reason: result.reason, message: result.message }
+  }
 }
