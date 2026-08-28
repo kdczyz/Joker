@@ -407,10 +407,14 @@ describe('ClawRuntime', () => {
   it('shows current Joker thread token usage with provider and model for an incoming IM command', async () => {
     const settings = buildSettings()
     settings.provider.providers = [buildModelProvider()]
+    // IM follows the desktop's current provider/model selection and ignores
+    // the model bound to the IM channel at connect time.
+    settings.agents.Joker.providerId = 'minimax'
+    settings.agents.Joker.model = 'MiniMax-M3'
     settings.claw.channels = [
       buildChannel({
         providerId: 'minimax',
-        model: 'MiniMax-M3',
+        model: 'MiniMax-M2.7',
         threadId: 'thr_usage',
         conversations: [buildConversation({ localThreadId: 'thr_usage' })]
       })
@@ -1301,8 +1305,8 @@ describe('ClawRuntime', () => {
     expect(createScheduledTaskFromText).toHaveBeenCalledWith('Remind me tomorrow to ship the review.', {
       workspaceRoot: settings.workspaceRoot,
       clawChannelId: null,
-      providerId: 'deepseek',
-      modelHint: 'deepseek-v4-flash',
+      providerId: 'opencode-zen',
+      modelHint: 'big-pickle',
       mode: settings.claw.im.mode
     })
     expect(store.patch).not.toHaveBeenCalled()
@@ -1914,12 +1918,12 @@ describe('ClawRuntime', () => {
     expect(current().claw.channels[0].model).toBe('auto')
     expect(current().claw.channels[0].conversations[0]).toMatchObject({
       chatId: 'oc_chat_a',
-      providerId: 'deepseek',
-      model: 'deepseek-v4-pro'
+      providerId: 'opencode-zen',
+      model: 'hy3-free'
     })
     expect(send).toHaveBeenCalledWith(
       'oc_chat_a',
-      { markdown: '[Joker] Claw IM model switched to `deepseek-v4-pro` with provider `deepseek`.' },
+      { markdown: '[Joker] Claw IM model switched to `hy3-free` with provider `opencode-zen`.' },
       { replyTo: 'om_inbound', replyInThread: false }
     )
   })
@@ -1981,8 +1985,8 @@ describe('ClawRuntime', () => {
       { markdown?: string },
       Record<string, unknown>
     ]
-    expect(modelListCall[1]).toMatchObject({ markdown: expect.stringContaining('3. `MiniMax-M3` · provider `minimax-a`') })
-    expect(modelListCall[1]).toMatchObject({ markdown: expect.stringContaining('5. `MiniMax-M3` · provider `minimax`') })
+    expect(modelListCall[1]).toMatchObject({ markdown: expect.stringContaining('1. `MiniMax-M3` · provider `minimax-a`') })
+    expect(modelListCall[1]).toMatchObject({ markdown: expect.stringContaining('3. `MiniMax-M3` · provider `minimax`') })
     expect(modelListCall[1]).toMatchObject({ markdown: expect.stringContaining('provider `minimax`') })
 
     await handleFeishuMessage('/model MiniMax-M3', 'om_model_name_switch')
@@ -1996,7 +2000,7 @@ describe('ClawRuntime', () => {
       { replyTo: 'om_model_name_switch', replyInThread: false }
     )
 
-    await handleFeishuMessage('/model 5', 'om_model_switch')
+    await handleFeishuMessage('/model 3', 'om_model_switch')
     expect(current().claw.channels[0]).toMatchObject({
       providerId: 'minimax',
       model: 'MiniMax-M2.7'
@@ -2021,9 +2025,13 @@ describe('ClawRuntime', () => {
       ...settings.provider.providers,
       buildModelProvider()
     ]
+    // IM follows the desktop's current provider/model selection; the channel's
+    // connect-time binding (MiniMax-M2.7 below) must not shadow it.
+    settings.agents.Joker.providerId = 'minimax'
+    settings.agents.Joker.model = 'MiniMax-M3'
     settings.claw.channels = [buildChannel({
       providerId: 'minimax',
-      model: 'MiniMax-M3',
+      model: 'MiniMax-M2.7',
       threadId: 'thr_minimax',
       conversations: [buildConversation({ localThreadId: 'thr_minimax' })]
     })]
@@ -2098,7 +2106,7 @@ describe('ClawRuntime', () => {
     )
   })
 
-  it('falls back to the first provider model when the stored IM model was removed', async () => {
+  it('keeps the desktop-selected model for IM turns even when the provider list no longer serves it', async () => {
     const settings = buildSettings()
     settings.claw.im.enabled = true
     settings.claw.im.responseTimeoutMs = 2_000
@@ -2106,19 +2114,25 @@ describe('ClawRuntime', () => {
       ...settings.provider.providers,
       buildModelProvider({ models: ['MiniMax-M2.7'] })
     ]
+    // The desktop composer still has MiniMax-M3 selected while the provider
+    // profile only lists MiniMax-M2.7. The concrete desktop selection is
+    // passed through to the runtime instead of being silently swapped for the
+    // provider's first model.
+    settings.agents.Joker.providerId = 'minimax'
+    settings.agents.Joker.model = 'MiniMax-M3'
     settings.claw.channels = [buildChannel({
       providerId: 'minimax',
-      model: 'MiniMax-M3',
+      model: 'MiniMax-M2.7',
       threadId: 'thr_minimax',
       conversations: [buildConversation({ localThreadId: 'thr_minimax' })]
     })]
     const { store } = mutableSettingsStore(settings)
     const runtimeRequest = vi.fn(async (requestSettings: AppSettingsV1, path, init) => {
       expect(requestSettings.agents.Joker.providerId).toBe('minimax')
-      expect(requestSettings.agents.Joker.model).toBe('MiniMax-M2.7')
+      expect(requestSettings.agents.Joker.model).toBe('MiniMax-M3')
       if (path === '/v1/threads/thr_minimax/turns' && init?.method === 'POST') {
         const body = JSON.parse(init?.body ?? '{}') as { model?: string }
-        expect(body.model).toBe('MiniMax-M2.7')
+        expect(body.model).toBe('MiniMax-M3')
         return { ok: true, status: 202, body: JSON.stringify({ threadId: 'thr_minimax', turnId: 'turn_minimax' }) }
       }
       if (path === '/v1/threads/thr_minimax' && init?.method === 'GET') {
@@ -2132,7 +2146,7 @@ describe('ClawRuntime', () => {
               {
                 id: 'turn_minimax',
                 status: 'completed',
-                items: [{ kind: 'assistant_text', text: 'hello from fallback model' }]
+                items: [{ kind: 'assistant_text', text: 'hello from desktop model' }]
               }
             ]
           })
@@ -2178,12 +2192,12 @@ describe('ClawRuntime', () => {
 
     expect(send).toHaveBeenCalledWith(
       'oc_chat_a',
-      { markdown: 'hello from fallback model' },
+      { markdown: 'hello from desktop model' },
       { replyTo: 'om_inbound', replyInThread: false }
     )
   })
 
-  it('uses the current IM conversation provider when starting an agent turn', async () => {
+  it('ignores the IM conversation model binding and uses the desktop model when starting an agent turn', async () => {
     const settings = buildSettings()
     settings.claw.im.enabled = true
     settings.claw.im.responseTimeoutMs = 2_000
@@ -2191,6 +2205,8 @@ describe('ClawRuntime', () => {
       ...settings.provider.providers,
       buildModelProvider()
     ]
+    settings.agents.Joker.providerId = 'minimax'
+    settings.agents.Joker.model = 'MiniMax-M3'
     settings.claw.channels = [buildChannel({
       providerId: 'minimax',
       model: 'MiniMax-M3',
@@ -2205,11 +2221,11 @@ describe('ClawRuntime', () => {
     })]
     const { store } = mutableSettingsStore(settings)
     const runtimeRequest = vi.fn(async (requestSettings: AppSettingsV1, path, init) => {
-      expect(requestSettings.agents.Joker.providerId).toBe('deepseek')
-      expect(requestSettings.agents.Joker.model).toBe('deepseek-v4-flash')
+      expect(requestSettings.agents.Joker.providerId).toBe('minimax')
+      expect(requestSettings.agents.Joker.model).toBe('MiniMax-M3')
       if (path === '/v1/threads/thr_deepseek/turns' && init?.method === 'POST') {
         const body = JSON.parse(init?.body ?? '{}') as { model?: string }
-        expect(body.model).toBe('deepseek-v4-flash')
+        expect(body.model).toBe('MiniMax-M3')
         return { ok: true, status: 202, body: JSON.stringify({ threadId: 'thr_deepseek', turnId: 'turn_deepseek' }) }
       }
       if (path === '/v1/threads/thr_deepseek' && init?.method === 'GET') {
@@ -2223,7 +2239,7 @@ describe('ClawRuntime', () => {
               {
                 id: 'turn_deepseek',
                 status: 'completed',
-                items: [{ kind: 'assistant_text', text: 'hello from deepseek' }]
+                items: [{ kind: 'assistant_text', text: 'hello from desktop model' }]
               }
             ]
           })
@@ -2269,7 +2285,7 @@ describe('ClawRuntime', () => {
 
     expect(send).toHaveBeenCalledWith(
       'oc_chat_a',
-      { markdown: 'hello from deepseek' },
+      { markdown: 'hello from desktop model' },
       { replyTo: 'om_inbound', replyInThread: false }
     )
   })

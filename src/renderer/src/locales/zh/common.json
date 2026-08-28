@@ -3030,5 +3030,6 @@
   "gitToolsCommit": "提交",
   "gitToolsCommitAndPush": "提交并推送",
   "gitToolsPush": "推送",
-  "gitToolsNoChanges": "没有更改"
+  "gitToolsNoChanges": "没有更改",
+  "inspectorNewFile": "新文件"
 }

@@ -3021,5 +3021,6 @@
   "gitToolsCommit": "कमिट",
   "gitToolsCommitAndPush": "कमिट और पुश",
   "gitToolsPush": "पुश",
-  "gitToolsNoChanges": "कोई बदलाव नहीं"
+  "gitToolsNoChanges": "कोई बदलाव नहीं",
+  "inspectorNewFile": "नई फ़ाइल"
 }

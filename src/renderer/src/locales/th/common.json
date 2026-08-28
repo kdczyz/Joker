@@ -3021,5 +3021,6 @@
   "gitToolsCommit": "คอมมิต",
   "gitToolsCommitAndPush": "คอมมิตและพุช",
   "gitToolsPush": "พุช",
-  "gitToolsNoChanges": "ไม่มีการเปลี่ยนแปลง"
+  "gitToolsNoChanges": "ไม่มีการเปลี่ยนแปลง",
+  "inspectorNewFile": "ไฟล์ใหม่"
 }

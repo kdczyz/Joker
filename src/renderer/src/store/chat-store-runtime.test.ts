@@ -12,11 +12,23 @@ import {
   MAX_PENDING_CLAW_FEISHU_MIRRORS,
   MAX_WATCHED_COMPLETION_NOTIFICATIONS,
   rememberPendingClawFeishuMirror,
+  syncTurnCompletionPoll,
   takePendingClawFeishuMirror,
   watchTurnCompletionNotification
 } from './chat-store-runtime'
-import { clearBusyWatchdog, resetBusyRecoveryAttempts } from './chat-store-schedulers'
+import { clearBusyWatchdog, resetBusyRecoveryAttempts, stopTurnCompletionPoll } from './chat-store-schedulers'
+import { deriveThreadStatusDot } from '../components/chat/thread-status-dot'
 import type { ChatState, ChatStoreSet } from './chat-store-types'
+
+const registryMocks = vi.hoisted(() => ({
+  getThreadDetail: vi.fn(async () => ({ blocks: [] as ChatBlock[], latestSeq: 1, threadStatus: 'idle' }))
+}))
+
+vi.mock('../agent/registry', () => ({
+  getProvider: () => ({
+    getThreadDetail: registryMocks.getThreadDetail
+  })
+}))
 import { emptyDesignThreadRegistry, markDesignThread } from '../design/design-thread-registry'
 import {
   WRITE_ASSISTANT_THREAD_TITLE,
@@ -946,5 +958,81 @@ describe('watched completion notifications', () => {
 
     expect(completionNotificationDedupeKeyForWatchedThread('thread-1', 999)).toBe('watch:thread-1:999')
     expect(completionNotificationDedupeKeyForWatchedThread('thread-0', 999)).toBe('watch:thread-0:1000')
+  })
+})
+
+describe('background turn completion poll', () => {
+  afterEach(() => {
+    stopTurnCompletionPoll()
+  })
+
+  it('settles the watched thread summary to a terminal dot and drops stale acknowledgment', async () => {
+    const harness = makeSinkHarness({
+      activeThreadId: 'thread-current',
+      busy: false,
+      currentTurnId: null,
+      runtimeConnection: 'ready',
+      watchTurnCompletion: { 'thread-bg': true },
+      acknowledgedStatusDotThreadIds: { 'thread-bg': true },
+      threads: [{
+        id: 'thread-bg',
+        title: 'Background',
+        updatedAt: '2026-06-08T00:00:00.000Z',
+        model: 'model',
+        mode: 'agent',
+        status: 'running',
+        latestTurnStatus: 'running'
+      }] as unknown as NormalizedThread[]
+    })
+    syncTurnCompletionPoll(harness.set, harness.get)
+    await new Promise((resolve) => setTimeout(resolve, 20))
+
+    const thread = harness.get().threads.find((candidate) => candidate.id === 'thread-bg')
+    expect(thread?.status).toBe('idle')
+    expect(thread?.latestTurnStatus).toBe('completed')
+    expect(deriveThreadStatusDot(thread!)).toBe('completed')
+    expect(harness.get().unreadThreadIds['thread-bg']).toBe(true)
+    expect(harness.get().watchTurnCompletion['thread-bg']).toBeUndefined()
+    expect(harness.get().acknowledgedStatusDotThreadIds['thread-bg']).toBeUndefined()
+  })
+})
+
+describe('background turn completion poll (failure)', () => {
+  afterEach(() => {
+    stopTurnCompletionPoll()
+    registryMocks.getThreadDetail.mockClear()
+  })
+
+  it('settles a failed watched turn to the interrupted (red) dot', async () => {
+    registryMocks.getThreadDetail.mockResolvedValue({
+      blocks: [
+        { kind: 'user', id: 'user-1', text: 'do work' },
+        { kind: 'system', id: 'err-1', text: 'boom', severity: 'error' }
+      ] as unknown as ChatBlock[],
+      latestSeq: 2,
+      threadStatus: 'idle'
+    })
+    const harness = makeSinkHarness({
+      activeThreadId: 'thread-current',
+      busy: false,
+      currentTurnId: null,
+      runtimeConnection: 'ready',
+      watchTurnCompletion: { 'thread-fail': true },
+      threads: [{
+        id: 'thread-fail',
+        title: 'Failing',
+        updatedAt: '2026-06-08T00:00:00.000Z',
+        model: 'model',
+        mode: 'agent',
+        status: 'running',
+        latestTurnStatus: 'running'
+      }] as unknown as NormalizedThread[]
+    })
+    syncTurnCompletionPoll(harness.set, harness.get)
+    await new Promise((resolve) => setTimeout(resolve, 20))
+
+    const thread = harness.get().threads.find((candidate) => candidate.id === 'thread-fail')
+    expect(thread?.latestTurnStatus).toBe('failed')
+    expect(deriveThreadStatusDot(thread!)).toBe('interrupted')
   })
 })

@@ -3021,5 +3021,6 @@
   "gitToolsCommit": "Коммит",
   "gitToolsCommitAndPush": "Коммит и отправка",
   "gitToolsPush": "Отправить",
-  "gitToolsNoChanges": "Нет изменений"
+  "gitToolsNoChanges": "Нет изменений",
+  "inspectorNewFile": "Новый файл"
 }

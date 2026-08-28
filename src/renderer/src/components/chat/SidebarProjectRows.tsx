@@ -396,10 +396,16 @@ function ThreadActivityDot({
     )
   }
   if (unread) {
+    // The static unread dot mirrors the thread's terminal state color:
+    // red for failed turns, green otherwise, so errors never read as "done".
+    const staticColor =
+      status === 'interrupted'
+        ? 'bg-red-500 shadow-[0_0_0_2px_rgba(239,68,68,0.2)]'
+        : 'bg-emerald-500 shadow-[0_0_0_2px_rgba(16,185,129,0.2)]'
     return (
       <span
-        className="block h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500 shadow-[0_0_0_2px_rgba(59,130,246,0.2)]"
-        title={unreadLabel}
+        className={`block h-1.5 w-1.5 shrink-0 rounded-full ${staticColor}`}
+        title={statusLabel || unreadLabel}
       />
     )
   }

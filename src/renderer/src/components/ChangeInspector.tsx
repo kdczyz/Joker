@@ -1,27 +1,21 @@
 import type { ReactElement } from 'react'
-import { useEffect, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { FileEdit, PanelRightClose } from 'lucide-react'
-import type { ChatBlock, ToolBlock } from '../agent/types'
-import {
-  countDiffStats,
-  extractDiffFilePath,
-  extractUnifiedDiffText,
-  formatFilePathForDisplay,
-} from '../lib/diff-stats'
+import { FileEdit, Loader2, PanelRightClose } from 'lucide-react'
+import type { GitDiffStatResult } from '@shared/git-changes'
+import { formatFilePathForDisplay } from '../lib/diff-stats'
 import { useChatStore } from '../store/chat-store'
 import { DiffView } from './DiffView'
 
 /**
- * Right-side change inspector — file_change items only.
- * Selecting a row reveals the unified patch in the bottom panel.
+ * Right-side change inspector — every file that differs from the remote
+ * (upstream) branch, straight from git. Selecting a row reveals the file's
+ * unified patch, whether the change came from this session or elsewhere.
  */
 export function ChangeInspector({
-  blocks,
   className,
   onCollapse
 }: {
-  blocks: ChatBlock[]
   className?: string
   onCollapse: () => void
 }): ReactElement {
@@ -30,36 +24,57 @@ export function ChangeInspector({
   const selectInspectorItem = useChatStore((s) => s.selectInspectorItem)
   const workspaceRoot = useChatStore((s) => s.workspaceRoot)
 
-  const fileChanges = useMemo<ToolBlock[]>(() => {
-    return blocks.flatMap((block): ToolBlock[] => {
-      if (!(block.kind === 'tool' && block.toolKind === 'file_change')) {
-        return []
-      }
+  const [stat, setStat] = useState<GitDiffStatResult | null>(null)
+  const [patch, setPatch] = useState<string | null>(null)
+  const [patchLoading, setPatchLoading] = useState(false)
+  const patchRequestRef = useRef(0)
 
-      const detailText = extractUnifiedDiffText(block.detail)
-      if (!detailText) return []
+  const files = useMemo(() => (stat?.ok === true ? stat.files : []), [stat])
 
-      return [
-        {
-          ...block,
-          detail: detailText,
-          filePath: extractDiffFilePath(detailText, block.filePath)
-        }
-      ]
-    })
-  }, [blocks])
+  const refresh = useCallback(async (): Promise<void> => {
+    if (!workspaceRoot || typeof window.JokerGui?.getGitDiffStat !== 'function') return
+    try {
+      const next = await window.JokerGui.getGitDiffStat(workspaceRoot)
+      setStat(next)
+    } catch {
+      // Keep the previous listing on transient IPC failures.
+    }
+  }, [workspaceRoot])
 
   useEffect(() => {
-    if (fileChanges.length === 0 && selectedId !== null) {
-      selectInspectorItem(null)
+    setStat(null)
+    setPatch(null)
+    void refresh()
+    const interval = window.setInterval(() => void refresh(), 10_000)
+    return () => window.clearInterval(interval)
+  }, [refresh])
+
+  useEffect(() => {
+    const path = selectedId
+    if (!path || !files.some((file) => file.path === path)) {
+      const fallback = files[files.length - 1]?.path ?? null
+      if (fallback !== path) selectInspectorItem(fallback)
       return
     }
-    if (selectedId && !fileChanges.some((b) => b.id === selectedId)) {
-      selectInspectorItem(fileChanges[fileChanges.length - 1]?.id ?? null)
-    }
-  }, [fileChanges, selectedId, selectInspectorItem])
+    const request = ++patchRequestRef.current
+    setPatchLoading(true)
+    setPatch(null)
+    void window.JokerGui
+      ?.getGitFileDiff({ workspaceRoot, path })
+      .then((result) => {
+        if (patchRequestRef.current !== request) return
+        setPatch(result.ok ? result.patch : null)
+      })
+      .catch(() => {
+        if (patchRequestRef.current === request) setPatch(null)
+      })
+      .finally(() => {
+        if (patchRequestRef.current === request) setPatchLoading(false)
+      })
+  }, [files, selectInspectorItem, selectedId, workspaceRoot])
 
-  const active = fileChanges.find((b) => b.id === selectedId) ?? fileChanges[fileChanges.length - 1]
+  const active = files.find((file) => file.path === selectedId) ?? files[files.length - 1] ?? null
+  const hasChanges = files.length > 0
 
   return (
     <aside
@@ -80,15 +95,15 @@ export function ChangeInspector({
             {t('inspectorTitle')}
           </div>
           <div className="mt-1 truncate text-[11px] text-ds-faint">
-            {fileChanges.length > 0
-              ? t('inspectorSummaryFiles', { count: fileChanges.length })
+            {hasChanges
+              ? t('inspectorSummaryFiles', { count: files.length })
               : t('inspectorEmpty')}
           </div>
         </div>
       </div>
 
       <div className="flex min-h-0 flex-1 flex-col">
-        {fileChanges.length === 0 ? (
+        {!hasChanges ? (
           <div className="flex flex-1 items-center justify-center px-6 py-10 text-center">
             <div>
               <FileEdit className="mx-auto h-7 w-7 text-ds-faint" strokeWidth={1.25} />
@@ -102,45 +117,40 @@ export function ChangeInspector({
           <>
             <div className="max-h-[42%] min-h-0 overflow-y-auto py-2">
               <ul className="divide-y divide-ds-border-muted/60">
-                {fileChanges.map((b) => {
-                  const stats = countDiffStats(b.detail)
-                  const displayPath = formatFilePathForDisplay(b.filePath, workspaceRoot)
+                {files.map((file) => {
+                  const displayPath = formatFilePathForDisplay(file.path, workspaceRoot)
+                  const selected = active?.path === file.path
                   return (
-                    <li key={b.id}>
+                    <li key={file.path}>
                       <button
                         type="button"
-                        onClick={() => selectInspectorItem(b.id)}
+                        onClick={() => selectInspectorItem(file.path)}
                         className={`flex w-full items-start gap-2 px-4 py-2.5 text-left transition ${
-                          active?.id === b.id
-                            ? 'bg-ds-hover text-ds-ink'
-                            : 'text-ds-ink hover:bg-ds-hover/70'
+                          selected ? 'bg-ds-hover text-ds-ink' : 'text-ds-ink hover:bg-ds-hover/70'
                         }`}
+                        title={file.path}
                       >
                         <FileEdit
-                          className={`mt-0.5 h-3.5 w-3.5 shrink-0 ${
-                            b.status === 'error' ? 'text-red-700' : 'text-ds-muted'
-                          }`}
+                          className="mt-0.5 h-3.5 w-3.5 shrink-0 text-ds-muted"
                           strokeWidth={1.75}
                         />
                         <div className="min-w-0 flex-1">
                           <div className="truncate text-[12px] text-ds-ink">
-                            {displayPath ?? t('toolActionFile')}
+                            {displayPath ?? file.path}
                           </div>
-                          {stats ? (
+                          {file.added > 0 || file.removed > 0 ? (
                             <div className="mt-0.5 flex gap-2 text-[10px] font-mono">
-                              <span className="text-ds-diff-added">
-                                +{stats.added}
-                              </span>
-                              <span className="text-ds-diff-removed">
-                                -{stats.removed}
-                              </span>
+                              <span className="text-ds-diff-added">+{file.added}</span>
+                              <span className="text-ds-diff-removed">-{file.removed}</span>
                             </div>
-                          ) : null}
+                          ) : (
+                            <div className="mt-0.5 text-[10px] text-ds-faint">
+                              {t('inspectorNewFile')}
+                            </div>
+                          )}
                         </div>
-                        {b.status === 'running' ? (
-                          <span className="rounded-full bg-amber-200/40 px-2 py-0.5 text-[10px] font-medium text-amber-900 dark:bg-amber-700/30 dark:text-amber-100">
-                            {t('inspectorStatusRunning')}
-                          </span>
+                        {selected && patchLoading ? (
+                          <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin text-ds-faint" strokeWidth={2} />
                         ) : null}
                       </button>
                     </li>
@@ -150,11 +160,15 @@ export function ChangeInspector({
             </div>
 
             <div className="ds-panel-strip flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden border-t border-ds-border-muted">
-              {active?.detail ? (
-                <DiffView patch={active.detail} maxHeight={9999} className="h-full min-w-0 rounded-none border-0" />
+              {patch ? (
+                <DiffView patch={patch} maxHeight={9999} className="h-full min-w-0 rounded-none border-0" />
               ) : (
                 <div className="ds-surface-soft flex h-full items-center justify-center border border-dashed border-ds-border-muted px-4 py-6 text-center text-[11px] leading-6 text-ds-muted">
-                  {t('inspectorSelectHint')}
+                  {patchLoading ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-ds-faint" strokeWidth={2} />
+                  ) : (
+                    t('inspectorSelectHint')
+                  )}
                 </div>
               )}
             </div>

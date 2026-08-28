@@ -97,6 +97,13 @@ export const gitBranchPayloadSchema = z
   })
   .strict()
 
+export const gitFileDiffPayloadSchema = z
+  .object({
+    workspaceRoot: workspaceRootSchema,
+    path: trimmedString(2_048)
+  })
+  .strict()
+
 export const gitCommitPayloadSchema = z
   .object({
     workspaceRoot: workspaceRootSchema,

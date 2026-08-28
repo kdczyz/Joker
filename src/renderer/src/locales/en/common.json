@@ -3030,5 +3030,6 @@
   "gitToolsCommit": "Commit",
   "gitToolsCommitAndPush": "Commit and push",
   "gitToolsPush": "Push",
-  "gitToolsNoChanges": "No changes"
+  "gitToolsNoChanges": "No changes",
+  "inspectorNewFile": "New file"
 }

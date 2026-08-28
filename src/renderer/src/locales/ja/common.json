@@ -3021,5 +3021,6 @@
   "gitToolsCommit": "コミット",
   "gitToolsCommitAndPush": "コミットしてプッシュ",
   "gitToolsPush": "プッシュ",
-  "gitToolsNoChanges": "変更なし"
+  "gitToolsNoChanges": "変更なし",
+  "inspectorNewFile": "新規ファイル"
 }

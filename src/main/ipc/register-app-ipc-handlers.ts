@@ -56,6 +56,7 @@ import {
   gitBranchPayloadSchema,
   gitCheckpointCreatePayloadSchema,
   gitCommitPayloadSchema,
+  gitFileDiffPayloadSchema,
   gitCheckpointRestorePayloadSchema,
   gitRestoreFilePayloadSchema,
   gitWorktreeRemoveSchema,
@@ -211,6 +212,7 @@ import {
   createGitBranchWorktree,
   getGitBranches,
   getGitDiffStat,
+  getGitFileDiff,
   listGitBranchWorktrees,
   pushGitChanges,
   removeGitBranchWorktree,
@@ -2040,6 +2042,10 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   ipcMain.handle('git:diff-stat', async (_, workspaceRoot: unknown) =>
     getGitDiffStat(parseIpcPayload('git:diff-stat', workspaceRootSchema, workspaceRoot))
   )
+  ipcMain.handle('git:file-diff', async (_, payload: unknown) => {
+    const request = parseIpcPayload('git:file-diff', gitFileDiffPayloadSchema, payload)
+    return getGitFileDiff(request.workspaceRoot, request.path)
+  })
   ipcMain.handle('git:commit', async (_, payload: unknown) => {
     const request = parseIpcPayload('git:commit', gitCommitPayloadSchema, payload)
     return commitGitChanges(request)

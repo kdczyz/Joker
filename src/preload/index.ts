@@ -247,6 +247,8 @@ const api = {
     ipcRenderer.invoke('git:branches', workspaceRoot),
   getGitDiffStat: (workspaceRoot) =>
     ipcRenderer.invoke('git:diff-stat', workspaceRoot),
+  getGitFileDiff: (payload) =>
+    ipcRenderer.invoke('git:file-diff', payload),
   commitGitChanges: (payload) =>
     ipcRenderer.invoke('git:commit', payload),
   pushGitChanges: (workspaceRoot) =>

@@ -14,6 +14,7 @@ import type {
   GitCommitResult,
   GitDiffStatFile,
   GitDiffStatResult,
+  GitFileDiffResult,
   GitPushResult
 } from '../../shared/git-changes'
 import { findNearestGitRoot } from './git-discovery'
@@ -444,9 +445,15 @@ export async function getGitDiffStat(workspaceRoot: string): Promise<GitDiffStat
     // Files changed vs the remote branch, plus untracked files that the cloud
     // doesn't have yet (they carry no line counts until staged).
     const changedPaths = new Set(combined.files.map((file) => file.path))
+    const trackedPaths = new Set(combined.files.map((file) => file.path))
+    const files = [...combined.files]
     for (const line of statusOutput.split('\n')) {
       if (line.trim().length < 4) continue
-      if (line[0] === '?' && line[1] === '?') changedPaths.add(line.slice(3).trim())
+      if (line[0] === '?' && line[1] === '?') {
+        changedPaths.add(line.slice(3).trim())
+        const untrackedPath = line.slice(3).trim()
+        if (!trackedPaths.has(untrackedPath)) files.push({ path: untrackedPath, added: 0, removed: 0 })
+      }
     }
     return {
       ok: true,
@@ -456,7 +463,7 @@ export async function getGitDiffStat(workspaceRoot: string): Promise<GitDiffStat
       stagedFiles: status.staged,
       unstagedFiles: status.unstaged,
       untrackedFiles: status.untracked,
-      files: combined.files,
+      files,
       suggestion: buildCommitSuggestion(combined.files)
     }
   } catch (error) {
@@ -557,6 +564,44 @@ export async function pushGitChanges(workspaceRoot: string): Promise<GitPushResu
   try {
     const { stdout, stderr } = await runGit(cwd, ['push'], 120_000)
     return { ok: true, output: (stdout + '\n' + stderr).trim() }
+  } catch (error) {
+    const result = gitFailure(error)
+    if (result.ok) return { ok: false, reason: 'error', message: gitErrorDetail(error) }
+    return { ok: false, reason: result.reason, message: result.message }
+  }
+}
+
+export async function getGitFileDiff(
+  workspaceRoot: string,
+  filePath: string
+): Promise<GitFileDiffResult> {
+  const cwd = await resolveGitCwd(workspaceRoot)
+  if (!cwd) {
+    return { ok: false, reason: 'no_workspace', message: 'No working directory selected.' }
+  }
+  const path = filePath.trim()
+  if (!path) return { ok: false, reason: 'error', message: 'File path is required.' }
+  try {
+    await runGit(cwd, ['rev-parse', '--git-dir'])
+    const statusLine = (
+      await runGit(cwd, ['status', '--porcelain=v1', '--untracked-files=normal', '--', path])
+    ).stdout.split('\n')[0]
+    if (statusLine.startsWith('??')) {
+      // Untracked file: synthesize an all-additions patch. `--no-index` exits
+      // with code 1 when differences exist, so read the patch from the error.
+      const nullDevice = process.platform === 'win32' ? 'nul' : '/dev/null'
+      try {
+        await runGit(cwd, ['diff', '--no-index', '--', nullDevice, path], 20_000)
+        return { ok: true, patch: '' }
+      } catch (error) {
+        const patch = gitErrorDetail(error)
+        if (patch) return { ok: true, patch }
+        throw error
+      }
+    }
+    const base = await resolveDiffBase(cwd)
+    const { stdout: patch } = await runGit(cwd, ['diff', base, '--', path], 20_000)
+    return { ok: true, patch }
   } catch (error) {
     const result = gitFailure(error)
     if (result.ok) return { ok: false, reason: 'error', message: gitErrorDetail(error) }

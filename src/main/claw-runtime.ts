@@ -208,10 +208,11 @@ function settingsWithImModelProvider(
   if (!trimmedProviderId) return settings
   const provider = findImProvider(settings, trimmedProviderId)
   const requestedModel = model.trim()
+  // Same rule as currentImModelResolution: a concrete desktop-selected model is
+  // passed through even when the settings-side provider list does not mirror it
+  // yet; only an empty/'auto' request resolves to the provider's first model.
   const resolvedModel = requestedModel && requestedModel !== DEFAULT_CLAW_MODEL
-    ? provider
-      ? validProviderModel(settings, provider, requestedModel) ?? firstProviderModel(settings, trimmedProviderId)
-      : requestedModel
+    ? (provider ? validProviderModel(settings, provider, requestedModel) ?? requestedModel : requestedModel)
     : firstProviderModel(settings, trimmedProviderId)
   return {
     ...settings,
@@ -355,20 +356,19 @@ function currentImModelResolution(
     const target = requestedModel.trim().toLowerCase()
     return providerTextModels(settings, provider).some((candidate) => candidate.trim().toLowerCase() === target)
   }
-  const debugInfo = {
-    explicitProviderId: explicitProvider?.id,
-    requestedModel,
-    explicitServesModel: servesModel(explicitProvider),
-    fallbackProviderId: requestedModel ? (providers.find(servesModel)?.id ?? null) : null,
-    allProviderIds: providers.map((p) => p.id),
-    customP4Models: providers.find((p) => p.id === 'custom-provider-4')?.models
-  }
-  try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'currentImModelResolution', ts: new Date().toISOString(), ...debugInfo }) + '\n') } catch {}
   const provider =
     explicitProvider && servesModel(explicitProvider)
       ? explicitProvider
       : (requestedModel ? providers.find(servesModel) : undefined) ?? explicitProvider
-  const model = validProviderModel(settings, provider, requestedModel) ?? firstProviderModel(settings, provider.id)
+  // The requested model comes from the desktop composer, whose list is fetched
+  // live from the provider upstream — it can legitimately name a model that the
+  // settings-side provider profile has not mirrored yet. The desktop selection
+  // must win: only fall back to the provider's first model when there is no
+  // concrete request (empty/'auto'), never silently swap a concrete one out.
+  const model = validProviderModel(settings, provider, requestedModel) ??
+    (requestedModel.trim() && requestedModel !== DEFAULT_CLAW_MODEL
+      ? requestedModel.trim()
+      : firstProviderModel(settings, provider.id))
   return { provider, model }
 }
 
@@ -1032,7 +1032,6 @@ export class ClawRuntime {
   }
 
   private async runPrompt(settings: AppSettingsV1, options: RunPromptOptions): Promise<ClawRunResult> {
-    try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'runPrompt', ts: new Date().toISOString(), providerId: options.providerId, model: options.model, existingThreadId: options.threadId }) + '\n') } catch {}
     const workspace = options.workspaceRoot.trim() || settings.workspaceRoot
     const existingThreadId = options.threadId?.trim()
     const requestedModel = normalizeTaskModel(options.model) ?? (settings.agents.Joker.model.trim() || DEFAULT_CLAW_MODEL)
@@ -1968,10 +1967,8 @@ export class ClawRuntime {
     }
   ): Promise<ClawRunResult> {
     const { channel, conversation, prompt, provider, remoteSession, sender } = input
-    try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'processIncomingImPrompt', ts: new Date().toISOString(), channelId: channel?.id, conversationId: conversation?.id, conversationProviderId: conversation?.providerId, conversationModel: conversation?.model }) + '\n') } catch {}
     const initialThreadId = currentClawThreadId({ channel, conversation, remoteSession })
     const modelResolution = currentImModelResolution(settings, channel, conversation)
-    try { require('fs').appendFileSync('/tmp/im-resolve-debug.log', JSON.stringify({ step: 'processIncomingImPrompt_resolved', ts: new Date().toISOString(), providerId: modelResolution.provider.id, model: modelResolution.model }) + '\n') } catch {}
     const result = await this.runPrompt(settings, {
       prompt,
       title: channel ? `[Claw IM:${channel.label}] ${sender}` : `[Claw IM:${provider}] ${sender}`,

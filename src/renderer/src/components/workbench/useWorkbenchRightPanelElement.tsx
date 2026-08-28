@@ -73,9 +73,7 @@ type WorkbenchRightPanelElementOptions = Pick<
     | 'onApplyFramework'
     | 'onNewConversation'
   >
-  changes: {
-    blocks: RightPanelHostProps['changes']['blocks']
-  }
+  changes: Record<string, never>
   todo: {
     onOpenPlan: RightPanelHostProps['todo']['onOpenPlan']
   }
@@ -183,7 +181,7 @@ export function useWorkbenchRightPanelElement({
         onOpenSettings: () => openSettings('agents'),
         onCollapse
       }}
-      changes={{ blocks: changes.blocks, onCollapse }}
+      changes={{ onCollapse }}
       todo={{ onCollapse, onOpenPlan: todo.onOpenPlan }}
       browser={{
         blocks: browser.blocks,

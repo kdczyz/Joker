@@ -854,7 +854,7 @@ export function Workbench(): ReactElement {
         startNewSddAssistantConversation()
       }
     },
-    changes: { blocks },
+    changes: {},
     todo: { onOpenPlan: openGuiPlanPanel },
     browser: { blocks: devPreviewBlocks, preferredUrl: latestDevPreviewUrl },
     canvas: { workspaceRoot: activeCodeCanvasWorkspace, activeThreadId },

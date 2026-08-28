@@ -25,6 +25,7 @@ import type { ClawImChannelV1 } from '@shared/app-settings'
 import { isBackgroundShellNoticeUserMessage } from '@shared/background-shell-notice'
 import type { ChatState } from './chat-store-types'
 import { hydrateBlockModelLabels, isClawThread } from './chat-store-helpers'
+import { threadStatusDotForThread } from '../components/chat/thread-status-dot'
 import {
   collectAssistantTextForTurn,
   isOptimisticUserBlockId,
@@ -641,10 +642,16 @@ export function syncTurnCompletionPoll(
   set: (partial: Partial<ChatState> | ((state: ChatState) => Partial<ChatState>)) => void,
   get: () => ChatState
 ): void {
+  // Captured per poll pass: whether the loaded thread detail ends in an error
+  // block, so the local settle below can tell a failed turn from a completed
+  // one when the refreshed summary is unavailable or stale.
+  const detailEndedInErrorByThreadId = new Map<string, boolean>()
   syncTurnCompletionPollImpl(set, get, {
     loadThreadState: async (state, threadId) => {
       const provider = getProvider()
-      return provider.getThreadDetail(threadId)
+      const detail = await provider.getThreadDetail(threadId)
+      detailEndedInErrorByThreadId.set(threadId, threadDetailEndsWithError(detail.blocks))
+      return detail
     },
     threadLooksRunning: threadSnapshotLooksRunning,
     onCompletedThreads: async (doneIds, state, setState, getState) => {
@@ -656,18 +663,56 @@ export function syncTurnCompletionPoll(
         )
         clearWatchedCompletionNotification(id)
       }
+      // Refresh before flipping the local flags so the terminal summary the
+      // sidebar needs (latestTurnStatus) is already in place when the unread
+      // dot appears; otherwise the row shows a static unread blue dot until
+      // some later refresh lands.
+      try {
+        await getState().refreshThreads()
+      } catch {
+        /* ignore — the local settle below still runs */
+      }
       setState((snapshot) => {
         const watchTurnCompletion = { ...snapshot.watchTurnCompletion }
         const unreadThreadIds = { ...snapshot.unreadThreadIds }
+        // A finished turn is new information: drop any stale acknowledgment so
+        // the terminal breathing light is not suppressed (a suppressed terminal
+        // dot degrades to the static unread blue dot forever).
+        const acknowledgedStatusDotThreadIds = { ...snapshot.acknowledgedStatusDotThreadIds }
+        const doneSet = new Set(doneIds)
         for (const id of doneIds) {
           delete watchTurnCompletion[id]
           unreadThreadIds[id] = true
+          delete acknowledgedStatusDotThreadIds[id]
         }
-        return { watchTurnCompletion, unreadThreadIds }
+        // The poll proved the turn is no longer running. If the refreshed
+        // summary still claims 'running' (runtime lag or a failed refresh),
+        // settle it locally so the dot derivation can reach a terminal state.
+        // A turn whose detail ends in an error block settles as failed (red);
+        // everything else as completed (green).
+        const threads = snapshot.threads.map((thread) => {
+          if (!doneSet.has(thread.id)) return thread
+          if (threadStatusDotForThread(thread) !== 'running') return thread
+          return {
+            ...thread,
+            status: thread.status === 'archived' ? thread.status : 'idle',
+            latestTurnStatus: detailEndedInErrorByThreadId.get(thread.id) ? 'failed' : 'completed'
+          }
+        })
+        return { watchTurnCompletion, unreadThreadIds, acknowledgedStatusDotThreadIds, threads }
       })
-      void getState().refreshThreads()
     }
   })
+}
+
+function threadDetailEndsWithError(blocks: ChatBlock[]): boolean {
+  for (let index = blocks.length - 1; index >= 0; index -= 1) {
+    const block = blocks[index]
+    if (!block || block.kind === 'reasoning') continue
+    if (block.kind === 'system') return block.severity === 'error'
+    return false
+  }
+  return false
 }
 
 export type ThreadEventSinkBinding = {

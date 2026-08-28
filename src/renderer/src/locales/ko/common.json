@@ -3021,5 +3021,6 @@
   "gitToolsCommit": "커밋",
   "gitToolsCommitAndPush": "커밋하고 푸시",
   "gitToolsPush": "푸시",
-  "gitToolsNoChanges": "변경 사항 없음"
+  "gitToolsNoChanges": "변경 사항 없음",
+  "inspectorNewFile": "새 파일"
 }

@@ -51,3 +51,15 @@ export type GitPushResult =
       reason: 'no_workspace' | 'not_git_repo' | 'git_unavailable' | 'error'
       message: string
     }
+
+export type GitFileDiffResult =
+  | {
+      ok: true
+      /** Unified patch of the file's changes vs the remote-diff base. */
+      patch: string
+    }
+  | {
+      ok: false
+      reason: 'no_workspace' | 'not_git_repo' | 'git_unavailable' | 'error'
+      message: string
+    }
