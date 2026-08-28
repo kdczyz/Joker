@@ -131,6 +131,7 @@ import { FloatingComposerSlashCommandMenu } from './FloatingComposerSlashCommand
 import { FloatingComposerTodoProgress } from './FloatingComposerTodoProgress'
 import { DiffCounter } from './RollingDigit'
 import { useComposerImageModelSelection } from './use-composer-image-model-selection'
+import { computePopoverPosition, type PopoverPosition } from './compute-popover-position'
 
 export type { ComposerFileReference } from '../../lib/composer-file-references'
 export type { ComposerExecutionSettings } from './FloatingComposerExecutionPicker'
@@ -422,11 +423,11 @@ export function FloatingComposer({
   const [usageChartOpen, setUsageChartOpen] = useState(false)
   const usageChipRef = useRef<HTMLButtonElement>(null)
   const usagePopoverRef = useRef<HTMLDivElement>(null)
-  const [usagePopoverPos, setUsagePopoverPos] = useState<{ bottom: number; left: number } | null>(null)
+  const [usagePopoverPos, setUsagePopoverPos] = useState<PopoverPosition | null>(null)
   const [gitToolsOpen, setGitToolsOpen] = useState(false)
   const gitToolsBtnRef = useRef<HTMLButtonElement>(null)
   const gitToolsPopoverRef = useRef<HTMLDivElement>(null)
-  const [gitToolsPos, setGitToolsPos] = useState<{ bottom: number; left: number } | null>(null)
+  const [gitToolsPos, setGitToolsPos] = useState<PopoverPosition | null>(null)
   const [gitStat, setGitStat] = useState<GitDiffStatResult | null>(null)
   const [gitStatTick, setGitStatTick] = useState(0)
   const refreshGitStat = useCallback(() => setGitStatTick((tick) => tick + 1), [])
@@ -437,12 +438,7 @@ export function FloatingComposer({
       const el = gitToolsBtnRef.current
       if (!el) return
       const rect = el.getBoundingClientRect()
-      const width = 320
-      let left = rect.right - width
-      left = Math.min(left, window.innerWidth - width - 16)
-      left = Math.max(16, left)
-      const bottom = Math.max(16, window.innerHeight - rect.top + 8)
-      setGitToolsPos({ bottom, left })
+      setGitToolsPos(computePopoverPosition(rect, 320, 460, 'end'))
     }
     updatePosition()
     const frame = window.requestAnimationFrame(updatePosition)
@@ -480,12 +476,7 @@ export function FloatingComposer({
       const el = usageChipRef.current
       if (!el) return
       const rect = el.getBoundingClientRect()
-      const width = 360
-      let left = rect.left
-      left = Math.min(left, window.innerWidth - width - 16)
-      left = Math.max(16, left)
-      const bottom = Math.max(16, window.innerHeight - rect.top + 8)
-      setUsagePopoverPos({ bottom, left })
+      setUsagePopoverPos(computePopoverPosition(rect, 360, 460, 'start'))
     }
     updatePosition()
     const frame = window.requestAnimationFrame(updatePosition)
@@ -2019,7 +2010,9 @@ export function FloatingComposer({
               aria-label={t('usageChartTitle')}
               className="fixed z-[1100] w-[360px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-ds-border bg-ds-card dark:bg-[#212322] p-4 shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
               style={{
-                bottom: usagePopoverPos.bottom,
+                ...(usagePopoverPos.bottom != null
+                  ? { bottom: usagePopoverPos.bottom }
+                  : { top: usagePopoverPos.top }),
                 left: usagePopoverPos.left,
                 maxHeight: 'min(460px, calc(100vh - 32px))'
               }}
@@ -2048,7 +2041,9 @@ export function FloatingComposer({
               aria-label={t('gitToolsTitle')}
               className="fixed z-[1100] overflow-visible rounded-2xl border border-ds-border bg-ds-card dark:bg-[#212322] shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
               style={{
-                bottom: gitToolsPos.bottom,
+                ...(gitToolsPos.bottom != null
+                  ? { bottom: gitToolsPos.bottom }
+                  : { top: gitToolsPos.top }),
                 left: gitToolsPos.left,
                 maxHeight: 'min(460px, calc(100vh - 32px))'
               }}
