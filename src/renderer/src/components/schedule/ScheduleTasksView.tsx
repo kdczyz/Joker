@@ -470,6 +470,12 @@ export function ScheduleTasksView({
         const nextStatus = await window.JokerGui.getScheduleStatus()
         if (refreshCoordinator.isCurrent(ticket)) setStatus(nextStatus)
       }
+    } catch (persistError) {
+      // 保存失败时必须显式提示,否则乐观更新会在下一次轮询后被
+      // 服务端的旧数据覆盖,用户看到的就是"任务创建后自动消失"。
+      const message = persistError instanceof Error ? persistError.message : String(persistError)
+      if (refreshCoordinator.isCurrent(ticket)) setError(message)
+      throw persistError
     } finally {
       refreshCoordinator.endMutation()
     }
@@ -576,14 +582,23 @@ export function ScheduleTasksView({
       nextRunAt: ''
     }
     if (dialog.mode === 'create') {
-      await persistSchedule({
-        enabled: true,
-        tasks: [...schedule.tasks, { ...task, createdAt: now }]
-      })
+      try {
+        await persistSchedule({
+          enabled: true,
+          tasks: [...schedule.tasks, { ...task, createdAt: now }]
+        })
+      } catch {
+        // persistSchedule 已把错误写入全局 error 状态;保留对话框让用户重试。
+        return
+      }
     } else {
-      await persistSchedule({
-        tasks: schedule.tasks.map((item) => item.id === dialog.taskId ? task : item)
-      })
+      try {
+        await persistSchedule({
+          tasks: schedule.tasks.map((item) => item.id === dialog.taskId ? task : item)
+        })
+      } catch {
+        return
+      }
     }
     setDialog(null)
     setDialogError(null)

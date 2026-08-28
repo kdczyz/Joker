@@ -322,6 +322,46 @@ describe('app-ipc-schemas', () => {
     })).toThrow()
   })
 
+  // 回归:DEFAULT_SCHEDULE_MODEL 为 '' 时,前端保存整份 schedule(含新建
+  // 任务)会带回 model: ''。schema 若用 min(1) 拒掉它,整个 settings:set
+  // 失败,新建的定时任务永远无法落盘,UI 上表现为"创建后自动消失"。
+  it('accepts schedule patches with an empty model (runtime falls back to provider default)', () => {
+    const payload = settingsPatchSchema.parse({
+      schedule: {
+        enabled: true,
+        model: '',
+        tasks: [{
+          id: 'task-1',
+          title: '每日摘要',
+          enabled: true,
+          prompt: '生成今日摘要',
+          workspaceRoot: '',
+          model: '',
+          providerId: '',
+          reasoningEffort: 'medium',
+          mode: 'agent',
+          priority: 0,
+          dependsOn: [],
+          useWorktree: false,
+          schedule: { kind: 'daily', timeOfDay: '09:00' },
+          lastStatus: 'idle'
+        }]
+      }
+    })
+    expect(payload.schedule?.model).toBe('')
+    expect(payload.schedule?.tasks?.[0]?.model).toBe('')
+    expect(payload.schedule?.tasks).toHaveLength(1)
+  })
+
+  it('accepts claw task patches with an empty model (auto normalizes to empty)', () => {
+    const payload = settingsPatchSchema.parse({
+      claw: {
+        tasks: [{ id: 'claw-task-1', title: '巡检', prompt: '巡检', model: '' }]
+      }
+    })
+    expect(payload.claw?.tasks?.[0]?.model).toBe('')
+  })
+
   it('accepts media generation settings and provider capability patches', () => {
     const payload = settingsPatchSchema.parse({
       provider: {

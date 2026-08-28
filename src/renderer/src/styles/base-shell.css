@@ -641,27 +641,44 @@ body.ds-workbench-resizing .ds-workbench-left-sidebar-clip {
   }
 }
 
-/* 展开/收起侧边栏按钮:固定锚定在窗口左上角红绿灯右侧,
-   与侧边栏标题栏几何一致(padding 10px + 安全区 80px + 间距),
-   侧边栏展开或收起时位置都不变。 */
+/* 展开/收起侧边栏按钮:贴着 macOS 原生红绿灯右侧自适应定位。
+   红绿灯几何来自主进程 BrowserWindow 的 trafficLightPosition { x: 31, y: 22 }
+   (src/main/index.ts,修改时需同步) + 标准灯组宽度 52px(3×12 + 2×8);
+   页面根节点有 zoom: var(--ds-ui-scale),原生红绿灯不参与缩放,
+   因此坐标必须除以缩放系数,保证任何界面缩放下都与红绿灯保持固定间距、不重叠。 */
 .ds-workbench-sidebar-toggle-anchor {
   position: absolute;
-  top: 8px;
-  left: 18px;
+  top: calc(8px / var(--ds-ui-scale, 1));
+  left: calc(18px / var(--ds-ui-scale, 1));
   z-index: 40;
 }
 
-/* 按钮加大到 28px,并用负 margin 扩大命中区,避免贴近拖拽区边缘时点击被吞 */
+/* 按钮 28px 视觉 + 负 margin 扩大命中区到 38px,避免贴近拖拽区边缘时点击被吞 */
 .ds-workbench-sidebar-toggle-anchor .ds-titlebar-sidebar-toggle {
-  height: 28px;
-  width: 28px;
-  padding: 5px;
+  height: 38px;
+  width: 38px;
+  padding: 0;
   margin: -5px;
 }
 
 :root[data-platform='darwin'] .ds-workbench-sidebar-toggle-anchor {
-  top: 12px;
-  left: 122px;
+  /* 灯组右缘 = 31 + 52 = 83px,留 16px 间距;灯组 y=22 为左上角时中心在 28px,按钮中心对齐 */
+  top: calc(14px / var(--ds-ui-scale, 1));
+  left: calc(99px / var(--ds-ui-scale, 1));
+}
+
+/* macOS 原生全屏时红绿灯隐藏,按钮移到最左侧(状态由 use-mac-window-fullscreen 写入 <html data-mac-fullscreen>) */
+:root[data-platform='darwin'][data-mac-fullscreen='true'] .ds-workbench-sidebar-toggle-anchor {
+  top: calc(14px / var(--ds-ui-scale, 1));
+  left: calc(16px / var(--ds-ui-scale, 1));
+}
+
+/* 全屏下红绿灯消失,安全区改为「避让侧边栏按钮自身」:
+   按钮占位约 16..49px,水平避让 52px、垂直避让 48px,内容不再与按钮重叠 */
+:root[data-platform='darwin'][data-mac-fullscreen='true'] {
+  --ds-window-controls-safe-block: 48px;
+  --ds-window-controls-safe-inset: 52px;
+  --ds-collapsed-sidebar-titlebar-extra-inset: 0px;
 }
 
 /* 聊天顶栏悬浮固定:顶栏浮在消息流上方,内容从其下方滚过 */
@@ -672,7 +689,8 @@ body.ds-workbench-resizing .ds-workbench-left-sidebar-clip {
 }
 
 .ds-chat-topbar-float-gap {
-  padding-top: calc(1rem + 46px + 0.9rem);
+  /* 顶栏上移后(actual top≈12px,高≈48px)再留 8px 呼吸空间 */
+  padding-top: 68px;
 }
 
 body::before {
@@ -808,9 +826,7 @@ pre {
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.97);
   border-color: rgba(20, 47, 95, 0.1);
-  box-shadow:
-    0 12px 34px rgba(20, 47, 95, 0.07),
-    0 3px 10px rgba(20, 47, 95, 0.04);
+  box-shadow: none;
 }
 
 .ds-chat-composer::before,
@@ -820,26 +836,18 @@ pre {
 
 .ds-chat-composer-focus {
   border-color: rgba(20, 47, 95, 0.18);
-  box-shadow:
-    0 0 0 3px rgba(20, 47, 95, 0.035),
-    0 14px 40px rgba(20, 47, 95, 0.09),
-    0 4px 12px rgba(20, 47, 95, 0.05);
+  box-shadow: none;
 }
 
 [data-theme='dark'] .ds-chat-composer {
   background: rgba(28, 29, 29, 0.97);
   border-color: rgba(255, 255, 255, 0.12);
-  box-shadow:
-    0 24px 68px rgba(0, 0, 0, 0.36),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  box-shadow: none;
 }
 
 [data-theme='dark'] .ds-chat-composer-focus {
   border-color: rgba(255, 255, 255, 0.2);
-  box-shadow:
-    0 0 0 3px rgba(255, 255, 255, 0.075),
-    0 24px 68px rgba(0, 0, 0, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow: none;
 }
 
 .ds-composer-toolbar {
@@ -2746,7 +2754,8 @@ body.ds-workbench-resizing webview {
 }
 
 .chat-topbar {
-  margin-top: 1rem;
+  /* 顶栏上移:会话标题首行与左上角侧边栏切换按钮水平对齐(按钮视觉中心 y≈28px) */
+  margin-top: 4px;
   min-height: 46px;
   border-radius: 22px;
 }

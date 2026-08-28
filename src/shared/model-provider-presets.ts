@@ -412,31 +412,27 @@ export const MODEL_PROVIDER_PRESETS: ModelProviderPreset[] = [
     baseUrl: 'https://opencode.ai/zen/v1',
     endpointFormat: 'chat_completions',
     // Free tier models (OpenCode Zen backend). Display names from the official
-    // picker: Big Pickle, Hy3 Free, MiMo V2.5 Free, Muse Spark 1.2 Free,
-    // Nemotron 3 Ultra Free, Nemotron 3.5 Lightning Free, Ox Alpha Free (Unlimited).
-    // x-preview-f-free is the API id for "Ox Alpha Free (Unlimited)".
+    // picker: Big Pickle, Hy3 Free, Ling 3.0 Flash Fin Free, MiMo V2.5 Free,
+    // Muse Spark 1.2 Free, Nemotron 3 Ultra Free, Nemotron 3.5 Lightning Free.
+    // ling-3.0-flash-fin-free is the API id for "Ling 3.0 Flash Fin Free".
     // muse-spark-1.2-contributor-free is the API id for "Muse Spark 1.2 Free".
     models: [
       'big-pickle',
       'hy3-free',
+      'ling-3.0-flash-fin-free',
       'mimo-v2.5-free',
       'muse-spark-1.2-contributor-free',
       'nemotron-3-ultra-free',
-      'nemotron-3.5-lightning-free',
-      'x-preview-f-free',
-      'deepseek-v4-flash-free',
-      'laguna-s-2.1-free'
+      'nemotron-3.5-lightning-free'
     ],
     modelProfiles: {
       'big-pickle': textChatProfile(131_072),
       'hy3-free': textChatProfile(131_072),
+      'ling-3.0-flash-fin-free': textChatProfile(131_072),
       'mimo-v2.5-free': textChatProfile(1_048_576, XIAOMI_REASONING),
       'muse-spark-1.2-contributor-free': textChatProfile(131_072),
       'nemotron-3-ultra-free': textChatProfile(262_144),
-      'nemotron-3.5-lightning-free': textChatProfile(262_144),
-      'x-preview-f-free': textChatProfile(131_072),
-      'deepseek-v4-flash-free': textChatProfile(1_000_000, DEEPSEEK_REASONING),
-      'laguna-s-2.1-free': textChatProfile(131_072)
+      'nemotron-3.5-lightning-free': textChatProfile(262_144)
     },
     docsUrl: 'https://opencode.ai/docs/zen',
     apiKeyUrl: 'https://opencode.ai/console'

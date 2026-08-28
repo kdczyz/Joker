@@ -360,6 +360,11 @@ export function reduceChatProjection(
     case 'runtime_status_received': {
       const event = action.payload
       const base: Partial<ChatState> = state.busy ? {} : { busy: true }
+      // "已调用 X 工具" upload-wait statuses are redundant with the tool row
+      // itself — keep the busy bookkeeping but do not materialize a block.
+      if (event.kind === 'tool_result_upload_wait') {
+        return { ...base, error: context.clearRecoveringError(state.error) }
+      }
       const flushed = flushLiveProjection(state, context.now)
       const baseBlocks = flushed.blocks ?? state.blocks
       const block: ChatBlock = {
@@ -579,7 +584,18 @@ export function reduceChatProjection(
         // Do NOT auto-acknowledge the just-finished turn here: leave the
         // terminal breathing light visible so the result reads as "new".
         // The user dismisses it by clicking/switching the thread (selectThread).
-        return { ...patch, watchTurnCompletion, unreadThreadIds }
+        return {
+          ...patch,
+          watchTurnCompletion,
+          unreadThreadIds,
+          threads: markThreadTurnSettled(
+            state.threads,
+            threadId,
+            'completed',
+            state.currentTurnId,
+            context.now
+          )
+        }
       }
       return patch
     }
@@ -609,6 +625,15 @@ export function reduceChatProjection(
         patch.watchTurnCompletion = watchTurnCompletion
         patch.unreadThreadIds = unreadThreadIds
       }
+      if (state.activeThreadId) {
+        patch.threads = markThreadTurnSettled(
+          state.threads,
+          state.activeThreadId,
+          interrupted ? 'aborted' : 'failed',
+          state.currentTurnId,
+          context.now
+        )
+      }
       return patch
     }
     default:
@@ -623,6 +648,33 @@ function runtimeEventStartedAt(createdAt: string | undefined, now: number): numb
   const maxPastAgeMs = 30 * 60_000
   const maxFutureSkewMs = 5_000
   return parsed < now - maxPastAgeMs || parsed > now + maxFutureSkewMs ? now : parsed
+}
+
+/**
+ * Optimistically settle the sidebar thread summary when a turn ends, so the
+ * terminal status-dot (green / red / amber breathing light) shows up without
+ * waiting for the next refreshThreads() round-trip. `status` must not stay
+ * 'running' — deriveThreadStatusDot checks it before latestTurnStatus and
+ * would keep the dot stuck on running.
+ */
+function markThreadTurnSettled(
+  threads: ChatState['threads'],
+  threadId: string,
+  latestTurnStatus: 'completed' | 'aborted' | 'failed',
+  turnId: string | null,
+  now: number
+): ChatState['threads'] {
+  return (threads ?? []).map((thread) =>
+    thread.id === threadId
+      ? {
+          ...thread,
+          status: thread.status === 'archived' ? thread.status : 'idle',
+          latestTurnStatus,
+          ...(turnId ? { latestTurnId: turnId } : {}),
+          updatedAt: new Date(now).toISOString()
+        }
+      : thread
+  )
 }
 
 function finalizeTurnTimingAt(state: ChatState, now: number): Partial<ChatState> {

@@ -153,6 +153,7 @@ export function FloatingComposerExecutionPicker({
       if (target instanceof Node && rootRef.current?.contains(target)) return
       if (target instanceof Node && menuRef.current?.contains(target)) return
       setOpenMenu(null)
+      approvalButtonRef.current?.blur()
     }
     const onUpdatePosition = (): void => updateMenuPosition(openMenu)
     window.addEventListener('pointerdown', onPointerDown)
@@ -166,14 +167,22 @@ export function FloatingComposerExecutionPicker({
     }
   }, [openMenu, updateMenuPosition])
 
+  // 点击后按钮仍持有焦点,Chromium 会画出焦点描边,且空格/Enter 还能
+  // 再次激活;点击后立即 blur,打开/关闭菜单都不保留焦点。
+  const blurApprovalButton = (): void => {
+    approvalButtonRef.current?.blur()
+  }
+
   const update = (patch: Partial<ComposerExecutionSettings>): void => {
     onChange(patch)
     setOpenMenu(null)
+    blurApprovalButton()
   }
 
   const toggleMenu = (menu: 'approval' | 'sandbox'): void => {
     updateMenuPosition(menu)
     setOpenMenu((current) => (current === menu ? null : menu))
+    blurApprovalButton()
   }
 
   // 切换到“完全访问(bypass)”需二次确认，避免误触高危模式。

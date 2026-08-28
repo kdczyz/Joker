@@ -21,6 +21,7 @@ import { useUiPluginWorkLabel } from '../../store/ui-plugin-store'
 import {
   groupTurns,
   isBackgroundShellNoticeBlock,
+  isToolCalledStatusBlock,
   sameTurnContent,
   splitThink,
   stableTurnKey,
@@ -639,7 +640,7 @@ export function MessageTimeline({
           ) : null}
         </div>
       ) : null}
-      <div className={`ds-message-timeline-content ds-chat-column-inset ds-chat-content-max-width mx-auto flex w-full min-w-0 flex-col gap-8 pt-8 ${
+      <div className={`ds-message-timeline-content ds-chat-column-inset ds-chat-content-max-width flex w-full min-w-0 flex-col gap-8 pt-8 ${
         goalTimelinePaddingClass(heroRoute, Boolean(activeThreadGoal))
       }`}>
         {!hasContent || !activeThreadId ? (
@@ -885,6 +886,7 @@ function MessageTurn({
   viewportRef: RefObject<HTMLDivElement | null>
   compactCards?: boolean
 }): ReactElement {
+  const { t } = useTranslation('common')
   const activeThreadGoal = useChatStore((s) => s.activeThreadGoal)
   const forkThreadFromTurn = useChatStore((s) => s.forkThreadFromTurn)
   const rollbackWorkspaceToCheckpoint = useChatStore((s) => s.rollbackWorkspaceToCheckpoint)
@@ -933,8 +935,10 @@ function MessageTurn({
     [processBlocks]
   )
   const workProcessBlocks = useMemo(
-    () => processBlocks.filter((block) => block.kind !== 'compaction'),
-    [processBlocks]
+    () => processBlocks.filter((block) => (
+      block.kind !== 'compaction' && !isToolCalledStatusBlock(block, t)
+    )),
+    [processBlocks, t]
   )
   const onlyCompactionProcess = processBlocks.length > 0 && workProcessBlocks.length === 0
   const hasProcessError = workProcessBlocks.some(processBlockHasError)
@@ -1021,7 +1025,7 @@ function MessageTurn({
             onToggle={() => setWorkExpandedOverride((value) => !(value ?? isProcessing))}
           />
           {workExpanded && processSections.length > 0 ? (
-            <div className="ds-process-timeline-spine flex flex-col gap-2.5 pt-1">
+            <div className="flex flex-col gap-2.5 pt-1">
               {processSections.map((section) => (
                 <ProcessSectionRow
                   key={section.id}

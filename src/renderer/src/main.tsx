@@ -14,9 +14,11 @@ import './styles/workflow-canvas.css'
 import App from './App'
 import './i18n'
 import { installDataMigrationRendererRpc } from './data-migration/renderer-state-rpc'
+import { installSpaceActivationSuppressor } from './lib/suppress-space-activation'
 
 document.documentElement.dataset.platform = window.JokerGui?.platform ?? 'unknown'
 installDataMigrationRendererRpc()
+installSpaceActivationSuppressor()
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

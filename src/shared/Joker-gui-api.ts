@@ -444,6 +444,11 @@ export type SdkDownloadState = {
 export type JokerGuiApi = ExtensionIpcApi & {
   platform: string
   homeDir: string
+  /** macOS 原生红绿灯/全屏状态:全屏时红绿灯隐藏,渲染层的窗口按钮需要自适应换位。 */
+  windowChrome: {
+    isFullscreen: () => Promise<boolean>
+    onFullscreenChange: (handler: (isFullscreen: boolean) => void) => () => void
+  }
   dataMigration: {
     pickExportPackage: (defaultPath?: string) => Promise<DataMigrationPathPickResult>
     pickImportPackage: (defaultPath?: string) => Promise<DataMigrationPathPickResult>

@@ -4973,3 +4973,12 @@ html:is(
     animation: none !important;
   }
 }
+
+/* 全局去掉焦点描边:Chromium 的默认焦点环颜色跟随系统主题(黄色系统
+   主题下就是黄圈),点击按钮后焦点残留时尤其碍眼。整个应用统一禁用;
+   键盘可达性依赖各控件自身的 hover/选中态样式。 */
+*:focus,
+*:focus-visible {
+  outline: none !important;
+}
+

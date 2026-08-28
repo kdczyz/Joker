@@ -298,8 +298,10 @@ describe('upstream model picker list', () => {
         const zenGroup = result.modelGroups?.find((group) => group.providerId === 'opencode-zen')
         expect(zenGroup?.modelIds).toEqual(expect.arrayContaining([
           'big-pickle',
-          'deepseek-v4-flash-free'
+          'ling-3.0-flash-fin-free'
         ]))
+        // 已移出内置精选清单的免费 id 不再进入免费分组,只作为存量运行时模型留在扁平列表里。
+        expect(zenGroup?.modelIds).not.toContain('deepseek-v4-flash-free')
       }
       expect(fetchMock).not.toHaveBeenCalled()
     } finally {

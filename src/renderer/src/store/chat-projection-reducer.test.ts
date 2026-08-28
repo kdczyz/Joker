@@ -288,4 +288,39 @@ describe('chat projection reducer', () => {
     expect(second.text).toBe('second thought')
     expect(second.durationMs).toBe(3000)
   })
+
+  it('settles the sidebar thread summary to completed when a turn completes', () => {
+    const initial: ChatState = {
+      ...state(),
+      busy: true,
+      currentTurnId: 'turn_1',
+      threads: [{ ...state().threads[0]!, status: 'running', latestTurnStatus: 'running' }]
+    }
+    const next = project(initial, [{ type: 'turn_completed' }])
+    const thread = next.threads.find((candidate) => candidate.id === 'thread_1')
+    expect(thread?.status).toBe('idle')
+    expect(thread?.latestTurnStatus).toBe('completed')
+    expect(thread?.latestTurnId).toBe('turn_1')
+  })
+
+  it.each([
+    { label: 'interrupted', error: new Error('interrupted'), isInterrupt: true, expected: 'aborted' },
+    { label: 'failed', error: new Error('boom'), isInterrupt: false, expected: 'failed' }
+  ])('settles the sidebar thread summary to $expected when a turn fails ($label)', ({
+    error,
+    isInterrupt,
+    expected
+  }) => {
+    const initial: ChatState = {
+      ...state(),
+      busy: true,
+      currentTurnId: 'turn_1',
+      threads: [{ ...state().threads[0]!, status: 'running', latestTurnStatus: 'running' }]
+    }
+    const failedContext = { ...context, isInterruptSettledError: () => isInterrupt }
+    const next = { ...initial, ...reduceChatProjection(initial, { type: 'turn_failed', error, options: { terminal: true } }, failedContext) }
+    const thread = next.threads.find((candidate) => candidate.id === 'thread_1')
+    expect(thread?.status).toBe('idle')
+    expect(thread?.latestTurnStatus).toBe(expected)
+  })
 })

@@ -220,16 +220,10 @@ function processSectionErrorTone(blocks: ChatBlock[]): ProcessErrorTone {
   return fallback
 }
 
-function processErrorTextClass(tone: ProcessErrorTone): string {
-  if (tone === 'tool') return 'text-orange-700 dark:text-orange-300'
-  if (tone === 'error') return 'text-red-600 dark:text-red-300'
+// Error rows are no longer color-tinted; failures keep normal row styling and
+// stay inspectable via the (neutral) expanded detail.
+function processErrorTextClass(_tone: ProcessErrorTone): string {
   return 'text-ds-muted'
-}
-
-function processErrorDotClass(tone: ProcessErrorTone): string {
-  if (tone === 'tool') return 'bg-orange-500 dark:bg-orange-300'
-  if (tone === 'error') return 'bg-red-500 dark:bg-red-300'
-  return ''
 }
 
 function sectionHasRequestUserInput(section: ProcessSection): boolean {
@@ -291,7 +285,6 @@ export function ProcessSectionRow({
   const activeReasoningLine =
     section.kind === 'reasoning' && active ? latestReasoningLine(reasoningText) : ''
   const canToggleSection = hasDetails && !forceExpanded
-  const showActiveError = active && hasError
   const shouldDeferDetails = section.kind !== 'subagent'
   const { ref: deferredDetailRef, shouldRender: shouldRenderDetail } = useDeferredRender<HTMLDivElement>({
     enabled: shouldDeferDetails && expanded,
@@ -330,8 +323,7 @@ export function ProcessSectionRow({
   }
 
   return (
-    <div className="ds-process-step-node flex flex-col">
-      <span className={`ds-process-node-dot${active ? ' is-active' : hasError ? ' is-error' : ''}`} />
+    <div className="flex flex-col">
       {canToggleSection ? (
         <button
           type="button"
@@ -340,11 +332,6 @@ export function ProcessSectionRow({
             hasError ? processErrorTextClass(errorTone) : 'text-ds-muted hover:text-ds-ink'
           }`}
         >
-          {showActiveError ? (
-            <span className="ds-work-logo-slot ds-work-logo-slot-sm mr-0.5">
-              <span className={`h-2 w-2 rounded-full ${processErrorDotClass(errorTone)}`} />
-            </span>
-          ) : null}
           {SectionIcon ? <ProcessGlyph Icon={SectionIcon} /> : null}
           <span className={`shrink-0 whitespace-nowrap ${active && !hasError ? 'ds-shiny-text' : ''}`}>{title}</span>
           {activeReasoningLine ? (
@@ -364,11 +351,6 @@ export function ProcessSectionRow({
             hasError ? processErrorTextClass(errorTone) : 'text-ds-muted'
           }`}
         >
-          {showActiveError ? (
-            <span className="ds-work-logo-slot ds-work-logo-slot-sm mr-0.5">
-              <span className={`h-2 w-2 rounded-full ${processErrorDotClass(errorTone)}`} />
-            </span>
-          ) : null}
           {SectionIcon ? <ProcessGlyph Icon={SectionIcon} /> : null}
           <span className={`shrink-0 whitespace-nowrap ${active && !hasError ? 'ds-shiny-text' : ''}`}>{title}</span>
           {activeReasoningLine ? (
@@ -612,8 +594,7 @@ function ProcessEntryRow({
   }
 
   return (
-    <div className="ds-process-step-node flex flex-col">
-      <span className={`ds-process-node-dot${rowActive ? ' is-active' : isError ? ' is-error' : ''}`} />
+    <div className="flex flex-col">
       <div
         role={canToggle ? 'button' : undefined}
         tabIndex={canToggle ? 0 : undefined}
@@ -1346,21 +1327,6 @@ function ProcessEntryDetail({
   if (detail.kind === 'tool') {
     if (detail.isPatch) {
       return <DiffView patch={detail.text} filePath={detail.filePath} />
-    }
-    if (detail.isError) {
-      const cleanError = cleanRawToolText(detail.text)
-      return (
-        <div className="overflow-hidden rounded-xl border border-orange-500/30 bg-orange-500/10 text-orange-950 dark:text-orange-100 shadow-sm">
-          {detail.filePath ? (
-            <div className="border-b border-orange-500/20 bg-orange-500/15 px-3 py-1.5 font-mono text-[11.5px] font-semibold text-orange-700 dark:text-orange-300">
-              {detail.filePath}
-            </div>
-          ) : null}
-          <pre className="max-h-72 overflow-auto whitespace-pre-wrap break-words px-3.5 py-2.5 font-mono text-[12px] leading-relaxed">
-            {cleanError}
-          </pre>
-        </div>
-      )
     }
     return (
       <div className="overflow-hidden rounded-xl border border-ds-border/50 bg-ds-card/80 shadow-inner">

@@ -213,15 +213,24 @@ export function getModelProviderProfile(
   return provider.providers[0] ?? defaultModelProviderProfile(provider.apiKey, provider.baseUrl)
 }
 
-export function listModelProviderModelIds(settings: AppSettingsV1): string[] {
-  const nonTextModelIds = listNonTextModelIds(settings)
-  const ids = new Set<string>()
+/**
+ * 用户配置的 provider 列表 + 内置免费 provider(opencode-zen)兜底。免费
+ * provider 是内置预设,不一定出现在用户配置里,但按 id 引用它的功能
+ * (定时任务/Claw)必须能解析到它,否则会被静默改路由到 providers[0]。
+ */
+export function listModelProviderProfiles(settings: AppSettingsV1): ModelProviderProfileV1[] {
   const providers = [...getModelProviderSettings(settings).providers]
   if (!providers.some((p) => p.id === 'opencode-zen')) {
     const zenPreset = getModelProviderPreset('opencode-zen')
     if (zenPreset) providers.push(modelProviderPresetProfile(zenPreset, 'public'))
   }
-  for (const provider of providers) {
+  return providers
+}
+
+export function listModelProviderModelIds(settings: AppSettingsV1): string[] {
+  const nonTextModelIds = listNonTextModelIds(settings)
+  const ids = new Set<string>()
+  for (const provider of listModelProviderProfiles(settings)) {
     for (const model of provider.models) {
       const trimmed = model.trim()
       if (!trimmed || !isComposerChatModelId(trimmed, nonTextModelIds)) continue

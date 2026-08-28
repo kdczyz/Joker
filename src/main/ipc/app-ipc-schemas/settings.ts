@@ -13,7 +13,6 @@ import {
   MAX_WRITE_AUTOSAVE_DELAY_MS,
   MIN_WRITE_AUTOSAVE_DELAY_MS,
   MIN_JOKER_LOCAL_PORT,
-  SCHEDULE_MODEL_IDS,
   SCHEDULE_REASONING_EFFORT_IDS,
   SPEECH_TO_TEXT_PROTOCOLS,
   TEXT_TO_SPEECH_PROTOCOLS,
@@ -645,7 +644,9 @@ const clawTaskPatchSchema = z.object({
   workspaceRoot: defaultPathSchema,
   clawChannelId: z.string().trim().max(MAX_ID_LENGTH).optional(),
   providerId: z.string().trim().max(64).optional(),
-  model: modelIdSchema.optional(),
+  // claw 任务与 schedule 任务共用 normalizeScheduledTask,'auto' 会被归一成 '',
+  // 回传时同样不能被 min(1) 拒掉。
+  model: optionalModelIdSchema,
   reasoningEffort: scheduleReasoningEffortSchema.optional(),
   mode: clawRunModeSchema.optional(),
   schedule: clawTaskSchedulePatchSchema.optional(),
@@ -692,7 +693,9 @@ const scheduledTaskPatchSchema = z.object({
   workspaceRoot: defaultPathSchema,
   clawChannelId: z.string().trim().max(MAX_ID_LENGTH).optional(),
   providerId: z.string().trim().max(64).optional(),
-  model: modelIdSchema.optional(),
+  // 空字符串是合法值:DEFAULT_SCHEDULE_MODEL 现在是 '',表示"运行时按
+  // provider 兜底选择",normalizeScheduledTask 也会把 'auto' 归一成 ''。
+  model: optionalModelIdSchema,
   reasoningEffort: scheduleReasoningEffortSchema.optional(),
   mode: clawRunModeSchema.optional(),
   priority: z.number().int().min(0).max(100).optional(),
@@ -712,7 +715,10 @@ const scheduleSettingsPatchSchema = z.object({
   enabled: z.boolean().optional(),
   defaultWorkspaceRoot: defaultPathSchema,
   providerId: z.string().trim().max(64).optional(),
-  model: z.union([z.enum(SCHEDULE_MODEL_IDS), modelIdSchema]).optional(),
+  // 允许空字符串:DEFAULT_SCHEDULE_MODEL 为 '',前端保存整份 schedule 时
+  // 会原样带回,不能被 modelIdSchema 的 min(1) 拒掉(否则整个 settings:set
+  // 失败,新建任务永远无法落盘)。
+  model: optionalModelIdSchema,
   mode: clawRunModeSchema.optional(),
   promptPrefix: z.string().max(MAX_CHANNEL_TEXT_LENGTH).optional(),
   skills: scheduleSkillPatchSchema.optional(),

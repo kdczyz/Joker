@@ -519,8 +519,9 @@ export function FloatingComposer({
 
   const effectiveWorkspaceRoot = normalizeWorkspaceRoot(activeThreadWorkspace || workspaceRootOverride || workspaceRoot)
 
-  // Poll the real Git working-tree stat so the Git 工具 chip reflects the
-  // repository state (not just this session's tracked changes).
+  // Poll the real Git stat (working tree + local commits vs the remote
+  // branch) so the Git 工具 chip reflects the repository state relative to
+  // the GitHub cloud, not just this session's tracked changes.
   useEffect(() => {
     const root = effectiveWorkspaceRoot
     if (!root || typeof window.JokerGui?.getGitDiffStat !== 'function') return
@@ -2060,6 +2061,12 @@ export function FloatingComposer({
                   onOpenChanges?.()
                 }}
                 onRefreshStat={refreshGitStat}
+                onCommitted={() => {
+                  setGitToolsOpen(false)
+                  // The chip keeps showing whatever still differs from the
+                  // remote branch (e.g. an unpushed commit) — re-read git.
+                  refreshGitStat()
+                }}
               />
             </div>,
             document.body

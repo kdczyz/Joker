@@ -5,9 +5,10 @@ import { useAuth } from '../../auth/AuthGate'
 import {
   ChevronRight,
   Clock3,
+  Command,
+  FilePen,
   LayoutGrid,
   Moon,
-  Plus,
   Smartphone,
   Sun,
   Workflow
@@ -28,7 +29,6 @@ import { SidebarProjectsSection } from './SidebarProjectsSection'
 import { SidebarConversationsSection } from './SidebarConversationsSection'
 import { WorkspaceModeTabs } from './WorkspaceModeTabs'
 import {
-  SidebarCommandRow,
   SidebarFrame,
   SidebarIconButton
 } from '../sidebar/SidebarPrimitives'
@@ -179,18 +179,24 @@ export function Sidebar({
         />
 
         <div className="flex flex-col gap-1 pt-0.5">
-          <SidebarCommandRow
-            icon={<Plus className="h-4 w-4" strokeWidth={2.2} />}
-            label={t('newAgent')}
-            shortcut="⌘N"
+          <button
+            type="button"
+            data-cursor-spotlight-target
             onClick={runtimeReady ? onNewChat : undefined}
             disabled={!runtimeReady}
-            disabledHint={t('runtimeActionNeedsConnection')}
-            variant="hero"
-          />
+            title={!runtimeReady ? t('runtimeActionNeedsConnection') : undefined}
+            className="group flex min-h-[30px] items-center gap-1.5 rounded-[7px] px-2 py-1 text-[12px] text-[#606066] transition duration-150 hover:bg-black/[0.04] hover:text-[#18181b] disabled:cursor-not-allowed disabled:opacity-55 dark:text-[#9e9ea6] dark:hover:bg-white/[0.06] dark:hover:text-white"
+          >
+            <FilePen className="h-3.5 w-3.5 shrink-0 text-[#606066] transition group-hover:text-[#18181b] dark:text-[#9e9ea6] dark:group-hover:text-white" strokeWidth={1.8} />
+            <span className="truncate">{t('newAgent')}</span>
+            <kbd className="ds-kbd ml-auto hidden items-center gap-0.5 rounded-[5px] border border-black/5 bg-black/[0.03] px-1.5 py-0.5 font-mono text-[10.5px] font-medium text-ds-faint transition group-hover:border-black/10 sm:inline-flex dark:border-white/10 dark:bg-white/5">
+              <Command className="h-2.5 w-2.5" strokeWidth={2} />
+              N
+            </kbd>
+          </button>
         </div>
 
-        <div className="mt-1 flex flex-col gap-1 rounded-[10px] border border-black/[0.05] bg-black/[0.02] p-1 dark:border-white/[0.06] dark:bg-white/[0.02]">
+        <div className="mt-1 flex flex-col gap-1">
           <button
             type="button"
             data-cursor-spotlight-target

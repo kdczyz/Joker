@@ -128,7 +128,7 @@ export const DEFAULT_WRITE_WORKSPACE_ROOT = '~/.Joker/write_workspace'
 // (DEFAULT_CONVERSATION_WORKSPACE_ROOT_ABSOLUTE)和 renderer 层
 // (defaultConversationWorkspaceRoot)各自按平台推导。
 export const DEFAULT_JOKER_DATA_DIR = '~/.Joker/data'
-export const DEFAULT_JOKER_MODEL = 'deepseek-v4-flash-free'
+export const DEFAULT_JOKER_MODEL = 'big-pickle'
 export const DEFAULT_PROMPT_OPTIMIZATION_PROMPT = [
   'You rewrite rough spoken or typed instructions into a clear prompt for a coding agent.',
   'Keep the user intent, constraints, names, paths, and concrete details intact.',

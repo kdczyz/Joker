@@ -1130,7 +1130,7 @@ export function SidebarProjectsSection({
                 actionsVisibility="hidden"
                 actionsLayout="overlay"
                 actions={
-                  <div className="flex items-center gap-0.5 rounded-[5px] bg-white/70 p-0.5 backdrop-blur-[3px] dark:bg-white/[0.06]">
+                  <div className="flex items-center">
                     <SidebarIconButton
                       onClick={() => onCreateThreadInWorkspace(workspacePath)}
                       title={t('sidebarWorkspaceNewThread')}

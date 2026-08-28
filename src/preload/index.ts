@@ -14,6 +14,14 @@ const homeDirFromArgs =
 const api = {
   platform: process.platform,
   homeDir: homeDirFromArgs,
+  windowChrome: {
+    isFullscreen: () => ipcRenderer.invoke('window-chrome:is-fullscreen'),
+    onFullscreenChange: (handler: (isFullscreen: boolean) => void) => {
+      const wrapped = (_: Electron.IpcRendererEvent, isFullscreen: boolean) => handler(isFullscreen)
+      ipcRenderer.on('window-chrome:fullscreen-changed', wrapped)
+      return () => ipcRenderer.removeListener('window-chrome:fullscreen-changed', wrapped)
+    }
+  },
   dataMigration: {
     pickExportPackage: (defaultPath) => ipcRenderer.invoke('data-migration:pick-export', { defaultPath }),
     pickImportPackage: (defaultPath) => ipcRenderer.invoke('data-migration:pick-import', { defaultPath }),

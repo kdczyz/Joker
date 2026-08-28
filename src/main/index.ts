@@ -1122,6 +1122,10 @@ async function restartRuntimeOnce(settings: AppSettingsV1): Promise<void> {
   noteRuntimeHealthy('restart')
 }
 
+// macOS 原生红绿灯全屏时会隐藏:向渲染层暴露全屏状态查询/推送通道,
+// 供侧边栏展开/收起按钮自适应换位(非全屏在红绿灯右侧,全屏靠最左)。
+ipcMain.handle('window-chrome:is-fullscreen', () => mainWindow?.isFullScreen() ?? false)
+
 function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
   traceStartup('createWindow:start')
   const preloadPath = resolvePreloadPath(__dirname)
@@ -1151,6 +1155,17 @@ function createWindow(options: { suppressInitialShow?: boolean } = {}): void {
   })
   mainWindow = window
   bindExtensionMainWindow?.(window)
+
+  // macOS 原生红绿灯在全屏时会隐藏,把全屏状态推给渲染层,
+  // 供侧边栏展开/收起按钮自适应换位(非全屏在红绿灯右侧,全屏靠最左)。
+  const sendFullscreenChanged = (): void => {
+    if (!window.isDestroyed() && !window.webContents.isDestroyed()) {
+      window.webContents.send('window-chrome:fullscreen-changed', window.isFullScreen())
+    }
+  }
+  window.on('enter-full-screen', sendFullscreenChanged)
+  window.on('leave-full-screen', sendFullscreenChanged)
+
   if (usesDesktopTitleBar) {
     window.setMenu(null)
     window.setMenuBarVisibility(false)

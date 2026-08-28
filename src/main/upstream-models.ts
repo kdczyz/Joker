@@ -100,9 +100,6 @@ function modelListOrError(
     : { ok: false, message }
 }
 
-let liveZenModelsCache: { models: string[]; timestamp: number } | null = null
-const ZEN_CACHE_TTL_MS = 120_000
-
 export function isOpenCodeZenFreeModelId(id: string): boolean {
   const lower = id.trim().toLowerCase()
   return (
@@ -114,43 +111,10 @@ export function isOpenCodeZenFreeModelId(id: string): boolean {
 }
 
 export function getKnownOpenCodeZenFreeModelIds(): string[] {
-  return liveZenModelsCache?.models ?? [
-    'big-pickle',
-    'hy3-free',
-    'mimo-v2.5-free',
-    'muse-spark-1.2-contributor-free',
-    'nemotron-3-ultra-free',
-    'nemotron-3.5-lightning-free',
-    'x-preview-f-free',
-    'deepseek-v4-flash-free',
-    'laguna-s-2.1-free'
-  ]
-}
-
-export async function fetchLiveOpenCodeZenFreeModelIds(): Promise<string[] | null> {
-  const now = Date.now()
-  if (liveZenModelsCache && now - liveZenModelsCache.timestamp < ZEN_CACHE_TTL_MS) {
-    return liveZenModelsCache.models
-  }
-  try {
-    const res = await fetch('https://opencode.ai/zen/v1/models', {
-      signal: AbortSignal.timeout(3000),
-      headers: { Accept: 'application/json' }
-    })
-    if (!res.ok) return liveZenModelsCache?.models ?? null
-    const json = (await res.json()) as { data?: Array<{ id?: string }> }
-    const rawList = Array.isArray(json.data) ? json.data : []
-    const freeModels = rawList
-      .map((item) => (typeof item.id === 'string' ? item.id.trim() : ''))
-      .filter((id) => Boolean(id) && isOpenCodeZenFreeModelId(id))
-    if (freeModels.length > 0) {
-      liveZenModelsCache = { models: freeModels, timestamp: now }
-      return freeModels
-    }
-  } catch {
-    // network timeout / offline fallback
-  }
-  return liveZenModelsCache?.models ?? null
+  // 免费档清单固定为内置精选(DEFAULT_COMPOSER_MODEL_IDS,与 opencode-zen 预设
+  // 同步),不再实时拉取上游 /models:官方免费名单会漂移,拉取会把已下线的
+  // 免费 id(如 deepseek-v4-flash-free)重新加回选择器。
+  return [...DEFAULT_COMPOSER_MODEL_IDS]
 }
 
 async function readConfiguredModelGroups(settings: AppSettingsV1): Promise<ModelProviderModelGroup[]> {
@@ -158,9 +122,6 @@ async function readConfiguredModelGroups(settings: AppSettingsV1): Promise<Model
   const nonTextModelIds = listNonTextModelIds(settings)
   const configuredProviders = getModelProviderSettings(settings).providers
   const knownZenFreeModels = getKnownOpenCodeZenFreeModelIds()
-  if (process.env.NODE_ENV !== 'test') {
-    void fetchLiveOpenCodeZenFreeModelIds().catch(() => {})
-  }
 
   for (const provider of configuredProviders) {
     if (provider.id === 'opencode-zen') {

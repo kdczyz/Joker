@@ -18,6 +18,8 @@ type Props = {
   stat: GitDiffStatResult | null
   onOpenChanges: () => void
   onRefreshStat: () => void
+  /** Invoked after a successful commit — the caller closes the panel and resets the stats. */
+  onCommitted: () => void
 }
 
 type BusyAction = 'commit' | 'commitPush' | 'push' | null
@@ -26,7 +28,8 @@ export function GitToolsPanel({
   workspaceRoot,
   stat,
   onOpenChanges,
-  onRefreshStat
+  onRefreshStat,
+  onCommitted
 }: Props): ReactElement {
   const { t } = useTranslation('common')
   const [view, setView] = useState<'tools' | 'commit'>('tools')
@@ -40,7 +43,12 @@ export function GitToolsPanel({
   const removed = diffReady ? stat.removed : 0
   const unstagedCount = diffReady ? stat.unstagedFiles + stat.untrackedFiles : 0
   const hasDiff = diffReady && stat.fileCount > 0
-  const commitDisabled = !diffReady || !hasDiff || (!includeUnstaged && stat.stagedFiles === 0)
+  // Committable content is *local* pending work only — the vs-cloud diff also
+  // covers already-committed-but-unpushed changes, which only need a push.
+  const localChangeCount = diffReady
+    ? stat.stagedFiles + stat.unstagedFiles + stat.untrackedFiles
+    : 0
+  const commitDisabled = !diffReady || (includeUnstaged ? localChangeCount === 0 : stat.stagedFiles === 0)
   const suggestion = stat?.ok === true ? stat.suggestion : ''
 
   const runGit = async (action: Exclude<BusyAction, null>): Promise<void> => {
@@ -67,7 +75,10 @@ export function GitToolsPanel({
           return
         }
         setMessage('')
-        if (action === 'commitPush') setView('tools')
+        // A successful commit closes the whole entry: the caller hides the
+        // panel and zeroes the stats until the next poll confirms the state.
+        onCommitted()
+        return
       }
       onRefreshStat()
     } catch (e) {
@@ -225,6 +236,13 @@ export function GitToolsPanel({
             <span className="shrink-0 inline-flex items-center gap-1.5 text-[13px] font-medium">
               <DiffCounter value={added} prefix="+" className="text-ds-diff-added" />
               <DiffCounter value={removed} prefix="-" className="text-ds-diff-removed" />
+            </span>
+          ) : stat && !stat.ok ? (
+            <span
+              className="shrink-0 max-w-[150px] truncate text-[12px] text-amber-700 dark:text-amber-300"
+              title={stat.message}
+            >
+              {stat.message}
             </span>
           ) : (
             <span className="shrink-0 text-[12.5px] text-ds-faint">{t('gitToolsNoChanges')}</span>

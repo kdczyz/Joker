@@ -3,7 +3,7 @@ import type { IncomingMessage, ServerResponse } from 'node:http'
 import {
   DEFAULT_SCHEDULE_MODEL,
   getJokerRuntimeSettings,
-  getModelProviderSettings,
+  listModelProviderProfiles,
   modelProviderModelProfile,
   normalizeScheduleReasoningEffort,
   DEFAULT_SCHEDULE_REASONING_EFFORT
@@ -311,7 +311,9 @@ export function resolveScheduleModelConfig(
   },
   fallbackProviderId = ''
 ): ScheduleModelConfig {
-  const providers = getModelProviderSettings(settings).providers
+  // 包含内置免费 provider(opencode-zen)兜底:它不一定在用户配置的
+  // provider 列表里,缺了它就会把任务静默改路由到 providers[0]。
+  const providers = listModelProviderProfiles(settings)
   const requestedProviderId = input.providerId?.trim() || ''
   const requestedModel = normalizeTaskModel(input.model ?? '')
   const runtimeProviderId = getJokerRuntimeSettings(settings).providerId.trim()

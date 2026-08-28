@@ -24,7 +24,8 @@ describe('GitToolsPanel', () => {
         workspaceRoot: '/repo',
         stat,
         onOpenChanges: () => undefined,
-        onRefreshStat: () => undefined
+        onRefreshStat: () => undefined,
+        onCommitted: () => undefined
       })
     )
 
@@ -40,7 +41,8 @@ describe('GitToolsPanel', () => {
         workspaceRoot: '/repo',
         stat: null,
         onOpenChanges: () => undefined,
-        onRefreshStat: () => undefined
+        onRefreshStat: () => undefined,
+        onCommitted: () => undefined
       })
     )
 

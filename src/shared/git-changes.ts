@@ -11,7 +11,10 @@ export type GitDiffStatResult =
       added: number
       /** Total deleted lines across all uncommitted tracked changes. */
       removed: number
-      /** Unique paths with uncommitted changes (staged, unstaged or untracked). */
+      /**
+       * Unique paths that differ from the remote (upstream) branch, including
+       * untracked files the cloud doesn't have yet.
+       */
       fileCount: number
       stagedFiles: number
       unstagedFiles: number

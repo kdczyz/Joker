@@ -22,8 +22,8 @@ import {
   DEFAULT_MODEL_PROVIDER_ID,
   buildClawRuntimePrompt,
   getJokerRuntimeSettings,
-  getModelProviderSettings,
   isComposerChatModelId,
+  listModelProviderProfiles,
   listNonTextModelIds,
   modelProfileSupportsTextChat,
   modelProviderModelProfile,
@@ -170,7 +170,7 @@ function findImProvider(settings: AppSettingsV1, value: string): ModelProviderPr
   const query = value.trim()
   if (!query) return undefined
   const normalizedId = normalizeModelProviderId(query)
-  const providers = getModelProviderSettings(settings).providers
+  const providers = listModelProviderProfiles(settings)
   return providers.find((provider) => provider.id === normalizedId) ??
     providers.find((provider) => provider.id.toLowerCase() === query.toLowerCase()) ??
     providers.find((provider) => provider.name.trim().toLowerCase() === query.toLowerCase())
@@ -181,7 +181,7 @@ function currentImProvider(
   channel?: ClawImChannelV1,
   conversation?: ClawImConversationV1
 ): ModelProviderProfileV1 {
-  const providers = getModelProviderSettings(settings).providers
+  const providers = listModelProviderProfiles(settings)
   const providerId = currentImProviderId(settings, channel, conversation)
   return providers.find((provider) => provider.id === providerId) ??
     providers.find((provider) => provider.id === DEFAULT_MODEL_PROVIDER_ID) ??
@@ -312,7 +312,7 @@ type ImModelResolution = {
 }
 
 function listImModelOptions(settings: AppSettingsV1): ImModelResolution[] {
-  return getModelProviderSettings(settings).providers.flatMap((provider) =>
+  return listModelProviderProfiles(settings).flatMap((provider) =>
     providerTextModels(settings, provider).map((model) => ({ provider, model }))
   )
 }
@@ -345,7 +345,7 @@ function currentImModelResolution(
 ): ImModelResolution {
   const explicitProvider = currentImProvider(settings, channel, conversation)
   const requestedModel = currentImModel(settings, channel, conversation)
-  const providers = getModelProviderSettings(settings).providers
+  const providers = listModelProviderProfiles(settings)
   // When the channel's explicit provider does not actually serve the requested
   // model, fall back to the provider that lists the model. This prevents routing a
   // model such as `adept/fuyu-8b` (which lives under a non-default provider) to the

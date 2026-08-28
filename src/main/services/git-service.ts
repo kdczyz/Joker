@@ -379,16 +379,6 @@ function buildCommitSuggestion(files: GitDiffStatFile[]): string {
   return `Update ${busiest.join(', ')}`
 }
 
-async function parseUncommittedFileCount(cwd: string): Promise<number> {
-  const { stdout } = await runGit(cwd, ['status', '--porcelain=v1', '--untracked-files=normal'])
-  const paths = new Set<string>()
-  for (const line of stdout.split('\n')) {
-    if (line.trim().length < 4) continue
-    paths.add(line.slice(3).trim())
-  }
-  return paths.size
-}
-
 function countStatusSections(stdout: string): { staged: number; unstaged: number; untracked: number } {
   let staged = 0
   let unstaged = 0
@@ -407,6 +397,32 @@ function countStatusSections(stdout: string): { staged: number; unstaged: number
   return { staged, unstaged, untracked }
 }
 
+/**
+ * Resolve the ref the diff stat compares against. The "code changes" number is
+ * defined as "local working tree vs the GitHub remote branch", so prefer the
+ * configured upstream, then origin/<branch>, and finally fall back to HEAD for
+ * branches that were never pushed.
+ */
+async function resolveDiffBase(cwd: string): Promise<string> {
+  try {
+    const upstream = (await runGit(cwd, ['rev-parse', '--abbrev-ref', '--symbolic-full-name', '@{u}'])).stdout.trim()
+    if (upstream && !upstream.startsWith('@{u}')) return upstream
+  } catch {
+    // No upstream configured — try origin/<current-branch> below.
+  }
+  try {
+    const branch = (await runGit(cwd, ['branch', '--show-current'])).stdout.trim()
+    if (branch) {
+      const remoteRef = `refs/remotes/origin/${branch}`
+      await runGit(cwd, ['show-ref', '--verify', '--quiet', remoteRef])
+      return `origin/${branch}`
+    }
+  } catch {
+    // Remote branch doesn't exist — fall back to HEAD.
+  }
+  return 'HEAD'
+}
+
 export async function getGitDiffStat(workspaceRoot: string): Promise<GitDiffStatResult> {
   const cwd = await resolveGitCwd(workspaceRoot)
   if (!cwd) {
@@ -414,23 +430,29 @@ export async function getGitDiffStat(workspaceRoot: string): Promise<GitDiffStat
   }
   try {
     await runGit(cwd, ['rev-parse', '--git-dir'])
+    const base = await resolveDiffBase(cwd)
     let combined: ParsedDiffStat = { added: 0, removed: 0, files: [] }
     try {
-      combined = parseNumStat((await runGit(cwd, ['diff', '--numstat', 'HEAD'], 20_000)).stdout)
+      combined = parseNumStat((await runGit(cwd, ['diff', '--numstat', base], 20_000)).stdout)
     } catch {
-      // Fresh repository without any commit yet — HEAD doesn't exist, so fall
-      // back to the worktree-only diff.
+      // Fresh repository without any commit yet — the base ref doesn't exist,
+      // so fall back to the worktree-only diff.
       combined = parseNumStat((await runGit(cwd, ['diff', '--numstat'], 20_000)).stdout)
     }
-    const status = countStatusSections(
-      (await runGit(cwd, ['status', '--porcelain=v1', '--untracked-files=normal'])).stdout
-    )
-    const fileCount = await parseUncommittedFileCount(cwd)
+    const statusOutput = (await runGit(cwd, ['status', '--porcelain=v1', '--untracked-files=normal'])).stdout
+    const status = countStatusSections(statusOutput)
+    // Files changed vs the remote branch, plus untracked files that the cloud
+    // doesn't have yet (they carry no line counts until staged).
+    const changedPaths = new Set(combined.files.map((file) => file.path))
+    for (const line of statusOutput.split('\n')) {
+      if (line.trim().length < 4) continue
+      if (line[0] === '?' && line[1] === '?') changedPaths.add(line.slice(3).trim())
+    }
     return {
       ok: true,
       added: combined.added,
       removed: combined.removed,
-      fileCount,
+      fileCount: changedPaths.size,
       stagedFiles: status.staged,
       unstagedFiles: status.unstaged,
       untrackedFiles: status.untracked,
@@ -442,9 +464,26 @@ export async function getGitDiffStat(workspaceRoot: string): Promise<GitDiffStat
   }
 }
 
+/**
+ * execFile rejections keep git's diagnostics in `stderr`/`stdout` properties,
+ * while `error.message` is only the generic "Command failed: git …" line —
+ * prefer the real git output so the UI can show why a command failed.
+ */
+function gitErrorDetail(error: unknown): string {
+  if (error && typeof error === 'object') {
+    const { stderr, stdout } = error as { stderr?: unknown; stdout?: unknown }
+    const parts = [stderr, stdout]
+      .map((part) => (typeof part === 'string' ? part.trim() : ''))
+      .filter(Boolean)
+    if (parts.length > 0) return parts.join('\n').trim()
+  }
+  return error instanceof Error ? error.message : String(error)
+}
+
 function gitChangeFailure(error: unknown): GitCommitResult {
+  const detail = gitErrorDetail(error)
   const message = error instanceof Error ? error.message : String(error)
-  if (/nothing to commit/i.test(message)) {
+  if (/nothing to commit/i.test(detail) || /nothing to commit/i.test(message)) {
     return {
       ok: false,
       reason: 'nothing_to_commit',
@@ -453,7 +492,7 @@ function gitChangeFailure(error: unknown): GitCommitResult {
   }
   const fallback = gitFailure(error)
   return fallback.ok
-    ? { ok: false, reason: 'error', message }
+    ? { ok: false, reason: 'error', message: detail }
     : { ok: false, reason: fallback.reason, message: fallback.message }
 }
 
@@ -477,6 +516,21 @@ export async function commitGitChanges(params: {
   try {
     await runGit(cwd, ['rev-parse', '--git-dir'])
     const diff = await getGitDiffStat(cwd)
+    if (diff.ok) {
+      // The vs-cloud diff also covers committed-but-unpushed work; only local
+      // pending changes can be committed.
+      const localCount = params.includeUnstaged
+        ? diff.stagedFiles + diff.unstagedFiles + diff.untrackedFiles
+        : diff.stagedFiles
+      if (localCount === 0) {
+        return {
+          ok: false,
+          reason: 'nothing_to_commit',
+          message:
+            'No local changes to commit — everything already differs from the remote only via unpushed commits. Use push instead.'
+        }
+      }
+    }
     const message = params.message?.trim() || (diff.ok ? diff.suggestion : '')
     if (!message) return { ok: false, reason: 'nothing_to_commit', message: 'There are no changes to commit.' }
     if (params.includeUnstaged) {
@@ -505,7 +559,7 @@ export async function pushGitChanges(workspaceRoot: string): Promise<GitPushResu
     return { ok: true, output: (stdout + '\n' + stderr).trim() }
   } catch (error) {
     const result = gitFailure(error)
-    if (result.ok) return { ok: false, reason: 'error', message: String(error) }
+    if (result.ok) return { ok: false, reason: 'error', message: gitErrorDetail(error) }
     return { ok: false, reason: result.reason, message: result.message }
   }
 }

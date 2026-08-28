@@ -34,6 +34,7 @@ import {
 import { useWorkbenchLayout } from './workbench-layout'
 import { useWorkbenchPlanController } from './workbench-plan-controller'
 import { normalizeWorkspaceRoot, workspaceRootScopeKey } from '../lib/workspace-path'
+import { useMacWindowFullscreenFlag } from '../lib/use-mac-window-fullscreen'
 import {
   relativeWorkspacePath,
 } from '../lib/composer-file-references'
@@ -101,6 +102,7 @@ function selectedExtensionVersion(
 
 export function Workbench(): ReactElement {
   const { t, i18n } = useTranslation('common')
+  useMacWindowFullscreenFlag()
   const {
     threads, threadSearch, showArchivedThreads, activeThreadId, activeThreadRelation,
     activeThreadParentId, selectThread, createThread, createConversation, blocks,

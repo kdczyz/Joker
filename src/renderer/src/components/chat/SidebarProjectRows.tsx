@@ -245,7 +245,7 @@ export function ThreadRow({
       actionsVisibility={deleting ? 'visible' : 'hidden'}
       actionsLayout="overlay"
       actions={(
-        <div className="flex items-center gap-0.5 rounded-[6px] bg-white/70 p-0.5 backdrop-blur-[3px] dark:bg-white/[0.06]">
+        <div className="flex items-center">
         <button
             type="button"
             data-cursor-spotlight-target

@@ -634,8 +634,8 @@ describe('MessageTimeline Joker runtime metadata smoke', () => {
     // completed a failed tool call stays collapsed by default — the error
     // detail is revealed only after the user expands the row.
     expect(html).toContain('Recognize image recognize_image')
-    expect(html).toContain('text-orange-700')
-    expect(html).not.toContain('text-red-600')
+    // Failed rows are no longer color-tinted in the process timeline.
+    expect(html).not.toContain('text-orange-700')
     expect(html).not.toContain('model request failed with status 401')
     expect(html).toContain('role="button"')
     expect(html).toContain('aria-expanded="false"')
@@ -660,7 +660,7 @@ describe('MessageTimeline Joker runtime metadata smoke', () => {
     )
 
     expect(html).toContain('Recognize image recognize_image')
-    expect(html).toContain('text-orange-700')
+    expect(html).not.toContain('text-orange-700')
     expect(html).not.toContain('model request failed with status 401')
     expect(html).toContain('aria-expanded="false"')
   })
@@ -699,7 +699,7 @@ describe('MessageTimeline Joker runtime metadata smoke', () => {
 
     expect(html).toContain('Used 2 tools')
     expect(html).toContain('Search needle')
-    expect(html).toContain('text-orange-700')
+    expect(html).not.toContain('text-orange-700')
     expect(html).not.toContain('search error detail should stay tucked away')
     expect(html).not.toContain('read detail should stay tucked away')
   })

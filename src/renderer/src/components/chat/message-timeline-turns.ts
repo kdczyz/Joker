@@ -81,6 +81,37 @@ export function isProcessBlock(block: ChatBlock): boolean {
   )
 }
 
+function escapeRegExp(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+/**
+ * "已调用 X 工具" runtime-status notices (kind `tool_result_upload_wait`) were
+ * persisted as plain system blocks in older threads. The tool row itself
+ * already shows the call, so these redundant rows are filtered out of the
+ * process timeline. New turns no longer project them into blocks at all.
+ */
+export function isToolCalledStatusBlock(
+  block: ChatBlock,
+  t: (key: string, opts?: Record<string, unknown>) => string
+): boolean {
+  if (
+    block.kind !== 'system' ||
+    block.code ||
+    block.detail?.trim() ||
+    block.severity === 'error'
+  ) {
+    return false
+  }
+  const sample = t('toolCalledStatus', { tool: '\u0000' })
+  const placeholderIndex = sample.indexOf('\u0000')
+  if (placeholderIndex < 0) return false
+  const pattern = new RegExp(
+    `^${escapeRegExp(sample.slice(0, placeholderIndex))}(.+)${escapeRegExp(sample.slice(placeholderIndex + 1))}$`
+  )
+  return pattern.test(block.text.trim())
+}
+
 export function findTrailingAssistantContentStart(blocks: ChatBlock[]): number {
   let start = blocks.length
 
