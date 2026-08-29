@@ -132,7 +132,6 @@ import { FloatingComposerSlashCommandMenu } from './FloatingComposerSlashCommand
 import { FloatingComposerTodoProgress } from './FloatingComposerTodoProgress'
 import { DiffCounter } from './RollingDigit'
 import { useComposerImageModelSelection } from './use-composer-image-model-selection'
-import { computePosition, flip, offset, shift } from '@floating-ui/dom'
 
 export type { ComposerFileReference } from '../../lib/composer-file-references'
 export type { ComposerExecutionSettings } from './FloatingComposerExecutionPicker'
@@ -424,11 +423,11 @@ export function FloatingComposer({
   const [usageChartOpen, setUsageChartOpen] = useState(false)
   const usageChipRef = useRef<HTMLButtonElement>(null)
   const usagePopoverRef = useRef<HTMLDivElement>(null)
-  const [usagePopoverPos, setUsagePopoverPos] = useState<{ top: number; left: number } | null>(null)
+  const [usagePopoverPos, setUsagePopoverPos] = useState<{ bottom: number; left: number; maxHeight: number } | null>(null)
   const [gitToolsOpen, setGitToolsOpen] = useState(false)
   const gitToolsBtnRef = useRef<HTMLButtonElement>(null)
   const gitToolsPopoverRef = useRef<HTMLDivElement>(null)
-  const [gitToolsPos, setGitToolsPos] = useState<{ top: number; left: number } | null>(null)
+  const [gitToolsPos, setGitToolsPos] = useState<{ bottom: number; left: number; maxHeight: number } | null>(null)
   const [gitStat, setGitStat] = useState<GitDiffStatResult | null>(null)
   const [gitStatTick, setGitStatTick] = useState(0)
   const refreshGitStat = useCallback(() => setGitStatTick((tick) => tick + 1), [])
@@ -436,28 +435,32 @@ export function FloatingComposer({
   useEffect(() => {
     if (!gitToolsOpen) {
       // Drop the stale coordinates so a reopen starts hidden instead of
-      // flashing at the previous position before floating-ui resolves.
+      // flashing at the previous position.
       setGitToolsPos(null)
       return
     }
     let cancelled = false
-    const updatePosition = async (): Promise<void> => {
+    // Bottom-anchored placement: the card's bottom edge sits 8px above the
+    // button. The offset depends only on the button — never on the card's
+    // content height — so late content growth extends the card upward instead
+    // of shifting it after mount (no first-frame jump), and the commit view
+    // stays glued above the toolbar instead of overflowing the window.
+    const updatePosition = (): void => {
       const el = gitToolsBtnRef.current
-      const popover = gitToolsPopoverRef.current
-      if (!el || !popover) return
-      const { x, y } = await computePosition(el, popover, {
-        strategy: 'fixed',
-        placement: 'top',
-        middleware: [offset(8), flip({ padding: 16 }), shift({ padding: 16 })]
-      })
-      // floating-ui returns viewport-space coordinates; the fixed popover is
-      // painted inside the zoomed <body>, so convert to the zoomed space.
+      if (!el) return
       const zoom = currentBodyZoom()
-      if (!cancelled) setGitToolsPos({ top: y / zoom, left: x / zoom })
+      const rect = el.getBoundingClientRect()
+      const bottom = (window.innerHeight - rect.top) / zoom + 8
+      const popover = gitToolsPopoverRef.current
+      const popoverWidth = popover ? popover.getBoundingClientRect().width / zoom : 356
+      const maxLeft = Math.max(16, window.innerWidth / zoom - popoverWidth - 16)
+      const left = Math.min(Math.max((rect.left + rect.right) / 2 / zoom - popoverWidth / 2, 16), maxLeft)
+      const maxHeight = Math.max(180, (rect.top - 16) / zoom)
+      if (!cancelled) setGitToolsPos({ bottom, left, maxHeight })
     }
-    void updatePosition()
+    updatePosition()
     const frame = window.requestAnimationFrame(updatePosition)
-    const onScroll = (): void => void updatePosition()
+    const onScroll = (): void => updatePosition()
     window.addEventListener('scroll', onScroll, true)
     window.addEventListener('resize', updatePosition)
     return () => {
@@ -493,23 +496,25 @@ export function FloatingComposer({
       return
     }
     let cancelled = false
-    const updatePosition = async (): Promise<void> => {
+    // Bottom-anchored placement, same scheme as the Git tools popover: the
+    // bottom offset depends only on the chip, so the chart growing after the
+    // first paint extends upward and never shifts the visible card.
+    const updatePosition = (): void => {
       const el = usageChipRef.current
-      const popover = usagePopoverRef.current
-      if (!el || !popover) return
-      const { x, y } = await computePosition(el, popover, {
-        strategy: 'fixed',
-        placement: 'top',
-        middleware: [offset(8), flip({ padding: 16 }), shift({ padding: 16 })]
-      })
-      // floating-ui returns viewport-space coordinates; the fixed popover is
-      // painted inside the zoomed <body>, so convert to the zoomed space.
+      if (!el) return
       const zoom = currentBodyZoom()
-      if (!cancelled) setUsagePopoverPos({ top: y / zoom, left: x / zoom })
+      const rect = el.getBoundingClientRect()
+      const bottom = (window.innerHeight - rect.top) / zoom + 8
+      const popover = usagePopoverRef.current
+      const popoverWidth = popover ? popover.getBoundingClientRect().width / zoom : 360
+      const maxLeft = Math.max(16, window.innerWidth / zoom - popoverWidth - 16)
+      const left = Math.min(Math.max((rect.left + rect.right) / 2 / zoom - popoverWidth / 2, 16), maxLeft)
+      const maxHeight = Math.max(180, (rect.top - 16) / zoom)
+      if (!cancelled) setUsagePopoverPos({ bottom, left, maxHeight })
     }
-    void updatePosition()
+    updatePosition()
     const frame = window.requestAnimationFrame(updatePosition)
-    const onScroll = (): void => void updatePosition()
+    const onScroll = (): void => updatePosition()
     window.addEventListener('scroll', onScroll, true)
     window.addEventListener('resize', updatePosition)
     return () => {
@@ -2041,12 +2046,13 @@ export function FloatingComposer({
               aria-label={t('usageChartTitle')}
               className="fixed z-[1100] w-[360px] max-w-[calc(100vw-24px)] overflow-hidden rounded-2xl border border-ds-border bg-ds-card dark:bg-[#212322] p-4 shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
               style={{
-                // Same as the Git tools popover: mount first, position on the
-                // next frame, stay hidden until then.
-                top: usagePopoverPos?.top ?? 0,
+                // Mount first, position on the next frame, stay hidden until
+                // then. Bottom-anchored: the bottom offset only depends on the
+                // chip, so late chart growth extends upward without a jump.
+                bottom: usagePopoverPos?.bottom ?? 0,
                 left: usagePopoverPos?.left ?? 0,
                 visibility: usagePopoverPos ? 'visible' : 'hidden',
-                maxHeight: 'min(460px, calc(100vh - 32px))'
+                maxHeight: usagePopoverPos?.maxHeight ?? 320
               }}
             >
               <div className="mb-3 flex items-center justify-between gap-2">
@@ -2071,15 +2077,16 @@ export function FloatingComposer({
               ref={gitToolsPopoverRef}
               role="dialog"
               aria-label={t('gitToolsTitle')}
-              className="fixed z-[1100] overflow-visible rounded-2xl border border-ds-border bg-ds-card dark:bg-[#212322] shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
+              className="fixed z-[1100] overflow-y-auto rounded-2xl border border-ds-border bg-ds-card dark:bg-[#212322] shadow-[0_24px_60px_rgba(20,47,95,0.22)]"
               style={{
-                // floating-ui measures the live node, so the popover must be
-                // mounted before a position exists. Hide it for that first
-                // frame instead of gating the render on `gitToolsPos`.
-                top: gitToolsPos?.top ?? 0,
+                // Mount first, position on the next frame, stay hidden until
+                // then. Bottom-anchored above the chip, and the maxHeight caps
+                // the card at the space above the toolbar — the tall commit
+                // view scrolls inside instead of overflowing the window.
+                bottom: gitToolsPos?.bottom ?? 0,
                 left: gitToolsPos?.left ?? 0,
                 visibility: gitToolsPos ? 'visible' : 'hidden',
-                maxHeight: 'min(460px, calc(100vh - 32px))'
+                maxHeight: gitToolsPos?.maxHeight ?? 460
               }}
             >
               <GitToolsPanel

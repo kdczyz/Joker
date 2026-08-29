@@ -84,6 +84,13 @@ type Props = {
 type CompactionTimelineBlock = Extract<ChatBlock, { kind: 'compaction' }>
 
 const TURN_PAGE_SIZE = 18
+const TIMELINE_JUMP_RAIL_FALLBACK_LEFT_PX = 16
+const TIMELINE_JUMP_RAIL_STAGE_INSET_PX = 16
+const TIMELINE_JUMP_RAIL_WIDTH_PX = 62
+const TIMELINE_JUMP_RAIL_PREVIEW_OFFSET_PX = 68
+const TIMELINE_JUMP_RAIL_PREVIEW_WIDTH_PX = 416
+const TIMELINE_JUMP_RAIL_PREVIEW_MARGIN_PX = 16
+const TIMELINE_JUMP_RAIL_PREVIEW_CONTAINER_GUTTER_PX = 88
 
 export function goalTimelinePaddingClass(route: 'chat' | 'claw', hasActiveGoal: boolean): string {
   return route === 'chat' && hasActiveGoal ? 'pb-32 md:pb-40' : 'pb-10'
@@ -108,6 +115,26 @@ export function activeTimelineTurnKey(
   return active
 }
 
+export function timelineJumpRailLeft(containerWidth: number): number {
+  const stageLeft = Math.max(TIMELINE_JUMP_RAIL_FALLBACK_LEFT_PX, TIMELINE_JUMP_RAIL_STAGE_INSET_PX)
+  if (!Number.isFinite(containerWidth) || containerWidth <= 0) return stageLeft
+  const maxLeft = Math.max(0, containerWidth - TIMELINE_JUMP_RAIL_WIDTH_PX - TIMELINE_JUMP_RAIL_FALLBACK_LEFT_PX)
+  return Math.min(stageLeft, maxLeft)
+}
+
+export function timelineJumpRailPreviewLeft(
+  railLeft: number,
+  containerWidth: number
+): number {
+  const previewWidth = Math.min(
+    TIMELINE_JUMP_RAIL_PREVIEW_WIDTH_PX,
+    Math.max(0, containerWidth - TIMELINE_JUMP_RAIL_PREVIEW_CONTAINER_GUTTER_PX)
+  )
+  const minLeft = Math.max(TIMELINE_JUMP_RAIL_FALLBACK_LEFT_PX, TIMELINE_JUMP_RAIL_PREVIEW_MARGIN_PX)
+  const maxLeft = Math.max(minLeft, containerWidth - previewWidth - TIMELINE_JUMP_RAIL_PREVIEW_MARGIN_PX)
+  const preferredLeft = railLeft + TIMELINE_JUMP_RAIL_PREVIEW_OFFSET_PX
+  return Math.min(Math.max(preferredLeft, minLeft), maxLeft)
+}
 
 function blockScrollStamp(block: ChatBlock | undefined): string {
   if (!block) return ''
@@ -192,6 +219,18 @@ export function timelineJumpPreviewMetadata(turn: Turn): TimelineJumpPreviewMeta
   return { fileLabels: fileLabels.slice(0, 32), hasCommit }
 }
 
+export function timelineJumpPreviewTop(
+  buttonTop: number,
+  buttonHeight: number,
+  railAnchorTop: number
+): number {
+  return buttonTop + buttonHeight / 2 - railAnchorTop
+}
+
+export function timelineJumpWaveDistance(index: number, hoveredIndex: number): number | null {
+  if (hoveredIndex < 0) return null
+  return Math.min(Math.abs(index - hoveredIndex), 3)
+}
 
 function processBlockHasError(block: ChatBlock): boolean {
   return (
@@ -347,6 +386,18 @@ export function MessageTimeline({
   const containerRef = useRef<HTMLDivElement>(null)
   const turnRefMap = useRef(new Map<string, HTMLDivElement>())
   const [activeTurnKey, setActiveTurnKey] = useState<string | null>(null)
+  const [jumpRailLayout, setJumpRailLayout] = useState<{
+    railLeft: number
+    previewLeft: number
+  } | null>(null)
+  const [jumpRailPreview, setJumpRailPreview] = useState<{
+    key: string
+    title: string
+    prompt: string
+    fileLabels: string[]
+    hasCommit: boolean
+    top: number
+  } | null>(null)
   const [messageContextMenu, setMessageContextMenu] = useState<{
     position: { x: number; y: number }
     context: JsonValue
@@ -454,7 +505,29 @@ export function MessageTimeline({
     }
   }, [visibleTurnAnchors])
 
-
+  useEffect(() => {
+    const container = containerRef.current
+    if (!container || visibleTurnAnchors.length <= 2) {
+      setJumpRailLayout(null)
+      return
+    }
+    const update = (): void => {
+      const rect = container.getBoundingClientRect()
+      const railLeft = timelineJumpRailLeft(rect.width)
+      setJumpRailLayout({
+        railLeft,
+        previewLeft: timelineJumpRailPreviewLeft(railLeft, rect.width)
+      })
+    }
+    update()
+    const observer = new ResizeObserver(update)
+    observer.observe(container)
+    window.addEventListener('resize', update)
+    return () => {
+      observer.disconnect()
+      window.removeEventListener('resize', update)
+    }
+  }, [visibleTurnAnchors.length])
 
   // Tick a clock while a turn is running so the live "Worked for Xs" updates.
   const [tickNow, setTickNow] = useState(() => Date.now())
@@ -465,13 +538,108 @@ export function MessageTimeline({
     return () => window.clearInterval(id)
   }, [busy, currentTurnUserId])
 
+  const jumpToTurn = (key: string): void => {
+    const target = turnRefMap.current.get(key)
+    if (!target) return
+    setActiveTurnKey(key)
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
+  const showJumpRailPreview = (
+    anchor: {
+      key: string
+      title: string
+      prompt: string
+      fileLabels: string[]
+      hasCommit: boolean
+    },
+    node: HTMLButtonElement
+  ): void => {
+    const nodeRect = node.getBoundingClientRect()
+    const railAnchor = node.closest<HTMLElement>('.timeline-jump-rail-anchor')
+    const railAnchorTop = railAnchor?.getBoundingClientRect().top ?? nodeRect.top
+    setJumpRailPreview({
+      key: anchor.key,
+      title: anchor.title,
+      prompt: anchor.prompt || anchor.title,
+      fileLabels: anchor.fileLabels,
+      hasCommit: anchor.hasCommit,
+      top: timelineJumpPreviewTop(nodeRect.top, nodeRect.height, railAnchorTop)
+    })
+  }
 
+  const jumpRailHoveredIndex = jumpRailPreview
+    ? visibleTurnAnchors.findIndex((item) => item.key === jumpRailPreview.key)
+    : -1
 
   return (
     <TimelineFilePreviewWorkspaceProvider workspaceRoot={filePreviewWorkspaceRoot}>
     <InjectedMemoryLookupProvider workspaceRoot={workspaceRoot}>
     <div ref={containerRef} className="ds-no-drag relative flex min-h-0 flex-1 flex-col overflow-y-auto overflow-x-hidden">
+      {visibleTurnAnchors.length > 2 && jumpRailLayout ? (
+        <div className="timeline-jump-rail-anchor">
+          <nav
+            aria-label={t('timelineJumpRailLabel')}
+            className="timeline-jump-rail"
+            style={{
+              left: `${jumpRailLayout.railLeft}px`
+            }}
+            onMouseLeave={() => setJumpRailPreview(null)}
+          >
+            {visibleTurnAnchors.map((anchor, index) => {
+              const waveDistance = timelineJumpWaveDistance(index, jumpRailHoveredIndex)
+              return (
+                <button
+                  key={anchor.key}
+                  type="button"
+                  className={`timeline-jump-rail-button${activeTurnKey === anchor.key ? ' is-active' : ''}`}
+                  data-wave-distance={waveDistance ?? undefined}
+                  aria-label={anchor.title}
+                  aria-current={activeTurnKey === anchor.key ? 'true' : undefined}
+                  onMouseEnter={(event) => showJumpRailPreview(anchor, event.currentTarget)}
+                  onFocus={(event) => showJumpRailPreview(anchor, event.currentTarget)}
+                  onBlur={() => setJumpRailPreview(null)}
+                  onClick={() => jumpToTurn(anchor.key)}
+                />
+              )
+            })}
+          </nav>
+          {jumpRailPreview ? (
+            <div
+              className="timeline-jump-rail-preview"
+              style={{
+                left: `${jumpRailLayout.previewLeft}px`,
+                top: `${jumpRailPreview.top}px`
+              }}
+              role="tooltip"
+            >
+              <div className="timeline-jump-rail-preview-title">{jumpRailPreview.title}</div>
+              <div className="timeline-jump-rail-preview-text">{jumpRailPreview.prompt}</div>
+              {jumpRailPreview.fileLabels.length > 0 || jumpRailPreview.hasCommit ? (
+                <div className="timeline-jump-rail-preview-meta" aria-hidden="true">
+                  {jumpRailPreview.fileLabels.slice(0, 2).map((fileLabel) => (
+                    <span key={fileLabel} className="timeline-jump-rail-preview-meta-item">
+                      <Hash />
+                      <span className="timeline-jump-rail-preview-file-label">{fileLabel}</span>
+                    </span>
+                  ))}
+                  {jumpRailPreview.fileLabels.length > 2 ? (
+                    <span className="timeline-jump-rail-preview-meta-count">
+                      +{jumpRailPreview.fileLabels.length - 2}
+                    </span>
+                  ) : null}
+                  {jumpRailPreview.hasCommit ? (
+                    <span className="timeline-jump-rail-preview-meta-item">
+                      <GitCommitHorizontal />
+                      {t('userInputSubmit')}
+                    </span>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <div className={`ds-message-timeline-content ds-chat-column-inset ds-chat-content-max-width flex w-full min-w-0 flex-col gap-8 pt-8 ${
         goalTimelinePaddingClass(heroRoute, Boolean(activeThreadGoal))
       }`}>

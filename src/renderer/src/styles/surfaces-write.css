@@ -951,13 +951,13 @@ html[data-ui-plugin-readability-strength='strong'] .ds-ui-plugin-readability-scr
 html[data-ui-plugin-content-reserve='narrow'] .ds-chat-stage {
   --Joker-ui-plugin-content-reserve: clamp(10rem, 20cqw, 17rem);
   --Joker-ui-plugin-content-shift: clamp(3rem, 7cqw, 6rem);
-  --ds-chat-side-rail-reserve: var(--Joker-ui-plugin-content-reserve);
+  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Joker-ui-plugin-content-reserve));
 }
 
 html[data-ui-plugin-content-reserve='wide'] .ds-chat-stage {
   --Joker-ui-plugin-content-reserve: clamp(15rem, 28cqw, 25rem);
   --Joker-ui-plugin-content-shift: clamp(8rem, 15cqw, 14rem);
-  --ds-chat-side-rail-reserve: var(--Joker-ui-plugin-content-reserve);
+  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Joker-ui-plugin-content-reserve));
 }
 
 html[data-ui-plugin-presentation='on'] .ds-message-timeline-content,
@@ -1084,7 +1084,7 @@ html[data-ui-plugin-scene='on'] .ds-ui-plugin-scene-visual-zone {
 html[data-ui-plugin-scene='on'] .ds-chat-stage {
   /* Discard the v1.5 right-side reserve before applying the selected v1.6
    * layout. Backdrop scenes use Joker's normal content width. */
-  --ds-chat-side-rail-reserve: 5.25rem;
+  --ds-chat-side-rail-reserve: 0px;
 }
 
 html[data-ui-plugin-scene-layout='rail-right'] .ds-ui-plugin-scene-visual-zone {
@@ -1133,14 +1133,14 @@ html[data-ui-plugin-scene-layout='rail-right'] .ds-chat-stage,
 html[data-ui-plugin-scene-layout='rail-left'] .ds-chat-stage {
   --Joker-ui-plugin-scene-content-reserve: clamp(15rem, 30cqw, 27rem);
   --Joker-ui-plugin-scene-content-shift: clamp(8rem, 16cqw, 15rem);
-  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Joker-ui-plugin-scene-content-reserve));
+  --ds-chat-side-rail-reserve: var(--Joker-ui-plugin-scene-content-reserve);
 }
 
 html[data-ui-plugin-scene-layout='card-right'] .ds-chat-stage,
 html[data-ui-plugin-scene-layout='card-left'] .ds-chat-stage {
   --Joker-ui-plugin-scene-content-reserve: clamp(11rem, 23cqw, 20rem);
   --Joker-ui-plugin-scene-content-shift: clamp(5rem, 10cqw, 9rem);
-  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Joker-ui-plugin-scene-content-reserve));
+  --ds-chat-side-rail-reserve: var(--Joker-ui-plugin-scene-content-reserve);
 }
 
 html:is(

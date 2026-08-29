@@ -185,7 +185,7 @@ describe('UiPluginStagePresentation', () => {
     expect(css).not.toMatch(/color-mix\([^;]*var\(--ds-surface-elevated\)/)
     expect(css).toContain("html[data-ui-plugin-scene-layout='rail-left']")
     expect(css).toContain("[data-ui-plugin-readability-scrim='opposite-character']")
-    expect(css).toContain('--ds-chat-side-rail-reserve: 5.25rem;')
+    expect(css).not.toContain('--ds-chat-side-rail-reserve: 5.25rem;')
     expect(css).toContain(".ds-chat-stage[data-terminal-open='true']")
     expect(css).toContain("[data-scene-motion='orbit']")
     expect(css).toContain('@keyframes ds-ui-plugin-scene-sway')
@@ -248,10 +248,9 @@ describe('UiPluginStagePresentation', () => {
   it('keeps the Grand Line conversation card and composer status rail visually connected', async () => {
     const nodeFs = 'node:fs/promises'
     const { readFile } = await import(/* @vite-ignore */ nodeFs)
-    const [css, workbenchStage, sidebar, executionPicker] = await Promise.all([
+    const [css, workbenchStage, executionPicker] = await Promise.all([
       readFile(new URL('../../styles/surfaces-write.css', import.meta.url), 'utf8'),
       readFile(new URL('../workbench/WorkbenchChatStage.tsx', import.meta.url), 'utf8'),
-      readFile(new URL('./Sidebar.tsx', import.meta.url), 'utf8'),
       readFile(new URL('./FloatingComposerExecutionPicker.tsx', import.meta.url), 'utf8')
     ])
 
@@ -292,7 +291,6 @@ describe('UiPluginStagePresentation', () => {
     expect(css).toContain(
       '.ds-message-timeline-content :is(.text-ds-ink, .text-ds-muted, .text-ds-faint)'
     )
-    expect(sidebar).toContain('ds-sidebar-mascot-slot')
     expect(executionPicker).toContain('ds-composer-permission-menu')
     expect(executionPicker).toContain('ds-composer-permission-option')
     expect(executionPicker).toContain('data-permission-mode={mode}')
