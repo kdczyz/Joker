@@ -2,6 +2,7 @@ import type { ReactElement } from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { currentBodyZoom } from '../../lib/body-zoom'
 import {
   formatCompactNumber,
   formatCost,
@@ -279,12 +280,15 @@ export function HeatmapGrid({
   // cell. Uses fixed positioning so it is never clipped by parent overflow.
   const showTooltip = (bucket: DailyUsageBucket, target: HTMLElement) => {
     onSelect(bucket)
+    // Rect and window sizes are in viewport space; the fixed tooltip lives
+    // inside the zoomed <body>, so convert to the zoomed coordinate space.
+    const zoom = currentBodyZoom()
     const cellRect = target.getBoundingClientRect()
-    const tooltipX = cellRect.left + cellRect.width / 2
-    const tooltipY = cellRect.top
+    const tooltipX = (cellRect.left + cellRect.width / 2) / zoom
+    const tooltipY = cellRect.top / zoom
     // Clamp so the tooltip never overflows the Electron window bounds.
-    const viewW = window.innerWidth
-    const viewH = window.innerHeight
+    const viewW = window.innerWidth / zoom
+    const viewH = window.innerHeight / zoom
     const TOOLTIP_HALF = 160 // approximate max half-width of the tooltip text
     const TOOLTIP_H = 32 // approximate tooltip height
     const clampedX = Math.max(TOOLTIP_HALF + 4, Math.min(viewW - TOOLTIP_HALF - 4, tooltipX))
@@ -804,11 +808,12 @@ function ModelUsagePanel({
                   width={xStep}
                   height={plotH}
                   fill="transparent"
-                  title={summary}
                   onMouseEnter={() => setActiveDayIndex(index)}
                   onFocus={() => setActiveDayIndex(index)}
                   onClick={() => setActiveDayIndex(index)}
-                />
+                >
+                  <title>{summary}</title>
+                </rect>
                 {/* Date labels */}
                 <text
                   x={PAD_LEFT + index * xStep}

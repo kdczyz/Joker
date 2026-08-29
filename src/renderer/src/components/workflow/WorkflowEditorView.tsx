@@ -54,6 +54,7 @@ import { NodeConfigPanel } from './NodeConfigPanel'
 import { ModuleManager } from './ModuleManager'
 import { WorkflowRunHistory } from './WorkflowRunHistory'
 import { WorkflowRunLogPanel } from './WorkflowRunLogPanel'
+import { currentBodyZoom } from '../../lib/body-zoom'
 import {
   TRIGGER_KINDS,
   WORKFLOW_PALETTE,
@@ -246,9 +247,13 @@ function WorkflowEditorInner({
       if (!target || !target.classList.contains('react-flow__pane')) return
       const clientX = 'clientX' in event ? event.clientX : 0
       const clientY = 'clientY' in event ? event.clientY : 0
+      // The menu is fixed inside the zoomed <body>: convert viewport-space
+      // clientX/Y to the zoomed coordinate space (flowPos stays viewport-space
+      // — screenToFlowPosition expects viewport coordinates).
+      const zoom = currentBodyZoom()
       setConnectMenu({
-        x: clientX,
-        y: clientY,
+        x: clientX / zoom,
+        y: clientY / zoom,
         flowPos: screenToFlowPosition({ x: clientX, y: clientY }),
         sourceId: source.nodeId,
         sourceHandle: source.handleId

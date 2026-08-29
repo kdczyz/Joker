@@ -655,18 +655,24 @@ body.ds-workbench-resizing .ds-workbench-left-sidebar-clip {
   top: calc(8px / var(--ds-ui-scale, 1));
   left: calc(18px / var(--ds-ui-scale, 1));
   z-index: 40;
+  display: inline-flex;
+  align-items: center;
+  gap: calc(6px / var(--ds-ui-scale, 1));
   /* 全屏↔窗口化时平滑滑到新位置;点击展开/收起本身不产生任何位移(图标单一静态) */
   transition:
     top 0.28s cubic-bezier(0.32, 0.72, 0.24, 1),
     left 0.28s cubic-bezier(0.32, 0.72, 0.24, 1);
 }
 
-/* 按钮 28px 视觉 + 负 margin 扩大命中区到 38px,避免贴近拖拽区边缘时点击被吞 */
+/* 按钮 38px 视觉 + 负 margin 扩大命中区到 48px,避免贴近拖拽区边缘时点击被吞。
+   尺寸与 margin 都按 --ds-ui-scale 分母缩放(与 left/top 一致的抵消逻辑):
+   ui-scale=1 时按钮 CSS 38px,zoom 后视觉 38px;
+   ui-scale=1.4 时按钮 CSS 27.1px,zoom 1.4 后视觉 38px —— 任何缩放下按钮都和红黄灯保持视觉尺寸比例 */
 .ds-workbench-sidebar-toggle-anchor .ds-titlebar-sidebar-toggle {
-  height: 38px;
-  width: 38px;
+  height: calc(38px / var(--ds-ui-scale, 1));
+  width: calc(38px / var(--ds-ui-scale, 1));
   padding: 0;
-  margin: -5px;
+  margin: calc(-5px / var(--ds-ui-scale, 1));
 }
 
 :root[data-platform='darwin'] .ds-workbench-sidebar-toggle-anchor {

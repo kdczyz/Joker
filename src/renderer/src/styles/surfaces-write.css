@@ -430,6 +430,49 @@
   color: rgba(255, 255, 255, 0.86);
 }
 
+/* 双按钮组里"当前状态已激活"的另一个按钮:不响应点击,视觉更弱。
+   hover 时不再变深背景,避免误导用户以为可以点。
+   同时关闭 tooltip —— 没必要提示一个用不上的功能。 */
+.ds-titlebar-sidebar-toggle--disabled {
+  opacity: 0.32;
+  cursor: default;
+  pointer-events: none;
+}
+
+.ds-titlebar-sidebar-toggle--disabled:hover,
+.ds-titlebar-sidebar-toggle--disabled:active {
+  background: transparent;
+  color: #9b9b9b;
+}
+
+[data-theme='dark'] .ds-titlebar-sidebar-toggle--disabled,
+[data-theme='dark'] .ds-titlebar-sidebar-toggle--disabled:hover,
+[data-theme='dark'] .ds-titlebar-sidebar-toggle--disabled:active {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* 装饰用的 PanelLeft 图标(标识当前侧栏形状,不响应点击)。
+   工作台锚点里第 1 个 button 用 [data-decorative-panel] 标记。
+   通过 data 属性强制去掉 hover/active 反馈,避免误以为可点。 */
+.ds-titlebar-sidebar-toggle[data-decorative-panel='true']:hover,
+.ds-titlebar-sidebar-toggle[data-decorative-panel='true']:active {
+  background: transparent;
+  color: #9b9b9b;
+  cursor: default;
+}
+[data-theme='dark'] .ds-titlebar-sidebar-toggle[data-decorative-panel='true']:hover,
+[data-theme='dark'] .ds-titlebar-sidebar-toggle[data-decorative-panel='true']:active {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* tooltip 文字(快捷键 kbd)右上角小角标 —— 与 ZCode 风格保持一致;
+   通过 [data-tooltip-anchor] 让没指定 tooltip 的按钮不会继承本规则 */
+.ds-titlebar-sidebar-toggle-tooltip {
+  text-align: left;
+}
+
 .ds-sidebar-toggle-button {
   display: inline-flex;
   height: 2rem;

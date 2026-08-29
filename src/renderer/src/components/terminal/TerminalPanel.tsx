@@ -28,6 +28,7 @@ import {
 } from '@shared/app-settings'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { SETTINGS_CHANGED_EVENT } from '../../lib/keyboard-shortcut-settings'
+import { currentBodyZoom } from '../../lib/body-zoom'
 import { terminalSessionIdForWorkspace, terminalWorkspaceSessionKey } from './terminal-session'
 
 type Props = {
@@ -488,13 +489,16 @@ export function TerminalPanel({
     event.stopPropagation()
     const tabButton = tabButtonRefs.current[tabId]
     const tabRect = tabButton?.getBoundingClientRect()
+    // clientX/Y and the rect are viewport-space; the fixed menu lives inside
+    // the zoomed <body>, so convert to the zoomed coordinate space.
+    const zoom = currentBodyZoom()
     const pointerX = event.clientX > 0 ? event.clientX : (tabRect?.left ?? 0)
     const pointerY = event.clientY > 0 ? event.clientY : (tabRect?.bottom ?? 0)
     setActiveTabId(tabId)
     setContextMenu({
       tabId,
-      x: Math.min(Math.max(pointerX, 8), window.innerWidth - 220),
-      y: Math.min(Math.max(pointerY, 8), window.innerHeight - 132)
+      x: Math.min(Math.max(pointerX / zoom, 8), window.innerWidth / zoom - 220),
+      y: Math.min(Math.max(pointerY / zoom, 8), window.innerHeight / zoom - 132)
     })
   }, [])
 

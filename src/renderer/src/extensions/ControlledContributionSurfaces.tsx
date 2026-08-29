@@ -16,6 +16,7 @@ import {
 } from './contribution-registry'
 import { ExtensionWebview } from './ExtensionWebview'
 import { ExtensionExternalBrowser } from './ExtensionExternalBrowser'
+import { currentBodyZoom } from '../lib/body-zoom'
 import { boundedPlainText, isSecretLikeSettingKey } from './safe-text'
 
 export { isSecretLikeSettingKey } from './safe-text'
@@ -238,8 +239,11 @@ export function DeclarativeContextMenuOverlay({
   }, [position])
 
   if (!position || contributions.length === 0) return null
-  const left = Math.max(8, Math.min(position.x, window.innerWidth - 232))
-  const top = Math.max(8, Math.min(position.y, window.innerHeight - Math.min(360, contributions.length * 40 + 16)))
+  // position is viewport-space (clientX/Y); the fixed menu lives inside the
+  // zoomed <body>, so convert to the zoomed coordinate space before clamping.
+  const zoom = currentBodyZoom()
+  const left = Math.max(8, Math.min(position.x / zoom, window.innerWidth / zoom - 232))
+  const top = Math.max(8, Math.min(position.y / zoom, window.innerHeight / zoom - Math.min(360, contributions.length * 40 + 16)))
   return (
     <div
       ref={rootRef}

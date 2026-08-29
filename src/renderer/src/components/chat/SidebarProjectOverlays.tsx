@@ -15,6 +15,7 @@ import {
 } from 'lucide-react'
 import type { NormalizedThread } from '../../agent/types'
 import { normalizeWorkspaceRoot } from '../../lib/workspace-path'
+import { currentBodyZoom } from '../../lib/body-zoom'
 import { workspaceLabelFromPath } from '../../lib/workspace-label'
 import type { SidebarThreadWorktreeRecord } from './sidebar-project-selectors'
 
@@ -67,17 +68,22 @@ function useViewportFitPosition(
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
+    // initialX/Y and window sizes are viewport-space; the fixed menu is
+    // painted inside the zoomed <body>, so work in the zoomed coordinate
+    // space (the menu's own rect reads back in viewport space — divide it too).
+    const zoom = currentBodyZoom()
     const rect = el.getBoundingClientRect()
     const padding = 8
-    const maxLeft = Math.max(padding, window.innerWidth - rect.width - padding)
-    const maxTop = Math.max(padding, window.innerHeight - rect.height - padding)
+    const maxLeft = Math.max(padding, window.innerWidth / zoom - rect.width / zoom - padding)
+    const maxTop = Math.max(padding, window.innerHeight / zoom - rect.height / zoom - padding)
     setFit({
-      left: Math.min(Math.max(initialX, padding), maxLeft),
-      top: Math.min(Math.max(initialY, padding), maxTop)
+      left: Math.min(Math.max(initialX / zoom, padding), maxLeft),
+      top: Math.min(Math.max(initialY / zoom, padding), maxTop)
     })
   }, [initialX, initialY])
 
-  const position = fit ?? { left: initialX, top: initialY }
+  const zoom = currentBodyZoom()
+  const position = fit ?? { left: initialX / zoom, top: initialY / zoom }
   return [ref, position]
 }
 

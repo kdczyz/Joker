@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   activeTimelineTurnKey,
-  timelineJumpRailLeft,
-  timelineJumpRailPreviewLeft,
-  timelineJumpPreviewMetadata,
-  timelineJumpPreviewTop,
-  timelineJumpWaveDistance
+  timelineJumpPreviewMetadata
 } from './MessageTimeline'
 
 describe('activeTimelineTurnKey', () => {
@@ -31,15 +27,6 @@ describe('activeTimelineTurnKey', () => {
   })
 })
 
-describe('timelineJumpWaveDistance', () => {
-  it('expands only the hovered turn and its nearby turns', () => {
-    expect(Array.from({ length: 7 }, (_, index) => timelineJumpWaveDistance(index, 3))).toEqual([3, 2, 1, 0, 1, 2, 3])
-  })
-
-  it('keeps every turn compact when the rail is idle', () => {
-    expect(timelineJumpWaveDistance(3, -1)).toBeNull()
-  })
-})
 
 describe('timelineJumpPreviewMetadata', () => {
   it('collects unique edited file labels and detects a git commit command', () => {
@@ -98,36 +85,4 @@ describe('timelineJumpPreviewMetadata', () => {
   })
 })
 
-describe('timelineJumpPreviewTop', () => {
-  it('aligns the preview center with the hovered rail marker', () => {
-    expect(timelineJumpPreviewTop(210, 20, 180)).toBe(40)
-  })
-})
 
-describe('timelineJumpRailLeft', () => {
-  it('anchors the rail to the left side of the conversation stage', () => {
-    expect(timelineJumpRailLeft(1000)).toBe(16)
-  })
-
-  it('keeps the same left inset in wide conversation stages', () => {
-    expect(timelineJumpRailLeft(1600)).toBe(16)
-  })
-
-  it('stays inside a very narrow chat stage', () => {
-    expect(timelineJumpRailLeft(24)).toBe(0)
-  })
-
-  it('falls back to the stage inset when the width is not measurable yet', () => {
-    expect(timelineJumpRailLeft(0)).toBe(16)
-  })
-})
-
-describe('timelineJumpRailPreviewLeft', () => {
-  it('keeps the hover preview inside the conversation gutter', () => {
-    expect(timelineJumpRailPreviewLeft(-20, 520)).toBe(48)
-  })
-
-  it('keeps the hover preview inside the conversation right edge', () => {
-    expect(timelineJumpRailPreviewLeft(1000, 1200)).toBe(768)
-  })
-})

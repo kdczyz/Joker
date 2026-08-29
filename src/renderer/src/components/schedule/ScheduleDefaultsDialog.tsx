@@ -129,12 +129,12 @@ export function ScheduleDefaultsDialog({
 
   return (
     <div
-      className="ds-no-drag fixed inset-0 z-[95] flex items-center justify-center bg-black/58 px-4"
+      className="ds-no-drag fixed inset-0 z-[95] flex items-start justify-center overflow-y-auto bg-black/58 px-4 py-4"
       onMouseDown={onClose}
     >
       <div
         onMouseDown={(event) => event.stopPropagation()}
-        className="max-h-[calc(100vh-4rem)] w-full max-w-[620px] overflow-y-auto rounded-[24px] bg-ds-card p-6 shadow-[0_28px_90px_rgba(0,0,0,0.28)]"
+        className="my-auto max-h-[calc(100vh-2rem)] w-full max-w-[620px] overflow-y-auto rounded-[24px] bg-ds-card p-6 shadow-[0_28px_90px_rgba(0,0,0,0.28)]"
       >
         <div className="flex items-start justify-between gap-4">
           <h2 className="text-[16px] font-semibold text-ds-ink">

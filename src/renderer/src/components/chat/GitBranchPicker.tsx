@@ -12,6 +12,7 @@ import type { GitBranchesResult, GitBranchRow } from '@shared/git-branches'
 import { getProvider } from '../../agent/registry'
 import { rendererRuntimeClient } from '../../agent/runtime-client'
 import { SETTINGS_CHANGED_EVENT } from '../../lib/keyboard-shortcut-settings'
+import { currentBodyZoom } from '../../lib/body-zoom'
 import { middleEllipsize } from '../../lib/middle-ellipsize'
 import {
   forgetThreadWorktree,
@@ -37,9 +38,14 @@ type BranchTooltip = {
 }
 
 function branchTooltipPosition(clientX: number, clientY: number): { x: number; y: number } {
-  const width = Math.min(544, Math.max(0, window.innerWidth - 32))
-  const x = Math.max(16, Math.min(clientX + 12, window.innerWidth - width - 16))
-  const y = Math.max(16, Math.min(clientY + 14, window.innerHeight - 96))
+  // clientX/Y are viewport-space; the fixed tooltip lives inside the zoomed
+  // <body>, so convert to the zoomed coordinate space before clamping.
+  const zoom = currentBodyZoom()
+  const viewW = window.innerWidth / zoom
+  const viewH = window.innerHeight / zoom
+  const width = Math.min(544, Math.max(0, viewW - 32))
+  const x = Math.max(16, Math.min(clientX / zoom + 12, viewW - width - 16))
+  const y = Math.max(16, Math.min(clientY / zoom + 14, viewH - 96))
   return { x, y }
 }
 

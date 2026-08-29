@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useInjectedMemoryTooltipText } from './injected-memory-lookup'
+import { currentBodyZoom } from '../../lib/body-zoom'
 
 type TooltipState = {
   text: string
@@ -11,9 +12,12 @@ type TooltipState = {
 }
 
 function chipTooltipPosition(clientX: number, anchorRect: DOMRect): { x: number; y: number } {
-  const maxWidth = Math.min(320, window.innerWidth - 24)
-  const x = Math.max(12, Math.min(clientX - maxWidth / 2, window.innerWidth - maxWidth - 12))
-  const y = Math.max(12, anchorRect.top - 8)
+  // clientX/Y and the anchor rect are viewport-space; the fixed tooltip lives
+  // inside the zoomed <body>, so convert to the zoomed coordinate space.
+  const zoom = currentBodyZoom()
+  const maxWidth = Math.min(320, window.innerWidth / zoom - 24)
+  const x = Math.max(12, Math.min(clientX / zoom - maxWidth / 2, window.innerWidth / zoom - maxWidth - 12))
+  const y = Math.max(12, anchorRect.top / zoom - 8)
   return { x, y }
 }
 

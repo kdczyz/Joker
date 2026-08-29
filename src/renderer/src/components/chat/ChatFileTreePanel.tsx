@@ -38,6 +38,7 @@ import {
   SidebarSectionHeader,
   SidebarTreeRow
 } from '../sidebar/SidebarPrimitives'
+import { currentBodyZoom } from '../../lib/body-zoom'
 
 export type ChatFileTreeReference = ComposerFileReference & {
   type: 'file' | 'directory'
@@ -366,9 +367,12 @@ export function ChatFileTreePanel({
 
   const openContextMenu = (event: ReactMouseEvent<HTMLDivElement>, entry: WorkspaceEntry): void => {
     event.preventDefault()
+    // clientX/Y are viewport-space; the fixed menu lives inside the zoomed
+    // <body>, so convert to the zoomed coordinate space.
+    const zoom = currentBodyZoom()
     setContextMenu({
-      x: event.clientX,
-      y: event.clientY,
+      x: event.clientX / zoom,
+      y: event.clientY / zoom,
       entry
     })
   }

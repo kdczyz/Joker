@@ -239,12 +239,16 @@ export function TurnChangeSummary({
           />
         </button>
         <span className="inline-flex shrink-0 items-center gap-1.5">
-          <span className="font-mono text-[13px] font-semibold text-ds-diff-added">
-            +{totals.added}
-          </span>
-          <span className="font-mono text-[13px] font-semibold text-ds-diff-removed">
-            -{totals.removed}
-          </span>
+          {totals ? (
+            <>
+              <span className="font-mono text-[13px] font-semibold text-ds-diff-added">
+                +{totals.added}
+              </span>
+              <span className="font-mono text-[13px] font-semibold text-ds-diff-removed">
+                -{totals.removed}
+              </span>
+            </>
+          ) : null}
         </span>
         <button
           type="button"

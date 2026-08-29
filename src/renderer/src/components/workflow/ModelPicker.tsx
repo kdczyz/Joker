@@ -1,6 +1,7 @@
 import { useMemo, useRef, useState, type ReactElement } from 'react'
 import { createPortal } from 'react-dom'
 import { useTranslation } from 'react-i18next'
+import { currentBodyZoom } from '../../lib/body-zoom'
 import { Check, ChevronDown, Search } from 'lucide-react'
 import type { ModelProviderProfileV1 } from '@shared/app-settings'
 
@@ -36,7 +37,7 @@ export function ModelPicker({
   const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
-  const [rect, setRect] = useState<DOMRect | null>(null)
+  const [rect, setRect] = useState<{ left: number; top: number; bottom: number; width: number } | null>(null)
   const triggerRef = useRef<HTMLButtonElement>(null)
 
   const visibleProviders = useMemo(
@@ -59,7 +60,18 @@ export function ModelPicker({
 
   const openPanel = (): void => {
     if (!providerChosen) return
-    if (triggerRef.current) setRect(triggerRef.current.getBoundingClientRect())
+    if (triggerRef.current) {
+      // The rect is viewport-space; the fixed panel lives inside the zoomed
+      // <body>, so convert to the zoomed coordinate space.
+      const zoom = currentBodyZoom()
+      const domRect = triggerRef.current.getBoundingClientRect()
+      setRect({
+        left: domRect.left / zoom,
+        top: domRect.top / zoom,
+        bottom: domRect.bottom / zoom,
+        width: domRect.width / zoom
+      })
+    }
     setQuery('')
     setOpen(true)
   }

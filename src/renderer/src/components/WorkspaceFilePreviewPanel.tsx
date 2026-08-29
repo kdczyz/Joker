@@ -20,6 +20,7 @@ import {
   X
 } from 'lucide-react'
 import { createPortal } from 'react-dom'
+import { currentBodyZoom } from '../lib/body-zoom'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import { harden } from 'rehype-harden'
@@ -494,12 +495,15 @@ export function WorkspaceFilePreviewPanel({
     event.stopPropagation()
     tabMenuTriggerRef.current = event.currentTarget
     const rect = event.currentTarget.getBoundingClientRect()
-    const requestedX = position?.x ?? ('clientX' in event ? event.clientX : rect.left)
-    const requestedY = position?.y ?? ('clientY' in event ? event.clientY : rect.bottom)
+    // clientX/Y and the rect are viewport-space; the fixed menu lives inside
+    // the zoomed <body>, so convert to the zoomed coordinate space.
+    const zoom = currentBodyZoom()
+    const requestedX = (position?.x ?? ('clientX' in event ? event.clientX : rect.left)) / zoom
+    const requestedY = (position?.y ?? ('clientY' in event ? event.clientY : rect.bottom)) / zoom
     setTabMenu({
       target: item,
-      x: Math.max(8, Math.min(requestedX, window.innerWidth - 200)),
-      y: Math.max(8, Math.min(requestedY, window.innerHeight - 112))
+      x: Math.max(8, Math.min(requestedX, window.innerWidth / zoom - 200)),
+      y: Math.max(8, Math.min(requestedY, window.innerHeight / zoom - 112))
     })
   }
 

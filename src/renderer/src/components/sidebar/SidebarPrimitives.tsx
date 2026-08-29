@@ -5,7 +5,15 @@ import type {
   ReactElement,
   ReactNode
 } from 'react'
-import { ChevronRight, Command, PanelLeft, Search, X } from 'lucide-react'
+import {
+  ChevronLeft,
+  ChevronRight,
+  Command,
+  PanelLeft,
+  PanelRight,
+  Search,
+  X
+} from 'lucide-react'
 
 function cx(...parts: Array<string | false | null | undefined>): string {
   return parts.filter(Boolean).join(' ')
@@ -21,9 +29,30 @@ type SidebarFrameProps = {
 type SidebarTitlebarToggleButtonProps = {
   title: string
   ariaLabel?: string
-  onClick: () => void
+  onClick?: () => void
   className?: string
   children?: ReactNode
+  disabled?: boolean
+  /**
+   * Icon intent. `panel` (default) renders the dual-sidebar `PanelLeft`
+   * glyph, useful as a status indicator that should not itself be clickable.
+   * `collapse` / `expand` render a single chevron pointing toward the action
+   * ("<-" to collapse the visible sidebar, "->" to expand a hidden one).
+   */
+  intent?: 'panel' | 'collapse' | 'expand'
+  /**
+   * Current sidebar state, used by the `panel` intent glyph to switch between
+   * `<|` (expanded) and `|>` (collapsed) — mirrors the ZCode pattern where the
+   * panel icon is a passive status indicator that tracks visibility.
+   */
+  panelState?: 'expanded' | 'collapsed'
+  /**
+   * Optional hover tooltip bubble rendered below the button. When supplied,
+   * the native `title` is suppressed and a CSS-only tooltip is shown instead
+   * so we can show a keyboard hint (e.g. ⌘B) alongside the label.
+   */
+  tooltip?: ReactNode
+  shortcut?: string
 }
 
 export function SidebarTitlebarToggleButton({
@@ -31,18 +60,66 @@ export function SidebarTitlebarToggleButton({
   ariaLabel,
   onClick,
   className,
-  children
+  children,
+  disabled = false,
+  intent = 'panel',
+  panelState = 'expanded',
+  tooltip,
+  shortcut
 }: SidebarTitlebarToggleButtonProps): ReactElement {
-  return (
+  const icon =
+    children ??
+    (intent === 'collapse' ? (
+      <ChevronLeft className="h-4 w-4" strokeWidth={1.75} />
+    ) : intent === 'expand' ? (
+      <ChevronRight className="h-4 w-4" strokeWidth={1.75} />
+    ) : panelState === 'collapsed' ? (
+      <PanelRight className="h-4 w-4" strokeWidth={1.75} />
+    ) : (
+      <PanelLeft className="h-4 w-4" strokeWidth={1.75} />
+    ))
+
+  // 装饰图标(intent='panel' 且无 onClick)用 data 属性标记,CSS 去掉 hover/active 反馈
+  const isDecorative = intent === 'panel' && !onClick
+
+  const button = (
     <button
       type="button"
       onClick={onClick}
-      title={title}
+      disabled={disabled}
+      // 仅在没有 tooltip 时降级使用浏览器原生 title;有 tooltip 时 hover 用 CSS 气泡替代
+      title={tooltip ? undefined : title}
       aria-label={ariaLabel ?? title}
-      className={cx('ds-titlebar-sidebar-toggle ds-no-drag', className)}
+      data-tooltip-anchor={tooltip ? '' : undefined}
+      data-decorative-panel={isDecorative ? 'true' : undefined}
+      className={cx(
+        'ds-titlebar-sidebar-toggle ds-no-drag',
+        disabled && 'ds-titlebar-sidebar-toggle--disabled',
+        className
+      )}
     >
-      {children ?? <PanelLeft className="h-4 w-4" strokeWidth={1.75} />}
+      {icon}
+      {tooltip ? (
+        <span
+          role="tooltip"
+          className="ds-titlebar-sidebar-toggle-tooltip ds-no-drag pointer-events-none absolute left-1/2 top-[calc(100%+6px)] z-50 -translate-x-1/2 whitespace-nowrap rounded-md border border-black/[0.08] bg-white/95 px-2 py-1 text-[11.5px] font-medium text-[#1f1f1f] shadow-[0_4px_14px_rgba(15,23,42,0.12),0_1px_3px_rgba(15,23,42,0.06)] backdrop-blur-md opacity-0 transition-opacity duration-150 group-hover/btn:opacity-100 group-focus-within/btn:opacity-100 dark:border-white/[0.12] dark:bg-[#1f1f1f]/95 dark:text-white"
+        >
+          <span>{tooltip}</span>
+          {shortcut ? (
+            <kbd className="ml-1.5 inline-flex h-[18px] min-w-[18px] items-center justify-center rounded border border-black/10 bg-black/[0.04] px-1 font-mono text-[10.5px] font-semibold tracking-tight text-[#3f3f46] dark:border-white/15 dark:bg-white/10 dark:text-white/85">
+              {shortcut}
+            </kbd>
+          ) : null}
+        </span>
+      ) : null}
     </button>
+  )
+
+  // 把 group/btn 挂在按钮外层,让 tooltip CSS 选择器能精确定位到当前按钮
+  return (
+    <span className="group/btn relative inline-flex">
+      {button}
+    </span>
   )
 }
 

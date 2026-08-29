@@ -1030,7 +1030,7 @@ function ScheduleTaskDialog({
 
   return (
     <div
-      className="ds-no-drag fixed inset-0 z-[90] flex items-center justify-center bg-black/58 px-4 py-2"
+      className="ds-no-drag fixed inset-0 z-[90] flex items-start justify-center overflow-y-auto bg-black/58 px-4 py-4"
       onMouseDown={onClose}
     >
       <form
@@ -1042,7 +1042,7 @@ function ScheduleTaskDialog({
           onSubmit()
         }}
         onMouseDown={(event) => event.stopPropagation()}
-        className="flex max-h-[calc(100vh-1rem)] w-full max-w-[540px] flex-col overflow-hidden rounded-[22px] border border-white/55 bg-ds-card shadow-[0_30px_90px_rgba(20,47,95,0.28)] dark:border-white/10"
+        className="my-auto flex max-h-[calc(100vh-2rem)] w-full max-w-[540px] flex-col overflow-hidden rounded-[22px] border border-white/55 bg-ds-card shadow-[0_30px_90px_rgba(20,47,95,0.28)] dark:border-white/10"
       >
         <div className="flex shrink-0 items-center justify-between gap-4 px-5 py-3">
           <div className="min-w-0">
