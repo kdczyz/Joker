@@ -1880,6 +1880,8 @@
   "terminalExitMessage": "プロセスが終了しました - クリックして再起動します",
   "terminalUnavailable": "端末が使用できません",
   "rightPanelCollapse": "右サイドバーを折りたたむ",
+  "rightPanelEmptyOpenFiles": "ファイルを開く",
+  "rightPanelEmptyHint": "このプロジェクトのファイルを表示",
   "editorPickerTitle": "デフォルトのエディターを選択する",
   "editorPickerTitleWithEditor": "デフォルトのエディタ: {{editor}}",
   "editorPickerMenuTitle": "ファイルを開く",

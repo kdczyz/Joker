@@ -9,6 +9,8 @@ import {
   type PointerEventHandler,
   type ReactElement
 } from 'react'
+import { FolderOpen } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import {
   DesignRightPanelContent,
   type DesignRightPanelContentProps
@@ -75,6 +77,7 @@ export type WorkbenchCodeRightWorkspaceProps = {
   extensionViews: readonly RegisteredContribution<'views.rightSidebar'>[]
   onActivate: (id: RightPanelContributionId) => void
   onClose: (id: RightPanelContributionId) => void
+  onOpenFiles: () => void
 }
 
 export type WorkbenchRightPanelProps = {
@@ -123,7 +126,6 @@ export function WorkbenchRightPanel({
   onCollapse
 }: WorkbenchRightPanelProps): ReactElement | null {
   if (route === 'chat' && rightPanelMode !== BUILTIN_RIGHT_PANEL_IDS.sddAi && code) {
-    if (!visible && code.state.tabs.length === 0) return null
     return (
       <CodeRightPanelWorkspace
         visible={visible}
@@ -246,6 +248,17 @@ function CodeRightPanelWorkspace({
     ? { ...dynamicTitles, [BUILTIN_RIGHT_PANEL_IDS.file]: fileTitle }
     : dynamicTitles
 
+  if (code.state.tabs.length === 0) {
+    return (
+      <CodeRightWorkspaceEmptyState
+        visible={visible}
+        width={width}
+        onOpenFiles={code.onOpenFiles}
+        onBeginResize={onBeginResize}
+      />
+    )
+  }
+
   const renderPanel = (id: RightPanelContributionId): ReactElement => {
     if (id === BUILTIN_RIGHT_PANEL_IDS.subagents) {
       return <SubagentDetailPanel className="h-full max-h-full w-full" onCollapse={onCollapse} />
@@ -311,9 +324,12 @@ function CodeRightPanelWorkspace({
         onPointerDown={onBeginResize}
       />
       <div
-        className={`${visible ? 'flex' : 'hidden'} h-full min-h-0 shrink-0 flex-col bg-ds-sidebar`}
-        style={{ width }}
+        aria-hidden={!visible}
+        className={`ds-code-right-workspace${visible ? ' ds-code-right-workspace-expanded' : ''} flex h-full min-h-0 shrink-0 flex-col overflow-hidden bg-ds-sidebar`}
+        style={{ width: visible ? width : 0 }}
       >
+        {/* 右上角固定按钮群悬浮在本面板上方,内容整体下移为其让位 */}
+        <div className="ds-workbench-corner-actions-spacer shrink-0" aria-hidden />
         <CodeRightPanelTabs
           state={code.state}
           domIdPrefix={domIdPrefix}
@@ -323,7 +339,6 @@ function CodeRightPanelWorkspace({
           extensionItems={code.extensionItems}
           onActivate={code.onActivate}
           onClose={code.onClose}
-          onCollapse={onCollapse}
         />
         <Suspense fallback={<div className="h-full w-full bg-ds-sidebar" />}>
           <div className="relative min-h-0 flex-1 bg-ds-sidebar">
@@ -346,6 +361,55 @@ function CodeRightPanelWorkspace({
             })}
           </div>
         </Suspense>
+      </div>
+    </>
+  )
+}
+
+/* 右侧工作区无任何标签时的空状态:提供「打开文件」快捷入口,
+   点击后打开文件树标签,浏览当前项目包含的文件 */
+function CodeRightWorkspaceEmptyState({
+  visible,
+  width,
+  onOpenFiles,
+  onBeginResize
+}: {
+  visible: boolean
+  width: number
+  onOpenFiles: () => void
+  onBeginResize: PointerEventHandler<HTMLDivElement>
+}): ReactElement {
+  const { t } = useTranslation('common')
+  return (
+    <>
+      <div
+        role="separator"
+        aria-orientation="vertical"
+        className={`${visible ? '' : 'hidden '}ds-workbench-divider ds-no-drag relative z-20 shrink-0 cursor-col-resize`}
+        onPointerDown={onBeginResize}
+      />
+      <div
+        aria-hidden={!visible}
+        className={`ds-code-right-workspace${visible ? ' ds-code-right-workspace-expanded' : ''} flex h-full min-h-0 shrink-0 flex-col overflow-hidden bg-ds-sidebar`}
+        style={{ width: visible ? width : 0 }}
+      >
+        {/* 右上角固定按钮群悬浮在本面板上方,内容整体下移为其让位 */}
+        <div className="ds-workbench-corner-actions-spacer shrink-0" aria-hidden />
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-8 pb-6 text-center">
+          <button
+            type="button"
+            onClick={onOpenFiles}
+            className="group flex flex-col items-center gap-3 rounded-[20px] border border-dashed border-ds-border-strong/60 px-10 py-7 text-ds-muted transition hover:border-accent/50 hover:bg-ds-hover/40 hover:text-ds-ink"
+          >
+            <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-ds-border bg-ds-card text-ds-faint shadow-sm transition group-hover:text-accent">
+              <FolderOpen className="h-5 w-5" strokeWidth={1.75} />
+            </span>
+            <span className="text-[13px] font-semibold">{t('rightPanelEmptyOpenFiles')}</span>
+          </button>
+          <p className="max-w-[220px] text-[12px] leading-relaxed text-ds-faint">
+            {t('rightPanelEmptyHint')}
+          </p>
+        </div>
       </div>
     </>
   )

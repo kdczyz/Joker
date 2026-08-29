@@ -10,7 +10,7 @@ import type { ChatBlock, RuntimeConnectionStatus } from '../../agent/types'
 import { FloatingComposer } from '../chat/FloatingComposer'
 import { LazyMessageTimeline } from '../chat/LazyMessageTimeline'
 import { SubagentReturnBar } from '../chat/message-timeline-empty'
-import { WorkbenchTopActions } from '../chat/WorkbenchTopBar'
+import { WorkbenchCornerActions } from '../chat/WorkbenchTopBar'
 import { ActiveUiPluginStagePresentation } from '../chat/UiPluginStagePresentation'
 import { DevPreviewLaunchCard } from '../DevPreviewLaunchCard'
 import { SessionHeader } from '../SessionHeader'
@@ -119,6 +119,13 @@ export function WorkbenchChatStage({
       data-terminal-open={terminalOpen ? 'true' : 'false'}
     >
       <ActiveUiPluginStagePresentation />
+      {/* 右上角固定按钮群:悬浮在窗口右上角(含右侧工作区上方),不随布局移动 */}
+      <WorkbenchCornerActions
+        terminalOpen={terminalOpen}
+        onToggleTerminal={onToggleTerminal}
+        rightWorkspaceExpanded={rightWorkspaceExpanded}
+        onToggleRightWorkspace={onToggleRightWorkspace}
+      />
       <div
         className={`${stageInsetClass} ds-ui-plugin-stage-content relative z-[3] flex min-h-0 min-w-0 flex-1 flex-col`}
       >
@@ -140,12 +147,6 @@ export function WorkbenchChatStage({
                   compact
                 />
               ) : null}
-              <WorkbenchTopActions
-                terminalOpen={terminalOpen}
-                onToggleTerminal={onToggleTerminal}
-                rightWorkspaceExpanded={rightWorkspaceExpanded}
-                onToggleRightWorkspace={onToggleRightWorkspace}
-              />
               {busy ? (
                 <span className="inline-flex shrink-0 rounded-full bg-amber-500/16 px-2.5 py-1 text-[11.5px] font-semibold text-amber-950 dark:text-amber-100">
                   {t('running')}

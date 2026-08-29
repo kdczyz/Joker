@@ -42,8 +42,8 @@ describe('SessionHeader', () => {
 
     expect(html).toContain('session-header-compact flex')
     expect(html).not.toContain('session-header-compact ds-no-drag')
-    expect(html).toContain('ds-no-drag relative shrink-0')
-    expect(html).toContain('"aria-label":"Export conversation"')
+    // 导出按钮移至右上角固定按钮群(WorkbenchCornerActions),标题行不再渲染
+    expect(html).not.toContain('"aria-label":"Export conversation"')
     expect(html).toContain('deepseek-gui')
     act(() => renderer!.unmount())
   })

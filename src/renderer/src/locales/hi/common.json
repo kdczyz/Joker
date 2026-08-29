@@ -1880,6 +1880,8 @@
   "terminalExitMessage": "प्रक्रिया समाप्त हो गई - पुनः आरंभ करने के लिए क्लिक करें",
   "terminalUnavailable": "टर्मिनल अनुपलब्ध",
   "rightPanelCollapse": "दाएँ साइडबार को संक्षिप्त करें",
+  "rightPanelEmptyOpenFiles": "फ़ाइलें खोलें",
+  "rightPanelEmptyHint": "इस प्रोजेक्ट की फ़ाइलें ब्राउज़ करें",
   "editorPickerTitle": "डिफ़ॉल्ट संपादक चुनें",
   "editorPickerTitleWithEditor": "Default editor: {{editor}}",
   "editorPickerMenuTitle": "के साथ फ़ाइलें खोलें",

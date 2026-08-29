@@ -1882,6 +1882,8 @@
   "terminalExitMessage": "进程已退出 — 点击重启",
   "terminalUnavailable": "终端不可用",
   "rightPanelCollapse": "收起右侧栏",
+  "rightPanelEmptyOpenFiles": "打开文件",
+  "rightPanelEmptyHint": "浏览当前项目包含的文件",
   "editorPickerTitle": "选择默认编辑器",
   "editorPickerTitleWithEditor": "默认编辑器：{{editor}}",
   "editorPickerMenuTitle": "打开文件使用",

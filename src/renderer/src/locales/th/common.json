@@ -1880,6 +1880,8 @@
   "terminalExitMessage": "ออกจากกระบวนการแล้ว — คลิกเพื่อเริ่มต้นใหม่",
   "terminalUnavailable": "เทอร์มินัลไม่พร้อมใช้งาน",
   "rightPanelCollapse": "ยุบแถบด้านข้างขวา",
+  "rightPanelEmptyOpenFiles": "เปิดไฟล์",
+  "rightPanelEmptyHint": "เรียกดูไฟล์ในโปรเจกต์นี้",
   "editorPickerTitle": "เลือกตัวแก้ไขเริ่มต้น",
   "editorPickerTitleWithEditor": "โปรแกรมแก้ไขเริ่มต้น: {{editor}}",
   "editorPickerMenuTitle": "เปิดไฟล์ด้วย",

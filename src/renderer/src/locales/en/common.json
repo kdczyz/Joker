@@ -1882,6 +1882,8 @@
   "terminalExitMessage": "Process exited — click to restart",
   "terminalUnavailable": "Terminal unavailable",
   "rightPanelCollapse": "Collapse right sidebar",
+  "rightPanelEmptyOpenFiles": "Open files",
+  "rightPanelEmptyHint": "Browse the files in this project",
   "editorPickerTitle": "Choose default editor",
   "editorPickerTitleWithEditor": "Default editor: {{editor}}",
   "editorPickerMenuTitle": "Open files with",

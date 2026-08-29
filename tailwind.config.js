@@ -38,6 +38,7 @@ export default {
           'border-muted': 'var(--ds-border-muted)',
           ink: 'var(--ds-text)',
           muted: 'var(--ds-text-muted)',
+          narrative: 'var(--ds-text-narrative)',
           faint: 'var(--ds-text-faint)',
           success: 'var(--ds-success)',
           'success-soft': 'var(--ds-success-soft)',

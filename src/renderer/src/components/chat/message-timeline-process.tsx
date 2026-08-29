@@ -335,7 +335,7 @@ export function ProcessSectionRow({
           {SectionIcon ? <ProcessGlyph Icon={SectionIcon} /> : null}
           <span className={`shrink-0 whitespace-nowrap ${active && !hasError ? 'ds-shiny-text' : ''}`}>{title}</span>
           {activeReasoningLine ? (
-            <span className="min-w-0 flex-auto truncate text-[12.5px] font-normal text-ds-faint">
+            <span className="min-w-0 flex-auto truncate text-[12.5px] font-normal text-ds-narrative">
               <span className="opacity-60">· </span>{activeReasoningLine}
             </span>
           ) : null}
@@ -354,7 +354,7 @@ export function ProcessSectionRow({
           {SectionIcon ? <ProcessGlyph Icon={SectionIcon} /> : null}
           <span className={`shrink-0 whitespace-nowrap ${active && !hasError ? 'ds-shiny-text' : ''}`}>{title}</span>
           {activeReasoningLine ? (
-            <span className="min-w-0 flex-auto truncate text-[12.5px] font-normal text-ds-faint">
+            <span className="min-w-0 flex-auto truncate text-[12.5px] font-normal text-ds-narrative">
               <span className="opacity-60">· </span>{activeReasoningLine}
             </span>
           ) : null}
@@ -370,7 +370,7 @@ export function ProcessSectionRow({
           {shouldRenderDetail ? (
             section.kind === 'reasoning' ? (
               <div className="rounded-xl border border-ds-border/40 bg-ds-card/60 p-3 shadow-inner">
-                <div className="ds-markdown text-[13px] leading-6 text-ds-faint">
+                <div className="ds-markdown text-[13px] leading-6 text-ds-narrative">
                   <AssistantMarkdown
                     text={reasoningText}
                     streaming={active && processing}
@@ -1309,7 +1309,7 @@ function ProcessEntryDetail({
   if (detail.kind === 'reasoning') {
     const streamReason = block.id === 'live-reasoning' && processing
     return (
-      <div className="ds-markdown text-[13.5px] leading-6 text-ds-muted">
+      <div className="ds-markdown text-[13.5px] leading-6 text-ds-narrative">
         <AssistantMarkdown text={detail.text} streaming={streamReason} hideHtmlComments />
       </div>
     )

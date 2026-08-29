@@ -1880,6 +1880,8 @@
   "terminalExitMessage": "프로세스가 종료되었습니다. 다시 시작하려면 클릭하세요.",
   "terminalUnavailable": "터미널 이용 불가",
   "rightPanelCollapse": "오른쪽 사이드바 접기",
+  "rightPanelEmptyOpenFiles": "파일 열기",
+  "rightPanelEmptyHint": "이 프로젝트의 파일 탐색",
   "editorPickerTitle": "기본 편집기 선택",
   "editorPickerTitleWithEditor": "기본 편집기: {{editor}}",
   "editorPickerMenuTitle": "다음으로 파일 열기",

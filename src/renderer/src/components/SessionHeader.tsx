@@ -5,7 +5,6 @@ import { useTranslation } from 'react-i18next'
 import { useChatStore } from '../store/chat-store'
 import { formatRelativeTime } from '../lib/format-relative-time'
 import { workspaceLabelFromPath } from '../lib/workspace-label'
-import { SessionExportMenu } from './SessionExportMenu'
 import {
   formatCompactNumber,
   formatCacheMissReason,
@@ -25,9 +24,6 @@ export function SessionHeader({ compact = false, className = '' }: Props): React
   const threads = useChatStore((s) => s.threads)
   const activeThreadId = useChatStore((s) => s.activeThreadId)
   const busy = useChatStore((s) => s.busy)
-  const blocks = useChatStore((s) => s.blocks)
-  const currentTurnId = useChatStore((s) => s.currentTurnId)
-  const currentTurnUserId = useChatStore((s) => s.currentTurnUserId)
   const runtimeConnection = useChatStore((s) => s.runtimeConnection)
   const workspaceLabel = useChatStore((s) => s.workspaceLabel)
   const renameActiveThread = useChatStore((s) => s.renameActiveThread)
@@ -116,13 +112,6 @@ export function SessionHeader({ compact = false, className = '' }: Props): React
                 ) : null}
               </div>
             </div>
-            <SessionExportMenu
-              title={active.title}
-              blocks={blocks}
-              busy={busy}
-              currentTurnId={currentTurnId}
-              currentTurnUserId={currentTurnUserId}
-            />
           </>
         ) : (
           <div className="min-w-0 pt-0.5">

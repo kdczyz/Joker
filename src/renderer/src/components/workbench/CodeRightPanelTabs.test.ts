@@ -33,8 +33,7 @@ describe('CodeRightPanelTabs', () => {
         sideConversationRunningCount: 1,
         extensionItems: [],
         onActivate,
-        onClose: vi.fn(),
-        onCollapse: vi.fn()
+        onClose: vi.fn()
       }))
     })
 
@@ -49,8 +48,7 @@ describe('CodeRightPanelTabs', () => {
     expect(onActivate).toHaveBeenLastCalledWith(BUILTIN_RIGHT_PANEL_IDS.file)
   })
 
-  it('omits the redundant add-tool menu and keeps the collapse control', () => {
-    const onCollapse = vi.fn()
+  it('omits the redundant add-tool menu and the collapse control', () => {
     let renderer: ReactTestRenderer
     act(() => {
       renderer = create(createElement(CodeRightPanelTabs, {
@@ -60,16 +58,14 @@ describe('CodeRightPanelTabs', () => {
         sideConversationRunningCount: 0,
         extensionItems: [],
         onActivate: vi.fn(),
-        onClose: vi.fn(),
-        onCollapse
+        onClose: vi.fn()
       }))
     })
 
     expect(renderer!.root.findAllByProps({ 'aria-label': 'Open right workspace tool' })).toHaveLength(0)
     expect(renderer!.root.findAll((node) => node.props.role === 'menu')).toHaveLength(0)
-    const collapse = renderer!.root.findByProps({ 'aria-label': 'Collapse right sidebar' })
-    act(() => collapse.props.onClick())
-    expect(onCollapse).toHaveBeenCalledTimes(1)
+    // 收起入口统一由右上角固定按钮群(WorkbenchCornerActions)承担,标签栏不再重复
+    expect(renderer!.root.findAllByProps({ 'aria-label': 'Collapse right sidebar' })).toHaveLength(0)
   })
 
   it('keeps empty tab chrome as an Electron no-drag region without an add button', () => {
@@ -82,8 +78,7 @@ describe('CodeRightPanelTabs', () => {
         sideConversationRunningCount: 0,
         extensionItems: [],
         onActivate: vi.fn(),
-        onClose: vi.fn(),
-        onCollapse: vi.fn()
+        onClose: vi.fn()
       }))
     })
 

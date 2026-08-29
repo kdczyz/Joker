@@ -18,6 +18,8 @@
   --border-strong: rgba(0, 0, 0, 0.2);
   --text-primary: #1c1c1f;
   --text-secondary: #52525b;
+  /* agent 思考/进展叙述文本:介于 secondary 与 primary 之间,保证时间线可读性 */
+  --text-narrative: #3d3d44;
   --text-tertiary: #8a8a92;
   --text-placeholder: #9d9da6;
 
@@ -33,6 +35,7 @@
   --ds-border-strong: var(--border-strong);
   --ds-text: var(--text-primary);
   --ds-text-muted: var(--text-secondary);
+  --ds-text-narrative: var(--text-narrative);
   --ds-text-faint: var(--text-tertiary);
   --ds-bubble-user: rgba(0, 0, 0, 0.07);
   --ds-bubble-user-fg: #1c1c1f;
@@ -140,6 +143,7 @@
   --border-strong: rgba(255, 255, 255, 0.2);
   --text-primary: #f4f4f5;
   --text-secondary: #b0b0b8;
+  --text-narrative: #d6d6de;
   --text-tertiary: #83838c;
   --text-placeholder: #6f6f78;
 
@@ -155,6 +159,7 @@
   --ds-border-strong: var(--border-strong);
   --ds-text: var(--text-primary);
   --ds-text-muted: var(--text-secondary);
+  --ds-text-narrative: var(--text-narrative);
   --ds-text-faint: var(--text-tertiary);
   --ds-bubble-user: rgba(255, 255, 255, 0.08);
   --ds-bubble-user-fg: #f4f4f5;
@@ -304,6 +309,7 @@
   --border-strong: rgba(90, 74, 58, 0.22);
   --text-primary: #1d011d;
   --text-secondary: #6e6060;
+  --text-narrative: #4f4343;
   --text-tertiary: #8a7e72;
   --text-placeholder: #b8b0a8;
 
@@ -635,12 +641,43 @@ body.ds-workbench-resizing .ds-workbench-left-sidebar-clip {
   transition: none;
 }
 
+/* 右侧工作区展开/收起动画:面板宽度过渡 + 内容淡入右滑;
+   收起时保持挂载(宽度 0 + overflow hidden),保证双向都有动画 */
+.ds-code-right-workspace {
+  transition: width 0.3s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+.ds-code-right-workspace:not(.ds-code-right-workspace-expanded) {
+  pointer-events: none;
+}
+
+.ds-code-right-workspace > * {
+  transition:
+    opacity 0.22s ease,
+    transform 0.3s cubic-bezier(0.32, 0.72, 0.24, 1);
+}
+
+.ds-code-right-workspace:not(.ds-code-right-workspace-expanded) > * {
+  opacity: 0;
+  transform: translateX(16px);
+}
+
+body.ds-workbench-resizing .ds-code-right-workspace,
+body.ds-workbench-resizing .ds-code-right-workspace > * {
+  transition: none;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .ds-workbench-left-sidebar-clip {
     transition: none;
   }
 
   .ds-workbench-sidebar-toggle-anchor {
+    transition: none;
+  }
+
+  .ds-code-right-workspace,
+  .ds-code-right-workspace > * {
     transition: none;
   }
 }
@@ -2807,6 +2844,8 @@ body.ds-workbench-resizing webview {
   justify-self: end;
   scrollbar-width: none;
   transform: translateY(-3px);
+  /* 顶栏操作列(扩展动作/运行徽标)为右上角固定按钮群留出空间,避免重叠 */
+  padding-right: 10.5rem;
 }
 
 .chat-topbar .ds-titlebar-sidebar-toggle {
@@ -2884,7 +2923,19 @@ body.ds-workbench-resizing webview {
 
 .ds-workbench-top-actions {
   z-index: 30;
-  margin-right: clamp(4.5rem, 14cqw, 12rem);
+}
+
+/* 右上角固定按钮群(导出/编辑器/终端/右侧工作区开关):
+   fixed 于窗口右上角,与聊天顶栏标题行同一水平线,
+   右侧工作区展开时悬浮其上,位置始终不变 */
+.ds-workbench-corner-actions {
+  top: 18px;
+  right: 14px;
+}
+
+/* 右侧工作区展开时,内容整体下移,为固定按钮群让出空间 */
+.ds-workbench-corner-actions-spacer {
+  height: 56px;
 }
 
 .ds-topbar-action-button {
@@ -2954,17 +3005,11 @@ body.ds-workbench-resizing webview {
 }
 
 @container (max-width: 640px) {
-  .chat-topbar-grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
+  /* 顶栏保持单行两列:标题在左截断,操作列在右。
+     顶部按钮已固定在窗口右上角,窄宽度下不再换行到第二行 */
   .chat-topbar-actions {
-    width: 100%;
     overflow-x: auto;
-  }
-
-  .ds-workbench-top-actions {
-    margin-right: 0;
+    padding-right: 0.5rem;
   }
 }
 

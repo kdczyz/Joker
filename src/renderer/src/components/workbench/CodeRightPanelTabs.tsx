@@ -13,7 +13,6 @@ import {
   Globe2,
   ListTodo,
   MessageCircleMore,
-  PanelRightClose,
   Puzzle,
   Shapes,
   X,
@@ -41,7 +40,6 @@ type Props = {
   extensionItems: readonly ExtensionRightRailViewEntry[]
   onActivate: (id: RightPanelContributionId) => void
   onClose: (id: RightPanelContributionId) => void
-  onCollapse: () => void
 }
 
 type BuiltinTab = {
@@ -62,8 +60,7 @@ export function CodeRightPanelTabs({
   sideConversationRunningCount,
   extensionItems,
   onActivate,
-  onClose,
-  onCollapse
+  onClose
 }: Props): ReactElement {
   const { t } = useTranslation('common')
   const idPrefix = safeDomId(domIdPrefix)
@@ -212,16 +209,6 @@ export function CodeRightPanelTabs({
           )
         })}
       </div>
-
-      <button
-        type="button"
-        onClick={onCollapse}
-        aria-label={t('rightPanelCollapse')}
-        title={t('rightPanelCollapse')}
-        className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-[9px] text-ds-faint transition hover:bg-ds-hover hover:text-ds-ink"
-      >
-        <PanelRightClose className="h-4 w-4" strokeWidth={1.8} />
-      </button>
     </div>
   )
 }

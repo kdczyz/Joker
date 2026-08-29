@@ -1880,6 +1880,8 @@
   "terminalExitMessage": "Процесс завершен — нажмите, чтобы перезапустить",
   "terminalUnavailable": "Терминал недоступен",
   "rightPanelCollapse": "Свернуть правую боковую панель",
+  "rightPanelEmptyOpenFiles": "Открыть файлы",
+  "rightPanelEmptyHint": "Просмотреть файлы этого проекта",
   "editorPickerTitle": "Выбрать редактор по умолчанию",
   "editorPickerTitleWithEditor": "Редактор по умолчанию: {{editor}}",
   "editorPickerMenuTitle": "Открытие файлов с помощью",

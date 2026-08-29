@@ -26,6 +26,7 @@ import {
   Terminal
 } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import { createPortal } from 'react-dom'
 import { readPreferredEditorId, writePreferredEditorId } from '../../lib/editor-preferences'
 import {
   extensionHostIconUrl,
@@ -39,6 +40,8 @@ import {
   type RightPanelMode
 } from '../../extensions/contribution-ids'
 import { boundedPlainText } from '../../extensions/safe-text'
+import { useChatStore } from '../../store/chat-store'
+import { SessionExportMenu } from '../SessionExportMenu'
 
 export type { RightPanelMode } from '../../extensions/contribution-ids'
 
@@ -377,6 +380,45 @@ export function WorkbenchTopActions({
         </button>
       ) : null}
     </div>
+  )
+}
+
+/* 右上角固定按钮群:导出 + 编辑器 + 终端 + 右侧工作区开关。
+   fixed 定位在窗口右上角,不随聊天区宽度、右侧工作区展开而移动或换行。
+   通过 Portal 挂到 body:按钮群的 tooltip 等溢出内容不能被聊天舞台
+   (isolate 层叠上下文)和其后渲染的右侧工作区面板盖住 */
+export function WorkbenchCornerActions({
+  terminalOpen = false,
+  onToggleTerminal,
+  rightWorkspaceExpanded = false,
+  onToggleRightWorkspace
+}: WorkbenchTopActionsProps): ReactElement {
+  const threads = useChatStore((s) => s.threads)
+  const activeThreadId = useChatStore((s) => s.activeThreadId)
+  const busy = useChatStore((s) => s.busy)
+  const blocks = useChatStore((s) => s.blocks)
+  const currentTurnId = useChatStore((s) => s.currentTurnId)
+  const currentTurnUserId = useChatStore((s) => s.currentTurnUserId)
+  const active = threads.find((th) => th.id === activeThreadId)
+  return createPortal(
+    <div className="ds-workbench-corner-actions ds-no-drag fixed z-[60] flex items-center gap-1.5">
+      {active ? (
+        <SessionExportMenu
+          title={active.title}
+          blocks={blocks}
+          busy={busy}
+          currentTurnId={currentTurnId}
+          currentTurnUserId={currentTurnUserId}
+        />
+      ) : null}
+      <WorkbenchTopActions
+        terminalOpen={terminalOpen}
+        onToggleTerminal={onToggleTerminal}
+        rightWorkspaceExpanded={rightWorkspaceExpanded}
+        onToggleRightWorkspace={onToggleRightWorkspace}
+      />
+    </div>,
+    document.body
   )
 }
 
