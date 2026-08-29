@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactElement } from 'react'
+import { useMemo, useRef, useState, type ReactElement } from 'react'
 import {
   ChevronDown,
   ChevronRight,
@@ -90,17 +90,6 @@ export function DesignSidebar({
   onToggleTheme
 }: Props): ReactElement {
   const { t } = useTranslation('common')
-  const [isDarkMode, setIsDarkMode] = useState(
-    () => typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark'
-  )
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDarkMode(document.documentElement.getAttribute('data-theme') === 'dark')
-    })
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
-    return () => observer.disconnect()
-  }, [])
   const documents = useDesignWorkspaceStore((s) => s.documents)
   const activeDocumentId = useDesignWorkspaceStore((s) => s.activeDocumentId)
   const artifacts = useDesignWorkspaceStore((s) => s.artifacts)
@@ -544,15 +533,15 @@ export function DesignSidebar({
                 />
               </div>
               <SidebarIconButton
-                title={isDarkMode ? t('switchToLight') : t('switchToDark')}
+                title={t('toggleTheme')}
                 ariaLabel={t('toggleTheme')}
                 onClick={onToggleTheme}
               >
-                {isDarkMode ? (
-                  <Sun className="h-4 w-4" strokeWidth={1.75} />
-                ) : (
-                  <Moon className="h-4 w-4" strokeWidth={1.75} />
-                )}
+                {/* 纯 CSS 切换,避免切换主题时重渲染整棵侧栏(见 chat/Sidebar.tsx 同名注释) */}
+                <Moon className="h-4 w-4 dark:hidden" strokeWidth={1.75} />
+                <Sun className="hidden h-4 w-4 dark:block" strokeWidth={1.75} />
+                <span className="sr-only dark:hidden">{t('switchToDark')}</span>
+                <span className="sr-only hidden dark:inline">{t('switchToLight')}</span>
               </SidebarIconButton>
             </div>
           </div>

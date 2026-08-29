@@ -5,10 +5,14 @@ import type {
   WorkspaceEntry
 } from '@shared/workspace-file'
 import {
+  buildChatFileTreeFilteredState,
   compareChatFileTreeEntriesByModified,
+  filterChatFileTreeEntries,
   formatChatFileTreeUnsupportedMessage,
   isChatFileTreeIgnoredDirectory,
   isChatFileTreePreviewableEntry,
+  matchesChatFileTreeQuery,
+  scanChatFileTreeAllEntries,
   scanChatFileTreeRecentFiles,
   sortChatFileTreeEntries
 } from './ChatFileTreePanel'
@@ -95,5 +99,91 @@ describe('ChatFileTreePanel helpers', () => {
       { workspaceRoot: root, path: root },
       { workspaceRoot: root, path: root }
     ])
+  })
+
+  it('matches query case-insensitively and trimmed', () => {
+    expect(matchesChatFileTreeQuery('Hello.ts', 'hello')).toBe(true)
+    expect(matchesChatFileTreeQuery('Hello.ts', '  HELLO  ')).toBe(true)
+    expect(matchesChatFileTreeQuery('Hello.ts', 'world')).toBe(false)
+    expect(matchesChatFileTreeQuery('Hello.ts', '')).toBe(true)
+  })
+
+  it('filters entries by file name while keeping parent directories', () => {
+    const children = new Map<string, WorkspaceEntry[]>([
+      ['/tmp/project/src', [entry({ name: 'main.ts', type: 'file', path: '/tmp/project/src/main.ts' })]],
+      ['/tmp/project/docs', [entry({ name: 'readme.md', type: 'file', path: '/tmp/project/docs/readme.md' })]]
+    ])
+    const rootEntries = [
+      entry({ name: 'src', type: 'directory', path: '/tmp/project/src' }),
+      entry({ name: 'docs', type: 'directory', path: '/tmp/project/docs' }),
+      entry({ name: 'logo.png', type: 'file', path: '/tmp/project/logo.png' })
+    ]
+    const filtered = filterChatFileTreeEntries(rootEntries, 'main', (path) => children.get(path))
+    expect(filtered.map((item) => item.name)).toEqual(['src'])
+    expect(filtered[0]?.type).toBe('directory')
+  })
+
+  it('returns directories whose names match the query', () => {
+    const rootEntries = [
+      entry({ name: 'src', type: 'directory', path: '/tmp/project/src' }),
+      entry({ name: 'assets', type: 'directory', path: '/tmp/project/assets' })
+    ]
+    const filtered = filterChatFileTreeEntries(rootEntries, 'src', () => [])
+    expect(filtered.map((item) => item.name)).toEqual(['src'])
+  })
+
+  it('builds filtered state and expands directories containing matches', () => {
+    const directories = {
+      '': {
+        entries: [
+          entry({ name: 'src', type: 'directory', path: '/tmp/project/src' }),
+          entry({ name: 'docs', type: 'directory', path: '/tmp/project/docs' })
+        ],
+        loading: false,
+        error: null
+      },
+      '/tmp/project/src': {
+        entries: [
+          entry({ name: 'main.ts', type: 'file', path: '/tmp/project/src/main.ts' }),
+          entry({ name: 'util.ts', type: 'file', path: '/tmp/project/src/util.ts' })
+        ],
+        loading: false,
+        error: null
+      },
+      '/tmp/project/docs': {
+        entries: [
+          entry({ name: 'readme.md', type: 'file', path: '/tmp/project/docs/readme.md' })
+        ],
+        loading: false,
+        error: null
+      }
+    }
+    const { filteredEntries, expandedPaths } = buildChatFileTreeFilteredState(directories, 'main')
+    expect(filteredEntries[''].map((item) => item.name)).toEqual(['src'])
+    expect(filteredEntries['/tmp/project/src'].map((item) => item.name)).toEqual(['main.ts'])
+    expect(expandedPaths.has('/tmp/project/src')).toBe(true)
+    expect(filteredEntries['/tmp/project/docs']).toEqual([])
+  })
+
+  it('scans all workspace entries for search filtering', async () => {
+    const root = '/tmp/project'
+    const snapshots: Record<string, WorkspaceDirectoryListResult> = {
+      [root]: directory([
+        entry({ name: 'src', type: 'directory', path: `${root}/src` }),
+        entry({ name: 'readme.md', type: 'file', path: `${root}/readme.md` })
+      ]),
+      [`${root}/src`]: directory([
+        entry({ name: 'main.ts', type: 'file', path: `${root}/src/main.ts` })
+      ])
+    }
+    const listWorkspaceDirectory = vi.fn(
+      async (target: WorkspaceDirectoryTarget): Promise<WorkspaceDirectoryListResult> =>
+        snapshots[target.path] ?? directory([])
+    )
+
+    const result = await scanChatFileTreeAllEntries(root, listWorkspaceDirectory)
+    expect(Object.keys(result).sort()).toEqual(['', `${root}/src`])
+    expect(result[''].map((item) => item.name)).toEqual(['readme.md', 'src'])
+    expect(result[`${root}/src`].map((item) => item.name)).toEqual(['main.ts'])
   })
 })

@@ -47,6 +47,7 @@ export type ChatFileTreeReference = ComposerFileReference & {
 type Props = {
   workspaceRoot: string
   selectedPath?: string | null
+  searchQuery?: string
   onPreviewFile: (path: string) => void
   onAddReference: (reference: ChatFileTreeReference) => void
   t: TFunction
@@ -130,6 +131,84 @@ export function sortChatFileTreeEntries(entries: WorkspaceEntry[], mode: FileTre
   return [...entries].sort(mode === 'modified' ? compareChatFileTreeEntriesByModified : compareChatFileTreeEntriesByName)
 }
 
+export function matchesChatFileTreeQuery(name: string, query: string): boolean {
+  return name.toLowerCase().includes(query.trim().toLowerCase())
+}
+
+export function filterChatFileTreeEntries(
+  entries: WorkspaceEntry[],
+  query: string,
+  getChildren: (path: string) => WorkspaceEntry[] | undefined
+): WorkspaceEntry[] {
+  const normalized = query.trim().toLowerCase()
+  if (!normalized) return entries
+
+  return entries.flatMap((entry) => {
+    if (entry.type === 'directory' && isChatFileTreeIgnoredDirectory(entry.name)) return []
+    const nameMatch = matchesChatFileTreeQuery(entry.name, normalized)
+    if (entry.type === 'file') {
+      return nameMatch ? [entry] : []
+    }
+    const children = getChildren(entry.path)
+    const filteredChildren = children ? filterChatFileTreeEntries(children, normalized, getChildren) : []
+    if (nameMatch || filteredChildren.length > 0) {
+      return [{ ...entry }]
+    }
+    return []
+  })
+}
+
+/**
+ * 根据搜索词构建过滤后的文件树状态。返回每个已加载目录过滤后的 entries，
+ * 以及需要自动展开的目录路径集合。
+ */
+export function buildChatFileTreeFilteredState(
+  directories: Record<string, { entries: WorkspaceEntry[] } | undefined>,
+  query: string
+): { filteredEntries: Record<string, WorkspaceEntry[]>; expandedPaths: Set<string> } {
+  const normalized = query.trim().toLowerCase()
+  const filteredEntries: Record<string, WorkspaceEntry[]> = {}
+  const expandedPaths = new Set<string>()
+
+  if (!normalized) {
+    for (const [key, state] of Object.entries(directories)) {
+      filteredEntries[key] = state?.entries ?? []
+    }
+    return { filteredEntries, expandedPaths }
+  }
+
+  const visited = new Set<string>()
+
+  function visit(path: string): WorkspaceEntry[] {
+    const key = path || ROOT_PATH
+    if (visited.has(key)) return filteredEntries[key] ?? []
+    visited.add(key)
+
+    const state = directories[key]
+    if (!state) return []
+
+    const result = state.entries.flatMap((entry) => {
+      if (entry.type === 'directory' && isChatFileTreeIgnoredDirectory(entry.name)) return []
+      const nameMatch = matchesChatFileTreeQuery(entry.name, normalized)
+      if (entry.type === 'file') {
+        return nameMatch ? [entry] : []
+      }
+      const children = visit(entry.path)
+      if (nameMatch || children.length > 0) {
+        if (children.length > 0) expandedPaths.add(entry.path)
+        return [entry]
+      }
+      return []
+    })
+
+    filteredEntries[key] = result
+    return result
+  }
+
+  visit(ROOT_PATH)
+  return { filteredEntries, expandedPaths }
+}
+
 function sortRecentFiles(entries: WorkspaceEntry[]): WorkspaceEntry[] {
   return [...entries]
     .filter(isChatFileTreePreviewableEntry)
@@ -179,6 +258,54 @@ export async function scanChatFileTreeRecentFiles(
   return sortRecentFiles(collected).slice(0, limit)
 }
 
+/**
+ * 扫描整个工作区，返回每个目录下的 entries（键与组件内部 directories state 一致）。
+ * 用于搜索模式，确保过滤能覆盖未懒加载的目录。
+ */
+export async function scanChatFileTreeAllEntries(
+  root: string,
+  listWorkspaceDirectory: ListWorkspaceDirectory,
+  options: RecentScanOptions = {}
+): Promise<Record<string, WorkspaceEntry[]>> {
+  const maxDepth = options.maxDepth ?? RECENT_SCAN_MAX_DEPTH
+  const maxEntries = options.maxEntries ?? RECENT_SCAN_MAX_ENTRIES
+  const isCancelled = options.isCancelled ?? (() => false)
+  const collected: Record<string, WorkspaceEntry[]> = {}
+
+  const scanDirectory = async (
+    path: string,
+    depth: number,
+    seenDirectories: Set<string>
+  ): Promise<void> => {
+    if (isCancelled() || depth > maxDepth) return
+    const directoryKey = pathKey(path || root)
+    if (seenDirectories.has(directoryKey)) return
+    seenDirectories.add(directoryKey)
+
+    const result = await listWorkspaceDirectory({ workspaceRoot: root, path: path || root })
+    if (!result.ok) {
+      collected[path === root ? ROOT_PATH : path] = []
+      return
+    }
+
+    const visibleEntries = sortChatFileTreeEntries(
+      result.entries.filter((entry) => entry.type !== 'directory' || !isChatFileTreeIgnoredDirectory(entry.name)),
+      'name'
+    )
+    collected[path === root ? ROOT_PATH : path] = visibleEntries
+
+    for (const entry of visibleEntries) {
+      if (isCancelled() || Object.keys(collected).length >= maxEntries) return
+      if (entry.type === 'directory') {
+        await scanDirectory(entry.path, depth + 1, seenDirectories)
+      }
+    }
+  }
+
+  await scanDirectory(root, 0, new Set())
+  return collected
+}
+
 export function isChatFileTreeIgnoredDirectory(name: string): boolean {
   return IGNORED_DIRS.has(name.toLowerCase())
 }
@@ -194,6 +321,7 @@ export function formatChatFileTreeUnsupportedMessage(name: string): string {
 export function ChatFileTreePanel({
   workspaceRoot,
   selectedPath,
+  searchQuery = '',
   onPreviewFile,
   onAddReference,
   t,
@@ -205,15 +333,31 @@ export function ChatFileTreePanel({
   const [sortMode, setSortMode] = useState<FileTreeSortMode>('name')
   const [recentScan, setRecentScan] = useState<RecentScanState>({ entries: [], loading: false, error: null })
   const [recentScanNonce, setRecentScanNonce] = useState(0)
+  const [searchScan, setSearchScan] = useState<{
+    directories: Record<string, DirectoryState>
+    loading: boolean
+    error: string | null
+  }>({ directories: {}, loading: false, error: null })
   const menuRef = useRef<HTMLDivElement | null>(null)
   const root = workspaceRoot.trim()
   const rootName = useMemo(() => workspaceDisplayName(root), [root])
+  const isSearching = searchQuery.trim().length > 0
+  const searchSource = useMemo<Record<string, DirectoryState>>(
+    () => (isSearching ? searchScan.directories : directories),
+    [isSearching, searchScan.directories, directories]
+  )
+  const { filteredEntries, expandedPaths: searchExpandedPaths } = useMemo(
+    () => buildChatFileTreeFilteredState(searchSource, searchQuery),
+    [searchSource, searchQuery]
+  )
+  const effectiveExpanded = isSearching ? searchExpandedPaths : expanded
 
   useEffect(() => {
     setExpanded(new Set([ROOT_PATH]))
     setDirectories({})
     setContextMenu(null)
     setRecentScan({ entries: [], loading: false, error: null })
+    setSearchScan({ directories: {}, loading: false, error: null })
   }, [root])
 
   const loadDirectory = useCallback((path: string): void => {
@@ -292,6 +436,48 @@ export function ChatFileTreePanel({
     }
   }, [root, recentScanNonce])
 
+  /* 搜索模式：一次性扫描整个工作区，用于过滤未懒加载的目录。 */
+  useEffect(() => {
+    if (!isSearching) {
+      setSearchScan({ directories: {}, loading: false, error: null })
+      return
+    }
+    if (Object.keys(searchScan.directories).length > 0) return
+
+    const listWorkspaceDirectory = window.JokerGui?.listWorkspaceDirectory?.bind(window.JokerGui)
+    if (!root || typeof listWorkspaceDirectory !== 'function') return
+    let cancelled = false
+    setSearchScan({ directories: {}, loading: true, error: null })
+
+    void (async () => {
+      try {
+        const dirs = await scanChatFileTreeAllEntries(root, listWorkspaceDirectory, {
+          isCancelled: () => cancelled
+        })
+        if (cancelled) return
+        const directoryStates = Object.fromEntries(
+          Object.entries(dirs).map(([key, entries]) => [
+            key,
+            { entries, loading: false, error: null } as DirectoryState
+          ])
+        )
+        setSearchScan({ directories: directoryStates, loading: false, error: null })
+      } catch (error) {
+        if (!cancelled) {
+          setSearchScan({
+            directories: {},
+            loading: false,
+            error: error instanceof Error ? error.message : String(error)
+          })
+        }
+      }
+    })()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isSearching, root, searchScan.directories])
+
   useEffect(() => {
     if (!contextMenu) return
     const onPointerDown = (event: PointerEvent): void => {
@@ -333,6 +519,7 @@ export function ChatFileTreePanel({
       error: null
     }))
     setRecentScanNonce((value) => value + 1)
+    setSearchScan({ directories: {}, loading: false, error: null })
   }
 
   const addReference = (entry: WorkspaceEntry): void => {
@@ -378,8 +565,13 @@ export function ChatFileTreePanel({
   }
 
   const renderDirectory = (path: string, depth: number): ReactElement[] => {
-    const state = directories[path || ROOT_PATH]
-    if (state?.loading && (!state.entries.length || depth === 0)) {
+    const state = searchSource[path || ROOT_PATH]
+    const rawEntries = state?.entries ?? []
+    const entries = isSearching
+      ? (filteredEntries[path || ROOT_PATH] ?? [])
+      : rawEntries
+
+    if (state?.loading && (!rawEntries.length || depth === 0)) {
       return [
         <div
           key={`${path}-loading`}
@@ -403,21 +595,21 @@ export function ChatFileTreePanel({
         </div>
       ]
     }
-    if (!state?.entries.length) {
+    if (!entries.length) {
       return depth === 0
         ? [
             <div key={`${path}-empty`} className="px-2.5 py-2 text-[12px] text-ds-muted">
-              {t('fileTreeEmpty')}
+              {isSearching ? t('fileTreeNoMatches', { defaultValue: 'No files match your filter.' }) : t('fileTreeEmpty')}
             </div>
           ]
         : []
     }
 
-    return sortChatFileTreeEntries(state.entries, sortMode)
+    return sortChatFileTreeEntries(entries, sortMode)
       .filter((entry) => entry.type !== 'directory' || !isChatFileTreeIgnoredDirectory(entry.name))
       .flatMap((entry) => {
         const isDirectory = entry.type === 'directory'
-        const entryExpanded = expanded.has(entry.path)
+        const entryExpanded = effectiveExpanded.has(entry.path)
         const previewable = isChatFileTreePreviewableEntry(entry)
         const active = !isDirectory && selectedKey === pathKey(entry.path)
         const icon = isDirectory
@@ -436,7 +628,7 @@ export function ChatFileTreePanel({
               active={active}
               onClick={() => {
                 if (isDirectory) {
-                  toggleDirectory(entry.path)
+                  if (!isSearching) toggleDirectory(entry.path)
                   return
                 }
                 onPreviewFile(entry.path)
@@ -499,7 +691,7 @@ export function ChatFileTreePanel({
           </>
         }
       />
-      {recentEntries.length || recentScan.loading || recentScan.error ? (
+      {!isSearching && (recentEntries.length || recentScan.loading || recentScan.error) ? (
         <div className="border-b border-ds-border-muted/60 px-1 pb-2">
           <div className="px-2.5 pb-1 text-[11px] font-medium text-ds-faint">
             {t('fileTreeRecentModifiedFiles', { defaultValue: 'Recent modified files' })}
@@ -532,7 +724,18 @@ export function ChatFileTreePanel({
         </div>
       ) : null}
       <div className={`${fill ? 'min-h-0 flex-1' : 'max-h-[34vh] min-h-[96px]'} overflow-y-auto overflow-x-hidden px-1`}>
-        {renderDirectory(ROOT_PATH, 0)}
+        {isSearching && searchScan.loading ? (
+          <div className="flex items-center gap-2 px-2.5 py-2 text-[12px] text-ds-muted">
+            <Loader2 className="h-3.5 w-3.5 animate-spin" strokeWidth={1.8} />
+            {t('fileTreeScanning', { defaultValue: 'Scanning workspace…' })}
+          </div>
+        ) : isSearching && searchScan.error ? (
+          <div className="px-2.5 py-2 text-[12px] leading-5 text-red-700 dark:text-red-300" title={searchScan.error}>
+            {searchScan.error}
+          </div>
+        ) : (
+          renderDirectory(ROOT_PATH, 0)
+        )}
       </div>
       {contextEntry ? (
         <div

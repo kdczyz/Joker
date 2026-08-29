@@ -1787,7 +1787,20 @@ app.whenReady().then(async () => {
       })
     })
   }
+  /**
+   * macOS 下侧边栏是完全透明的,颜色全靠窗口 vibrancy 材质透出来。
+   * 渲染层点击瞬间就切了 data-theme,而材质由主进程的 nativeTheme 控制 ——
+   * 如果材质跟得慢,这一小段时间里侧边栏就会露出窗口底色(灰色),且材质切换
+   * 时 NSVisualEffectView 重建也会闪一下。所以主题必须零 await 同步,
+   * 不能排在磁盘读写和 runtime sync 后面。
+   */
+  const syncNativeThemeSource = (theme: AppSettingsV1['theme'] | undefined): void => {
+    if (!theme || theme === nativeTheme.themeSource) return
+    nativeTheme.themeSource = theme
+  }
+
   const applySettingsPatch = async (partial: AppSettingsPatch): Promise<AppSettingsV1> => {
+    syncNativeThemeSource(partial.theme)
     const prev = await store.load()
     const effectivePartial = preserveRuntimeTokenForFullSettingsSnapshot(prev, partial)
     const { agents: agentsPatch, provider: providerPatch, ...restPatch } = effectivePartial
@@ -1843,7 +1856,7 @@ app.whenReady().then(async () => {
     syncLoginItemSettings(saved)
     syncTray(saved)
     syncCheckpointCleanupTimer(saved)
-    nativeTheme.themeSource = saved.theme
+    syncNativeThemeSource(saved.theme)
     requestExtensionWorkbenchEnvironmentPublish()
     return saved
   }
@@ -1855,8 +1868,9 @@ app.whenReady().then(async () => {
   }
 
   const saveSettingsPatch = async (partial: AppSettingsPatch): Promise<AppSettingsV1> => {
+    syncNativeThemeSource(partial.theme)
     const saved = await store.patch(preserveRuntimeTokenForFullSettingsSnapshot(await store.load(), partial))
-    nativeTheme.themeSource = saved.theme
+    syncNativeThemeSource(saved.theme)
     requestExtensionWorkbenchEnvironmentPublish()
     return saved
   }

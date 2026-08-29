@@ -5110,3 +5110,16 @@ body.ds-workbench-resizing webview {
 html[data-theme='dark'] .ds-inspector-diff .ds-diff-code span {
   color: var(--shiki-dark, inherit) !important;
 }
+
+/* 主题切换瞬间:掐掉全站过渡/动画(由 apply-theme.ts 挂两帧后摘掉)。
+   否则深浅切换时每个带 transition 的元素都要走一遍颜色插值 —— 中间帧混出灰调、
+   上百个并行过渡还会掉帧,看起来就是「左侧栏发灰并卡一下」。 */
+html[data-theme-switch] *,
+html[data-theme-switch] *::before,
+html[data-theme-switch] *::after {
+  transition-property: none !important;
+  transition-duration: 0ms !important;
+  transition-delay: 0ms !important;
+  animation-duration: 0ms !important;
+  animation-delay: 0ms !important;
+}

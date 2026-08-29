@@ -1,5 +1,5 @@
 import type { ReactElement } from 'react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../../auth/AuthGate'
 import {
@@ -98,19 +98,8 @@ export function Sidebar({
 }: Props): ReactElement {
   const { t, i18n } = useTranslation('common')
   const auth = useAuth()
-  const [isDarkMode, setIsDarkMode] = useState(
-    () => typeof document !== 'undefined' && document.documentElement.getAttribute('data-theme') === 'dark'
-  )
   const accountDisplayName = auth.user.displayName
   const accountInitials = auth.user.displayName.slice(0, 2).toUpperCase()
-
-  useEffect(() => {
-    const observer = new MutationObserver(() => {
-      setIsDarkMode(document.documentElement.getAttribute('data-theme') === 'dark')
-    })
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
-    return () => observer.disconnect()
-  }, [])
 
   const workspaceRoot = useChatStore((s) => s.workspaceRoot)
   const conversationWorkspaceRoot = useChatStore((s) => s.conversationWorkspaceRoot)
@@ -157,16 +146,18 @@ export function Sidebar({
               <Smartphone className="h-4 w-4" strokeWidth={1.75} />
             </SidebarIconButton>
             <SidebarIconButton
-              title={isDarkMode ? t('switchToLight') : t('switchToDark')}
+              title={t('toggleTheme')}
               ariaLabel={t('toggleTheme')}
               onClick={onToggleTheme}
               className="h-8 w-8 rounded-[9px] border border-black/[0.06] bg-black/[0.02] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:bg-black/[0.05] dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:bg-white/[0.08]"
             >
-              {isDarkMode ? (
-                <Sun className="h-4 w-4" strokeWidth={1.75} />
-              ) : (
-                <Moon className="h-4 w-4" strokeWidth={1.75} />
-              )}
+              {/* 图标/文案随主题纯 CSS 切换:此前用 MutationObserver + useState 跟踪
+                  data-theme,切换主题会在同一帧同步重渲染整棵侧栏(侧栏还带 zoom:1.08,
+                  重绘更贵)—— 这是切换瞬间卡顿的主因。 */}
+              <Moon className="h-4 w-4 dark:hidden" strokeWidth={1.75} />
+              <Sun className="hidden h-4 w-4 dark:block" strokeWidth={1.75} />
+              <span className="sr-only dark:hidden">{t('switchToDark')}</span>
+              <span className="sr-only hidden dark:inline">{t('switchToLight')}</span>
             </SidebarIconButton>
           </div>
         </div>

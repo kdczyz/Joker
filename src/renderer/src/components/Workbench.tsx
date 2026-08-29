@@ -1095,9 +1095,9 @@ export function Workbench(): ReactElement {
       />
 
       {/* 展开/收起侧边栏:固定锚定在红绿灯右侧,展开与收起时位置不变。
-          - 第一个按钮 = PanelLeft 装饰图标,标识侧栏形状(不响应点击,只做视觉提示)
-          - collapse/expand 双按钮:当前状态对应的按钮可点 + 显示 tooltip(快捷键 ⌘B)
-          - 另一个按钮 disabled + 灰(避免双按钮摆在一起时让用户以为两个都能点)
+          单个按钮同时承担状态指示与点击切换:
+          - 图标随侧栏状态在 <| 与 |> 之间切换(PanelLeft / PanelRight)
+          - 点击即切换展开/收起,tooltip 显示当前动作 + 快捷键 ⌘B
           放在 shell 最后一个子节点,确保点击不被任何兄弟层拦截 */}
       <div className="ds-workbench-sidebar-toggle-anchor ds-no-drag">
         <SidebarTitlebarToggleButton
@@ -1105,24 +1105,10 @@ export function Workbench(): ReactElement {
           panelState={leftSidebarCollapsed ? 'collapsed' : 'expanded'}
           title={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
           ariaLabel={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
-        />
-        <SidebarTitlebarToggleButton
-          intent="collapse"
           onClick={toggleLeftSidebar}
-          title={t('sidebarCollapse')}
-          ariaLabel={t('sidebarCollapse')}
-          disabled={leftSidebarCollapsed}
-          tooltip={leftSidebarCollapsed ? undefined : t('sidebarCollapse')}
+          tooltip={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
           shortcut="⌘B"
-        />
-        <SidebarTitlebarToggleButton
-          intent="expand"
-          onClick={toggleLeftSidebar}
-          title={t('sidebarExpand')}
-          ariaLabel={t('sidebarExpand')}
-          disabled={!leftSidebarCollapsed}
-          tooltip={leftSidebarCollapsed ? t('sidebarExpand') : undefined}
-          shortcut="⌘B"
+          className="ml-[50px] mt-[50px]"
         />
       </div>
     </div>
