@@ -186,7 +186,8 @@ describe('UiPluginStagePresentation', () => {
     expect(css).toContain("html[data-ui-plugin-scene-layout='rail-left']")
     expect(css).toContain("[data-ui-plugin-readability-scrim='opposite-character']")
     expect(css).not.toContain('--ds-chat-side-rail-reserve: 5.25rem;')
-    expect(css).toContain(".ds-chat-stage[data-terminal-open='true']")
+    /* 底部终端抽屉已移除,终端改为右侧工作区标签页,不再有 data-terminal-open */
+    expect(css).not.toContain('data-terminal-open')
     expect(css).toContain("[data-scene-motion='orbit']")
     expect(css).toContain('@keyframes ds-ui-plugin-scene-sway')
     expect(css).toContain('@media (prefers-reduced-motion: reduce)')

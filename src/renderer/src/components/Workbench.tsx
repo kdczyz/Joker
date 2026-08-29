@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useChatStore, COMPOSER_DRAFT_PENDING_KEY } from '../store/chat-store'
+import { useChatStore, COMPOSER_DRAFT_PENDING_KEY, type AppRoute } from '../store/chat-store'
 import type { RightPanelMode } from './chat/WorkbenchTopBar'
 import { WorkbenchLeftSidebar } from './workbench/WorkbenchLeftSidebar'
 import { SidebarTitlebarToggleButton } from './sidebar/SidebarPrimitives'
@@ -169,6 +169,7 @@ export function Workbench(): ReactElement {
   const [useWorktreePool, setUseWorktreePool] = useState(false)
   const [worktreeBranch, setWorktreeBranch] = useState('')
   const [connectPhoneSidebarOpen, setConnectPhoneSidebarOpen] = useState(false)
+  const [fileBrowserReturnRoute, setFileBrowserReturnRoute] = useState<string | null>(null)
   const { runtimeLogPath, toggleTheme, uiModeCameosEnabled } =
     useWorkbenchUiRuntime()
   const contributionContext = useMemo(
@@ -323,11 +324,11 @@ export function Workbench(): ReactElement {
     skillMenuOpen: getSlashQuery(input) !== null
   })
   const {
-    activateRightPanelTab, beginLeftResize, beginRightResize, beginTerminalResize, closeRightPanelTab,
+    activateRightPanelTab, beginLeftResize, beginRightResize, closeRightPanelTab,
     codeRightTabs, collapseRightPanel, expandRightPanel, filePreviewTarget,
     leftSidebarCollapsed, leftSidebarWidth, openDevPreview, rightPanelMode, rightPanelVisible,
     openRightPanelTab, rightSidebarWidth, setFilePreviewTarget, setRightPanelMode,
-    setRightSidebarWidth, shellRef, terminalHeight, terminalOpen, toggleLeftSidebar, toggleTerminal,
+    setRightSidebarWidth, shellRef, terminalTabActive, toggleLeftSidebar, toggleTerminal,
   } = useWorkbenchLayout({
     activeThreadId,
     latestAutoOpenDevPreviewUrl,
@@ -615,15 +616,27 @@ export function Workbench(): ReactElement {
     openRightPanelTab(BUILTIN_RIGHT_PANEL_IDS.files)
   }, [openFileTreeSidePanel, openRightPanelTab])
 
-  const openCodeRightTool = useCallback((id: RightPanelContributionId): void => {
-    if (id === BUILTIN_RIGHT_PANEL_IDS.terminal) {
-      toggleTerminal()
-      return
+  const openTerminalTab = useCallback((): void => {
+    openRightPanelTab(BUILTIN_RIGHT_PANEL_IDS.terminal)
+  }, [openRightPanelTab])
+
+  const toggleFileBrowser = useCallback((): void => {
+    if (route === 'fileBrowser') {
+      // 返回之前的路由
+      setRoute((fileBrowserReturnRoute ?? 'chat') as AppRoute)
+      setFileBrowserReturnRoute(null)
+    } else {
+      // 记住当前路由，切换到文件浏览器
+      setFileBrowserReturnRoute(route)
+      setRoute('fileBrowser')
     }
+  }, [route, fileBrowserReturnRoute, setRoute])
+
+  const openCodeRightTool = useCallback((id: RightPanelContributionId): void => {
     if (id === BUILTIN_RIGHT_PANEL_IDS.sideConversations) openSideChat()
     if (id === BUILTIN_RIGHT_PANEL_IDS.files) setFileTreeSidePanelView('workspace')
     openRightPanelTab(id)
-  }, [openRightPanelTab, openSideChat, setFileTreeSidePanelView, toggleTerminal])
+  }, [openRightPanelTab, openSideChat, setFileTreeSidePanelView])
 
   const closeCodeRightTool = useCallback((id: RightPanelContributionId): void => {
     if (id === BUILTIN_RIGHT_PANEL_IDS.sideConversations) setSidePanelOpen(false)
@@ -889,9 +902,12 @@ export function Workbench(): ReactElement {
       extensionViews: extensionRightPanelItems,
       onActivate: activateRightPanelTab,
       onClose: closeCodeRightTool,
-      onOpenFiles: openWorkspaceFileTreeTab
+      onOpenFiles: openWorkspaceFileTreeTab,
+      onOpenBrowser: openDevPreview,
+      onOpenTerminal: openTerminalTab
     },
-    workspaceRoot: extensionWorkspaceRoot
+    workspaceRoot: extensionWorkspaceRoot,
+    terminalWorkspaceRoot: fileTreeWorkspaceRoot
   })
 
   return (
@@ -1013,9 +1029,7 @@ export function Workbench(): ReactElement {
             returnParentTitle: threads.find((thread) => thread.id === activeThreadParentId)?.title?.trim() ?? '',
             showReturnBar: activeThreadRelation === 'side' && Boolean(activeThreadParentId),
             composerProps: chatComposerProps,
-            terminalOpen,
-            terminalWorkspaceRoot: fileTreeWorkspaceRoot,
-            terminalHeight,
+            terminalTabActive,
             rightWorkspaceExpanded: codeRightTabs.expanded,
             onToggleLeftSidebar: toggleLeftSidebar,
             onRetryConnection: () => void probeRuntime('user', { restart: true }),
@@ -1027,7 +1041,6 @@ export function Workbench(): ReactElement {
             onBackToParent: () => {
               if (activeThreadParentId) void selectThread(activeThreadParentId)
             },
-            onBeginTerminalResize: beginTerminalResize,
             onToggleTerminal: toggleTerminal,
             onToggleRightWorkspace: toggleCodeRightWorkspace,
             extensionTopBarActions,
@@ -1062,6 +1075,15 @@ export function Workbench(): ReactElement {
           onOpenIntegrations: openPluginsView,
           onOpenView: openManagedExtensionView
         }}
+        fileBrowser={
+          route === 'fileBrowser'
+            ? {
+                workspaceRoot: extensionWorkspaceRoot || workspaceRoot,
+                designWorkspaceRoot: undefined,
+                onClose: toggleFileBrowser
+              }
+            : undefined
+        }
       />
       )}
       {activeExtensionAuxiliaryPanel ? (
@@ -1098,6 +1120,8 @@ export function Workbench(): ReactElement {
           单个按钮同时承担状态指示与点击切换:
           - 图标随侧栏状态在 <| 与 |> 之间切换(PanelLeft / PanelRight)
           - 点击即切换展开/收起,tooltip 显示当前动作 + 快捷键 ⌘B
+          - ml/mt 偏移按 --ds-ui-scale 抵消(与锚点 left/top 同一套逻辑),
+            保证任何界面缩放下视觉位移都是 50px
           放在 shell 最后一个子节点,确保点击不被任何兄弟层拦截 */}
       <div className="ds-workbench-sidebar-toggle-anchor ds-no-drag">
         <SidebarTitlebarToggleButton
@@ -1108,7 +1132,7 @@ export function Workbench(): ReactElement {
           onClick={toggleLeftSidebar}
           tooltip={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
           shortcut="⌘B"
-          className="ml-[50px] mt-[50px]"
+          className="ml-[calc(50px_/_var(--ds-ui-scale,1))] mt-[calc(50px_/_var(--ds-ui-scale,1))]"
         />
       </div>
     </div>

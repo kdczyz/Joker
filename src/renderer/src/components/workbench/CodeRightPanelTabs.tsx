@@ -15,6 +15,7 @@ import {
   MessageCircleMore,
   Puzzle,
   Shapes,
+  TerminalSquare,
   X,
   type LucideIcon
 } from 'lucide-react'
@@ -68,6 +69,7 @@ export function CodeRightPanelTabs({
 
   const builtinTabs = useMemo<BuiltinTab[]>(() => [
     { id: BUILTIN_RIGHT_PANEL_IDS.browser, label: t('rightPanelBrowserTool'), icon: Globe2 },
+    { id: BUILTIN_RIGHT_PANEL_IDS.terminal, label: t('rightPanelTerminal'), icon: TerminalSquare },
     { id: BUILTIN_RIGHT_PANEL_IDS.files, label: t('rightPanelFiles'), icon: Files },
     {
       id: BUILTIN_RIGHT_PANEL_IDS.sideConversations,

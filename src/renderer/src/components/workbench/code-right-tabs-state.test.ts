@@ -72,8 +72,14 @@ describe('code right tab state', () => {
       BUILTIN_RIGHT_PANEL_IDS.files
     ])
     expect(migrateLegacyRightPanelMode('removed-mode')).toEqual(emptyCodeRightTabsState())
+    /* sddAi 仍是 transient 模式,不占标签位 */
     expect(migrateLegacyRightPanelMode('sdd-ai')).toEqual(emptyCodeRightTabsState())
-    expect(migrateLegacyRightPanelMode('terminal')).toEqual(emptyCodeRightTabsState())
+    /* 终端已改为右侧工作区的一个标签页,遗留的 terminal 模式应迁移成标签 */
+    expect(migrateLegacyRightPanelMode('terminal')).toMatchObject({
+      tabs: [BUILTIN_RIGHT_PANEL_IDS.terminal],
+      activeId: BUILTIN_RIGHT_PANEL_IDS.terminal,
+      expanded: true
+    })
   })
 
   it('normalizes duplicates and fails closed for invalid persisted values', () => {
@@ -88,9 +94,10 @@ describe('code right tab state', () => {
       activeId: 'bad',
       expanded: true
     })
+    /* 无效值被丢弃、重复项去重;terminal 现在是合法标签,因此保留 */
     expect(state).toEqual({
       version: 1,
-      tabs: [BUILTIN_RIGHT_PANEL_IDS.files],
+      tabs: [BUILTIN_RIGHT_PANEL_IDS.files, BUILTIN_RIGHT_PANEL_IDS.terminal],
       activeId: BUILTIN_RIGHT_PANEL_IDS.files,
       expanded: true
     })
@@ -101,6 +108,15 @@ describe('code right tab state', () => {
     expect(openCodeRightTab(
       emptyCodeRightTabsState(),
       BUILTIN_RIGHT_PANEL_IDS.terminal
+    )).toMatchObject({
+      tabs: [BUILTIN_RIGHT_PANEL_IDS.terminal],
+      activeId: BUILTIN_RIGHT_PANEL_IDS.terminal,
+      expanded: true
+    })
+    /* sddAi 依然不是标签,尝试打开它应保持原状态不变 */
+    expect(openCodeRightTab(
+      emptyCodeRightTabsState(),
+      BUILTIN_RIGHT_PANEL_IDS.sddAi
     )).toEqual(emptyCodeRightTabsState())
   })
 

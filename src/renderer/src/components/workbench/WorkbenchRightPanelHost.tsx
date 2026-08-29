@@ -16,6 +16,7 @@ export type WorkbenchRightPanelHostProps = Pick<
   | 'planPanel'
   | 'canvas'
   | 'file'
+  | 'terminal'
   | 'mcpSkills'
   | 'extensionView'
   | 'code'
@@ -46,6 +47,7 @@ export function WorkbenchRightPanelHost({
   planPanel,
   canvas,
   file,
+  terminal,
   mcpSkills,
   extensionView,
   code,
@@ -67,6 +69,7 @@ export function WorkbenchRightPanelHost({
       planPanel={planPanel}
       canvas={canvas}
       file={file}
+      terminal={terminal}
       mcpSkills={mcpSkills}
       extensionView={extensionView}
       code={code}

@@ -15,10 +15,10 @@ export type CodeRightTabsState = {
   expanded: boolean
 }
 
+/* 终端与其它内置面板一样是右侧工作区的一个标签页。
+   sddAi 仍是 transient 模式(不占标签位),因此继续排除。 */
 function isCodeRightTabContributionId(value: unknown): value is RightPanelContributionId {
-  return isRightPanelContributionId(value) &&
-    value !== BUILTIN_RIGHT_PANEL_IDS.sddAi &&
-    value !== BUILTIN_RIGHT_PANEL_IDS.terminal
+  return isRightPanelContributionId(value) && value !== BUILTIN_RIGHT_PANEL_IDS.sddAi
 }
 
 export type StoredCodeRightTabsRegistry = {

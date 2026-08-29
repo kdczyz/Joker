@@ -58,13 +58,16 @@ type Props = {
   fileTreeEnabled?: boolean
   onToggleFileTree?: () => void
   onOpenSideChat?: () => void
+  onToggleFileBrowser?: () => void
+  fileBrowserActive?: boolean
   extensionItems?: readonly ExtensionRightRailViewEntry[]
   extensionContainers?: readonly ExtensionRightContainerTarget[]
   onSelectExtension?: (entry: ExtensionRightRailViewEntry) => void
 }
 
 type WorkbenchTopActionsProps = {
-  terminalOpen?: boolean
+  /** 右侧工作区的终端标签是否处于激活状态。 */
+  terminalActive?: boolean
   onToggleTerminal?: () => void
   rightWorkspaceExpanded?: boolean
   onToggleRightWorkspace?: () => void
@@ -88,7 +91,7 @@ function topbarActionButtonClass(active: boolean, extra?: string): string {
 }
 
 export function WorkbenchTopActions({
-  terminalOpen = false,
+  terminalActive = false,
   onToggleTerminal,
   rightWorkspaceExpanded = false,
   onToggleRightWorkspace
@@ -358,10 +361,10 @@ export function WorkbenchTopActions({
         <button
           type="button"
           onClick={onToggleTerminal}
-          className={topbarActionButtonClass(terminalOpen)}
+          className={topbarActionButtonClass(terminalActive)}
           data-tooltip={t('rightPanelTerminal')}
           aria-label={t('rightPanelTerminal')}
-          aria-pressed={terminalOpen}
+          aria-pressed={terminalActive}
         >
           <Terminal className={TOPBAR_ICON_CLASS} strokeWidth={1.75} />
         </button>
@@ -388,7 +391,7 @@ export function WorkbenchTopActions({
    通过 Portal 挂到 body:按钮群的 tooltip 等溢出内容不能被聊天舞台
    (isolate 层叠上下文)和其后渲染的右侧工作区面板盖住 */
 export function WorkbenchCornerActions({
-  terminalOpen = false,
+  terminalActive = false,
   onToggleTerminal,
   rightWorkspaceExpanded = false,
   onToggleRightWorkspace
@@ -412,7 +415,7 @@ export function WorkbenchCornerActions({
         />
       ) : null}
       <WorkbenchTopActions
-        terminalOpen={terminalOpen}
+        terminalActive={terminalActive}
         onToggleTerminal={onToggleTerminal}
         rightWorkspaceExpanded={rightWorkspaceExpanded}
         onToggleRightWorkspace={onToggleRightWorkspace}
@@ -435,6 +438,8 @@ export function WorkbenchSideRail({
   fileTreeEnabled = true,
   onToggleFileTree,
   onOpenSideChat,
+  onToggleFileBrowser,
+  fileBrowserActive,
   extensionItems = [],
   extensionContainers = [],
   onSelectExtension
@@ -586,6 +591,19 @@ export function WorkbenchSideRail({
           aria-pressed={fileTreeOpen}
         >
           <Folders className={TOPBAR_ICON_CLASS} strokeWidth={1.75} />
+        </button>
+      ) : null}
+
+      {onToggleFileBrowser ? (
+        <button
+          type="button"
+          onClick={onToggleFileBrowser}
+          className={sideRailButtonClass(fileBrowserActive ?? false)}
+          data-tooltip={t('fileBrowserToggle', { defaultValue: '文件浏览器' })}
+          aria-label={t('fileBrowserToggle', { defaultValue: '文件浏览器' })}
+          aria-pressed={fileBrowserActive}
+        >
+          <FolderOpen className={TOPBAR_ICON_CLASS} strokeWidth={1.75} />
         </button>
       ) : null}
 

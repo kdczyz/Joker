@@ -1,10 +1,4 @@
-import {
-  lazy,
-  Suspense,
-  type ComponentProps,
-  type PointerEventHandler,
-  type ReactElement
-} from 'react'
+import { type ComponentProps, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ChatBlock, RuntimeConnectionStatus } from '../../agent/types'
 import { FloatingComposer } from '../chat/FloatingComposer'
@@ -17,10 +11,6 @@ import { SessionHeader } from '../SessionHeader'
 import type { JsonValue } from '@joker-code/extension-api'
 import type { RegisteredContribution } from '../../extensions/contribution-registry'
 import { DeclarativeActionBar } from '../../extensions/ControlledContributionSurfaces'
-
-const TerminalPanel = lazy(() =>
-  import('../terminal/TerminalPanel').then((module) => ({ default: module.TerminalPanel }))
-)
 
 type FloatingComposerProps = ComponentProps<typeof FloatingComposer>
 
@@ -42,9 +32,7 @@ export type WorkbenchChatStageProps = {
   returnParentTitle: string
   showReturnBar: boolean
   composerProps: FloatingComposerProps
-  terminalOpen: boolean
-  terminalWorkspaceRoot: string
-  terminalHeight: number
+  terminalTabActive: boolean
   rightWorkspaceExpanded: boolean
   onToggleLeftSidebar: () => void
   onRetryConnection: () => void
@@ -54,7 +42,6 @@ export type WorkbenchChatStageProps = {
   onOpenPlan: () => void
   onOpenDevPreview: () => void
   onBackToParent: () => void
-  onBeginTerminalResize: PointerEventHandler<HTMLDivElement>
   onToggleTerminal: () => void
   onToggleRightWorkspace: () => void
   extensionTopBarActions?: readonly RegisteredContribution<'actions.topBar'>[]
@@ -89,9 +76,7 @@ export function WorkbenchChatStage({
   returnParentTitle,
   showReturnBar,
   composerProps,
-  terminalOpen,
-  terminalWorkspaceRoot,
-  terminalHeight,
+  terminalTabActive,
   rightWorkspaceExpanded,
   onRetryConnection,
   onOpenSettings,
@@ -100,7 +85,6 @@ export function WorkbenchChatStage({
   onOpenPlan,
   onOpenDevPreview,
   onBackToParent,
-  onBeginTerminalResize,
   onToggleTerminal,
   onToggleRightWorkspace,
   extensionTopBarActions = [],
@@ -116,12 +100,11 @@ export function WorkbenchChatStage({
   return (
     <section
       className="ds-chat-stage ds-drag relative isolate flex min-h-0 min-w-0 flex-1 flex-col"
-      data-terminal-open={terminalOpen ? 'true' : 'false'}
     >
       <ActiveUiPluginStagePresentation />
       {/* 右上角固定按钮群:悬浮在窗口右上角(含右侧工作区上方),不随布局移动 */}
       <WorkbenchCornerActions
-        terminalOpen={terminalOpen}
+        terminalActive={terminalTabActive}
         onToggleTerminal={onToggleTerminal}
         rightWorkspaceExpanded={rightWorkspaceExpanded}
         onToggleRightWorkspace={onToggleRightWorkspace}
@@ -208,24 +191,6 @@ export function WorkbenchChatStage({
           )}
         </div>
       </div>
-      {terminalOpen ? (
-        <div className="ds-no-drag relative z-[3] flex w-full shrink-0 flex-col px-0 pb-0">
-          <div
-            role="separator"
-            aria-orientation="horizontal"
-            className="relative z-20 h-1 shrink-0 cursor-row-resize bg-transparent transition hover:bg-ds-border-muted"
-            onPointerDown={onBeginTerminalResize}
-          />
-          <Suspense fallback={<div className="ds-surface-strong h-full w-full" />}>
-            <TerminalPanel
-              workspaceRoot={terminalWorkspaceRoot}
-              height={terminalHeight}
-              className="w-full"
-              onCollapse={onToggleTerminal}
-            />
-          </Suspense>
-        </div>
-      ) : null}
     </section>
   )
 }

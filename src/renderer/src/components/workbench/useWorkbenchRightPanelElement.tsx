@@ -95,6 +95,8 @@ type WorkbenchRightPanelElementOptions = Pick<
   extensionView?: RightPanelHostProps['extensionView']
   code?: RightPanelHostProps['code']
   workspaceRoot?: string
+  /** 终端标签的工作目录,通常与文件树的工作区根目录一致。 */
+  terminalWorkspaceRoot?: string
 }
 
 function resolveDesignPanelMode({
@@ -132,7 +134,8 @@ export function useWorkbenchRightPanelElement({
   file,
   extensionView,
   code,
-  workspaceRoot
+  workspaceRoot,
+  terminalWorkspaceRoot
 }: WorkbenchRightPanelElementOptions): ReactElement | null {
   const designValue = design ?? EMPTY_DESIGN_PANEL
   const designPanelMode = resolveDesignPanelMode({
@@ -197,6 +200,10 @@ export function useWorkbenchRightPanelElement({
       file={{
         ...file,
         onClose: onCollapse
+      }}
+      terminal={{
+        workspaceRoot: terminalWorkspaceRoot ?? workspaceRoot ?? '',
+        onCollapse
       }}
       mcpSkills={{
         onOpenSettings: () => openSettings('agents')

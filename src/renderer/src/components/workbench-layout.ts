@@ -34,8 +34,6 @@ const RIGHT_PANEL_WIDTH_KEY = 'Joker.layout.rightInspectorWidth'
 const RIGHT_PANEL_MODE_KEY = 'Joker.layout.rightPanelMode'
 export const CODE_RIGHT_TABS_KEY = 'Joker.layout.codeRightTabs.v1'
 export const CODE_RIGHT_WIDTHS_KEY = 'Joker.layout.codeRightWidths.v1'
-const TERMINAL_OPEN_KEY = 'Joker.layout.terminalOpen'
-const TERMINAL_HEIGHT_KEY = 'Joker.layout.terminalHeight'
 const LEFT_PANEL_DEFAULT = 304
 const RIGHT_PANEL_DEFAULT = 360
 export const CODE_PANEL_PREFERRED = 560
@@ -48,9 +46,6 @@ const MAIN_MIN_WIDTH = 560
 const PANEL_RESIZE_HANDLE_WIDTH = 5
 export const RAIL_WIDTH = 48
 export const WORKBENCH_RESIZE_CLASS = 'ds-workbench-resizing'
-const TERMINAL_HEIGHT_DEFAULT = 360
-const TERMINAL_HEIGHT_MIN = 220
-const TERMINAL_HEIGHT_MAX = 760
 
 export type WorkbenchWidthConstraints = {
   mainMinWidth: number
@@ -322,10 +317,6 @@ export function useWorkbenchLayout({
     const legacy = readStoredWidth(RIGHT_PANEL_WIDTH_KEY, RIGHT_PANEL_DEFAULT)
     return codeRightTabs.expanded ? Math.max(legacy, CODE_PANEL_PREFERRED) : legacy
   })
-  const [terminalOpen, setTerminalOpen] = useState(false)
-  const [terminalHeight, setTerminalHeight] = useState(() =>
-    readStoredWidth(TERMINAL_HEIGHT_KEY, TERMINAL_HEIGHT_DEFAULT)
-  )
   const shellRef = useRef<HTMLDivElement | null>(null)
   const previewThreadId = useRef<string | null>(activeThreadId)
   const autoOpenedPreviewUrlRef = useRef<string | null>(null)
@@ -397,14 +388,6 @@ export function useWorkbenchLayout({
       setRightSidebarWidth((width) => Math.max(width, CODE_PANEL_PREFERRED))
     }
   }, [codeRightTabs, workspaceRoot])
-
-  useEffect(() => {
-    removeBrowserStorageItem(TERMINAL_OPEN_KEY)
-  }, [])
-
-  useEffect(() => {
-    persistWidth(TERMINAL_HEIGHT_KEY, terminalHeight)
-  }, [terminalHeight])
 
   useEffect(() => {
     const onPreview = (event: Event): void => {
@@ -629,54 +612,24 @@ export function useWorkbenchLayout({
     window.addEventListener('pointercancel', onEnd)
   }
 
-  const beginTerminalResize = (event: ReactPointerEvent<HTMLDivElement>): void => {
-    if (event.button !== 0 || !terminalOpen) return
-    event.preventDefault()
-    const startY = event.clientY
-    const startHeight = terminalHeight
-    const releasePointer = captureResizePointer(event.currentTarget, event.pointerId)
-    const prevCursor = document.body.style.cursor
-    const prevUserSelect = document.body.style.userSelect
-    document.body.classList.add(WORKBENCH_RESIZE_CLASS)
-    document.body.style.cursor = 'row-resize'
-    document.body.style.userSelect = 'none'
-
-    const onMove = (moveEvent: PointerEvent): void => {
-      const containerHeight = shellRef.current?.clientHeight ?? window.innerHeight
-      const delta = startY - moveEvent.clientY
-      const maxHeight = Math.max(
-        TERMINAL_HEIGHT_MIN,
-        Math.min(TERMINAL_HEIGHT_MAX, containerHeight - 260)
-      )
-      setTerminalHeight(Math.min(
-        Math.max(startHeight + delta, TERMINAL_HEIGHT_MIN),
-        maxHeight
-      ))
+  /* 终端是右侧工作区的一个标签页:已展开且正停在终端标签上时收起整个右侧栏,
+     否则打开(或激活)终端标签。 */
+  const toggleTerminal = useCallback((): void => {
+    const current = codeRightTabsRef.current
+    if (current.expanded && current.activeId === BUILTIN_RIGHT_PANEL_IDS.terminal) {
+      setCodeRightTabs((state) => collapseCodeRightTabs(state))
+      return
     }
+    openRightPanelTab(BUILTIN_RIGHT_PANEL_IDS.terminal)
+  }, [openRightPanelTab])
 
-    const onEnd = (): void => {
-      releasePointer()
-      document.body.classList.remove(WORKBENCH_RESIZE_CLASS)
-      document.body.style.cursor = prevCursor
-      document.body.style.userSelect = prevUserSelect
-      window.removeEventListener('pointermove', onMove)
-      window.removeEventListener('pointerup', onEnd)
-      window.removeEventListener('pointercancel', onEnd)
-    }
-
-    window.addEventListener('pointermove', onMove)
-    window.addEventListener('pointerup', onEnd)
-    window.addEventListener('pointercancel', onEnd)
-  }
-
-  const toggleTerminal = (): void => {
-    setTerminalOpen((current) => !current)
-  }
+  /** 右侧终端标签是否处于激活状态,供顶栏按钮反映按下态。 */
+  const terminalTabActive =
+    codeRightTabs.expanded && codeRightTabs.activeId === BUILTIN_RIGHT_PANEL_IDS.terminal
 
   return {
     beginLeftResize,
     beginRightResize,
-    beginTerminalResize,
     codeRightTabs,
     activateRightPanelTab,
     closeRightPanelTab,
@@ -694,8 +647,7 @@ export function useWorkbenchLayout({
     setRightPanelMode,
     setRightSidebarWidth,
     shellRef,
-    terminalHeight,
-    terminalOpen,
+    terminalTabActive,
     toggleLeftSidebar,
     toggleRightPanelMode,
     toggleTerminal

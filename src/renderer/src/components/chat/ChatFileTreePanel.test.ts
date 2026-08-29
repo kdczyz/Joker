@@ -183,7 +183,7 @@ describe('ChatFileTreePanel helpers', () => {
 
     const result = await scanChatFileTreeAllEntries(root, listWorkspaceDirectory)
     expect(Object.keys(result).sort()).toEqual(['', `${root}/src`])
-    expect(result[''].map((item) => item.name)).toEqual(['readme.md', 'src'])
+    expect(result[''].map((item) => item.name)).toEqual(['src', 'readme.md'])
     expect(result[`${root}/src`].map((item) => item.name)).toEqual(['main.ts'])
   })
 })

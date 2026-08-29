@@ -4990,26 +4990,6 @@ html:is(
   }
 }
 
-.ds-chat-stage[data-terminal-open='true'] .ds-ui-plugin-decor-layer,
-.ds-chat-stage[data-terminal-open='true'] .ds-ui-plugin-character-layer,
-.ds-chat-stage[data-terminal-open='true'] .ds-ui-plugin-readability-scrim,
-.ds-chat-stage[data-terminal-open='true'] .ds-ui-plugin-scene-stage-layer,
-.ds-chat-stage[data-terminal-open='true'] .ds-ui-plugin-scene-visual-zone {
-  display: none !important;
-}
-
-.ds-chat-stage[data-terminal-open='true']
-  :is(.ds-message-timeline-content, .ds-floating-composer) {
-  translate: none !important;
-}
-
-.ds-chat-stage[data-terminal-open='true'] .ds-ui-plugin-stage-content {
-  --ds-chat-content-effective-max-width: min(
-    var(--ds-chat-content-max-width, 56rem),
-    max(0px, calc(100cqw - 5.25rem))
-  );
-}
-
 @media (prefers-reduced-motion: reduce) {
   .ds-ui-plugin-character,
   .ds-ui-plugin-scene-artwork {

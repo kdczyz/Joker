@@ -9,7 +9,7 @@ import {
   type PointerEventHandler,
   type ReactElement
 } from 'react'
-import { FolderOpen } from 'lucide-react'
+import { FolderOpen, Globe, TerminalSquare } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import {
   DesignRightPanelContent,
@@ -60,6 +60,9 @@ const SideConversationPanel = lazy(() =>
 const McpSkillsPanel = lazy(() =>
   import('./McpSkillsPanel').then((module) => ({ default: module.McpSkillsPanel }))
 )
+const TerminalPanel = lazy(() =>
+  import('../terminal/TerminalPanel').then((module) => ({ default: module.TerminalPanel }))
+)
 
 type SddAssistantPanelProps = ComponentProps<typeof SddAssistantPanel>
 type ChangeInspectorProps = ComponentProps<typeof ChangeInspector>
@@ -67,6 +70,7 @@ type TodoPanelProps = ComponentProps<typeof TodoPanel>
 type DevBrowserPanelProps = ComponentProps<typeof DevBrowserPanel>
 type CodeCanvasPanelProps = ComponentProps<typeof CodeCanvasPanel>
 type WorkspaceFilePreviewPanelProps = ComponentProps<typeof WorkspaceFilePreviewPanel>
+type TerminalPanelProps = ComponentProps<typeof TerminalPanel>
 
 export type WorkbenchCodeRightWorkspaceProps = {
   state: CodeRightTabsState
@@ -78,6 +82,10 @@ export type WorkbenchCodeRightWorkspaceProps = {
   onActivate: (id: RightPanelContributionId) => void
   onClose: (id: RightPanelContributionId) => void
   onOpenFiles: () => void
+  /** 打开右侧"开发预览"浏览器 tab。 */
+  onOpenBrowser: () => void
+  /** 打开右侧终端 tab。 */
+  onOpenTerminal: () => void
 }
 
 export type WorkbenchRightPanelProps = {
@@ -96,6 +104,7 @@ export type WorkbenchRightPanelProps = {
   planPanel: ReactElement
   canvas: Omit<CodeCanvasPanelProps, 'className'>
   file: Omit<WorkspaceFilePreviewPanelProps, 'className'>
+  terminal: Pick<TerminalPanelProps, 'workspaceRoot' | 'onCollapse'>
   mcpSkills: {
     onOpenSettings: () => void
   }
@@ -119,6 +128,7 @@ export function WorkbenchRightPanel({
   planPanel,
   canvas,
   file,
+  terminal,
   mcpSkills,
   extensionView,
   code,
@@ -138,6 +148,7 @@ export function WorkbenchRightPanel({
         planPanel={planPanel}
         canvas={canvas}
         file={file}
+        terminal={terminal}
         mcpSkills={mcpSkills}
         workspaceRoot={workspaceRoot}
         onCollapse={onCollapse}
@@ -173,6 +184,8 @@ export function WorkbenchRightPanel({
             <CodeCanvasPanel {...canvas} className="h-full max-h-full w-full" />
           ) : rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.file ? (
             <WorkspaceFilePreviewPanel {...file} className="h-full max-h-full w-full" />
+          ) : rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.terminal ? (
+            <TerminalPanel {...terminal} embedded className="h-full max-h-full w-full" />
           ) : rightPanelMode === BUILTIN_RIGHT_PANEL_IDS.mcpSkills ? (
             <McpSkillsPanel workspaceRoot={workspaceRoot} onOpenSettings={mcpSkills.onOpenSettings} />
           ) : rightPanelMode && isExtensionContributionId(rightPanelMode) && extensionView?.id === rightPanelMode ? (
@@ -199,6 +212,7 @@ function CodeRightPanelWorkspace({
   planPanel,
   canvas,
   file,
+  terminal,
   mcpSkills,
   workspaceRoot,
   onCollapse
@@ -213,6 +227,7 @@ function CodeRightPanelWorkspace({
   | 'planPanel'
   | 'canvas'
   | 'file'
+  | 'terminal'
   | 'mcpSkills'
   | 'workspaceRoot'
   | 'onCollapse'
@@ -254,12 +269,14 @@ function CodeRightPanelWorkspace({
         visible={visible}
         width={width}
         onOpenFiles={code.onOpenFiles}
+        onOpenBrowser={code.onOpenBrowser}
+        onOpenTerminal={code.onOpenTerminal}
         onBeginResize={onBeginResize}
       />
     )
   }
 
-  const renderPanel = (id: RightPanelContributionId): ReactElement => {
+  const renderPanel = (id: RightPanelContributionId, active: boolean): ReactElement => {
     if (id === BUILTIN_RIGHT_PANEL_IDS.subagents) {
       return <SubagentDetailPanel className="h-full max-h-full w-full" onCollapse={onCollapse} />
     }
@@ -276,6 +293,20 @@ function CodeRightPanelWorkspace({
           {...browser}
           embedded
           className="h-full max-h-full w-full flex-col"
+          onTitleChange={(title) => updateTitle(id, title)}
+        />
+      )
+    }
+    /* 终端在右侧栏里作为一个标签页嵌入:非激活标签用 active={false}
+       暂停 xterm 渲染与会话输出,切回来再恢复。 */
+    if (id === BUILTIN_RIGHT_PANEL_IDS.terminal) {
+      return (
+        <TerminalPanel
+          key={workspaceRoot || '__global__'}
+          {...terminal}
+          embedded
+          active={active}
+          className="h-full max-h-full w-full"
           onTitleChange={(title) => updateTitle(id, title)}
         />
       )
@@ -355,7 +386,7 @@ function CodeRightPanelWorkspace({
                   hidden={!active}
                   className="absolute inset-0 min-h-0"
                 >
-                  {renderPanel(id)}
+                  {renderPanel(id, active)}
                 </div>
               )
             })}
@@ -366,20 +397,33 @@ function CodeRightPanelWorkspace({
   )
 }
 
-/* 右侧工作区无任何标签时的空状态:提供「打开文件」快捷入口,
-   点击后打开文件树标签,浏览当前项目包含的文件 */
+/* 右侧工作区无任何标签时的空状态:提供「打开文件 / 打开浏览器 / 打开终端」三个快捷入口 */
 function CodeRightWorkspaceEmptyState({
   visible,
   width,
   onOpenFiles,
+  onOpenBrowser,
+  onOpenTerminal,
   onBeginResize
 }: {
   visible: boolean
   width: number
   onOpenFiles: () => void
+  onOpenBrowser: () => void
+  onOpenTerminal: () => void
   onBeginResize: PointerEventHandler<HTMLDivElement>
 }): ReactElement {
   const { t } = useTranslation('common')
+  const hintTexts = [
+    { titleKey: 'rightPanelEmptyOpenFiles', descKey: 'rightPanelEmptyHintBrowse' },
+    { titleKey: 'rightPanelEmptyOpenBrowser', descKey: 'rightPanelEmptyHintBrowser' },
+    { titleKey: 'rightPanelEmptyOpenTerminal', descKey: 'rightPanelEmptyHintTerminal' }
+  ] as const
+  const actions: { icon: typeof FolderOpen; onClick: () => void; titleKey: string; descKey: string }[] = [
+    { icon: FolderOpen, onClick: onOpenFiles, ...hintTexts[0] },
+    { icon: Globe, onClick: onOpenBrowser, ...hintTexts[1] },
+    { icon: TerminalSquare, onClick: onOpenTerminal, ...hintTexts[2] }
+  ]
   return (
     <>
       <div
@@ -395,20 +439,28 @@ function CodeRightWorkspaceEmptyState({
       >
         {/* 右上角固定按钮群悬浮在本面板上方,内容整体下移为其让位 */}
         <div className="ds-workbench-corner-actions-spacer shrink-0" aria-hidden />
-        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4 px-8 pb-6 text-center">
-          <button
-            type="button"
-            onClick={onOpenFiles}
-            className="group flex flex-col items-center gap-3 rounded-[20px] border border-dashed border-ds-border-strong/60 px-10 py-7 text-ds-muted transition hover:border-accent/50 hover:bg-ds-hover/40 hover:text-ds-ink"
-          >
-            <span className="flex h-12 w-12 items-center justify-center rounded-2xl border border-ds-border bg-ds-card text-ds-faint shadow-sm transition group-hover:text-accent">
-              <FolderOpen className="h-5 w-5" strokeWidth={1.75} />
-            </span>
-            <span className="text-[13px] font-semibold">{t('rightPanelEmptyOpenFiles')}</span>
-          </button>
+        <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-3 px-6 pb-6 text-center">
           <p className="max-w-[220px] text-[12px] leading-relaxed text-ds-faint">
             {t('rightPanelEmptyHint')}
           </p>
+          <div className="flex w-full max-w-[260px] flex-col gap-2">
+            {actions.map(({ icon: Icon, onClick, titleKey, descKey }) => (
+              <button
+                key={titleKey}
+                type="button"
+                onClick={onClick}
+                className="group flex items-center gap-3 rounded-2xl border border-dashed border-ds-border-strong/60 px-4 py-3 text-left text-ds-muted transition hover:border-accent/50 hover:bg-ds-hover/40 hover:text-ds-ink"
+              >
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-ds-border bg-ds-card text-ds-faint shadow-sm transition group-hover:text-accent">
+                  <Icon className="h-4 w-4" strokeWidth={1.75} />
+                </span>
+                <span className="flex min-w-0 flex-col">
+                  <span className="text-[13px] font-semibold leading-tight">{t(titleKey)}</span>
+                  <span className="mt-0.5 text-[11px] leading-snug text-ds-faint">{t(descKey)}</span>
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
     </>

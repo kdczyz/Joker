@@ -18,7 +18,7 @@ describe('WorkbenchTopActions', () => {
   it('renders editor, terminal, and right workspace actions for the top bar', () => {
     const html = renderToStaticMarkup(
       createElement(WorkbenchTopActions, {
-        terminalOpen: false,
+        terminalActive: false,
         onToggleTerminal: vi.fn(),
         rightWorkspaceExpanded: false,
         onToggleRightWorkspace: vi.fn()
