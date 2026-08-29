@@ -62,6 +62,8 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
   const [tooltip, setTooltip] = useState<BranchTooltip | null>(null)
   const [branchPrefix, setBranchPrefix] = useState(DEFAULT_GIT_BRANCH_PREFIX)
   const wrapRef = useRef<HTMLDivElement | null>(null)
+  const listRef = useRef<HTMLDivElement | null>(null)
+  const [listPos, setListPos] = useState<{ bottom: number; left: number; maxHeight: number } | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   const load = useCallback(async (): Promise<void> => {
@@ -119,10 +121,45 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
     const onPointerDown = (event: PointerEvent): void => {
       const target = event.target
       if (target instanceof Node && wrapRef.current?.contains(target)) return
+      if (target instanceof Node && listRef.current?.contains(target)) return
       setOpen(false)
     }
     window.addEventListener('pointerdown', onPointerDown)
     return () => window.removeEventListener('pointerdown', onPointerDown)
+  }, [open])
+
+  // The dropdown renders in a body portal (so the Git 工具 popover's scroll
+  // container cannot clip it). Anchor its bottom edge 8px above the trigger,
+  // converting viewport-space measurements into the zoomed <body> space.
+  useEffect(() => {
+    if (!open) {
+      setListPos(null)
+      return
+    }
+    let cancelled = false
+    const updatePosition = (): void => {
+      const el = wrapRef.current
+      if (!el) return
+      const zoom = currentBodyZoom()
+      const rect = el.getBoundingClientRect()
+      const width = Math.min(420, window.innerWidth / zoom - 48)
+      const maxLeft = Math.max(16, window.innerWidth / zoom - width - 16)
+      const left = Math.min(Math.max(16, rect.left / zoom), maxLeft)
+      const bottom = (window.innerHeight - rect.top) / zoom + 8
+      const maxHeight = Math.max(240, (rect.top - 16) / zoom)
+      if (!cancelled) setListPos({ bottom, left, maxHeight })
+    }
+    updatePosition()
+    const frame = window.requestAnimationFrame(updatePosition)
+    const onScroll = (): void => updatePosition()
+    window.addEventListener('scroll', onScroll, true)
+    window.addEventListener('resize', updatePosition)
+    return () => {
+      cancelled = true
+      window.cancelAnimationFrame(frame)
+      window.removeEventListener('scroll', onScroll, true)
+      window.removeEventListener('resize', updatePosition)
+    }
   }, [open])
 
   useEffect(() => {
@@ -358,8 +395,18 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
         )}
       </button>
 
-      {open ? (
-        <div className="absolute bottom-[calc(100%+8px)] left-0 z-50 w-[min(420px,calc(100vw-48px))] overflow-hidden rounded-xl border border-ds-border bg-ds-elevated shadow-[0_24px_70px_rgba(44,55,78,0.18)] backdrop-blur-xl dark:shadow-[0_30px_80px_rgba(0,0,0,0.42)]">
+      {open
+        ? createPortal(
+            <div
+              ref={listRef}
+              className="fixed z-[1200] flex w-[min(420px,calc(100vw-48px))] flex-col overflow-hidden rounded-xl border border-ds-border bg-ds-elevated shadow-[0_24px_70px_rgba(44,55,78,0.18)] backdrop-blur-xl dark:shadow-[0_30px_80px_rgba(0,0,0,0.42)]"
+              style={{
+                bottom: listPos?.bottom ?? 0,
+                left: listPos?.left ?? 0,
+                maxHeight: listPos?.maxHeight ?? 400,
+                visibility: listPos ? 'visible' : 'hidden'
+              }}
+            >
           <div className="flex items-center gap-2 border-b border-ds-border-muted px-4 py-3">
             <Search className="h-4 w-4 shrink-0 text-ds-faint" strokeWidth={1.8} />
             <input
@@ -386,7 +433,7 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
             />
           </div>
 
-          <div className="max-h-[320px] overflow-y-auto px-3 py-3">
+          <div className="min-h-0 flex-1 overflow-y-auto px-3 py-3">
             <div className="mb-2 px-1 text-[13px] font-medium text-ds-faint">
               {t('gitBranches')}
             </div>
@@ -539,8 +586,10 @@ export function GitBranchPicker({ workspaceRoot }: Props): ReactElement | null {
               </button>
             </div>
           ) : null}
-        </div>
-      ) : null}
+            </div>,
+            document.body
+          )
+        : null}
       {tooltip ? createPortal(
         <div
           className="pointer-events-none fixed z-[9999] max-w-[min(34rem,calc(100vw-2rem))] break-all rounded-lg border border-ds-border bg-ds-elevated px-2.5 py-1.5 text-[12px] font-medium leading-5 text-ds-ink shadow-[0_14px_36px_rgba(15,23,42,0.22)]"
