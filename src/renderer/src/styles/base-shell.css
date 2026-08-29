@@ -2517,11 +2517,17 @@ body.ds-workbench-resizing webview {
 
 .ds-chat-content-max-width {
   max-width: var(--ds-chat-content-effective-max-width, var(--ds-chat-content-max-width, 56rem));
+  /* Center the conversation column so it matches the composer dock (which is
+   * centered by .ds-composer-dock) and keeps clear of the jump rail. */
+  margin-inline: auto;
 }
 
 .ds-chat-stage {
   container-type: inline-size;
-  --ds-chat-side-rail-reserve: 5.25rem;
+  /* Reserve enough gutter for the jump rail: rail sits 1rem from the left and
+   * its widest wave marker spans 3.2rem, so half of this reserve (~70px)
+   * keeps the centered column clear of the markers. */
+  --ds-chat-side-rail-reserve: 8.75rem;
   --ds-chat-content-effective-max-width: min(
     var(--ds-chat-content-max-width, 56rem),
     max(0px, calc(100cqw - var(--ds-chat-side-rail-reserve)))
