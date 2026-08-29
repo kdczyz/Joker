@@ -102,7 +102,7 @@ export function SidebarTitlebarToggleButton({
       {tooltip ? (
         <span
           role="tooltip"
-          className="ds-titlebar-sidebar-toggle-tooltip ds-no-drag pointer-events-none absolute left-1/2 top-[calc(100%+6px)] z-50 -translate-x-1/2 whitespace-nowrap rounded-md border border-black/[0.08] bg-white/95 px-2 py-1 text-[11.5px] font-medium text-[#1f1f1f] shadow-[0_4px_14px_rgba(15,23,42,0.12),0_1px_3px_rgba(15,23,42,0.06)] backdrop-blur-md opacity-0 transition-opacity duration-150 group-hover/btn:opacity-100 group-focus-within/btn:opacity-100 dark:border-white/[0.12] dark:bg-[#1f1f1f]/95 dark:text-white"
+          className="ds-titlebar-sidebar-toggle-tooltip ds-no-drag pointer-events-none absolute left-1/2 top-[calc(100%+6px)] z-50 -translate-x-1/2 whitespace-nowrap rounded-md border border-black/[0.08] bg-white/95 px-2 py-1 text-[11.5px] font-medium text-[#1f1f1f] shadow-[0_4px_14px_rgba(15,23,42,0.12),0_1px_3px_rgba(15,23,42,0.06)] backdrop-blur-md opacity-0 transition-opacity duration-150 group-hover/btn:opacity-100 dark:border-white/[0.12] dark:bg-[#1f1f1f]/95 dark:text-white"
         >
           <span>{tooltip}</span>
           {shortcut ? (

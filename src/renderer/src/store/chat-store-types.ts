@@ -109,7 +109,7 @@ export type SettingsRouteSection =
   | 'claw'
   | 'updates'
   | 'dataMigration'
-export type AppRoute = 'chat' | 'design' | 'settings' | 'plugins' | 'extensions' | 'claw' | 'schedule' | 'workflow'
+export type AppRoute = 'chat' | 'design' | 'settings' | 'plugins' | 'extensions' | 'claw' | 'schedule' | 'workflow' | 'fileBrowser'
 export type PluginHostRoute = 'chat' | 'claw'
 
 /**

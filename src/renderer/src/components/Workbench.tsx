@@ -2,7 +2,7 @@ import type { ReactElement } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useChatStore, COMPOSER_DRAFT_PENDING_KEY, type AppRoute } from '../store/chat-store'
-import type { RightPanelMode } from './chat/WorkbenchTopBar'
+import { type RightPanelMode } from './chat/WorkbenchTopBar'
 import { WorkbenchLeftSidebar } from './workbench/WorkbenchLeftSidebar'
 import { SidebarTitlebarToggleButton } from './sidebar/SidebarPrimitives'
 import { WorkbenchStageRouter } from './workbench/WorkbenchStageRouter'
@@ -626,11 +626,16 @@ export function Workbench(): ReactElement {
       setRoute((fileBrowserReturnRoute ?? 'chat') as AppRoute)
       setFileBrowserReturnRoute(null)
     } else {
-      // 记住当前路由，切换到文件浏览器
+      // 记住当前路由，关闭右侧面板，切换到文件浏览器
       setFileBrowserReturnRoute(route)
+      setRightPanelMode(null)
       setRoute('fileBrowser')
     }
-  }, [route, fileBrowserReturnRoute, setRoute])
+  }, [route, fileBrowserReturnRoute, setRoute, setRightPanelMode])
+
+  const toggleRightPanelMode = useCallback((mode: Exclude<RightPanelMode, null>): void => {
+    setRightPanelMode(rightPanelMode === mode ? null : mode)
+  }, [rightPanelMode, setRightPanelMode])
 
   const openCodeRightTool = useCallback((id: RightPanelContributionId): void => {
     if (id === BUILTIN_RIGHT_PANEL_IDS.sideConversations) openSideChat()
@@ -833,7 +838,7 @@ export function Workbench(): ReactElement {
     onReplanChanged: (ids) => void replanChangedRequirements(ids),
     setRightPanelMode
   })
-  const rightPanelDockedVisible = rightPanelVisible && !planPanelInOverlay
+  const rightPanelDockedVisible = rightPanelVisible && !planPanelInOverlay && route !== 'fileBrowser'
 
   const imageAnnotationHost = (
     <WorkbenchImageAnnotationHost
@@ -976,6 +981,7 @@ export function Workbench(): ReactElement {
         onNewConversation={startNewConversation}
         onBeginResize={beginLeftResize}
       />
+
 
       {/* 聊天窗口:圆角面板浮在整块磨砂玻璃上(图二样式),留白处露出玻璃,无对比色中缝 */}
       <div className={`flex min-h-0 min-w-0 flex-1 flex-col p-2 transition-[padding] duration-300 ease-[cubic-bezier(0.32,0.72,0.24,1)] ${leftSidebarCollapsed || activeExtensionCenterView?.point === 'views.fullPage' ? '' : 'pl-0'}`}>
@@ -1120,8 +1126,11 @@ export function Workbench(): ReactElement {
           单个按钮同时承担状态指示与点击切换:
           - 图标随侧栏状态在 <| 与 |> 之间切换(PanelLeft / PanelRight)
           - 点击即切换展开/收起,tooltip 显示当前动作 + 快捷键 ⌘B
-          - ml/mt 偏移按 --ds-ui-scale 抵消(与锚点 left/top 同一套逻辑),
-            保证任何界面缩放下视觉位移都是 50px
+          - 位置完全由锚点 .ds-workbench-sidebar-toggle-anchor 决定(macOS: left/top
+            99px/14px ÷ --ds-ui-scale),按钮自身 margin:-5px/scale 让 38px 按钮垂直居中
+            对齐红绿灯中心(y=28px),水平紧贴红绿灯右侧。不要在此加 ml/mt 偏移——
+            会被 base-shell.css L708 的 .ds-workbench-sidebar-toggle-anchor
+            .ds-titlebar-sidebar-toggle { margin:-5px/scale } 以更高特异性覆盖,无效。
           放在 shell 最后一个子节点,确保点击不被任何兄弟层拦截 */}
       <div className="ds-workbench-sidebar-toggle-anchor ds-no-drag">
         <SidebarTitlebarToggleButton
@@ -1132,7 +1141,6 @@ export function Workbench(): ReactElement {
           onClick={toggleLeftSidebar}
           tooltip={leftSidebarCollapsed ? t('sidebarExpand') : t('sidebarCollapse')}
           shortcut="⌘B"
-          className="ml-[calc(50px_/_var(--ds-ui-scale,1))] mt-[calc(50px_/_var(--ds-ui-scale,1))]"
         />
       </div>
     </div>

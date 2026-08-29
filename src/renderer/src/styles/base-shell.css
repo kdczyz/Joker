@@ -3,7 +3,7 @@
   --ds-window-controls-safe-inset: 0px;
   --ds-collapsed-sidebar-titlebar-extra-inset: 0px;
   --ds-write-titlebar-extra-inset: 0px;
-  --ds-ui-scale: 1;
+  --ds-ui-scale: 1.05;
   /* 左侧栏独立缩放系数(需求:左侧栏 108% / 右侧对话框 100%)。
      修改此处时务必同步 WorkbenchLeftSidebar.tsx 中的 LEFT_SIDEBAR_ZOOM 常量(用于补偿占位宽度)。 */
   --ds-ui-scale-sidebar: 1.08;
@@ -713,14 +713,18 @@ body.ds-workbench-resizing .ds-code-right-workspace > * {
 }
 
 :root[data-platform='darwin'] .ds-workbench-sidebar-toggle-anchor {
-  /* 灯组右缘 = 31 + 52 = 83px,留 16px 间距;灯组 y=22 为左上角时中心在 28px,按钮中心对齐 */
-  top: calc(14px / var(--ds-ui-scale, 1));
-  left: calc(99px / var(--ds-ui-scale, 1));
+  /* 灯组右缘 = 31 + 52 = 83px,留 16px 间距。
+     top 在 8px 基准上,按用户要求再下移 12px → 20px(相对红绿灯左对齐基线 y=22)。
+     left 在 99px 基准上右移 5px → 104px。两者均除以 --ds-ui-scale 抵消 body zoom,
+     保证任意缩放下视觉位移固定(下12/右5)。 */
+  top: calc(17px / var(--ds-ui-scale, 1));
+  left: calc(107px / var(--ds-ui-scale, 1));
 }
 
-/* macOS 原生全屏时红绿灯隐藏,按钮移到最左侧(状态由 use-mac-window-fullscreen 写入 <html data-mac-fullscreen>) */
+/* macOS 原生全屏时红绿灯隐藏,按钮移到最左侧(状态由 use-mac-window-fullscreen 写入 <html data-mac-fullscreen>)。
+   top 与窗口模式一致下移 12px(left 保持在最左 16px,全屏下无红绿灯无需右移) */
 :root[data-platform='darwin'][data-mac-fullscreen='true'] .ds-workbench-sidebar-toggle-anchor {
-  top: calc(14px / var(--ds-ui-scale, 1));
+  top: calc(17px / var(--ds-ui-scale, 1));
   left: calc(16px / var(--ds-ui-scale, 1));
 }
 

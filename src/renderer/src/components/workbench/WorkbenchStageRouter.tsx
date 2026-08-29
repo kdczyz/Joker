@@ -18,6 +18,11 @@ const ExtensionManagementCenter = lazy(() =>
     default: module.ExtensionManagementCenter
   }))
 )
+const WorkspaceFileBrowserView = lazy(() =>
+  import('../WorkspaceFileBrowserView').then((module) => ({
+    default: module.WorkspaceFileBrowserView
+  }))
+)
 
 export type WorkbenchStageRouterProps = {
   route: string
@@ -31,6 +36,11 @@ export type WorkbenchStageRouterProps = {
     workspaceRoot: string
     onOpenIntegrations: () => void
     onOpenView: (contributionId: string) => Promise<void>
+  }
+  fileBrowser?: {
+    workspaceRoot: string
+    designWorkspaceRoot?: string
+    onClose: () => void
   }
 }
 
@@ -46,7 +56,8 @@ export function WorkbenchStageRouter({
   conversation,
   imageAnnotationHost,
   planOverlay,
-  extensions
+  extensions,
+  fileBrowser
 }: WorkbenchStageRouterProps): ReactElement {
   return (
     <main
@@ -55,7 +66,15 @@ export function WorkbenchStageRouter({
       }`}
     >
       <div className="ds-stage-route-host relative flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        {route === 'extensions' ? (
+        {route === 'fileBrowser' && fileBrowser ? (
+          <Suspense fallback={<div className="h-full bg-ds-main" />}>
+            <WorkspaceFileBrowserView
+              workspaceRoot={fileBrowser.workspaceRoot}
+              designWorkspaceRoot={fileBrowser.designWorkspaceRoot}
+              onClose={fileBrowser.onClose}
+            />
+          </Suspense>
+        ) : route === 'extensions' ? (
           <Suspense fallback={<div className="h-full bg-ds-main" />}>
             <ExtensionManagementCenter
               key={extensions.workspaceRoot || '__global__'}
