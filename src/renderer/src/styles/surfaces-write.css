@@ -951,13 +951,13 @@ html[data-ui-plugin-readability-strength='strong'] .ds-ui-plugin-readability-scr
 html[data-ui-plugin-content-reserve='narrow'] .ds-chat-stage {
   --Joker-ui-plugin-content-reserve: clamp(10rem, 20cqw, 17rem);
   --Joker-ui-plugin-content-shift: clamp(3rem, 7cqw, 6rem);
-  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Joker-ui-plugin-content-reserve));
+  --ds-chat-side-rail-reserve: var(--Joker-ui-plugin-content-reserve);
 }
 
 html[data-ui-plugin-content-reserve='wide'] .ds-chat-stage {
   --Joker-ui-plugin-content-reserve: clamp(15rem, 28cqw, 25rem);
   --Joker-ui-plugin-content-shift: clamp(8rem, 15cqw, 14rem);
-  --ds-chat-side-rail-reserve: calc(5.25rem + var(--Joker-ui-plugin-content-reserve));
+  --ds-chat-side-rail-reserve: var(--Joker-ui-plugin-content-reserve);
 }
 
 html[data-ui-plugin-presentation='on'] .ds-message-timeline-content,
