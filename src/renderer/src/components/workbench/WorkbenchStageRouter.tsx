@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ReactElement, type ReactNode } from 'react'
+import { lazy, Suspense, type ComponentProps, type ReactElement, type ReactNode } from 'react'
 import { WorkbenchConversationStage, type WorkbenchConversationStageProps } from './WorkbenchConversationStage'
 
 const PluginMarketplaceView = lazy(() =>
@@ -23,6 +23,11 @@ const WorkspaceFileBrowserView = lazy(() =>
     default: module.WorkspaceFileBrowserView
   }))
 )
+const WorkbenchDesignStage = lazy(() =>
+  import('./WorkbenchDesignStage').then((module) => ({
+    default: module.WorkbenchDesignStage
+  }))
+)
 
 export type WorkbenchStageRouterProps = {
   route: string
@@ -42,6 +47,23 @@ export type WorkbenchStageRouterProps = {
     designWorkspaceRoot?: string
     onClose: () => void
   }
+  design?: {
+    busy?: boolean
+    onOpenAgentSettings?: () => void
+    onImplementDesign?: (artifact: import('../../design/design-types').DesignArtifact) => void
+    onScreenCreated?: (shapeId: string, userPrompt: string, brief?: string) => void
+    onSvgCreated?: (
+      artifactId: string,
+      shapeId: string,
+      userPrompt: string,
+      brief: string
+    ) => boolean | Promise<boolean>
+    onUseElementAsContext?: (context: import('../../design/design-composer-context').DesignHtmlElementContext | null, promptSeed?: string) => void
+    onRuntimeQualityFindings?: (payload: import('../../design/design-html-quality').DesignRuntimeQualityPayload) => void
+    onRequestQualityRepair?: (payload: import('../../design/design-html-quality').DesignRuntimeQualityPayload) => void
+    rightPanel?: ReactNode
+    composerProps?: ComponentProps<typeof import('../chat/FloatingComposer').FloatingComposer>
+  }
 }
 
 function WorkbenchPaneFallback(): ReactElement {
@@ -57,7 +79,8 @@ export function WorkbenchStageRouter({
   imageAnnotationHost,
   planOverlay,
   extensions,
-  fileBrowser
+  fileBrowser,
+  design
 }: WorkbenchStageRouterProps): ReactElement {
   return (
     <main
@@ -106,6 +129,23 @@ export function WorkbenchStageRouter({
               leftSidebarCollapsed={leftSidebarCollapsed}
               onToggleLeftSidebar={onToggleLeftSidebar}
               onOpenThread={onOpenThread}
+            />
+          </Suspense>
+        ) : route === 'design' ? (
+          <Suspense fallback={<div className="h-full bg-ds-main" />}>
+            <WorkbenchDesignStage
+              leftSidebarCollapsed={leftSidebarCollapsed}
+              onToggleLeftSidebar={onToggleLeftSidebar}
+              busy={design?.busy}
+              onOpenAgentSettings={design?.onOpenAgentSettings}
+              onImplementDesign={design?.onImplementDesign}
+              onScreenCreated={design?.onScreenCreated}
+              onSvgCreated={design?.onSvgCreated}
+              onUseElementAsContext={design?.onUseElementAsContext}
+              onRuntimeQualityFindings={design?.onRuntimeQualityFindings}
+              onRequestQualityRepair={design?.onRequestQualityRepair}
+              rightPanel={design?.rightPanel}
+              composerProps={design?.composerProps!}
             />
           </Suspense>
         ) : (

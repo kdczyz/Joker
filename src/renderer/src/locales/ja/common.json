@@ -34,6 +34,7 @@
   "windowsMenuOpenLogDir": "ログフォルダーを開く",
   "windowsMenuAboutMessage": "Joker\nVersion {{version}}",
   "windowsMenuUnknownVersion": "不明",
+  "canvas": "キャンバス",
   "code": "コード",
   "write": "書く",
   "design": "デザイン",

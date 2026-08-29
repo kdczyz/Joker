@@ -34,6 +34,7 @@
   "windowsMenuOpenLogDir": "Open logs folder",
   "windowsMenuAboutMessage": "Joker\nVersion {{version}}",
   "windowsMenuUnknownVersion": "unknown",
+  "canvas": "Canvas",
   "code": "Code",
   "write": "Write",
   "design": "Design",

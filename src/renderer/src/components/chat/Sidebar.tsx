@@ -60,6 +60,7 @@ type Props = {
   onToggleTheme: () => void
   onToggleConnectPhone: () => void
   onCodeOpen: () => void
+  onDesignOpen?: () => void
   onScheduleOpen: () => void
   onWorkflowOpen: () => void
   onNewConversation: () => void
@@ -92,6 +93,7 @@ export function Sidebar({
   onToggleTheme,
   onToggleConnectPhone,
   onCodeOpen,
+  onDesignOpen,
   onScheduleOpen,
   onWorkflowOpen,
   onNewConversation
@@ -167,6 +169,7 @@ export function Sidebar({
         <WorkspaceModeTabs
           activeView={activeView}
           onCodeOpen={onCodeOpen}
+          onDesignOpen={onDesignOpen}
         />
 
         <div className="flex flex-col gap-1 pt-0.5">

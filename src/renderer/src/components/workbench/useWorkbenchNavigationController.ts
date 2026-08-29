@@ -51,6 +51,7 @@ type UseWorkbenchNavigationControllerParams = {
 export type WorkbenchNavigationController = {
   closeRightPanel: () => void
   openCodeMode: () => void
+  openDesignMode: () => void
   openPluginsView: () => void
   openExtensionsView: () => void
   openScheduleView: () => void
@@ -179,6 +180,11 @@ export function useWorkbenchNavigationController({
     void openCode()
   }, [openCode, setConnectPhoneSidebarOpen])
 
+  const openDesignMode = useCallback((): void => {
+    setConnectPhoneSidebarOpen(false)
+    setRoute('design')
+  }, [setConnectPhoneSidebarOpen, setRoute])
+
   const openClawMode = useCallback((): void => {
     setConnectPhoneSidebarOpen(false)
     openClaw()
@@ -230,6 +236,7 @@ export function useWorkbenchNavigationController({
   return {
     closeRightPanel,
     openCodeMode,
+    openDesignMode,
     openClawMode,
     openPluginsView,
     openExtensionsView,

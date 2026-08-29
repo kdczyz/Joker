@@ -34,6 +34,7 @@
   "windowsMenuOpenLogDir": "로그 폴더 열기",
   "windowsMenuAboutMessage": "Joker\nVersion {{version}}",
   "windowsMenuUnknownVersion": "알 수 없음",
+  "canvas": "캔버스",
   "code": "코드",
   "write": "쓰기",
   "design": "디자인",

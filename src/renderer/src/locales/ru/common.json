@@ -34,6 +34,7 @@
   "windowsMenuOpenLogDir": "Открыть папку с логами",
   "windowsMenuAboutMessage": "Joker\nВерсия {{version}}",
   "windowsMenuUnknownVersion": "неизвестно",
+  "canvas": "Канвас",
   "code": "Код",
   "write": "Письмо",
   "design": "Дизайн",

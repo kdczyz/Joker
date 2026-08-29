@@ -1,6 +1,7 @@
 import { Suspense, type ComponentProps, type PointerEventHandler, type ReactElement } from 'react'
 import type { SettingsRouteSection } from '../../store/chat-store'
 import { Sidebar } from '../chat/Sidebar'
+import { DesignSidebar } from '../design/DesignSidebar'
 import type { RegisteredContribution } from '../../extensions/contribution-registry'
 import { ExtensionViewOutlet } from '../../extensions/ControlledContributionSurfaces'
 
@@ -42,6 +43,7 @@ export type WorkbenchLeftSidebarProps = {
   onToggleTheme: CodeSidebarProps['onToggleTheme']
   onToggleConnectPhone: CodeSidebarProps['onToggleConnectPhone']
   onCodeOpen: CodeSidebarProps['onCodeOpen']
+  onDesignOpen?: () => void
   onScheduleOpen: CodeSidebarProps['onScheduleOpen']
   onWorkflowOpen: CodeSidebarProps['onWorkflowOpen']
   onNewConversation: CodeSidebarProps['onNewConversation']
@@ -84,6 +86,7 @@ export function WorkbenchLeftSidebar({
   onToggleTheme,
   onToggleConnectPhone,
   onCodeOpen,
+  onDesignOpen,
   onScheduleOpen,
   onWorkflowOpen,
   onNewConversation,
@@ -102,7 +105,15 @@ export function WorkbenchLeftSidebar({
           }`}
           style={{ width: width / LEFT_SIDEBAR_ZOOM }}
         >
-          {extensionView ? (
+          {route === 'design' ? (
+            <DesignSidebar
+              onCodeOpen={onCodeOpen}
+              onWriteOpen={onCodeOpen}
+              onDesignOpen={onDesignOpen ?? (() => {})}
+              onOpenSettings={onOpenSettings}
+              onToggleTheme={onToggleTheme}
+            />
+          ) : extensionView ? (
             <ExtensionViewOutlet
               contribution={extensionView}
               workspaceRoot={workspaceRoot}
@@ -136,6 +147,7 @@ export function WorkbenchLeftSidebar({
               onToggleTheme={onToggleTheme}
               onToggleConnectPhone={onToggleConnectPhone}
               onCodeOpen={onCodeOpen}
+              onDesignOpen={onDesignOpen}
               onScheduleOpen={onScheduleOpen}
               onWorkflowOpen={onWorkflowOpen}
               onNewConversation={onNewConversation}

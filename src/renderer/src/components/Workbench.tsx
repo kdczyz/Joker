@@ -754,7 +754,7 @@ export function Workbench(): ReactElement {
   })
 
   const {
-    closeRightPanel, openCodeMode, openPluginsView, openExtensionsView, openScheduleView,
+    closeRightPanel, openCodeMode, openDesignMode, openPluginsView, openExtensionsView, openScheduleView,
     openThread, openWorkflowView, sidebarView,
     startNewChat, startNewChatInWorkspace, startNewConversation,
     toggleConnectPhone
@@ -976,6 +976,7 @@ export function Workbench(): ReactElement {
         onToggleTheme={toggleTheme}
         onToggleConnectPhone={toggleConnectPhone}
         onCodeOpen={openCodeMode}
+        onDesignOpen={openDesignMode}
         onScheduleOpen={openScheduleView}
         onWorkflowOpen={openWorkflowView}
         onNewConversation={startNewConversation}
@@ -1088,6 +1089,11 @@ export function Workbench(): ReactElement {
                 designWorkspaceRoot: undefined,
                 onClose: toggleFileBrowser
               }
+            : undefined
+        }
+        design={
+          route === 'design'
+            ? { busy, composerProps: chatComposerProps }
             : undefined
         }
       />
