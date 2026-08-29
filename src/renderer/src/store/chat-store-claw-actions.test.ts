@@ -227,6 +227,93 @@ describe('chat-store Claw actions helpers', () => {
     })
   })
 
+  it('does not bind a recovery candidate whose thread was deleted with its previous device', async () => {
+    rendererRuntimeClient.invalidateSettings()
+    // Re-adding a device after a disconnect starts unbound; the deleted
+    // device's managed-titled thread still sits in the threads list, which is
+    // exactly the recovery candidate that poisoned the channel before.
+    const staleDeletedThread = thread('thr-deleted-with-device', '[Claw IM:Feishu Agent01]', '2026-06-01T00:02:00.000Z')
+    const settings = {
+      workspaceRoot: '/Users/zxy/project',
+      claw: {
+        enabled: true,
+        im: {
+          enabled: true,
+          provider: 'feishu',
+          workspaceRoot: '/Users/zxy/project'
+        },
+        channels: [channel({
+          threadId: '',
+          conversations: [{ ...channel().conversations[0], localThreadId: '' }]
+        })]
+      }
+    }
+    const JokerGui = {
+      getSettings: vi.fn(async () => settings),
+      setSettings: vi.fn(async (patch: { claw?: { channels?: ClawImChannelV1[] } }) => {
+        settings = {
+          ...settings,
+          claw: {
+            ...settings.claw,
+            ...(patch.claw ?? {}),
+            channels: patch.claw?.channels ?? settings.claw.channels
+          }
+        }
+        return settings
+      })
+    }
+    vi.stubGlobal('window', { JokerGui })
+
+    const createdThread = thread('thr-created-fresh', '[Claw:Feishu Agent01]')
+    const provider = {
+      createThread: vi.fn(async () => createdThread),
+      getThreadDetail: vi.fn(async (id: string) => {
+        throw new Error(`thread not found: ${id}`)
+      }),
+      deleteThread: vi.fn()
+    }
+    const selectThread = vi.fn(async () => undefined)
+    let state: Record<string, unknown> = {
+      runtimeConnection: 'ready',
+      route: 'chat',
+      clawChannels: settings.claw.channels,
+      activeClawChannelId: '',
+      activeThreadId: null,
+      threads: [staleDeletedThread],
+      selectThread,
+      error: null
+    }
+    const set = vi.fn((partial: Record<string, unknown> | ((current: typeof state) => Record<string, unknown>)) => {
+      const patch = typeof partial === 'function' ? partial(state) : partial
+      state = { ...state, ...patch }
+    })
+    const actions = createClawActions({
+      set: set as never,
+      get: (() => state) as never,
+      i18n: { t: (key: string) => key },
+      getProvider: () => provider,
+      newClawChannel: vi.fn() as never,
+      normalizeClawComposerModel: (raw: string) => raw as never,
+      activeClawChannel: vi.fn() as never,
+      normalizeWorkspaceRoot: (workspaceRoot?: string | null) => workspaceRoot?.trim() ?? '',
+      formatRuntimeError: (error: unknown) => error instanceof Error ? error.message : String(error),
+      shouldOpenSettingsForError: () => false,
+      clearedThreadSelection: vi.fn() as never,
+      sseAbortRef: { current: null },
+      clearBusyWatchdog: vi.fn()
+    })
+
+    await actions.selectClawChannel('channel-1')
+
+    // The dead recovery candidate must be skipped; the channel lands on a
+    // freshly created thread instead of the deleted one.
+    expect(provider.getThreadDetail).toHaveBeenCalledWith('thr-deleted-with-device')
+    expect(provider.createThread).toHaveBeenCalledTimes(1)
+    expect(selectThread).toHaveBeenCalledWith('thr-created-fresh')
+    const savedPatch = JokerGui.setSettings.mock.calls[0]?.[0] as { claw: { channels: ClawImChannelV1[] } } | undefined
+    expect(savedPatch?.claw.channels[0]).toMatchObject({ id: 'channel-1', threadId: 'thr-created-fresh' })
+  })
+
   it('does not let a slower empty-channel lookup clear the newer selection', async () => {    rendererRuntimeClient.invalidateSettings()
     const first = channel({
       id: 'channel-a',

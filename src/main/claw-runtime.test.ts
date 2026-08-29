@@ -1817,6 +1817,97 @@ describe('ClawRuntime', () => {
     )
   })
 
+  it('replaces a thread that the runtime fenced off as being deleted', async () => {
+    const settings = buildSettings()
+    const logError = vi.fn()
+    const onTurnStarted = vi.fn()
+    const runtimeRequest = vi.fn(async (_settings, path, init) => {
+      if (path === '/v1/threads/thr_deleted/turns') {
+        return {
+          ok: false,
+          status: 409,
+          body: JSON.stringify({ code: 'conflict', message: 'thread is being deleted: thr_deleted' })
+        }
+      }
+      if (path === '/v1/threads') {
+        return { ok: true, status: 200, body: JSON.stringify({ id: 'thr_replacement' }) }
+      }
+      if (path === '/v1/threads/thr_replacement' && init?.method === 'PATCH') {
+        return { ok: true, status: 200, body: '{}' }
+      }
+      if (path === '/v1/threads/thr_replacement/turns') {
+        return {
+          ok: true,
+          status: 202,
+          body: JSON.stringify({ threadId: 'thr_replacement', turnId: 'turn_replacement' })
+        }
+      }
+      if (path === '/v1/threads/thr_replacement' && init?.method === 'GET') {
+        return {
+          ok: true,
+          status: 200,
+          body: JSON.stringify({
+            id: 'thr_replacement',
+            status: 'idle',
+            turns: [
+              {
+                id: 'turn_replacement',
+                status: 'completed',
+                items: [{ kind: 'assistant_text', text: 'recovered reply' }]
+              }
+            ]
+          })
+        }
+      }
+      throw new Error(`unexpected path ${path}`)
+    })
+    const runtime = createClawRuntime({
+      store: { load: vi.fn(async () => settings), patch: vi.fn(async () => settings) } as never,
+      runtimeRequest,
+      logError
+    })
+
+    const result = await (runtime as unknown as {
+      runPrompt: (
+        settingsArg: AppSettingsV1,
+        options: {
+          prompt: string
+          title: string
+          workspaceRoot: string
+          model: string
+          mode: 'agent' | 'plan'
+          waitForResult: boolean
+          responseTimeoutMs: number
+          source: 'task' | 'im'
+          threadId?: string
+          onTurnStarted?: (payload: { threadId: string; turnId: string }) => Promise<void> | void
+        }
+      ) => Promise<{ ok: boolean; threadId?: string; turnId?: string; text?: string }>
+    }).runPrompt(settings, {
+      prompt: 'hello',
+      title: 'demo',
+      workspaceRoot: '/tmp/workspace',
+      model: 'auto',
+      mode: 'agent',
+      waitForResult: true,
+      responseTimeoutMs: 2_000,
+      source: 'im',
+      threadId: 'thr_deleted',
+      onTurnStarted
+    })
+
+    expect(result).toMatchObject({
+      ok: true,
+      threadId: 'thr_replacement',
+      turnId: 'turn_replacement',
+      text: 'recovered reply'
+    })
+    expect(onTurnStarted).toHaveBeenCalledWith({
+      threadId: 'thr_replacement',
+      turnId: 'turn_replacement'
+    })
+  })
+
   it('handles Feishu /new locally by clearing the mapped IM thread', async () => {
     const settings = buildSettings()
     settings.claw.im.enabled = true

@@ -93,6 +93,19 @@ function isMissingThreadResult(result: { ok: boolean; status: number; body: stri
   return result.status === 404 && message.includes('thread') && message.includes('not found')
 }
 
+// A bound thread can also be unusable while its deletion is still fenced off
+// in the runtime (HTTP 409 "thread is being deleted") — e.g. right after a
+// device was disconnected and re-added and recovery bound the new channel to
+// the old device's removed thread. The inbound IM message must not bounce:
+// treat it like a missing thread so a replacement thread is created and the
+// channel rebinds to it.
+function isUnusableExistingThreadResult(result: { ok: boolean; status: number; body: string }): boolean {
+  if (isMissingThreadResult(result)) return true
+  if (result.ok || result.status !== 409) return false
+  const message = runtimeErrorMessage(result, '').toLowerCase()
+  return message.includes('thread') && message.includes('being deleted')
+}
+
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : String(error)
 }
@@ -1100,7 +1113,7 @@ export class ClawRuntime {
       turnBody.sandboxMode = imSandboxMode
     }
     let turn = await this.startRuntimeTurn(runtimeSettings, thread.id, turnBody)
-    if (!turn.ok && existingThreadId && isMissingThreadResult(turn)) {
+    if (!turn.ok && existingThreadId && isUnusableExistingThreadResult(turn)) {
       this.deps.logError('claw-runtime', 'Configured IM thread was missing; creating a replacement thread.', {
         threadId: existingThreadId,
         channelId: options.channel?.id,

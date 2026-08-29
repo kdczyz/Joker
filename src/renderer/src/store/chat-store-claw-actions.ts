@@ -386,6 +386,16 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
       )
       let threadId = clawThreadIdForProvider(channel, latestConversation)
       const recoveredThread = findRecoverableClawThread(get().threads, channels, channel)
+      // A recovery candidate can be a thread that was deleted together with a
+      // previously disconnected device — its managed title still matches this
+      // channel's label. Binding such a thread poisons every later message
+      // with HTTP 409 "thread is being deleted", so verify the candidate still
+      // exists before trusting recovery.
+      let recoveredThreadId = recoveredThread?.id ?? ''
+      if (recoveredThreadId && !(await threadExists(provider, recoveredThreadId))) {
+        recoveredThreadId = ''
+      }
+      if (!isLatestSelection()) return
       const configuredThreadExists = threadId ? await threadExists(provider, threadId) : false
       if (!isLatestSelection()) return
       const configuredThreadHasUserMessages =
@@ -394,7 +404,7 @@ export function createClawActions(options: CreateClawActionsOptions): Pick<
       const configuredThreadId = threadId
       threadId = resolveClawThreadId({
         configuredThreadId,
-        recoveredThreadId: recoveredThread?.id ?? '',
+        recoveredThreadId,
         configuredThreadExists,
         configuredThreadHasUserMessages
       })
