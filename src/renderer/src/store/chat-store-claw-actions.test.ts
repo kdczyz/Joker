@@ -98,6 +98,53 @@ describe('chat-store Claw actions helpers', () => {
     expect(recovered).toBeNull()
   })
 
+  it('does not claim a same-label thread via title prefix when two channels share the label', () => {
+    // WeChat and Feishu both bind as the agent profile name, so two channels
+    // can legitimately be labeled "Joker". An orphaned WeChat thread must not
+    // be adopted by the Feishu channel (or vice versa) on click.
+    const weixin = channel({
+      id: 'channel-weixin',
+      provider: 'weixin',
+      label: 'Joker',
+      threadId: 'thr-weixin-live',
+      conversations: []
+    })
+    const feishu = channel({
+      id: 'channel-feishu',
+      provider: 'feishu',
+      label: 'Joker',
+      threadId: '',
+      conversations: [{ ...channel().conversations[0], localThreadId: '' }]
+    })
+    const orphanWeixinThread = thread('thr-weixin-orphan', '[Claw IM:Joker] o9cq-im.wechat', '2026-06-01T00:05:00.000Z')
+
+    expect(
+      findRecoverableClawThread([orphanWeixinThread], [weixin, feishu], feishu)
+    ).toBeNull()
+  })
+
+  it('still recovers by title prefix when the label is unique among channels', () => {
+    const weixin = channel({
+      id: 'channel-weixin',
+      provider: 'weixin',
+      label: 'WeChat Joker',
+      threadId: 'thr-weixin-live',
+      conversations: []
+    })
+    const feishu = channel({
+      id: 'channel-feishu',
+      provider: 'feishu',
+      label: 'Feishu Joker',
+      threadId: '',
+      conversations: []
+    })
+    const orphanFeishuThread = thread('thr-feishu-orphan', '[Claw IM:Feishu Joker] ou_fb', '2026-06-01T00:05:00.000Z')
+
+    expect(
+      findRecoverableClawThread([orphanFeishuThread], [weixin, feishu], feishu)?.id
+    ).toBe('thr-feishu-orphan')
+  })
+
   it('writes recovered provider thread ids back to both channel and conversation', () => {
     const now = '2026-06-01T00:03:00.000Z'
     const next = channelWithClawThreadMapping(channel(), 'Joker-thread', now, 'conversation-1')
@@ -233,7 +280,7 @@ describe('chat-store Claw actions helpers', () => {
     // device's managed-titled thread still sits in the threads list, which is
     // exactly the recovery candidate that poisoned the channel before.
     const staleDeletedThread = thread('thr-deleted-with-device', '[Claw IM:Feishu Agent01]', '2026-06-01T00:02:00.000Z')
-    const settings = {
+    let settings = {
       workspaceRoot: '/Users/zxy/project',
       claw: {
         enabled: true,

@@ -680,12 +680,16 @@ export function ConnectPhoneSidebarPanel({
   channels,
   onAddProvider,
   onDisconnect,
-  onOpenSettings
+  onOpenSettings,
+  onSelectChannel
 }: {
   channels: ClawImChannelV1[]
   onAddProvider: AddClawPhoneChannel
   onDisconnect: (channelId: string) => Promise<void>
   onOpenSettings: () => void
+  /** Switch the conversation panel to this channel's thread. The binding
+   * panel stays open so the user can keep managing devices. */
+  onSelectChannel?: (channelId: string) => void
 }): ReactElement {
   const { t } = useTranslation('common')
   const [target, setTarget] = useState<ClawInstallTarget>('feishu')
@@ -1002,7 +1006,10 @@ export function ConnectPhoneSidebarPanel({
                   <button
                     key={channel.id}
                     type="button"
-                    onClick={() => setTarget(providerTarget)}
+                    onClick={() => {
+                      setTarget(providerTarget)
+                      onSelectChannel?.(channel.id)
+                    }}
                     className={`group flex min-h-[64px] w-full items-center gap-2 rounded-[12px] border px-2.5 py-2 text-left transition ${
                       active
                         ? 'border-accent/20 bg-accent/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.62)]'

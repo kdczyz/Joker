@@ -237,6 +237,7 @@ export function Sidebar({
           }}
           onDisconnect={(channelId) => deleteClawChannel(channelId)}
           onOpenSettings={() => onOpenSettings('claw')}
+          onSelectChannel={(channelId) => void selectClawChannel(channelId)}
         />
       ) : activeView === 'claw' ? (
         <ClawSidebarContent

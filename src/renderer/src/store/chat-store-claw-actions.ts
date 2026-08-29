@@ -107,14 +107,23 @@ export function findRecoverableClawThread(
     .filter((thread) => !knownThreadIds.has(thread.id))
     .filter((thread) => clawThreadTitleLooksManaged(thread.title))
     .sort((a, b) => updatedAtMs(b) - updatedAtMs(a))
+  // The managed-instructions heading matches regardless of channel: with
+  // several IM devices bound it would happily claim another device's thread,
+  // so only trust it when this is the only configured channel. The
+  // `[Claw IM:<label>]` prefix has the same blind spot when two channels
+  // share a label (each device binds as the agent profile name, so WeChat and
+  // Feishu can both be "Joker"): the title cannot tell the channels apart, and
+  // a click on one device would load the other device's orphaned conversation.
+  // Only trust the prefix while the label is unambiguous.
+  const labelIsShared =
+    channels.filter((item) => item.label.trim() === channel.label.trim()).length > 1
   return (
-    // The managed-instructions heading matches regardless of channel: with
-    // several IM devices bound it would happily claim another device's thread,
-    // so only trust it when this is the only configured channel.
     (channels.length <= 1
       ? candidates.find((thread) => thread.title.trim().startsWith(CLAW_MANAGED_INSTRUCTIONS_HEADING))
       : undefined) ??
-    candidates.find((thread) => titleMatchesClawChannel(thread, channel)) ??
+    (labelIsShared
+      ? undefined
+      : candidates.find((thread) => titleMatchesClawChannel(thread, channel))) ??
     null
   )
 }
