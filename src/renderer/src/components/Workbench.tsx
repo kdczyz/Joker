@@ -803,7 +803,23 @@ export function Workbench(): ReactElement {
   })
   const ensureDesignThreadForWorkspace = useCallback(
     async (wsRoot: string, docId: string, artifactId?: string | null) => {
-      return useDesignAssistantStore.getState().ensureDesignThread(wsRoot, docId, artifactId)
+      const { threadId, created } = await useDesignAssistantStore.getState().ensureDesignThread(wsRoot, docId, artifactId)
+      if (threadId) {
+        // ensureDesignThread only registers the thread; it never activates it in
+        // the chat store. Without this, the canvas/design turn would be routed by
+        // chat-store sendMessage to the currently active code thread (or, when
+        // the design-route sync has cleared the selection, create a brand-new
+        // code thread) — i.e. canvas agent sessions leaking into code sessions.
+        // Activating the design thread here keeps the turn on the design thread.
+        const chatState = useChatStore.getState()
+        if (chatState.activeThreadId !== threadId) {
+          // A freshly created thread has no history to load; skip the
+          // getThreadDetail HTTP round-trip so the first canvas send appears
+          // immediately instead of hanging on a redundant fetch.
+          await chatState.selectThread(threadId, { skipDetail: created })
+        }
+      }
+      return threadId
     },
     []
   )
@@ -821,7 +837,10 @@ export function Workbench(): ReactElement {
     designContextState.handleDesignHtmlElementAsContext(null)
   }, [designContextState.handleDesignHtmlElementAsContext])
 
-  const { sendDesignPrompt, designThreads, switchDesignThread } = useWorkbenchDesignAgentRuntime({
+  const {
+    sendDesignPrompt, designThreads, switchDesignThread,
+    handleDesignRuntimeQualityFindings, handleDesignQualityRepairRequest
+  } = useWorkbenchDesignAgentRuntime({
     activeCodeCanvasWorkspace,
     activeDocumentId: designActiveDocumentId,
     activeArtifactId: designActiveArtifactId,
@@ -1221,17 +1240,28 @@ export function Workbench(): ReactElement {
             ? {
                 busy,
                 // The design stage renders the docked right sidebar itself
-                // (WorkbenchDesignStage line ~34); without this the chat rail
-                // never mounts on the design route regardless of visibility.
+                // (WorkbenchDesignStage); without this the chat rail never
+                // mounts on the design route regardless of visibility.
                 rightPanel,
-                composerProps: {
-                  ...chatComposerProps,
-                  onSend: () => {
-                    const text = input.trim()
-                    if (!text) return
-                    void sendDesignPrompt(text)
-                  }
-                }
+                onOpenAgentSettings: () => openSettings('agents'),
+                // When the live canvas loop creates a screen frame, kick off the
+                // follow-up turn that writes the screen's HTML artifact — the
+                // frame is born as a skeleton and stays "generation incomplete"
+                // without this dispatch. Prefer the agent's expanded brief.
+                onScreenCreated: (shapeId, userPrompt, brief) => {
+                  useCanvasSelectionStore.getState().select([shapeId])
+                  const screenPrompt = brief?.trim() || userPrompt.trim() || 'Design this screen'
+                  void sendDesignPrompt(screenPrompt, { screenShapeId: shapeId })
+                },
+                onSvgCreated: async (artifactId, shapeId, userPrompt, brief) => {
+                  useCanvasSelectionStore.getState().select([shapeId])
+                  return sendDesignPrompt(brief || userPrompt || 'Create this SVG motion design', {
+                    svgArtifactId: artifactId
+                  })
+                },
+                onUseElementAsContext: designContextState.handleDesignHtmlElementAsContext,
+                onRuntimeQualityFindings: handleDesignRuntimeQualityFindings,
+                onRequestQualityRepair: handleDesignQualityRepairRequest
               }
             : undefined
         }

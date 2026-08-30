@@ -67,7 +67,7 @@ type DesignAssistantState = {
     workspaceRoot: string,
     docId?: string | null,
     artifactId?: string | null
-  ) => Promise<string>
+  ) => Promise<{ threadId: string; created: boolean }>
   sendDesignMessage: (
     text: string,
     workspaceRoot: string,
@@ -279,7 +279,7 @@ export const useDesignAssistantStore = create<DesignAssistantState>((set, get) =
     const existing = get().designThreadMap[scope]
     if (existing) {
       set({ activeScopeKey: scope })
-      return existing
+      return { threadId: existing, created: false }
     }
 
     const provider = getProvider()
@@ -300,7 +300,7 @@ export const useDesignAssistantStore = create<DesignAssistantState>((set, get) =
     } catch {
       // non-fatal — isolation from the sidebar is best-effort
     }
-    return threadId
+    return { threadId, created: true }
   },
 
   sendDesignMessage: async (text, workspaceRoot, opts) => {
@@ -321,7 +321,7 @@ export const useDesignAssistantStore = create<DesignAssistantState>((set, get) =
     })
 
     try {
-      const threadId = await get().ensureDesignThread(workspaceRoot, docId, artifactId)
+      const { threadId } = await get().ensureDesignThread(workspaceRoot, docId, artifactId)
       const provider = getProvider()
       const model = opts?.model?.trim()
       const reasoningEffort = opts?.reasoningEffort?.trim()

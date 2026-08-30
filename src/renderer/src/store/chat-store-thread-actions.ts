@@ -411,7 +411,8 @@ export function createThreadActions(
     }
   },
 
-  selectThread: async (id) => {
+  selectThread: async (id, options) => {
+    const skipDetail = options?.skipDetail === true
     const selectionGeneration = ++threadSelectionGeneration
     const isLatestSelection = () => selectionGeneration === threadSelectionGeneration
     if (get().runtimeConnection !== 'ready') {
@@ -458,6 +459,40 @@ export function createThreadActions(
       queuedMessages: []
     })
     const p = getProvider()
+    if (skipDetail) {
+      // Freshly created thread (e.g. the first canvas/design send): there is no
+      // persisted history to fetch, so skip the getThreadDetail HTTP round-trip
+      // and the SSE subscription — they would otherwise add a noticeable delay
+      // between clicking send and the message appearing. sendMessage opens its
+      // own SSE stream with sinceSeq = lastSeq (0 for a brand-new thread).
+      set({
+        watchTurnCompletion: nextWatch,
+        unreadThreadIds: nextUnread,
+        acknowledgedStatusDotThreadIds: nextAcknowledged,
+        activeThreadId: id,
+        activeThreadRelation: 'primary',
+        activeThreadParentId: null,
+        activeThreadGoal: null,
+        activeThreadTodos: null,
+        blocks: [],
+        lastSeq: 0,
+        liveDeltaSeqFloor: 0,
+        liveReasoning: '',
+        liveAssistant: '',
+        error: null,
+        busy: false,
+        currentTurnId: null,
+        currentTurnUserId: null,
+        turnStartedAtByUserId: {},
+        turnDurationByUserId: {},
+        turnReasoningFirstAtByUserId: {},
+        turnReasoningLastAtByUserId: {},
+        turnTtftMsByUserId: {},
+        inspectorSelectedId: null,
+        queuedMessages: []
+      })
+      return
+    }
     try {
       resetBusyRecoveryAttempts()
       clearBusyWatchdog()

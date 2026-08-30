@@ -63,11 +63,21 @@ async function setupProvider(overrides: Record<string, unknown> = {}) {
 describe('design-assistant-store (isolated canvas chat)', () => {
   it('creates a thread and registers it as a design thread (excluded from code sidebar)', async () => {
     const provider = await setupProvider()
-    const id = await store.getState().ensureDesignThread('/proj')
-    expect(id).toBe('thread-x')
+    const { threadId, created } = await store.getState().ensureDesignThread('/proj')
+    expect(threadId).toBe('thread-x')
+    expect(created).toBe(true)
     expect(provider.createThread).toHaveBeenCalledWith({ workspace: '/proj', title: 'Design Assistant' })
     expect((await import('./design-thread-registry')).markDesignThread).toHaveBeenCalled()
     expect((await import('./design-thread-registry')).saveDesignThreadRegistry).toHaveBeenCalled()
+  })
+
+  it('reuses an existing design thread and reports created=false', async () => {
+    const provider = await setupProvider()
+    const first = await store.getState().ensureDesignThread('/proj')
+    expect(first.created).toBe(true)
+    const second = await store.getState().ensureDesignThread('/proj')
+    expect(second).toEqual({ threadId: 'thread-x', created: false })
+    expect(provider.createThread).toHaveBeenCalledTimes(1)
   })
 
   it('scopes conversations per folder and keeps them isolated', async () => {

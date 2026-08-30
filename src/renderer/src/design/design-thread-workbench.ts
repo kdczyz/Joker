@@ -52,7 +52,23 @@ export function designThreadBelongsToDocument(options: DesignThreadSelectorOptio
 }): boolean {
   const activeThreadId = options.activeThreadId?.trim()
   if (!activeThreadId) return false
-  return designThreadsForDocument(options).some((thread) => thread.id === activeThreadId)
+  if (designThreadsForDocument(options).some((thread) => thread.id === activeThreadId)) return true
+  // A freshly created design thread is already registered in the design-thread
+  // registry before it is loaded into the chat store's `threads` list (no
+  // refreshThreads has run yet). Treat registry membership as belonging-to-
+  // document so the selection sync does not clear it — clearing would make the
+  // *first* canvas turn fall through to sendMessage's code-thread creation path.
+  const root = options.workspaceRoot?.trim()
+  const docId = options.docId?.trim()
+  if (!root || !docId) return false
+  const registry = options.registry ?? readDesignThreadRegistry()
+  const artifactId = options.artifactId?.trim()
+  if (artifactId) {
+    const artifactRecord = registry.workspaces[designDocKey(root, docId, artifactId)]
+    if (artifactRecord?.threadIds.includes(activeThreadId)) return true
+  }
+  const docRecord = registry.workspaces[designDocKey(root, docId)]
+  return Boolean(docRecord?.threadIds.includes(activeThreadId))
 }
 
 export function designThreadToSelectForDocument(options: DesignThreadSelectorOptions & {

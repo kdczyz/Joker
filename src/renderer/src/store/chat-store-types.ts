@@ -341,7 +341,7 @@ export type ChatState = {
     conversation?: boolean
   }) => Promise<void>
   createConversation: () => Promise<void>
-  selectThread: (id: string) => Promise<void>
+  selectThread: (id: string, options?: { skipDetail?: boolean }) => Promise<void>
   /**
    * 打开 SSE 订阅一条 thread(不预先拉 getThreadDetail)。
    * 用于:onClawChannelActivity 自动切到 bot thread,让流式 deltas 立即可见。

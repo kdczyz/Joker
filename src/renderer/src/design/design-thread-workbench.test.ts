@@ -153,6 +153,57 @@ describe('design thread workbench helpers', () => {
     })).toEqual({ action: 'none' })
   })
 
+  it('keeps a freshly registered design thread on the first canvas send (not yet in the threads list)', () => {
+    // ensureDesignThread registers the thread in the registry before the chat
+    // store has refreshed `threads`, so the sync must not clear the selection —
+    // otherwise the first canvas turn would fall through to a new code thread.
+    const registry = markDesignThread('/workspace', 'doc', 'thr_new', emptyDesignThreadRegistry())
+
+    expect(designThreadBelongsToDocument({
+      threads: [],
+      workspaceRoot: '/workspace',
+      docId: 'doc',
+      activeThreadId: 'thr_new',
+      registry
+    })).toBe(true)
+    expect(designThreadSelectionSyncForDocument({
+      route: 'design',
+      activeThreadId: 'thr_new',
+      threads: [],
+      workspaceRoot: '/workspace',
+      docId: 'doc',
+      registry
+    })).toEqual({ action: 'none' })
+  })
+
+  it('keeps a freshly registered artifact-scoped design thread on the first canvas send', () => {
+    const registry = markDesignThread(
+      '/workspace',
+      'doc',
+      'thr_new',
+      emptyDesignThreadRegistry(),
+      'artifact-1'
+    )
+
+    expect(designThreadBelongsToDocument({
+      threads: [],
+      workspaceRoot: '/workspace',
+      docId: 'doc',
+      artifactId: 'artifact-1',
+      activeThreadId: 'thr_new',
+      registry
+    })).toBe(true)
+    expect(designThreadSelectionSyncForDocument({
+      route: 'design',
+      activeThreadId: 'thr_new',
+      threads: [],
+      workspaceRoot: '/workspace',
+      docId: 'doc',
+      artifactId: 'artifact-1',
+      registry
+    })).toEqual({ action: 'none' })
+  })
+
   it('marks the switched thread, persists metadata, and selects it', async () => {
     const saveRegistry = vi.fn()
     const persistMeta = vi.fn(async () => true)
