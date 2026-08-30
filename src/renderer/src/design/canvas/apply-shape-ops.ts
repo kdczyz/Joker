@@ -285,6 +285,14 @@ export function applyDesignToolCallByName(
   options?: { executeOptions?: ExecuteOpsOptions }
 ): ApplyDesignToolResult {
   const name = typeof toolName === 'string' ? toolName : ''
+  // Backend adapter tool results carry the real mutations in `ops` — apply them
+  // directly instead of re-deriving ops from the result wrapper (which previously
+  // dropped them, so `design_create_screen` / `design_system` etc. were "queued"
+  // but never executed). Raw tool-argument payloads are handled below.
+  const resultOps = toolResultOps(parsed)
+  if (resultOps) {
+    return runOps(resultOps, `tool:${name}`, options?.executeOptions)
+  }
   switch (name) {
     case 'design_create_screen':
       return runOps(
@@ -366,6 +374,20 @@ export function extractSvgArtifactCreateSpecsFromValue(value: unknown): SvgArtif
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
+}
+
+/**
+ * Detect a backend adapter tool result — the `{ ok: true, tool, action, ops, message }`
+ * shape produced by the agent tool host ("Queued N design operation(s) for the
+ * design canvas."). The `ops` array holds the real canvas mutations; every design
+ * tool (`design_create_screen`, `design_system`, `design_update_shapes`, ...)
+ * returns this shape, so applying `ops` directly is the uniform execution path.
+ * Raw tool-argument payloads (no `ok`/`ops`) return null and fall through to the
+ * tool-specific normalizers / structured protocol.
+ */
+function toolResultOps(value: unknown): unknown[] | null {
+  if (!isRecord(value) || value.ok !== true) return null
+  return Array.isArray(value.ops) && value.ops.length > 0 ? value.ops : null
 }
 
 function copyOptionalFields(

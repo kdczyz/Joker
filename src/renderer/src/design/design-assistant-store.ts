@@ -276,9 +276,33 @@ export const useDesignAssistantStore = create<DesignAssistantState>((set, get) =
 
   ensureDesignThread: async (workspaceRoot, docId, artifactId) => {
     const scope = artifactScopeKey(workspaceRoot, docId, artifactId)
+    // Keep this canvas thread out of the code-thread sidebar: register it as a
+    // design thread so isDesignThreadId() excludes it everywhere.
+    //
+    // This must run on EVERY path, not just when the thread is created. The v2
+    // map above is only a scope→thread cache; the v1 registry is what the canvas
+    // renderer queries via designThreadBelongsToDocument() to decide whether a
+    // thread's design tool results may reach the canvas. Writing it only on
+    // creation means a long-lived thread — or one whose registry write ever
+    // failed/got overwritten — stays unregistered forever, so every
+    // design_create_screen / design_update_shapes result is silently dropped and
+    // the canvas never changes even though the agent sees `ok`.
+    // markDesignThread() is idempotent, so re-registering on each send is safe.
+    const registerDesignThread = (threadId: string): void => {
+      try {
+        const registry = readDesignThreadRegistry()
+        saveDesignThreadRegistry(
+          markDesignThread(workspaceRoot, docId ?? '', threadId, registry, artifactId)
+        )
+      } catch {
+        // non-fatal — isolation from the sidebar is best-effort
+      }
+    }
+
     const existing = get().designThreadMap[scope]
     if (existing) {
       set({ activeScopeKey: scope })
+      registerDesignThread(existing)
       return { threadId: existing, created: false }
     }
 
@@ -291,15 +315,7 @@ export const useDesignAssistantStore = create<DesignAssistantState>((set, get) =
     const nextMap = { ...get().designThreadMap, [scope]: threadId }
     writeDesignAssistantThreadMap(nextMap)
     set({ designThreadMap: nextMap, activeScopeKey: scope })
-
-    // Keep this canvas thread out of the code-thread sidebar: register it as a
-    // design thread so isDesignThreadId() excludes it everywhere.
-    try {
-      const registry = readDesignThreadRegistry()
-      saveDesignThreadRegistry(markDesignThread(workspaceRoot, docId ?? '', threadId, registry, artifactId))
-    } catch {
-      // non-fatal — isolation from the sidebar is best-effort
-    }
+    registerDesignThread(threadId)
     return { threadId, created: true }
   },
 

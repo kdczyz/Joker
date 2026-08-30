@@ -2,7 +2,12 @@ import { useEffect, useRef } from 'react'
 import type { ChatBlock, ToolBlock } from '../../agent/types'
 import { useChatStore } from '../../store/chat-store'
 import { collectAssistantTextForTurn, threadHasPendingRuntimeWork } from '../../store/chat-store-runtime-helpers'
-import { applyCanvasOpsSince, applyDesignToolCallByName, setLastCanvasOpErrors } from './apply-shape-ops'
+import {
+  applyCanvasOpsSince,
+  applyDesignToolCallByName,
+  isDesignCanvasToolName,
+  setLastCanvasOpErrors
+} from './apply-shape-ops'
 import { useCanvasSelectionStore } from './canvas-selection-store'
 import { useCanvasShapeStore } from './canvas-shape-store'
 import { takeScreenBrief } from './screen-artifact-bridge'
@@ -64,9 +69,16 @@ export function activeCanvasTurnMatchesThread(
   return !targetThreadId || state.activeThreadId === targetThreadId
 }
 
+/**
+ * Idle-turn replay gate. Durable design canvas tool blocks (screens, shape ops,
+ * design system, arrange, motion, SVG) are re-consumed after the renderer has
+ * been away — panel closed, app restarted, or SSE reconnected — because their
+ * `ops` are exactly-once guarded by the operation journal via the tool block id
+ * replay key. Without this, blocks queued by the agent while the canvas was not
+ * mounted were dropped forever and the layers never reached the canvas file.
+ */
 export function shouldReplayIdleCanvasToolBlock(block: ToolBlock): boolean {
-  return block.meta?.toolName === 'design_svg_create' ||
-    isDesignMotionRendererToolName(block.meta?.toolName)
+  return isDesignCanvasToolName(block.meta?.toolName)
 }
 
 function blocksForActiveCanvasTurn(state: ActiveCanvasTurnReplayState): readonly ChatBlock[] {
@@ -369,7 +381,9 @@ export function useApplyShapeOpsLive(
         errorsThisTurn.push(revisionError)
         return
       }
-      const result = applyDesignToolCallByName(block.meta?.toolName, parsed, { executeOptions })
+      const result = applyDesignToolCallByName(block.meta?.toolName, parsed, {
+        executeOptions: { ...executeOptions, replayKey: block.id }
+      })
       appliedToolBlockIds.add(block.id)
       if (result.errors.length > 0) errorsThisTurn.push(...result.errors)
       persistAppliedDesignSystemTool(block.meta?.toolName, result.errors)
@@ -554,9 +568,10 @@ export function useApplyShapeOpsLive(
     if (!initialState.currentTurnId && activeCanvasTurnMatchesThread(initialState, targetThreadId)) {
       for (const block of initialState.blocks) {
         if (block.kind !== 'tool' || !shouldReplayIdleCanvasToolBlock(block)) continue
-        if (isDesignMotionRendererToolName(block.meta?.toolName)) applyToolBlock(block)
-        else {
+        if (block.meta?.toolName === 'design_svg_create') {
           void applySvgToolBlock(block)
+        } else {
+          applyToolBlock(block)
         }
       }
     }
@@ -578,9 +593,10 @@ export function useApplyShapeOpsLive(
       if (!state.currentTurnId && state.blocks !== prev.blocks) {
         for (const block of state.blocks) {
           if (block.kind !== 'tool' || !shouldReplayIdleCanvasToolBlock(block)) continue
-          if (isDesignMotionRendererToolName(block.meta?.toolName)) applyToolBlock(block)
-          else {
+          if (block.meta?.toolName === 'design_svg_create') {
             void applySvgToolBlock(block)
+          } else {
+            applyToolBlock(block)
           }
         }
       }

@@ -57,14 +57,22 @@ export function DesignCanvas({
   const toggleCanvasAssistantOpen = useDesignWorkspaceStore((s) => s.toggleCanvasAssistantOpen)
   const artifacts = useDesignWorkspaceStore((s) => s.artifacts)
   const activeDocumentId = useDesignWorkspaceStore((s) => s.activeDocumentId)
+  const activeArtifactId = useDesignWorkspaceStore((s) => s.activeArtifactId)
   const activeThreadId = useChatStore((s) => s.activeThreadId)
   const threads = useChatStore((s) => s.threads)
   const boardArtifact = findDesignBoardArtifact(artifacts)
   const baseDir = activeDocumentId ? `.Joker-design/${activeDocumentId}` : undefined
+  // Pass `artifactId` so the check matches the scope key the canvas thread was
+  // registered under. `ensureDesignThread` registers with `artifactScopeKey(...)`,
+  // which is the 3-level `workspace\0docId\0artifactId` key whenever both ids are
+  // present — querying the 2-level document scope alone never matches, which
+  // nulls `liveOpsThreadId` and leaves every design tool result unconsumed
+  // (the agent sees `ok` while the canvas silently stays empty).
   const activeThreadBelongsToDoc = designThreadBelongsToDocument({
     threads,
     workspaceRoot,
     docId: activeDocumentId,
+    artifactId: activeArtifactId,
     activeThreadId
   })
   const liveOpsThreadId = activeThreadBelongsToDoc ? activeThreadId : null

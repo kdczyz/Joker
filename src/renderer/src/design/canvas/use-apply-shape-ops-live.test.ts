@@ -18,7 +18,7 @@ import {
 import { createDefaultShape, createEmptyDocument, createHtmlFrameShape } from './canvas-types'
 
 describe('replayActiveCanvasTurn', () => {
-  it('marks durable SVG and Motion results for idle remount replay', () => {
+  it('marks durable design canvas tool results for idle remount replay', () => {
     const block = (toolName: string): ToolBlock => ({
       kind: 'tool',
       id: `tool-${toolName}`,
@@ -29,7 +29,10 @@ describe('replayActiveCanvasTurn', () => {
     })
     expect(shouldReplayIdleCanvasToolBlock(block('design_motion_upsert_keyframes'))).toBe(true)
     expect(shouldReplayIdleCanvasToolBlock(block('design_svg_create'))).toBe(true)
-    expect(shouldReplayIdleCanvasToolBlock(block('design_update_shapes'))).toBe(false)
+    expect(shouldReplayIdleCanvasToolBlock(block('design_update_shapes'))).toBe(true)
+    expect(shouldReplayIdleCanvasToolBlock(block('design_create_screen'))).toBe(true)
+    // Non-design tools are never replayed by the idle canvas renderer.
+    expect(shouldReplayIdleCanvasToolBlock(block('generate_image'))).toBe(false)
   })
 
   it('replays existing tool blocks and streaming text when enabled mid-turn', () => {

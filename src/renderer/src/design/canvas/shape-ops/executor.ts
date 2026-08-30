@@ -9,6 +9,7 @@ import {
   appendDesignOperationJournalEntry,
   shapeOpToDesignOperation
 } from '../../graph/design-operation-journal'
+import type { DesignOperationJournalEntry } from '../../graph/design-graph-types'
 
 function executeOne(
   op: ShapeOp,
@@ -29,6 +30,13 @@ export function executeOps(
   label = 'shape-ops',
   options?: ExecuteOpsOptions
 ): ExecuteResult {
+  const store = useCanvasShapeStore.getState()
+  // Durable exactly-once guard: when the same tool block is re-consumed after a
+  // panel remount / SSE reconnect / restart, replay the journaled result instead
+  // of mutating the canvas again (which would duplicate shapes).
+  const replayed = journalForReplayKey(store.document, options?.replayKey)
+  if (replayed) return resultFromReplayedJournal(replayed)
+
   const affectedIds = new Set<string>()
   const errors: OpError[] = []
 
@@ -67,7 +75,8 @@ export function executeOps(
     status: errors.length === 0 ? 'applied' : 'partial',
     operations: validatedOps.map((op) => shapeOpToDesignOperation(op, label)),
     affectedIds: Array.from(affectedIds),
-    errors: errors.map((error) => ({ ...error }))
+    errors: errors.map((error) => ({ ...error })),
+    ...(options?.replayKey ? { replayKey: options.replayKey } : {})
   })
   useCanvasShapeStore.getState().appendOperationJournalEntry(journalEntry)
 
@@ -75,5 +84,25 @@ export function executeOps(
     ok: errors.length === 0,
     affectedIds: Array.from(affectedIds),
     errors
+  }
+}
+
+function journalForReplayKey(
+  document: { operationJournal?: readonly DesignOperationJournalEntry[] },
+  replayKey: string | undefined
+): DesignOperationJournalEntry | undefined {
+  if (!replayKey) return undefined
+  return (document.operationJournal ?? []).find((entry) => entry.replayKey === replayKey)
+}
+
+function resultFromReplayedJournal(entry: DesignOperationJournalEntry): ExecuteResult {
+  return {
+    ok: entry.status === 'applied',
+    affectedIds: [...entry.affectedIds],
+    errors: entry.errors.map((error) => ({
+      code: error.code as OpError['code'],
+      message: error.message,
+      ...(error.suggestion ? { suggestion: error.suggestion } : {})
+    }))
   }
 }

@@ -141,4 +141,6 @@ export type DesignOperationJournalEntry = {
   operations: DesignOperation[]
   affectedIds: string[]
   errors: Array<{ code: string; message: string; suggestion?: string }>
+  /** Durable replay key (chat tool block id) — lets a re-consumed tool result be skipped instead of re-applied. */
+  replayKey?: string
 }

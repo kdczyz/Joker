@@ -80,6 +80,25 @@ describe('design-assistant-store (isolated canvas chat)', () => {
     expect(provider.createThread).toHaveBeenCalledTimes(1)
   })
 
+  it('re-registers a cached design thread so the canvas renderer can consume its tool results', async () => {
+    await setupProvider()
+    const registry = await import('./design-thread-registry')
+    await store.getState().ensureDesignThread('/proj', 'doc-1', 'art-1')
+    const callsAfterCreate = registry.markDesignThread.mock.calls.length
+    expect(callsAfterCreate).toBe(1)
+
+    await store.getState().ensureDesignThread('/proj', 'doc-1', 'art-1')
+    expect(registry.markDesignThread.mock.calls.length).toBe(2)
+    expect(registry.markDesignThread.mock.calls[1]).toEqual([
+      '/proj',
+      'doc-1',
+      'thread-x',
+      { version: 1, workspaces: {} },
+      'art-1'
+    ])
+    expect(registry.saveDesignThreadRegistry.mock.calls.length).toBe(2)
+  })
+
   it('scopes conversations per folder and keeps them isolated', async () => {
     await setupProvider()
     await store.getState().sendDesignMessage('a', '/folder-a')

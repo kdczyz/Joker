@@ -536,3 +536,56 @@ describe('addShape unique naming', () => {
     expect(names).toEqual(['Card', 'Card 2', 'Card 3'])
   })
 })
+
+describe('replayKey exactly-once guard', () => {
+  it('re-applying the same tool block id replays the journal instead of duplicating shapes', () => {
+    const first = executeOps(
+      [{ op: 'add', shape: { type: 'rect', name: 'Hero', x: 0, y: 0, width: 120, height: 80 } }],
+      'tool:block-1',
+      { replayKey: 'block-1' }
+    )
+    expect(first.ok).toBe(true)
+    const docAfterFirst = useCanvasShapeStore.getState().document
+    const rootChildrenAfterFirst = docAfterFirst.objects[docAfterFirst.rootId].children.length
+
+    // Simulate an SSE reconnect / panel remount re-consuming the SAME tool block.
+    const second = executeOps(
+      [{ op: 'add', shape: { type: 'rect', name: 'Hero', x: 0, y: 0, width: 120, height: 80 } }],
+      'tool:block-1',
+      { replayKey: 'block-1' }
+    )
+    expect(second.ok).toBe(true)
+    expect(second.affectedIds).toEqual(first.affectedIds)
+    const docAfterSecond = useCanvasShapeStore.getState().document
+    expect(docAfterSecond.objects[docAfterSecond.rootId].children.length).toBe(rootChildrenAfterFirst)
+    // The journal entry recorded the replay key for durable dedup.
+    expect(docAfterSecond.operationJournal?.at(-1)?.replayKey).toBe('block-1')
+  })
+
+  it('distinct tool block ids each apply their own batch exactly once', () => {
+    const a = executeOps(
+      [{ op: 'add', shape: { type: 'rect', name: 'A', x: 0, y: 0, width: 20, height: 20 } }],
+      'tool:block-a',
+      { replayKey: 'block-a' }
+    )
+    const b = executeOps(
+      [{ op: 'add', shape: { type: 'rect', name: 'B', x: 40, y: 0, width: 20, height: 20 } }],
+      'tool:block-b',
+      { replayKey: 'block-b' }
+    )
+    const doc = useCanvasShapeStore.getState().document
+    const root = doc.objects[doc.rootId]
+    expect(root.children).toHaveLength(2)
+    expect(root.children).toContain(a.affectedIds[0])
+    expect(root.children).toContain(b.affectedIds[0])
+  })
+
+  it('replays without a replay key applies again (no dedup)', () => {
+    const ops = [{ op: 'add', shape: { type: 'rect', name: 'Dup', x: 0, y: 0, width: 10, height: 10 } }]
+    executeOps(ops)
+    executeOps(ops)
+    const doc = useCanvasShapeStore.getState().document
+    const root = doc.objects[doc.rootId]
+    expect(root.children).toHaveLength(2)
+  })
+})

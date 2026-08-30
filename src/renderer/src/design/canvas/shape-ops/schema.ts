@@ -507,4 +507,12 @@ export type ExecuteOpsOptions = {
   screenFallback?: 'plain-frame'
   /** Apply theme-aware, Excalidraw-like defaults when Code whiteboard ops omit style fields. */
   shapePreset?: CanvasShapePreset
+  /**
+   * Durable replay key (e.g. the chat tool block id). When set, `executeOps`
+   * first checks the canvas operation journal for an entry carrying the same
+   * key and replays its result instead of mutating again — so an already-applied
+   * tool result is safely re-consumed after a panel remount or SSE reconnect
+   * without duplicating shapes.
+   */
+  replayKey?: string
 }
