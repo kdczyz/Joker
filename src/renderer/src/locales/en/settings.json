@@ -637,10 +637,8 @@
   "JokerPromptOptimization": "Prompt optimization",
   "JokerPromptOptimizationDesc": "When enabled, the composer shows an optimization button that rewrites rough spoken or draft instructions into a clearer prompt and replaces the editor text.",
   "JokerPromptOptimizationConfig": "Prompt optimization config",
-  "JokerPromptOptimizationConfigDesc": "Choose the model that rewrites prompts and optionally override the built-in optimization prompt.",
-  "JokerPromptOptimizationProvider": "Provider",
-  "JokerPromptOptimizationModel": "Model",
-  "JokerPromptOptimizationModelDefault": "Default: {{model}}",
+  "JokerPromptOptimizationConfigDesc": "Rewrite prompts using the current session model. Optionally override the built-in optimization prompt.",
+  "JokerPromptOptimizationUsesSessionModel": "Uses default model:",
   "JokerPromptOptimizationTimeout": "Timeout ms",
   "JokerPromptOptimizationPrompt": "Optimization prompt (empty uses built-in default)",
   "JokerTokenEconomy": "Reduce context usage",
@@ -1647,5 +1645,12 @@
   "tokenStatCurrentStreak": "Current Streak",
   "tokenStatLongestStreak": "Longest Streak",
   "tokenActivity": "Token Activity",
-  "logout": "Sign Out"
+  "logout": "Sign Out",
+  "sectionBrowserMode": "Browser Mode",
+  "browserModeEnabled": "Enable browser access",
+  "browserModeEnabledDesc": "Allow the Joker runtime HTTP API to accept requests from a browser. When enabled, you can open the renderer at http://127.0.0.1:5173 without Electron. The backend service must be running separately.",
+  "browserModePort": "Runtime HTTP port",
+  "browserModePortDesc": "Port the Joker runtime listens on. The browser-mode shim connects to this port to proxy window.JokerGui calls. Default: 18899.",
+  "browserModePortInvalid": "Port must be between 1 and 65535.",
+  "browserModeHint": "When browser mode is enabled, the yellow banner at the bottom of the page shows the browser-mode status. Open http://127.0.0.1:5173 in any browser to use the Joker interface without Electron."
 }

@@ -266,7 +266,11 @@ const defaultSettings = (): AppSettingsV1 => ({
   workflow: defaultWorkflowSettings(),
   design: defaultDesignSettings(),
   terminal: defaultTerminalSettings(),
-  openaiProxy: defaultOpenAiProxySettings()
+  openaiProxy: defaultOpenAiProxySettings(),
+  browserMode: {
+    enabled: false,
+    port: 18899
+  }
 })
 
 function buildMergedSettings(parsed: Partial<AppSettingsV1>): AppSettingsV1 {
@@ -298,7 +302,11 @@ function buildMergedSettings(parsed: Partial<AppSettingsV1>): AppSettingsV1 {
     openaiProxy: mergeOpenAiProxySettings(defaults.openaiProxy!, migrated.openaiProxy),
     guiUpdate: { ...defaults.guiUpdate, ...migrated.guiUpdate },
     codePromptPrefix: typeof migrated.codePromptPrefix === 'string' ? migrated.codePromptPrefix : '',
-    disabledSkillIds: normalizeDisabledSkillIds(migrated.disabledSkillIds)
+    disabledSkillIds: normalizeDisabledSkillIds(migrated.disabledSkillIds),
+    browserMode: {
+      enabled: typeof migrated.browserMode?.enabled === 'boolean' ? migrated.browserMode.enabled : defaults.browserMode.enabled,
+      port: typeof migrated.browserMode?.port === 'number' ? migrated.browserMode.port : defaults.browserMode.port
+    }
   }
 }
 

@@ -10,6 +10,7 @@ import {
   resolveWriteInlineCompletionModel,
   resolveWriteInlineCompletionProviderProfile,
   modelProviderModelProfile,
+  opencodeZenClientHeaders,
   resolveModelEndpointFormat,
   type ModelEndpointFormat,
   type AppSettingsV1
@@ -908,7 +909,12 @@ export async function requestWriteInlineCompletion(
     })
     const response = await fetchWithOptionalProxy(url, {
       method: 'POST',
-      headers: buildProviderHeaders(auth.apiKey, responseFormat, auth.headers, responsesLite),
+      headers: buildProviderHeaders(auth.apiKey, responseFormat, {
+        // Same client identity the chat runtime sends; without it the Zen free
+        // tier answers 429 for every model.
+        ...opencodeZenClientHeaders(undefined, baseUrl),
+        ...auth.headers
+      }, responsesLite),
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(INLINE_COMPLETION_TIMEOUT_MS)
     }, resolveModelProviderProxyUrl(settings))

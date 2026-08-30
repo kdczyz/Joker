@@ -1738,13 +1738,6 @@ pre {
 
 /* 喝奶茶:惬意慢摇,中途仰头嘬一口 */
 
-@keyframes ds-shiny-text {
-  to {
-    background-position:
-      calc(100% + var(--shine-size) * 2.4) 0,
-      0 0;
-  }
-}
 
 /* ---------- Joker Crew · subagent call card ---------- */
 .ds-subagent-mount {

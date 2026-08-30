@@ -120,6 +120,10 @@ export function mergeSettings(current: AppSettingsV1, patch: SettingsPatch): App
     guiUpdate: {
       ...safeCurrent.guiUpdate,
       ...(patch.guiUpdate ?? {})
+    },
+    browserMode: {
+      ...safeCurrent.browserMode,
+      ...(patch.browserMode ?? {})
     }
   }
 }
@@ -176,7 +180,13 @@ export function coerceRendererSettings(settings: AppSettingsV1): AppSettingsV1 {
       channel: normalizeGuiUpdateChannel(raw.guiUpdate?.channel ?? DEFAULT_GUI_UPDATE_CHANNEL)
     },
     codePromptPrefix: typeof raw.codePromptPrefix === 'string' ? raw.codePromptPrefix : '',
-    disabledSkillIds: normalizeDisabledSkillIds(raw.disabledSkillIds)
+    disabledSkillIds: normalizeDisabledSkillIds(raw.disabledSkillIds),
+    browserMode: {
+      enabled: raw.browserMode?.enabled === true,
+      port: typeof raw.browserMode?.port === 'number' && raw.browserMode.port >= 1 && raw.browserMode.port <= 65535
+        ? raw.browserMode.port
+        : 18899
+    }
   }
 }
 

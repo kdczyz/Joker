@@ -227,6 +227,34 @@ export function listModelProviderProfiles(settings: AppSettingsV1): ModelProvide
   return providers
 }
 
+export const OPENCODE_ZEN_BASE_URL = 'https://opencode.ai/zen/v1'
+/**
+ * OpenCode Zen (Joker-free) meters its free tier per client. A request without
+ * these headers is billed to the anonymous "Console" bucket and answered with
+ * `429 FreeUsageLimitError` even for whitelisted free models, while the
+ * desktop-client bucket keeps serving them. The chat runtime always sends them
+ * (Joker runtime-factory), so *every* model call made outside the runtime —
+ * prompt optimization, inline completion, ... — must send them too, otherwise
+ * "chat works but this one feature is always rate limited".
+ */
+export const OPENCODE_ZEN_CLIENT_HEADERS: Readonly<Record<string, string>> = {
+  'User-Agent': 'opencode/1.2.0',
+  'x-opencode-client': 'desktop'
+}
+
+export function isOpencodeZenProvider(providerId: string | undefined, baseUrl: string): boolean {
+  if (providerId?.trim() === 'opencode-zen') return true
+  const normalized = baseUrl.trim().toLowerCase().replace(/\/+$/, '')
+  return normalized === 'https://opencode.ai/zen/v1' || normalized === 'https://opencode.ai/zen'
+}
+
+export function opencodeZenClientHeaders(
+  providerId: string | undefined,
+  baseUrl: string
+): Record<string, string> {
+  return isOpencodeZenProvider(providerId, baseUrl) ? { ...OPENCODE_ZEN_CLIENT_HEADERS } : {}
+}
+
 export function listModelProviderModelIds(settings: AppSettingsV1): string[] {
   const nonTextModelIds = listNonTextModelIds(settings)
   const ids = new Set<string>()

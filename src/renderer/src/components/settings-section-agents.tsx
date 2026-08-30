@@ -431,19 +431,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
     timeoutMs: 60000,
     ...(Joker.promptOptimization ?? {})
   }
-  const promptOptimizationProviderId = promptOptimization.providerId?.trim() || activeProviderId
-  const promptOptimizationProvider =
-    modelProviders.find((item) => item.id === promptOptimizationProviderId) ?? activeProvider
-  const promptOptimizationModels = promptOptimizationProvider?.models ?? []
-  const promptOptimizationDefaultModel = (() => {
-    const providerId = promptOptimizationProvider?.id ?? promptOptimizationProviderId
-    const smallModel = Joker.smallModel?.trim() ?? ''
-    const smallProviderId = Joker.smallModelProviderId?.trim() || activeProviderId
-    if (smallModel && smallProviderId === providerId) return smallModel
-    const mainModel = Joker.model?.trim() ?? ''
-    if (mainModel && activeProviderId === providerId) return mainModel
-    return promptOptimizationModels[0] ?? mainModel
-  })()
+  const promptOptimizationDefaultModel = Joker.model?.trim() || activeProviderModels[0] || ''
   const updatePromptOptimization = (patch: Record<string, unknown>): void => {
     updateJoker({
       promptOptimization: {
@@ -551,46 +539,7 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                       description={t('JokerPromptOptimizationConfigDesc')}
                       wideControl
                       control={
-                        <div className="grid gap-3 lg:grid-cols-[minmax(0,220px)_minmax(0,1fr)_minmax(120px,160px)]">
-                          <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                            {t('JokerPromptOptimizationProvider')}
-                            <select
-                              className={selectControlClass}
-                              value={promptOptimization.providerId?.trim() || ''}
-                              onChange={(e) => {
-                                const providerId = e.target.value
-                                const nextProvider = modelProviders.find((item) => item.id === providerId) ?? activeProvider
-                                const keepModel = nextProvider?.models.includes(promptOptimization.model) === true
-                                updatePromptOptimization({
-                                  providerId,
-                                  model: keepModel ? promptOptimization.model : ''
-                                })
-                              }}
-                            >
-                              <option value="">{t('modelSelectDefaultSuffix', {
-                                model: activeProvider?.name ?? ''
-                              })}</option>
-                              {modelProviders.map((item) => (
-                                <option key={item.id} value={item.id}>{item.name}</option>
-                              ))}
-                            </select>
-                          </label>
-                          <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
-                            {t('JokerPromptOptimizationModel')}
-                            <ModelSelect
-                              value={promptOptimization.model}
-                              options={promptOptimizationModels}
-                              defaultLabel={t('JokerPromptOptimizationModelDefault', {
-                                model: promptOptimizationDefaultModel
-                              })}
-                              optionLabel={(model) => model}
-                              allowCustom
-                              customLabel={t('modelSelectCustomOption')}
-                              customPlaceholder={t('modelSelectCustomPlaceholder')}
-                              selectClassName={selectControlClass}
-                              onChange={(model) => updatePromptOptimization({ model: model.trim() })}
-                            />
-                          </label>
+                        <div className="grid gap-3 lg:grid-cols-[minmax(120px,160px)_1fr]">
                           <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted">
                             {t('JokerPromptOptimizationTimeout')}
                             <input
@@ -603,7 +552,11 @@ export function AgentsSettingsSection({ ctx }: { ctx: Record<string, any> }): Re
                               onChange={(e) => updatePromptOptimization({ timeoutMs: Number(e.target.value) })}
                             />
                           </label>
-                          <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted lg:col-span-3">
+                          <div className="flex items-center gap-2 rounded-xl border border-ds-border bg-ds-main/40 px-3 py-2 text-[13px] text-ds-muted">
+                            <span>{t('JokerPromptOptimizationUsesSessionModel')}</span>
+                            <span className="font-medium text-ds-ink">{Joker.model || promptOptimizationDefaultModel}</span>
+                          </div>
+                          <label className="flex min-w-0 flex-col gap-1.5 text-[12px] font-medium text-ds-muted lg:col-span-2">
                             {t('JokerPromptOptimizationPrompt')}
                             <textarea
                               value={promptOptimization.prompt}

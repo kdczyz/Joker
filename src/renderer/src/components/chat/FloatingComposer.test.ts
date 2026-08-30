@@ -6,6 +6,7 @@ import {
   buildResearchPrompt,
   calculateComposerMenuScrollTop,
   calculateContextCapacityPopoverPlacement,
+  describePromptOptimizationFailure,
   formatGoalElapsedSeconds,
   handleComposerImagePaste,
   imageFilesFromTransfer,
@@ -1831,5 +1832,46 @@ describe('FloatingComposer capability controls', () => {
     const sendButton = html.match(/<button[^>]*aria-label="Send"[^>]*>/)?.[0] ?? ''
     expect(sendButton).toContain('disabled=""')
     expect(html).toContain('lucide-loader-circle')
+  })
+
+  describe('prompt optimization failures', () => {
+    const t = (key: string, values?: Record<string, unknown>): string =>
+      `${key}${values === undefined ? '' : `:${JSON.stringify(values)}`}`
+
+    it('maps a rate-limit failure to localized copy plus the provider detail', () => {
+      const message = describePromptOptimizationFailure({
+        ok: false,
+        message: 'Rate limited by the model provider (HTTP 429): slow down (retried 2 times)',
+        reason: 'rate_limited',
+        status: 429,
+        attempts: 3,
+        detail: 'slow down'
+      }, t)
+
+      expect(message).toBe(
+        'composerPromptOptimizeFailedRateLimited:{"status":429} slow down '
+        + 'composerPromptOptimizeFailedRetried:{"count":2}'
+      )
+    })
+
+    it('falls back to the main-process message for unmapped reasons', () => {
+      expect(describePromptOptimizationFailure({
+        ok: false,
+        message: 'Prompt optimization is disabled.',
+        reason: 'disabled'
+      }, t)).toBe('Prompt optimization is disabled.')
+      expect(describePromptOptimizationFailure({ ok: false, message: 'boom' }, t)).toBe('boom')
+    })
+
+    it('omits the retry suffix after a single attempt', () => {
+      expect(describePromptOptimizationFailure({
+        ok: false,
+        message: 'Could not reach the model provider: ENOTFOUND',
+        reason: 'network',
+        status: 0,
+        attempts: 1,
+        detail: 'ENOTFOUND'
+      }, t)).toBe('composerPromptOptimizeFailedNetwork:{"status":0} ENOTFOUND')
+    })
   })
 })

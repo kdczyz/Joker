@@ -637,10 +637,8 @@
   "JokerPromptOptimization": "提示词优化",
   "JokerPromptOptimizationDesc": "开启后，输入区显示优化按钮，可把口头或草稿式指令重写成更清晰的提示词，并直接替换编辑区文字。",
   "JokerPromptOptimizationConfig": "提示词优化配置",
-  "JokerPromptOptimizationConfigDesc": "选择用于重写提示词的模型，并覆盖默认优化 Prompt。",
-  "JokerPromptOptimizationProvider": "供应商",
-  "JokerPromptOptimizationModel": "模型",
-  "JokerPromptOptimizationModelDefault": "默认：{{model}}",
+  "JokerPromptOptimizationConfigDesc": "使用当前会话默认模型重写提示词，可覆盖默认优化 Prompt。",
+  "JokerPromptOptimizationUsesSessionModel": "使用默认模型：",
   "JokerPromptOptimizationTimeout": "超时毫秒",
   "JokerPromptOptimizationPrompt": "优化 Prompt（留空使用内置默认）",
   "JokerTokenEconomy": "节省上下文用量",
@@ -1647,5 +1645,12 @@
   "tokenStatCurrentStreak": "当前连续天数",
   "tokenStatLongestStreak": "最长连续天数",
   "tokenActivity": "Token 活动",
-  "logout": "退出登录"
+  "logout": "退出登录",
+  "sectionBrowserMode": "浏览器模式",
+  "browserModeEnabled": "启用浏览器访问",
+  "browserModeEnabledDesc": "允许 Joker 运行时 HTTP API 接受浏览器请求。启用后，可以在浏览器中直接打开 http://127.0.0.1:5173 使用 Joker 界面，无需 Electron 桌面客户端。后端服务需要单独启动。",
+  "browserModePort": "运行时 HTTP 端口",
+  "browserModePortDesc": "Joker 运行时监听的端口号。浏览器模式 shim 连接此端口来代理 window.JokerGui 调用。默认：18899。",
+  "browserModePortInvalid": "端口号必须在 1 到 65535 之间。",
+  "browserModeHint": "启用浏览器模式后，页面底部的黄色横幅会显示浏览器模式状态。在任意浏览器中打开 http://127.0.0.1:5173 即可使用 Joker 界面。"
 }

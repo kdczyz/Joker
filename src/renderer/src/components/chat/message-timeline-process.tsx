@@ -18,7 +18,7 @@ import {
   Wrench
 } from 'lucide-react'
 import type { ChatBlock, ToolBlock } from '../../agent/types'
-import { extractUnifiedDiffText } from '../../lib/diff-stats'
+import { countDiffStats, extractUnifiedDiffText } from '../../lib/diff-stats'
 import { useDeferredRender } from '../../hooks/use-deferred-render'
 import { openWorkspacePathInEditor } from '../../lib/open-workspace-path'
 import { previewWorkspaceFile } from '../../lib/workspace-file-preview'
@@ -593,6 +593,16 @@ function ProcessEntryRow({
     handleToggle()
   }
 
+  // Compute diff stats for edit/write tool blocks
+  const diffStats = (() => {
+    if (block.kind !== 'tool') return null
+    const toolName = toolNameForBlock(block)
+    const isEditTool = toolName === 'edit' || toolName === 'write' || toolName === 'edit_file' || toolName === 'write_file'
+    if (!isEditTool) return null
+    const patch = extractUnifiedDiffText(block.detail)
+    return patch ? countDiffStats(patch) : null
+  })()
+
   return (
     <div className="flex flex-col">
       <div
@@ -634,6 +644,12 @@ function ProcessEntryRow({
               {rest ? (
                 <span className="ml-1.5 inline-block rounded bg-ds-card/80 px-1.5 py-0.2 font-mono text-[12px] text-ds-ink">
                   <ProcessSummaryText block={block} summary={rest} workspaceRoot={workspaceRoot} />
+                </span>
+              ) : null}
+              {diffStats ? (
+                <span className="ml-1.5 text-[11px] font-mono">
+                  <span className="text-emerald-600">+{diffStats.added}</span>{' '}
+                  <span className="text-red-500">-{diffStats.removed}</span>
                 </span>
               ) : null}
             </>

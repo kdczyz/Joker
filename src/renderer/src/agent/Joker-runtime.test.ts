@@ -42,7 +42,8 @@ function settings(): AppSettingsV1 {
     terminal: defaultTerminalSettings(),
     guiUpdate: { channel: 'stable' },
     codePromptPrefix: '',
-    disabledSkillIds: []
+    disabledSkillIds: [],
+    browserMode: { enabled: false, port: 18899 }
   }
 }
 

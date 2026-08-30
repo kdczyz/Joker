@@ -2,12 +2,14 @@ import { type ComponentProps, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { ChatBlock, RuntimeConnectionStatus } from '../../agent/types'
 import { FloatingComposer } from '../chat/FloatingComposer'
+import { FloatingComposerTodoProgress } from '../chat/FloatingComposerTodoProgress'
 import { LazyMessageTimeline } from '../chat/LazyMessageTimeline'
 import { SubagentReturnBar } from '../chat/message-timeline-empty'
 import { WorkbenchCornerActions } from '../chat/WorkbenchTopBar'
 import { ActiveUiPluginStagePresentation } from '../chat/UiPluginStagePresentation'
 import { DevPreviewLaunchCard } from '../DevPreviewLaunchCard'
 import { SessionHeader } from '../SessionHeader'
+import { useChatStore } from '../../store/chat-store'
 import type { JsonValue } from '@joker-code/extension-api'
 import type { RegisteredContribution } from '../../extensions/contribution-registry'
 import { DeclarativeActionBar } from '../../extensions/ControlledContributionSurfaces'
@@ -97,6 +99,11 @@ export function WorkbenchChatStage({
   onExtensionCommand
 }: WorkbenchChatStageProps): ReactElement {
   const { t } = useTranslation('common')
+  const activeThreadTodos = useChatStore((s) => s.activeThreadTodos)
+  const showTodoProgress =
+    Boolean(activeThreadId)
+    && activeThreadTodos?.threadId === activeThreadId
+    && activeThreadTodos.items.length > 0
   return (
     <section
       className="ds-chat-stage ds-drag relative isolate flex min-h-0 min-w-0 flex-1 flex-col"
@@ -109,6 +116,11 @@ export function WorkbenchChatStage({
         rightWorkspaceExpanded={rightWorkspaceExpanded}
         onToggleRightWorkspace={onToggleRightWorkspace}
       />
+      {showTodoProgress ? (
+        <div className="pointer-events-auto absolute right-4 top-14 z-50">
+          <FloatingComposerTodoProgress todos={activeThreadTodos} />
+        </div>
+      ) : null}
       <div
         className={`${stageInsetClass} ds-ui-plugin-stage-content relative z-[3] flex min-h-0 min-w-0 flex-1 flex-col`}
       >

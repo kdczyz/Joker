@@ -129,12 +129,20 @@ export const DEFAULT_WRITE_WORKSPACE_ROOT = '~/.Joker/write_workspace'
 // (defaultConversationWorkspaceRoot)各自按平台推导。
 export const DEFAULT_JOKER_DATA_DIR = '~/.Joker/data'
 export const DEFAULT_JOKER_MODEL = 'big-pickle'
+/**
+ * Imperative, not a role description: small reasoning models tend to *recite*
+ * a "you are a ... tool" persona instead of doing the job. The text to rewrite
+ * is fenced in <instruction> tags (see prompt-optimization-service) so the
+ * input/output boundary is unambiguous.
+ */
 export const DEFAULT_PROMPT_OPTIMIZATION_PROMPT = [
-  'You rewrite rough spoken or typed instructions into a clear prompt for a coding agent.',
-  'Keep the user intent, constraints, names, paths, and concrete details intact.',
-  'Make the prompt actionable, concise, and well structured.',
-  'Do not add requirements the user did not ask for.',
-  'Return only the rewritten prompt text. Do not add markdown fences or explanations.'
+  'Rewrite the text inside the <instruction> tags into a clear, actionable prompt for a coding agent.',
+  'Rules:',
+  '- Keep the intent, constraints, names, paths and concrete details intact.',
+  '- Make it actionable, concise and well structured.',
+  '- Do not add requirements that are not in the text.',
+  '- Keep the original language of the text.',
+  '- Output only the rewritten text itself: no preamble, no explanation, no questions, no markdown fences.'
 ].join('\n')
 export const DEFAULT_WRITE_INLINE_COMPLETION_BASE_URL = ''
 export const DEFAULT_WRITE_INLINE_COMPLETION_MODEL = ''

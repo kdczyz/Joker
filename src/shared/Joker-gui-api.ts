@@ -319,9 +319,42 @@ export type PromptOptimizationRequest = {
   /** When provided, use this provider instead of settings-based selection. */
   providerId?: string
 }
+/**
+ * Machine-readable failure class for prompt optimization. The renderer uses it
+ * to pick localized copy; `message` stays as the English fallback/detail string
+ * produced by the main process.
+ */
+export type PromptOptimizationFailureReason =
+  | 'empty_input'
+  | 'disabled'
+  | 'missing_key'
+  | 'invalid_credentials'
+  | 'invalid_endpoint'
+  | 'rate_limited'
+  | 'unauthorized'
+  | 'unavailable'
+  | 'timeout'
+  | 'network'
+  | 'empty_response'
+  | 'unusable_output'
+  | 'request'
 export type PromptOptimizationResult =
   | { ok: true; text: string; model: string; providerId: string }
-  | { ok: false; message: string }
+  | {
+      ok: false
+      message: string
+      reason?: PromptOptimizationFailureReason
+      /** Upstream HTTP status of the last attempt; 0 when no response arrived. */
+      status?: number
+      /** Number of HTTP attempts made before giving up. */
+      attempts?: number
+      /** Error text extracted from the upstream response body, when available. */
+      detail?: string
+      /** Model the request was actually sent with (after provider fallback). */
+      model?: string
+      /** Provider the request was sent to. */
+      providerId?: string
+    }
 export type ClawImInstallQrResult =
   | { ok: true; url: string; deviceCode: string; userCode: string; interval: number; expireIn: number }
   | { ok: false; message: string }

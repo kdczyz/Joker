@@ -129,7 +129,6 @@ export { shouldCaptureFileMentionCommitKey } from './use-composer-file-mentions'
 import { FloatingComposerFileMentionMenu } from './FloatingComposerFileMentionMenu'
 import { useComposerSlashCommandMenu } from './use-composer-slash-command-menu'
 import { FloatingComposerSlashCommandMenu } from './FloatingComposerSlashCommandMenu'
-import { FloatingComposerTodoProgress } from './FloatingComposerTodoProgress'
 import { DiffCounter } from './RollingDigit'
 import { useComposerImageModelSelection } from './use-composer-image-model-selection'
 
@@ -257,6 +256,37 @@ export function formatGoalElapsedSeconds(seconds: number): string {
   return remainingMinutes === 0
     ? `${hours}h`
     : `${hours}h ${remainingMinutes}m`
+}
+
+/**
+ * Turn a `prompt:optimize` failure into composer copy. The main process sends a
+ * machine-readable `reason` plus the provider's own `detail`, so the common
+ * cases (rate limit, bad key, outage) get real guidance instead of a raw
+ * `HTTP 429 {json...}` dump.
+ */
+export function describePromptOptimizationFailure(
+  result: { ok: false; message: string; reason?: string; status?: number; attempts?: number; detail?: string },
+  t: (key: string, values?: Record<string, unknown>) => string
+): string {
+  const key = ((): string | null => {
+    switch (result.reason) {
+      case 'rate_limited': return 'composerPromptOptimizeFailedRateLimited'
+      case 'unauthorized': return 'composerPromptOptimizeFailedUnauthorized'
+      case 'unavailable': return 'composerPromptOptimizeFailedUnavailable'
+      case 'timeout': return 'composerPromptOptimizeFailedTimeout'
+      case 'network': return 'composerPromptOptimizeFailedNetwork'
+      case 'unusable_output': return 'composerPromptOptimizeFailedUnusable'
+      default: return null
+    }
+  })()
+  if (!key) return result.message
+  const parts = [t(key, { status: result.status ?? 0 })]
+  const detail = result.detail?.trim()
+  if (detail) parts.push(detail)
+  if (result.attempts && result.attempts > 1) {
+    parts.push(t('composerPromptOptimizeFailedRetried', { count: result.attempts - 1 }))
+  }
+  return parts.join(' ')
 }
 
 export function shouldShowGoalFloater({
@@ -714,15 +744,6 @@ export function FloatingComposer({
           : useWorktreePool
             ? t('composerWorktreeModeHint')
             : null
-  const showTodoProgress = !compact
-    && route === 'chat'
-    && Boolean(activeThreadId)
-    && activeThreadTodos?.threadId === activeThreadId
-    && activeThreadTodos.items.length > 0
-    && slashQuery == null
-    && !composerMenuOpen
-    && !goalPanelOpen
-    && !pendingUserInputBlock
 
   useEffect(() => {
     if (!useWorktreePool || !effectiveWorkspaceRoot || typeof window.JokerGui?.getGitBranches !== 'function') {
@@ -1035,7 +1056,7 @@ export function FloatingComposer({
     })
       .then((result) => {
         if (!result.ok) {
-          setPromptOptimizationError(result.message)
+          setPromptOptimizationError(describePromptOptimizationFailure(result, t))
           return
         }
         setInput(result.text)
@@ -1341,9 +1362,6 @@ export function FloatingComposer({
                 </button>
               </div>
             </div>
-          ) : null}
-          {showTodoProgress && activeThreadTodos ? (
-            <FloatingComposerTodoProgress todos={activeThreadTodos} />
           ) : null}
         </div>
 

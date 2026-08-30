@@ -340,6 +340,41 @@ export function GeneralSettingsSection({ ctx }: { ctx: Record<string, any> }): R
                   }
                 />
               </SettingsCard>
+
+              <SettingsCard title={t('sectionBrowserMode')}>
+                <SettingRow
+                  title={t('browserModeEnabled')}
+                  description={t('browserModeEnabledDesc')}
+                  control=
+                    <Toggle
+                      checked={form.browserMode?.enabled ?? false}
+                      onChange={(v) => update({ browserMode: { ...(form.browserMode ?? { enabled: false, port: 18899 }), enabled: v } })}
+                    />
+                />
+                <SettingRow
+                  title={t('browserModePort')}
+                  description={t('browserModePortDesc')}
+                  control=
+                    <input
+                      type="number"
+                      min={1}
+                      max={65535}
+                      className="w-28 rounded-xl border border-ds-border bg-ds-card px-3 py-2 text-[14px] text-ds-ink shadow-sm focus:border-accent/40 focus:outline-none focus:ring-1 focus:ring-accent/30"
+                      value={form.browserMode?.port ?? 18899}
+                      onChange={(e) => {
+                        const port = Number(e.target.value)
+                        if (port >= 1 && port <= 65535) {
+                          update({ browserMode: { ...(form.browserMode ?? { enabled: false, port: 18899 }), port } })
+                        }
+                      }}
+                    />
+                />
+                {(form.browserMode?.enabled) && (
+                  <div className="mt-2 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-[13px] text-amber-800 dark:border-amber-500/30 dark:bg-amber-500/10 dark:text-amber-200">
+                    {t('browserModeHint')}
+                  </div>
+                )}
+              </SettingsCard>
             </>
   )
 }
