@@ -5,6 +5,7 @@ import {
   initialCodeRightTabsForLaunch,
   normalizeStoredCodeRightWidthsRegistry,
   RAIL_WIDTH,
+  resolveRightPanelVisible,
   WORKBENCH_RESIZE_CLASS,
   workbenchWidthConstraintsForRightPanel
 } from './workbench-layout'
@@ -95,6 +96,62 @@ describe('code right workspace startup', () => {
       activeId: BUILTIN_RIGHT_PANEL_IDS.files,
       expanded: false
     })
+  })
+})
+
+describe('resolveRightPanelVisible', () => {
+  it('shows the right sidebar on the design route when the assistant chat is open', () => {
+    expect(resolveRightPanelVisible({
+      route: 'design',
+      designAssistantOpen: true,
+      designImplementOpen: false,
+      codeRightTabsExpanded: false,
+      rightPanelMode: null
+    })).toBe(true)
+  })
+
+  it('shows the right sidebar on the design route when the implement panel is open', () => {
+    expect(resolveRightPanelVisible({
+      route: 'design',
+      designAssistantOpen: false,
+      designImplementOpen: true,
+      codeRightTabsExpanded: false,
+      rightPanelMode: null
+    })).toBe(true)
+  })
+
+  it('keeps the right sidebar hidden on the design route when both design panels are closed', () => {
+    expect(resolveRightPanelVisible({
+      route: 'design',
+      designAssistantOpen: false,
+      designImplementOpen: false,
+      codeRightTabsExpanded: false,
+      rightPanelMode: null
+    })).toBe(false)
+  })
+
+  it('on non-design routes visibility follows the code-right tabs / panel mode, not the design flags', () => {
+    expect(resolveRightPanelVisible({
+      route: 'chat',
+      designAssistantOpen: false,
+      designImplementOpen: false,
+      codeRightTabsExpanded: true,
+      rightPanelMode: null
+    })).toBe(true)
+    expect(resolveRightPanelVisible({
+      route: 'chat',
+      designAssistantOpen: false,
+      designImplementOpen: false,
+      codeRightTabsExpanded: false,
+      rightPanelMode: BUILTIN_RIGHT_PANEL_IDS.browser
+    })).toBe(true)
+    expect(resolveRightPanelVisible({
+      route: 'chat',
+      designAssistantOpen: true,
+      designImplementOpen: true,
+      codeRightTabsExpanded: false,
+      rightPanelMode: null
+    })).toBe(false)
   })
 })
 

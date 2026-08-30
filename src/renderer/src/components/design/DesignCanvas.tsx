@@ -1,6 +1,6 @@
 import { useEffect, type ReactElement } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Bot, X } from 'lucide-react'
+import { Bot, Sparkles, X } from 'lucide-react'
 import { useDesignWorkspaceStore } from '../../design/design-workspace-store'
 import type { DesignArtifact } from '../../design/design-types'
 import type { DesignHtmlElementContext } from '../../design/design-composer-context'
@@ -53,6 +53,8 @@ export function DesignCanvas({
   const settingsLoaded = useDesignWorkspaceStore((s) => s.settingsLoaded)
   const agentTakeoverMode = useDesignWorkspaceStore((s) => s.agentTakeoverMode)
   const toggleAgentTakeoverMode = useDesignWorkspaceStore((s) => s.toggleAgentTakeoverMode)
+  const canvasAssistantOpen = useDesignWorkspaceStore((s) => s.canvasAssistantOpen)
+  const toggleCanvasAssistantOpen = useDesignWorkspaceStore((s) => s.toggleCanvasAssistantOpen)
   const artifacts = useDesignWorkspaceStore((s) => s.artifacts)
   const activeDocumentId = useDesignWorkspaceStore((s) => s.activeDocumentId)
   const activeThreadId = useChatStore((s) => s.activeThreadId)
@@ -157,6 +159,25 @@ export function DesignCanvas({
 
   return (
     <div className="ds-stage-design-canvas relative min-h-0 min-w-0 flex-1 overflow-hidden bg-ds-main">
+      <button
+        type="button"
+        onClick={toggleCanvasAssistantOpen}
+        title={canvasAssistantOpen
+          ? t('canvasAgentChatCollapse', '收起 Agent 聊天')
+          : t('canvasAgentChatExpand', '展开 Agent 聊天 · 让 AI 帮你创作绘画')}
+        aria-label={canvasAssistantOpen
+          ? t('canvasAgentChatCollapse', '收起 Agent 聊天')
+          : t('canvasAgentChatExpand', '展开 Agent 聊天 · 让 AI 帮你创作绘画')}
+        aria-pressed={canvasAssistantOpen}
+        className={`absolute right-3 top-3 z-30 inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-medium shadow-[0_10px_28px_rgba(15,23,42,0.14)] backdrop-blur transition ${
+          canvasAssistantOpen
+            ? 'border-transparent bg-gradient-to-r from-indigo-500 to-violet-500 text-white shadow-indigo-500/30'
+            : 'border-accent/20 bg-white/95 text-accent hover:bg-accent-soft dark:bg-[#1f2430]/95'
+        }`}
+      >
+        <Sparkles className="h-3.5 w-3.5" strokeWidth={2} />
+        {t('canvasAgentChat', 'Agent 聊天')}
+      </button>
       {agentTakeoverMode ? (
         <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-center px-4 pt-3">
           <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-indigo-300/60 bg-gradient-to-r from-indigo-500 to-violet-500 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-indigo-500/30">

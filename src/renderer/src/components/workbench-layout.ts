@@ -276,6 +276,32 @@ export function fitWorkbenchWidths(
   return { left: nextLeft, right: nextRight }
 }
 
+/**
+ * Whether the docked right sidebar is shown for the current route.
+ * - design route: driven by the design workspace panels (assistant chat / implement)
+ * - other routes: driven by the code-right tabs / transient panel mode
+ *
+ * Extracted so the design-panel wiring can be unit-tested — the assistant chat
+ * visibility regressed once when these flags were never passed into the hook.
+ */
+export function resolveRightPanelVisible({
+  route,
+  designAssistantOpen,
+  designImplementOpen,
+  codeRightTabsExpanded,
+  rightPanelMode
+}: {
+  route: AppRoute
+  designAssistantOpen: boolean
+  designImplementOpen: boolean
+  codeRightTabsExpanded: boolean
+  rightPanelMode: RightPanelMode | null
+}): boolean {
+  return route === 'design'
+    ? designAssistantOpen || designImplementOpen
+    : codeRightTabsExpanded || rightPanelMode !== null
+}
+
 export function useWorkbenchLayout({
   activeThreadId,
   designAssistantOpen = false,
@@ -323,9 +349,13 @@ export function useWorkbenchLayout({
   const rightPanelMode = route === 'chat'
     ? transientRightPanelMode ?? (codeRightTabs.expanded ? codeRightTabs.activeId : null)
     : null
-  const rightPanelVisible = route === 'design'
-    ? designAssistantOpen || designImplementOpen
-    : codeRightTabs.expanded || rightPanelMode !== null
+  const rightPanelVisible = resolveRightPanelVisible({
+    route,
+    designAssistantOpen,
+    designImplementOpen,
+    codeRightTabsExpanded: codeRightTabs.expanded,
+    rightPanelMode
+  })
   const widthConstraints = workbenchWidthConstraintsForRightPanel(route, rightPanelMode)
   const ensureInitialCodePanelWidth = useCallback((): void => {
     if (codeRightTabsRef.current.tabs.length === 0) {

@@ -62,7 +62,6 @@ export type WorkbenchStageRouterProps = {
     onRuntimeQualityFindings?: (payload: import('../../design/design-html-quality').DesignRuntimeQualityPayload) => void
     onRequestQualityRepair?: (payload: import('../../design/design-html-quality').DesignRuntimeQualityPayload) => void
     rightPanel?: ReactNode
-    composerProps?: ComponentProps<typeof import('../chat/FloatingComposer').FloatingComposer>
   }
 }
 
@@ -145,7 +144,6 @@ export function WorkbenchStageRouter({
               onRuntimeQualityFindings={design?.onRuntimeQualityFindings}
               onRequestQualityRepair={design?.onRequestQualityRepair}
               rightPanel={design?.rightPanel}
-              composerProps={design?.composerProps!}
             />
           </Suspense>
         ) : (

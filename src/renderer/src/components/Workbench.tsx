@@ -333,6 +333,10 @@ export function Workbench(): ReactElement {
     runtimeConnection,
     skillMenuOpen: getSlashQuery(input) !== null
   })
+  // Hoisted above useWorkbenchLayout: the layout hook derives rightPanelVisible
+  // from these on the design route, so they must be subscribed before it runs.
+  const designAssistantOpen = useDesignWorkspaceStore((s) => s.canvasAssistantOpen)
+  const designImplementOpen = useDesignWorkspaceStore((s) => s.implementOpen)
   const {
     activateRightPanelTab, beginLeftResize, beginRightResize, closeRightPanelTab,
     codeRightTabs, collapseRightPanel, expandRightPanel, filePreviewTarget,
@@ -341,6 +345,8 @@ export function Workbench(): ReactElement {
     setRightSidebarWidth, shellRef, terminalTabActive, toggleLeftSidebar, toggleTerminal,
   } = useWorkbenchLayout({
     activeThreadId,
+    designAssistantOpen,
+    designImplementOpen,
     latestAutoOpenDevPreviewUrl,
     latestDevPreviewUrl,
     route,
@@ -783,8 +789,6 @@ export function Workbench(): ReactElement {
   const designActiveArtifactId = useDesignWorkspaceStore((s) => s.activeArtifactId)
   const designWorkspaceRoot = useDesignWorkspaceStore((s) => s.workspaceRoot)
   const designSetCanvasAssistantOpen = useDesignWorkspaceStore((s) => s.setCanvasAssistantOpen)
-  const designAssistantOpen = useDesignWorkspaceStore((s) => s.canvasAssistantOpen)
-  const designImplementOpen = useDesignWorkspaceStore((s) => s.implementOpen)
   const designImplementTitle = useDesignWorkspaceStore((s) => s.implementTitle)
   const designAssistantModel = useDesignWorkspaceStore((s) => s.assistantModel)
   const designAssistantProviderId = useDesignWorkspaceStore((s) => s.assistantProviderId)
@@ -1216,6 +1220,10 @@ export function Workbench(): ReactElement {
           route === 'design'
             ? {
                 busy,
+                // The design stage renders the docked right sidebar itself
+                // (WorkbenchDesignStage line ~34); without this the chat rail
+                // never mounts on the design route regardless of visibility.
+                rightPanel,
                 composerProps: {
                   ...chatComposerProps,
                   onSend: () => {
