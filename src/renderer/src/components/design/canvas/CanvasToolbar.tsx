@@ -1,6 +1,7 @@
 import { memo, useCallback, useMemo, useState } from 'react'
 import {
   ArrowRight,
+  Bot,
   Circle,
   Download,
   FileCode2,
@@ -106,6 +107,8 @@ function CanvasToolbarInner({
   const setCanvasAssistantOpen = useDesignWorkspaceStore((s) => s.setCanvasAssistantOpen)
   const canvasAssistantOpen = useDesignWorkspaceStore((s) => s.canvasAssistantOpen)
   const toggleCanvasAssistantOpen = useDesignWorkspaceStore((s) => s.toggleCanvasAssistantOpen)
+  const agentTakeoverMode = useDesignWorkspaceStore((s) => s.agentTakeoverMode)
+  const toggleAgentTakeoverMode = useDesignWorkspaceStore((s) => s.toggleAgentTakeoverMode)
   const designTarget = useDesignWorkspaceStore((s) => s.designContext.designTarget ?? 'web')
   const [imageImportBusy, setImageImportBusy] = useState(false)
   const [contextOpen, setContextOpen] = useState(false)
@@ -193,6 +196,10 @@ function CanvasToolbarInner({
   const btnActive = 'bg-[#1f2733] text-white shadow-[0_6px_16px_rgba(15,23,42,0.22)]'
   const btnInactive =
     'text-ds-muted hover:bg-ds-hover hover:text-ds-ink dark:hover:bg-white/10'
+  const btnTakeoverActive =
+    'bg-gradient-to-br from-indigo-500 to-violet-500 text-white shadow-[0_6px_18px_rgba(99,102,241,0.45)]'
+  const btnTakeoverInactive =
+    'text-indigo-500 hover:bg-indigo-500/10 hover:text-indigo-600 dark:text-indigo-300 dark:hover:bg-indigo-400/15'
   const divider = 'my-1 h-px w-7 shrink-0 bg-ds-border-muted/80'
   const prototypePlayDisabled = !prototypePlayable || !onOpenPrototypePlayer
   const prototypePlayLabel = prototypePlayable
@@ -202,6 +209,19 @@ function CanvasToolbarInner({
   return (
     <div className="relative pointer-events-auto">
       <div className="design-canvas-toolbar flex flex-col items-center gap-1 rounded-full border border-ds-border bg-white/82 px-1.5 py-1.5 shadow-[0_16px_42px_rgba(20,47,95,0.13)] backdrop-blur-2xl dark:bg-ds-card/84 dark:shadow-none">
+        <button
+          type="button"
+          className={`${iconBtnBase} ${agentTakeoverMode ? btnTakeoverActive : btnTakeoverInactive}`}
+          onClick={toggleAgentTakeoverMode}
+          title={agentTakeoverMode ? t('canvasToolTakeoverOn', 'Agent 接管中 · 点击退出') : t('canvasToolTakeover', '交给 Agent 接管画布')}
+          aria-label={agentTakeoverMode ? t('canvasToolTakeoverOn', 'Agent 接管中 · 点击退出') : t('canvasToolTakeover', '交给 Agent 接管画布')}
+          aria-pressed={agentTakeoverMode}
+        >
+          <Bot className="h-4 w-4" strokeWidth={1.9} />
+        </button>
+
+        <div className={divider} />
+
         {visibleTools.map((tool) => {
           const label = t(surface === 'code' && tool.codeLabelKey ? tool.codeLabelKey : tool.labelKey)
           return (

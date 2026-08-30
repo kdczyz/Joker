@@ -38,7 +38,7 @@ export type DesignPromptControllerOptions = {
   setAttachmentUploadError: (error: string | null) => void
   setError: (error: string | null) => void
   setDesignAssistantOpen: (open: boolean) => void
-  ensureDesignThreadForWorkspace: (workspaceRoot: string, docId: string) => Promise<string | null>
+  ensureDesignThreadForWorkspace: (workspaceRoot: string, docId: string, artifactId?: string | null) => Promise<string | null>
   sendMessage: DesignTurnSubmitSendMessage
   getAttachmentScope: () => ComposerAttachmentScope
   clearComposerAttachments: (scope?: ComposerAttachmentScope) => void
@@ -84,7 +84,8 @@ export function useDesignPromptController({
     }
     void (async () => {
       const docId = useDesignWorkspaceStore.getState().ensureActiveDocument()
-      const threadId = await ensureDesignThreadForWorkspace(designWorkspaceRoot, docId)
+      const artifactId = useDesignWorkspaceStore.getState().activeArtifactId
+      const threadId = await ensureDesignThreadForWorkspace(designWorkspaceRoot, docId, artifactId)
       if (!threadId) {
         setInput(brief)
         return
@@ -142,8 +143,9 @@ export function useDesignPromptController({
     try {
       const dispatchState = useDesignWorkspaceStore.getState()
       const docId = dispatchState.ensureActiveDocument()
+      const artifactId = dispatchState.activeArtifactId
       const dispatchWorkspaceRoot = dispatchState.workspaceRoot || designWorkspaceRoot
-      const threadId = await ensureDesignThreadForWorkspace(designWorkspaceRoot, docId)
+      const threadId = await ensureDesignThreadForWorkspace(designWorkspaceRoot, docId, artifactId)
       if (!threadId) {
         setInput(routeText)
         return false

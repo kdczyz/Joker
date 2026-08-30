@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest'
 import type { ModelRequest, ModelStreamChunk } from '../ports/model-client.js'
 import type { CacheRequestSignature } from '../cache/cache-diagnostics.js'
-import { ModelRoundEngine, type ModelRoundEngineDeps } from './model-round-engine.js'
+import { ModelRoundEngine, type ModelRoundEngineDeps, type ModelRoundRecoveryConfig } from './model-round-engine.js'
 
 const usage = {
   promptTokens: 3,
@@ -135,7 +135,7 @@ function harness(values: readonly ModelStreamChunk[]) {
     controller,
     engine,
     setStream: (next: () => AsyncIterable<ModelStreamChunk>) => { streamFactory = next },
-    run: () => engine.run({
+    run: (recovery?: ModelRoundRecoveryConfig) => engine.run({
       threadId: 'thread_1',
       turnId: 'turn_1',
       signal: controller.signal,
@@ -156,6 +156,7 @@ function harness(values: readonly ModelStreamChunk[]) {
       },
       preSendDetails: { model: 'model_1' },
       postSendDetails: { model: 'model_1' },
+      ...(recovery ? { recovery } : {}),
       writeGeneratedImage: async () => {
         trace.push('image:write')
         return { markdown: '\n![generated image](generated.png)\n' }
@@ -376,5 +377,74 @@ describe('ModelRoundEngine', () => {
       text: 'partial thought',
       status: 'completed'
     })
+  })
+
+  it('seamlessly retries a mid-stream error and hides it until the final attempt succeeds', async () => {
+    let calls = 0
+    const test = harness([])
+    test.setStream(() => {
+      calls++
+      if (calls < 3) {
+        // Intermediate attempts fail mid-stream; the error must be hidden.
+        return chunks([
+          { kind: 'assistant_text_delta', text: `partial-${calls}` },
+          { kind: 'error', message: 'upstream failed', code: 'upstream' }
+        ])
+      }
+      return chunks([
+        { kind: 'assistant_text_delta', text: 'final' },
+        { kind: 'completed', stopReason: 'stop' }
+      ])
+    })
+
+    await expect(test.run({ maxAttempts: 3, delayMs: 1 })).resolves.toEqual(
+      expect.objectContaining({ kind: 'completed' })
+    )
+    // Three model requests were issued (two failed + one success).
+    expect(test.requests).toHaveLength(3)
+    // A seamless "recovering" status is emitted between attempts, with no HTTP
+    // status code — it is a generic recovery, not a transport-layer 429.
+    const retries = test.recordedEvents.filter((event) => event.kind === 'model_request_retry')
+    expect(retries).toHaveLength(2)
+    for (const retry of retries) {
+      expect(retry).not.toHaveProperty('status')
+      expect(retry).toMatchObject({
+        attempt: expect.any(Number),
+        maxAttempts: 3,
+        delayMs: 1
+      })
+    }
+    // Only the successful attempt's text is persisted as a final item; the
+    // hidden partial failures are never turned into items.
+    const textItems = test.appliedItems.filter((item) => item.kind === 'assistant_text')
+    expect(textItems).toHaveLength(1)
+    expect(textItems[0]).toMatchObject({ text: 'final', status: 'completed' })
+  })
+
+  it('surfaces the error on the final attempt after exhausting all retries', async () => {
+    let calls = 0
+    const test = harness([])
+    test.setStream(() => {
+      calls++
+      return chunks([
+        { kind: 'assistant_text_delta', text: `partial-${calls}` },
+        { kind: 'error', message: 'upstream failed', code: 'upstream' }
+      ])
+    })
+
+    await expect(test.run({ maxAttempts: 2, delayMs: 1 })).resolves.toEqual({ kind: 'failed' })
+    // Both model requests were issued and both failed.
+    expect(test.requests).toHaveLength(2)
+    // One seamless recovery status between attempt 1 and the final attempt.
+    const retries = test.recordedEvents.filter((event) => event.kind === 'model_request_retry')
+    expect(retries).toHaveLength(1)
+    expect(retries[0]).not.toHaveProperty('status')
+    // Only the final attempt surfaces the error and drains the partial text
+    // into a persisted item — the earlier hidden attempt does not.
+    expect(test.trace.filter((trace) => trace === 'failure')).toHaveLength(1)
+    expect(test.trace.filter((trace) => trace === 'event:error')).toHaveLength(1)
+    const textItems = test.appliedItems.filter((item) => item.kind === 'assistant_text')
+    expect(textItems).toHaveLength(1)
+    expect(textItems[0]).toMatchObject({ kind: 'assistant_text', status: 'completed' })
   })
 })

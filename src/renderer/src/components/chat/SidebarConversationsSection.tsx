@@ -227,7 +227,7 @@ export function SidebarConversationsSection({
   }
 
   return (
-    <div className="ds-no-drag flex shrink-0 flex-col mt-2 rounded-xl bg-black/[0.05] pb-1.5 dark:bg-white/[0.05]">
+    <div className="ds-no-drag flex shrink-0 flex-col mt-2 rounded-xl pb-1.5">
       <div className="flex min-h-[34px] items-center justify-between px-2 pb-1 pt-2">
         <button
           type="button"
@@ -276,8 +276,17 @@ export function SidebarConversationsSection({
         </div>
       ) : null}
 
-      {!collapsed ? (
-        <div className="relative ml-2 max-h-[40vh] min-h-0 shrink-0 space-y-[2px] overflow-y-auto border-l border-black/[0.06] pb-2 pl-2 pt-0.5 dark:border-white/[0.08]">
+      <div
+        className="relative ml-2 space-y-[2px] overflow-y-auto border-l border-black/[0.06] pl-2 pt-0.5 dark:border-white/[0.08]"
+        style={{
+          maxHeight: collapsed ? '0px' : '40vh',
+          opacity: collapsed ? 0 : 1,
+          paddingBottom: collapsed ? '0px' : '0.5rem',
+          transition: 'max-height 0.3s cubic-bezier(0.4,0,0.2,1), opacity 0.2s ease',
+          overflow: 'hidden',
+          pointerEvents: collapsed ? 'none' as const : 'auto' as const
+        }}
+      >
           {conversationThreads.length === 0 ? (
             <button
               type="button"
@@ -320,8 +329,7 @@ export function SidebarConversationsSection({
               onOpenMenu={(x, y) => setThreadContextMenu({ thread, x, y })}
             />
           ))}
-        </div>
-      ) : null}
+      </div>
 
       {threadContextMenu ? (
         <ThreadContextMenu

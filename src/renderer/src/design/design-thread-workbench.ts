@@ -13,14 +13,31 @@ export type DesignThreadSelectorOptions = {
   threads: NormalizedThread[]
   workspaceRoot?: string | null
   docId?: string | null
+  artifactId?: string | null
   registry?: DesignThreadRegistry
 }
 
 export function designThreadsForDocument(options: DesignThreadSelectorOptions): NormalizedThread[] {
   const root = options.workspaceRoot?.trim()
   const docId = options.docId?.trim()
+  const artifactId = options.artifactId?.trim()
   if (!root || !docId) return []
   const registry = options.registry ?? readDesignThreadRegistry()
+
+  // Prefer per-artifact scope
+  if (artifactId) {
+    const artifactKey = designDocKey(root, docId, artifactId)
+    const artifactRecord = registry.workspaces[artifactKey]
+    if (artifactRecord) {
+      const idSet = new Set(artifactRecord.threadIds)
+      const result = options.threads
+        .filter((thread) => idSet.has(thread.id) && thread.archived !== true)
+        .sort((a, b) => Date.parse(b.updatedAt) - Date.parse(a.updatedAt))
+      if (result.length > 0) return result
+    }
+  }
+
+  // Fall back to document-level scope
   const key = designDocKey(root, docId)
   const record = registry.workspaces[key]
   if (!record) return []
@@ -44,6 +61,7 @@ export function designThreadToSelectForDocument(options: DesignThreadSelectorOpt
 }): string | null {
   const root = options.workspaceRoot?.trim()
   const docId = options.docId?.trim()
+  const artifactId = options.artifactId?.trim()
   if (options.route !== 'design' || !root || !docId) return null
   const activeThreadId = options.activeThreadId?.trim()
   if (!activeThreadId) {
@@ -53,7 +71,8 @@ export function designThreadToSelectForDocument(options: DesignThreadSelectorOpt
     root,
     docId,
     options.threads,
-    options.registry ?? readDesignThreadRegistry()
+    options.registry ?? readDesignThreadRegistry(),
+    artifactId
   )
   if (!existing || existing.id === activeThreadId) return null
   return existing.id
@@ -81,6 +100,7 @@ export function designThreadSelectionSyncForDocument(options: DesignThreadSelect
 export type SwitchDesignThreadOptions = {
   workspaceRoot?: string | null
   docId?: string | null
+  artifactId?: string | null
   threadId: string
   selectThread: (threadId: string) => Promise<void>
   registry?: DesignThreadRegistry
@@ -93,9 +113,10 @@ export async function switchDesignThreadForDocument(
 ): Promise<boolean> {
   const root = options.workspaceRoot?.trim()
   const docId = options.docId?.trim()
+  const artifactId = options.artifactId?.trim()
   const threadId = options.threadId.trim()
   if (!root || !threadId) return false
-  const nextRegistry = markDesignThread(root, docId ?? '', threadId, options.registry ?? readDesignThreadRegistry())
+  const nextRegistry = markDesignThread(root, docId ?? '', threadId, options.registry ?? readDesignThreadRegistry(), artifactId)
   const saveRegistry = options.saveRegistry ?? saveDesignThreadRegistry
   saveRegistry(nextRegistry)
   void (options.persistMeta ?? persistDesignChatMetaForDoc)({

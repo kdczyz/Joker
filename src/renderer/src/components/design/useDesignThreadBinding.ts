@@ -13,6 +13,7 @@ export type DesignThreadBindingOptions = {
   workspaceRoot: string
   designWorkspaceRoot: string
   activeDocumentId: string | null
+  activeArtifactId: string | null
   activeThreadId: string | null
   route: string
   selectThread: (threadId: string) => Promise<void>
@@ -29,6 +30,7 @@ export function useDesignThreadBinding({
   workspaceRoot,
   designWorkspaceRoot,
   activeDocumentId,
+  activeArtifactId,
   activeThreadId,
   route,
   selectThread,
@@ -39,15 +41,17 @@ export function useDesignThreadBinding({
     return designThreadsForDocument({
       threads,
       workspaceRoot: effectiveWorkspaceRoot,
-      docId: activeDocumentId
+      docId: activeDocumentId,
+      artifactId: activeArtifactId
     })
-  }, [activeDocumentId, effectiveWorkspaceRoot, threads])
+  }, [activeDocumentId, activeArtifactId, effectiveWorkspaceRoot, threads])
 
   const switchDesignThread = useCallback(async (threadId: string): Promise<void> => {
     const designStore = useDesignWorkspaceStore.getState()
     await switchDesignThreadForDocument({
       workspaceRoot: designStore.workspaceRoot || workspaceRoot,
       docId: designStore.activeDocumentId,
+      artifactId: designStore.activeArtifactId,
       threadId,
       selectThread
     })
@@ -59,7 +63,8 @@ export function useDesignThreadBinding({
       activeThreadId,
       threads,
       workspaceRoot: effectiveWorkspaceRoot,
-      docId: activeDocumentId
+      docId: activeDocumentId,
+      artifactId: activeArtifactId
     })
     if (sync.action === 'select') {
       void selectThread(sync.threadId)
@@ -69,6 +74,7 @@ export function useDesignThreadBinding({
       clearActiveThreadSelection?.()
     }
   }, [
+    activeArtifactId,
     activeDocumentId,
     activeThreadId,
     clearActiveThreadSelection,

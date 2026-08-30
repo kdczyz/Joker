@@ -1960,6 +1960,7 @@
   "runtimeStreamRecovering": "ランタイム イベント ストリームを回復しています…",
   "toolUploadWaitStatus": "{{count}} 個のツール結果の後にモデルを待機しています…",
   "modelRequestRetryStatus": "Model request returned HTTP {{status}}; retrying {{attempt}}/{{max}} in about {{seconds}}s…",
+  "modelRecoveryStatus": "応答の復旧を試行中（{{attempt}}/{{max}} 回目）、約 {{seconds}} 秒後に再試行します…",
   "toolCatalogChangedStatus": "ツールカタログが変更されました。 Joker はアクティブなツールのリストを更新しました。",
   "toolStormSuppressedStatus": "{{tool}} が同じ呼び出しを何度も繰り返しました。 Joker は重複を抑制し、モデルにアプローチを変更するよう依頼しました。",
   "compactionSummaryFallbackStatus": "モデル圧縮の概要は利用できませんでした。 Joker はヒューリスティックサマリーを使用しました。",

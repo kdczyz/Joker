@@ -18,6 +18,7 @@ import {
 type WorkbenchDesignAgentRuntimeOptions = {
   activeCodeCanvasWorkspace: CodeCanvasPromptControllerOptions['activeCodeCanvasWorkspace']
   activeDocumentId: DesignThreadBindingOptions['activeDocumentId']
+  activeArtifactId: DesignThreadBindingOptions['activeArtifactId']
   activeThreadId: DesignThreadBindingOptions['activeThreadId']
   attachmentUploadEnabled: DesignPromptControllerOptions['attachmentUploadEnabled']
   busy: DesignPromptControllerOptions['busy']
@@ -52,6 +53,7 @@ type WorkbenchDesignAgentRuntimeOptions = {
 export function useWorkbenchDesignAgentRuntime({
   activeCodeCanvasWorkspace,
   activeDocumentId,
+  activeArtifactId,
   activeThreadId,
   attachmentUploadEnabled,
   busy,
@@ -87,6 +89,7 @@ export function useWorkbenchDesignAgentRuntime({
     workspaceRoot,
     designWorkspaceRoot,
     activeDocumentId,
+    activeArtifactId,
     activeThreadId,
     route,
     selectThread,

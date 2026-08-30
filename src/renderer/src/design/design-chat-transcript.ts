@@ -118,9 +118,15 @@ export function parseDesignChatMeta(raw: string): DesignChatMeta | null {
 
 function recordForDesignDoc(
   workspaceRoot: string,
-  docId: string
+  docId: string,
+  artifactId?: string | null
 ): DesignThreadWorkspaceRecord | null {
   const registry = readDesignThreadRegistry()
+  // Prefer per-artifact scope when artifactId is provided
+  if (artifactId) {
+    const artifactRecord = registry.workspaces[designDocKey(workspaceRoot, docId, artifactId)]
+    if (artifactRecord) return artifactRecord
+  }
   return registry.workspaces[designDocKey(workspaceRoot, docId)] ?? null
 }
 
@@ -179,10 +185,11 @@ export async function hydrateDesignChatMetaForDoc(input: {
 export async function persistDesignChatMetaForDoc(input: {
   workspaceRoot: string
   docId: string
+  artifactId?: string | null
   stampThreadId?: string
 }): Promise<boolean> {
   const metaPath = designChatMetaPath(input.docId)
-  const record = recordForDesignDoc(input.workspaceRoot, input.docId)
+  const record = recordForDesignDoc(input.workspaceRoot, input.docId, input.artifactId)
   if (!metaPath || !record) return false
   if (
     typeof window.JokerGui?.writeWorkspaceFile !== 'function' ||
@@ -273,8 +280,9 @@ export function notifyDesignChatTranscriptMirror(get: () => ChatStateLike): void
 export async function refreshDesignChatTranscriptFromProvider(input: {
   workspaceRoot: string
   docId: string
+  artifactId?: string | null
 }): Promise<void> {
-  const record = recordForDesignDoc(input.workspaceRoot, input.docId)
+  const record = recordForDesignDoc(input.workspaceRoot, input.docId, input.artifactId)
   const threadId = record?.activeThreadId
   if (!threadId) return
   try {

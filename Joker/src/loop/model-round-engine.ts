@@ -1,5 +1,6 @@
 import type { CacheRequestSignature } from '../cache/cache-diagnostics.js'
 import { utf8PrefixWithinBytes } from '../shared/utf8-text-blocks.js'
+import { sleepWithAbort } from '../adapters/model/compat-retry-policy.js'
 import type { PipelineStage } from '../contracts/events.js'
 import type { ModelClient, ModelRequest } from '../ports/model-client.js'
 import type { IdGenerator } from '../ports/id-generator.js'
@@ -25,6 +26,24 @@ export type ModelRoundStreamResult =
   | { kind: 'aborted' }
   | { kind: 'failed' }
 
+/**
+ * Result of a single (non-retried) model round. `success` carries the stream
+ * outcome; `retryable` means the round failed in a way worth re-attempting
+ * (stream error / thrown mid-stream); `fatal` means the failure is terminal
+ * (e.g. tool-call limit) and must not be retried; `aborted` means the turn was
+ * cancelled.
+ */
+export type ModelRoundAttemptResult =
+  | { kind: 'success'; result: ModelRoundStreamResult }
+  | { kind: 'aborted' }
+  | { kind: 'retryable'; message: string; code?: string; persist: () => Promise<void> }
+  | { kind: 'finalFailed'; code?: string; message: string }
+
+export type ModelRoundRecoveryConfig = {
+  maxAttempts: number
+  delayMs: number
+}
+
 export type ModelRoundEngineInput = {
   threadId: string
   turnId: string
@@ -40,6 +59,8 @@ export type ModelRoundEngineInput = {
     imageBase64: string
     mimeType: string
   }) => Promise<{ markdown: string }>
+  /** Optional seamless retry policy applied when a model reply fails mid-stream. */
+  recovery?: ModelRoundRecoveryConfig
 }
 
 export type ModelRoundEngineDeps = {
@@ -78,6 +99,47 @@ export class ModelRoundEngine {
   constructor(private readonly deps: ModelRoundEngineDeps) {}
 
   async run(input: ModelRoundEngineInput): Promise<ModelRoundStreamResult> {
+    const maxAttempts = input.recovery ? Math.max(1, Math.floor(input.recovery.maxAttempts)) : 1
+    const delayMs = input.recovery ? Math.max(0, Math.floor(input.recovery.delayMs)) : 0
+
+    for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+      const result = await this.runAttempt(input, attempt, maxAttempts)
+      if (result.kind === 'success') return result.result
+      if (result.kind === 'aborted') return { kind: 'aborted' }
+      if (result.kind === 'finalFailed') return { kind: 'failed' }
+      // Retryable failure with more attempts remaining: surface a seamless
+      // "recovering" status and back off before the next attempt. The status
+      // event also flushes any half-streamed text into its own block so the
+      // next attempt starts from a clean live buffer.
+      await this.deps.events.record({
+        kind: 'model_request_retry',
+        threadId: input.threadId,
+        turnId: input.turnId,
+        attempt,
+        maxAttempts,
+        delayMs
+      })
+      const aborted = await sleepWithAbort(delayMs, input.signal)
+      if (aborted || input.signal.aborted) return { kind: 'aborted' }
+    }
+
+    // Defensive fallback: the final attempt always returns finalFailed (or
+    // throws), so this is unreachable in practice. Fail cleanly.
+    return { kind: 'failed' }
+  }
+
+  /**
+   * Runs one already-prepared model request exactly once. Returns whether the
+   * round succeeded, was aborted, failed terminally (not retryable), or failed
+   * in a retryable way. On a retryable failure it does NOT persist or record the
+   * error — that is deferred to `run` so a seamless retry can hide it from the
+   * user.
+   */
+  private async runAttempt(
+    input: ModelRoundEngineInput,
+    attempt: number,
+    maxAttempts: number
+  ): Promise<ModelRoundAttemptResult> {
     const collector = new ModelStreamCollector({
       maxToolCallsPerStep: input.maxToolCallsPerStep,
       toolMetadata: input.streamToolMetadata,
@@ -163,6 +225,8 @@ export class ModelRoundEngine {
       'post_send',
       input.postSendDetails
     )
+
+    let capturedModelError: { message: string; code?: string } | undefined
     try {
       for await (const chunk of this.deps.model.stream(input.request)) {
         if (input.signal.aborted) {
@@ -181,7 +245,7 @@ export class ModelRoundEngine {
           })
           await this.deps.recordToolCallLimit(input.threadId, input.turnId, message)
           await persistAccumulatedResponse()
-          return { kind: 'failed' }
+          return { kind: 'finalFailed', code: 'tool_call_limit_exceeded', message }
         }
         for (const intent of reduction.intents) {
           if (
@@ -278,19 +342,12 @@ export class ModelRoundEngine {
               break
             }
             case 'model_error':
-              this.deps.rememberFailure(input.turnId, {
-                error: intent.message,
-                ...(intent.code ? { code: intent.code } : {}),
-                severity: 'error'
-              })
-              await this.deps.events.record({
-                kind: 'error',
-                threadId: input.threadId,
-                turnId: input.turnId,
+              // Capture but do NOT surface yet: a seamless retry will hide this
+              // from the user unless every attempt fails.
+              capturedModelError = {
                 message: intent.message,
-                code: intent.code,
-                severity: 'error'
-              })
+                ...(intent.code ? { code: intent.code } : {})
+              }
               break
           }
         }
@@ -302,8 +359,15 @@ export class ModelRoundEngine {
       } catch (flushError) {
         streamFailure = flushError
       }
-      await persistAccumulatedResponse()
-      throw streamFailure
+      if (attempt === maxAttempts) {
+        // Final attempt: persist the partial output and propagate the error so
+        // the legacy throw-based contract is preserved.
+        await persistAccumulatedResponse()
+        throw streamFailure
+      }
+      const message =
+        streamFailure instanceof Error ? streamFailure.message : String(streamFailure)
+      return { kind: 'retryable', message, persist: persistAccumulatedResponse }
     } finally {
       deltaEvents.dispose()
     }
@@ -315,15 +379,54 @@ export class ModelRoundEngine {
     }
     await deltaEvents.flush()
     const snapshot = collector.snapshot()
+    if (snapshot.stopReason === 'error') {
+      const errorInfo = capturedModelError ?? { message: '模型回复生成失败。' }
+      if (attempt === maxAttempts) {
+        // Final attempt: surface the error exactly as the legacy path did so
+        // downstream consumers (and the test contract) see the same ordering.
+        this.deps.rememberFailure(input.turnId, {
+          error: errorInfo.message,
+          ...(errorInfo.code ? { code: errorInfo.code } : {}),
+          severity: 'error'
+        })
+        await this.deps.events.record({
+          kind: 'error',
+          threadId: input.threadId,
+          turnId: input.turnId,
+          message: errorInfo.message,
+          ...(errorInfo.code ? { code: errorInfo.code } : {}),
+          severity: 'error'
+        })
+        await this.deps.recordPipelineStage(input.threadId, input.turnId, 'response_received', {
+          stopReason: snapshot.stopReason,
+          toolCallCount: snapshot.toolCalls.length
+        })
+        await persistAccumulatedResponse()
+        return { kind: 'finalFailed', code: errorInfo.code, message: errorInfo.message }
+      }
+      // Intermediate attempt: hide the error and let `run` seamlessly retry.
+      await this.deps.recordPipelineStage(input.threadId, input.turnId, 'response_received', {
+        stopReason: snapshot.stopReason,
+        toolCallCount: snapshot.toolCalls.length
+      })
+      return {
+        kind: 'retryable',
+        message: errorInfo.message,
+        ...(errorInfo.code ? { code: errorInfo.code } : {}),
+        persist: persistAccumulatedResponse
+      }
+    }
     await this.deps.recordPipelineStage(input.threadId, input.turnId, 'response_received', {
       stopReason: snapshot.stopReason,
       toolCallCount: snapshot.toolCalls.length
     })
     await persistAccumulatedResponse()
-    if (snapshot.stopReason === 'error') return { kind: 'failed' }
-    return snapshot.toolCalls.length > 0
-      ? { kind: 'tool_calls', snapshot }
-      : { kind: 'completed', snapshot }
+    return {
+      kind: 'success',
+      result: snapshot.toolCalls.length > 0
+        ? { kind: 'tool_calls', snapshot }
+        : { kind: 'completed', snapshot }
+    }
   }
 }
 

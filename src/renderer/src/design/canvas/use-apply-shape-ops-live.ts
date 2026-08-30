@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { ChatBlock, ToolBlock } from '../../agent/types'
 import { useChatStore } from '../../store/chat-store'
 import { collectAssistantTextForTurn, threadHasPendingRuntimeWork } from '../../store/chat-store-runtime-helpers'
-import { applyCanvasOpBlocks, applyCanvasOpsSince, extractCanvasOpBlocksFromValue, setLastCanvasOpErrors } from './apply-shape-ops'
+import { applyCanvasOpsSince, applyDesignToolCallByName, setLastCanvasOpErrors } from './apply-shape-ops'
 import { useCanvasSelectionStore } from './canvas-selection-store'
 import { useCanvasShapeStore } from './canvas-shape-store'
 import { takeScreenBrief } from './screen-artifact-bridge'
@@ -369,23 +369,19 @@ export function useApplyShapeOpsLive(
         errorsThisTurn.push(revisionError)
         return
       }
-      const blocks = extractCanvasOpBlocksFromValue(parsed)
-      if (blocks.length === 0) {
-        return
-      }
-      const { affectedIds, errors } = applyCanvasOpBlocks(blocks, `tool:${block.id}`, executeOptions)
+      const result = applyDesignToolCallByName(block.meta?.toolName, parsed, { executeOptions })
       appliedToolBlockIds.add(block.id)
-      if (errors.length > 0) errorsThisTurn.push(...errors)
-      persistAppliedDesignSystemTool(block.meta?.toolName, errors)
-      if (affectedIds.length === 0) return
-      for (const id of affectedIds) affectedThisTurn.add(id)
+      if (result.errors.length > 0) errorsThisTurn.push(...result.errors)
+      persistAppliedDesignSystemTool(block.meta?.toolName, result.errors)
+      if (result.affectedIds.length === 0) return
+      for (const id of result.affectedIds) affectedThisTurn.add(id)
       useCanvasSelectionStore.getState().select([...affectedThisTurn])
       if (!framedThisTurn) {
         framedThisTurn = true
-        useDesignAssistantStore.getState().markAiAffected(affectedIds)
+        useDesignAssistantStore.getState().markAiAffected(result.affectedIds)
       } else {
         useDesignAssistantStore.setState({
-          lastAiAffectedIds: affectedIds,
+          lastAiAffectedIds: result.affectedIds,
           lastAiActionAt: Date.now()
         })
       }

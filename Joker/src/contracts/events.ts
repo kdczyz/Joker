@@ -176,7 +176,7 @@ export type ToolCallReadyEvent = z.infer<typeof ToolCallReadyEvent>
 
 export const ModelRequestRetryEvent = RuntimeEventBase.extend({
   kind: z.literal('model_request_retry'),
-  status: z.number().int().min(100).max(599),
+  status: z.number().int().min(100).max(599).optional(),
   attempt: z.number().int().positive(),
   maxAttempts: z.number().int().positive(),
   delayMs: z.number().int().nonnegative()

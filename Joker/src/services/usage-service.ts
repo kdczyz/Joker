@@ -394,15 +394,34 @@ function resolveUsageWindow(
   }
 }
 
+// `Intl.DateTimeFormat` compiles ICU timezone data on construction and is
+// surprisingly expensive (~0.1ms each). `buildDailyUsageResponse` /
+// `buildModelUsageResponse` call `formatDateInTimezone` once per usage record,
+// so constructing a fresh formatter every call turned a large usage history
+// into a minutes-long synchronous block that froze the event loop (the runtime
+// even logged `event loop blocked for ~593604ms — formatDateInTimezone @
+// usage-service.js:281`). Cache one formatter per timezone instead — the set
+// of timezones is tiny, so the cache is effectively bounded.
+const dayFormatterCache = new Map<string, Intl.DateTimeFormat>()
+
+function getDayFormatter(timezone: string): Intl.DateTimeFormat {
+  let formatter = dayFormatterCache.get(timezone)
+  if (!formatter) {
+    formatter = new Intl.DateTimeFormat('en-US', {
+      timeZone: timezone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    })
+    dayFormatterCache.set(timezone, formatter)
+  }
+  return formatter
+}
+
 export function formatDateInTimezone(isoTimestamp: string, timezone: string): string | null {
   const date = new Date(isoTimestamp)
   if (Number.isNaN(date.getTime())) return null
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: timezone,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).formatToParts(date)
+  const parts = getDayFormatter(timezone).formatToParts(date)
   const year = parts.find((part) => part.type === 'year')?.value
   const month = parts.find((part) => part.type === 'month')?.value
   const day = parts.find((part) => part.type === 'day')?.value

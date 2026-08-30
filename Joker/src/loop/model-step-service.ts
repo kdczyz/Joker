@@ -4,6 +4,7 @@ import { randomBytes } from 'node:crypto'
 import type { CacheRequestSignature } from '../cache/cache-diagnostics.js'
 import type { ImmutablePrefix } from '../cache/immutable-prefix.js'
 import type { PipelineStage } from '../contracts/events.js'
+import { DEFAULT_MODEL_REQUEST_RETRY_CONFIG } from '../config/Joker-config.js'
 import type { ModelCapabilityMetadata } from '../contracts/capabilities.js'
 import type { TurnItem } from '../contracts/items.js'
 import { makeErrorItem } from '../domain/item.js'
@@ -640,6 +641,10 @@ export class ModelStepService {
         ? { maxToolArgumentStringBytes: this.deps.toolArgumentRepair.maxStringBytes }
         : {}),
       cacheSignature,
+      recovery: {
+        maxAttempts: DEFAULT_MODEL_REQUEST_RETRY_CONFIG.maxAttempts,
+        delayMs: DEFAULT_MODEL_REQUEST_RETRY_CONFIG.initialDelayMs
+      },
       preSendDetails: {
         model: request.model,
         ...clientDiagnostics,

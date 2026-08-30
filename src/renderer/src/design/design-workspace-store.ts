@@ -95,6 +95,7 @@ export const useDesignWorkspaceStore = create<DesignWorkspaceState>((set, get) =
     aiRailCollapsed: readPersistedAiRailCollapsed(),
     canvasAssistantOpen: readPersistedCanvasAssistantOpen(),
     canvasInspectorPinned: readPersistedCanvasInspectorPinned(),
+    agentTakeoverMode: false,
     designIntentMode: 'generate',
     multiPageMode: readPersistedMultiPageMode(),
     pagesRun: null,
@@ -547,6 +548,17 @@ export const useDesignWorkspaceStore = create<DesignWorkspaceState>((set, get) =
     setCanvasInspectorPinned: (pinned) => {
       writeBrowserStorageItem(CANVAS_INSPECTOR_PINNED_KEY, pinned ? '1' : '0')
       set({ canvasInspectorPinned: pinned })
+    },
+
+    setAgentTakeoverMode: (on) => {
+      set({ agentTakeoverMode: on })
+      if (on) get().setCanvasAssistantOpen(true)
+    },
+
+    toggleAgentTakeoverMode: () => {
+      const next = !get().agentTakeoverMode
+      set({ agentTakeoverMode: next })
+      if (next) get().setCanvasAssistantOpen(true)
     },
 
     setAssistantModel: (model, providerId) => {

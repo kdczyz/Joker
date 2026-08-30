@@ -1,4 +1,6 @@
 import { useEffect, type ReactElement } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Bot, X } from 'lucide-react'
 import { useDesignWorkspaceStore } from '../../design/design-workspace-store'
 import type { DesignArtifact } from '../../design/design-types'
 import type { DesignHtmlElementContext } from '../../design/design-composer-context'
@@ -46,8 +48,11 @@ export function DesignCanvas({
   onRuntimeQualityFindings,
   onRequestQualityRepair
 }: CanvasProps): ReactElement {
+  const { t } = useTranslation()
   const workspaceRoot = useDesignWorkspaceStore((s) => s.workspaceRoot)
   const settingsLoaded = useDesignWorkspaceStore((s) => s.settingsLoaded)
+  const agentTakeoverMode = useDesignWorkspaceStore((s) => s.agentTakeoverMode)
+  const toggleAgentTakeoverMode = useDesignWorkspaceStore((s) => s.toggleAgentTakeoverMode)
   const artifacts = useDesignWorkspaceStore((s) => s.artifacts)
   const activeDocumentId = useDesignWorkspaceStore((s) => s.activeDocumentId)
   const activeThreadId = useChatStore((s) => s.activeThreadId)
@@ -152,6 +157,23 @@ export function DesignCanvas({
 
   return (
     <div className="ds-stage-design-canvas relative min-h-0 min-w-0 flex-1 overflow-hidden bg-ds-main">
+      {agentTakeoverMode ? (
+        <div className="pointer-events-none absolute inset-x-0 top-0 z-30 flex justify-center px-4 pt-3">
+          <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-indigo-300/60 bg-gradient-to-r from-indigo-500 to-violet-500 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-indigo-500/30">
+            <Bot className="h-3.5 w-3.5" strokeWidth={2} />
+            <span>{t('canvasTakeoverBanner', 'Agent 正在接管画布')}</span>
+            <button
+              type="button"
+              onClick={toggleAgentTakeoverMode}
+              className="ml-1 inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-white transition-colors hover:bg-white/30"
+              aria-label={t('canvasTakeoverExit', '退出接管')}
+            >
+              <X className="h-3 w-3" strokeWidth={2.5} />
+              {t('canvasTakeoverExit', '退出接管')}
+            </button>
+          </div>
+        </div>
+      ) : null}
       <CanvasViewport
         workspaceRoot={workspaceRoot}
         artifactId={boardArtifact.id}

@@ -63,7 +63,9 @@ describe('design tool protocol', () => {
       'design.system',
       'design.bind_code',
       'design.implement',
-      'design.export'
+      'design.export',
+      'design.query',
+      'design.snapshot'
     ])
     expect(designToolProtocolById('design.system')).toMatchObject({
       category: 'system',

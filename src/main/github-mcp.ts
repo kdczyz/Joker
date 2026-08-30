@@ -1,6 +1,7 @@
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import { resolveJokerMcpJsonPath } from './claw-schedule-mcp-config'
+import { getGithubCredentials } from './services/github-credential-store'
 
 /**
  * 一键把「已登录的 GitHub OAuth token」注入到 Joker 的 MCP 配置里，
@@ -10,9 +11,9 @@ import { resolveJokerMcpJsonPath } from './claw-schedule-mcp-config'
  * 且仅新增/更新 `github` 这一个服务器条目，不会破坏用户已有的其它 MCP 服务器
  * （计划任务同步逻辑 buildSyncedClawScheduleMcpJson 也会保留 userServers）。
  *
- * 注意：token 以明文写入 mcp.json 的 env（与 app 本身同为受信任分发场景，
- * 且 OAuth token 已存在于本机）。若日后要走「不落盘」方案，可改为在 MCP
- * 服务器 spawn 时由运行时动态注入 env。
+ * 注意：token 以 Bearer 头明文写入 mcp.json 的 github 服务器条目（与 app 本身
+ * 同为受信任分发场景，且 OAuth token 已存在于本机）。若日后要走「不落盘」方案，
+ * 可改为 MCP 连接时由运行时动态注入 Authorization 头。
  */
 
 export const GITHUB_MCP_SERVER_NAME = 'github'
@@ -40,16 +41,18 @@ async function readMcpJson(path: string): Promise<Record<string, unknown> | null
 //   2. 官方推荐的本地形态是 docker / brew / go install，但都需要额外装运行时。
 //   3. 最稳的形式是远程 streamable-http MCP，由 GitHub 托管：
 //      https://api.githubcopilot.com/mcp/
-//      Joker runtime 已支持 transport=streamable-http + OAuth provider，
-//      第一次连接会按运行时 OAuth 流程引导用户在浏览器里授权 GitHub。
-// 改动后，OAuth token 不再写进 mcp.json（远程 MCP 自己处理 OAuth），
-// 减少本机 token 暴露面。
+// 该端点要求请求带 Authorization: Bearer <token>。Joker runtime 的 MCP
+// OAuth provider 是「按需显式配置」的（见 Joker/src/adapters/tool/mcp-oauth-provider.ts），
+// 并不会在 github 条目缺 oauth 字段时自动触发浏览器授权，所以裸连必报
+// "missing required Authorization header"。因此这里直接把「已登录的 GitHub
+// OAuth token」作为 Bearer 头写进 mcp.json，与 cloudflare-mcp.ts 同构。
 const GITHUB_MCP_OFFICIAL_URL = 'https://api.githubcopilot.com/mcp/'
 
-function githubServerEntry(): Record<string, unknown> {
+function githubServerEntry(accessToken: string): Record<string, unknown> {
   return {
     transport: 'streamable-http',
     url: GITHUB_MCP_OFFICIAL_URL,
+    headers: { Authorization: `Bearer ${accessToken}` },
     trustScope: 'user',
     enabled: true
   }
@@ -57,10 +60,19 @@ function githubServerEntry(): Record<string, unknown> {
 
 /**
  * 写入「官方远程 GitHub MCP」条目到 mcp.json。
- * 不需要本地 OAuth token —— 运行时第一次连接时会通过内置 OAuth provider
- * 引导用户在浏览器里完成 GitHub 授权（与 VS Code 等编辑器走同一条 OAuth 流）。
+ * 要求已通过 GitHub OAuth 登录（设置页「GitHub 授权」区块）—— 没有 token 时
+ * 拒绝启用并给出可提示用户去登录的 message；启用后把 token 作为 Bearer 头注入，
+ * 这样 agent 运行时连接 api.githubcopilot.com/mcp/ 时即带上鉴权，不再报
+ * "missing required Authorization header"。
  */
-export async function enableGithubMcp(): Promise<void> {
+export async function enableGithubMcp(): Promise<{ ok: true } | { ok: false; message: string }> {
+  const creds = await getGithubCredentials()
+  if (!creds) {
+    return {
+      ok: false,
+      message: '尚未授权 GitHub 账号：请先在「GitHub 授权」区块完成登录，再启用 GitHub MCP'
+    }
+  }
   const path = resolveJokerMcpJsonPath()
   const current = (await readMcpJson(path)) ?? {}
   const servers = isRecord(current.servers) ? current.servers : {}
@@ -69,12 +81,13 @@ export async function enableGithubMcp(): Promise<void> {
     ...current,
     servers: {
       ...servers,
-      [GITHUB_MCP_SERVER_NAME]: githubServerEntry()
+      [GITHUB_MCP_SERVER_NAME]: githubServerEntry(creds.accessToken)
     }
   }
 
   await mkdir(dirname(path), { recursive: true })
   await writeFile(path, `${JSON.stringify(next, null, 2)}\n`, 'utf8')
+  return { ok: true }
 }
 
 /**

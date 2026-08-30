@@ -68,6 +68,16 @@ import {
   type ExtensionManagementVersion
 } from '../extensions/extension-workbench-client'
 import { resolveActiveExtensionWorkspaceRoot } from '../extensions/active-extension-workspace'
+import { useWorkbenchDesignAgentRuntime } from './workbench/useWorkbenchDesignAgentRuntime'
+import { useDesignWorkspaceStore } from '../design/design-workspace-store'
+import { useDesignAssistantStore } from '../design/design-assistant-store'
+import { useDesignComposerContextState } from './design/useDesignComposerContextState'
+import {
+  buildComposerAssistantPickList,
+  resolveComposerAssistantProviderId
+} from './chat/composer-model-selection'
+import { useCanvasShapeStore } from '../design/canvas/canvas-shape-store'
+import { useCanvasSelectionStore } from '../design/canvas/canvas-selection-store'
 import {
   canOpenHostContextMenuForTarget,
   DeclarativeContextMenuOverlay,
@@ -768,6 +778,80 @@ export function Workbench(): ReactElement {
     setRightPanelMode, setRoute, setUseWorktreePool
   })
 
+  // Design runtime: wires design canvas send through proper design thread routing
+  const designActiveDocumentId = useDesignWorkspaceStore((s) => s.activeDocumentId)
+  const designActiveArtifactId = useDesignWorkspaceStore((s) => s.activeArtifactId)
+  const designWorkspaceRoot = useDesignWorkspaceStore((s) => s.workspaceRoot)
+  const designSetCanvasAssistantOpen = useDesignWorkspaceStore((s) => s.setCanvasAssistantOpen)
+  const designAssistantOpen = useDesignWorkspaceStore((s) => s.canvasAssistantOpen)
+  const designImplementOpen = useDesignWorkspaceStore((s) => s.implementOpen)
+  const designImplementTitle = useDesignWorkspaceStore((s) => s.implementTitle)
+  const designAssistantModel = useDesignWorkspaceStore((s) => s.assistantModel)
+  const designAssistantProviderId = useDesignWorkspaceStore((s) => s.assistantProviderId)
+  const setDesignAssistantModel = useDesignWorkspaceStore((s) => s.setAssistantModel)
+  const canvasDocument = useCanvasShapeStore((s) => s.document)
+  const canvasSelectedIds = useCanvasSelectionStore((s) => s.selectedIds)
+  const designContextState = useDesignComposerContextState({
+    route,
+    canvasDocument,
+    selectedIds: canvasSelectedIds,
+    setInput
+  })
+  const ensureDesignThreadForWorkspace = useCallback(
+    async (wsRoot: string, docId: string, artifactId?: string | null) => {
+      return useDesignAssistantStore.getState().ensureDesignThread(wsRoot, docId, artifactId)
+    },
+    []
+  )
+  const designCreateThread = useCallback(
+    async (workspaceRoot?: string, docId?: string): Promise<string | null> => {
+      const designStore = useDesignWorkspaceStore.getState()
+      const root = workspaceRoot || designStore.workspaceRoot
+      const did = docId ?? designStore.ensureActiveDocument()
+      if (!root) return null
+      return ensureDesignThreadForWorkspace(root, did)
+    },
+    [ensureDesignThreadForWorkspace]
+  )
+  const clearHtmlElementContext = useCallback(() => {
+    designContextState.handleDesignHtmlElementAsContext(null)
+  }, [designContextState.handleDesignHtmlElementAsContext])
+
+  const { sendDesignPrompt, designThreads, switchDesignThread } = useWorkbenchDesignAgentRuntime({
+    activeCodeCanvasWorkspace,
+    activeDocumentId: designActiveDocumentId,
+    activeArtifactId: designActiveArtifactId,
+    activeThreadId,
+    attachmentUploadEnabled,
+    busy,
+    clearHtmlElementContext,
+    clearComposerAttachments,
+    composerAttachments,
+    composerModelGroups,
+    composerReasoningEffort,
+    createThread,
+    designContextSuppressedIds: designContextState.designContextSuppressedIds,
+    designHtmlElementContext: designContextState.designHtmlElementContext,
+    designWorkspaceRoot: designWorkspaceRoot || workspaceRoot,
+    ensureDesignThreadForWorkspace,
+    getAttachmentScope,
+    clearActiveThreadSelection,
+    openDesign: openDesignMode,
+    rightPanelMode,
+    route,
+    runtimeConnection,
+    selectThread,
+    sendMessage,
+    setAttachmentUploadError,
+    setConnectPhoneSidebarOpen,
+    setDesignAssistantOpen: designSetCanvasAssistantOpen,
+    setError,
+    setInput,
+    setRightPanelMode,
+    threads,
+    workspaceRoot
+  })
+
   const chatComposerProps = useWorkbenchChatComposerProps({
     input, setInput, composerMode, setComposerMode, busy, route, runtimeReady: runtimeConnection === 'ready',
     activeThreadId, selectedContextWindowTokens, runtimeInfo, activeClawChannelId,
@@ -840,6 +924,17 @@ export function Workbench(): ReactElement {
   })
   const rightPanelDockedVisible = rightPanelVisible && !planPanelInOverlay && route !== 'fileBrowser'
 
+  const designAssistantPickList = useMemo(() => {
+    return buildComposerAssistantPickList({ composerPickList })
+  }, [composerPickList])
+  const resolvedDesignAssistantProviderId = useMemo(() => {
+    return resolveComposerAssistantProviderId({
+      composerModelGroups,
+      model: designAssistantModel,
+      storedProviderId: designAssistantProviderId
+    })
+  }, [composerModelGroups, designAssistantModel, designAssistantProviderId])
+
   const imageAnnotationHost = (
     <WorkbenchImageAnnotationHost
       route={route}
@@ -860,6 +955,32 @@ export function Workbench(): ReactElement {
     onCollapse: route === 'chat' ? collapseRightPanel : closeRightPanel,
     openSettings,
     onSend: handleSend,
+    design: {
+      implementOpen: designImplementOpen,
+      assistantOpen: designAssistantOpen,
+      implementTitle: designImplementTitle,
+      implementationWorkspaceRoot: designWorkspaceRoot || workspaceRoot,
+      implementationComposer: {
+        composerModel: '',
+        composerProviderId: undefined,
+        composerPickList: [],
+        setComposerModel: () => {}
+      },
+      assistantComposer: {
+        composerModel: designAssistantModel,
+        composerProviderId: resolvedDesignAssistantProviderId,
+        composerPickList: designAssistantPickList,
+        setComposerModel: setDesignAssistantModel
+      },
+      contextChips: designContextState.designContextChips,
+      input,
+      onRemoveContextChip: designContextState.removeDesignContextChip,
+      onSendPrompt: sendDesignPrompt,
+      createThread: designCreateThread,
+      threads: designThreads,
+      onSwitchThread: switchDesignThread,
+      fallbackWorkspaceRoot: workspaceRoot
+    },
     sdd: {
       draft: activeSddDraft,
       composerModel: writeAssistantModel,
@@ -1093,7 +1214,17 @@ export function Workbench(): ReactElement {
         }
         design={
           route === 'design'
-            ? { busy, composerProps: chatComposerProps }
+            ? {
+                busy,
+                composerProps: {
+                  ...chatComposerProps,
+                  onSend: () => {
+                    const text = input.trim()
+                    if (!text) return
+                    void sendDesignPrompt(text)
+                  }
+                }
+              }
             : undefined
         }
       />

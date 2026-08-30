@@ -4,10 +4,14 @@ import { normalizeWorkspaceRoot } from '../lib/workspace-path'
 
 /**
  * Thin design-thread registry — keeps design-assistant threads out of the
- * code-thread sidebar and lets each 设计稿 (design document) reuse its own
- * thread. Records are keyed by a composite (workspace + 设计稿) scope so that
- * switching 设计稿 switches the conversation. Legacy per-workspace records are
- * re-keyed onto the default 设计稿 by {@link migrateRegistryToDoc}.
+ * code-thread sidebar and lets each 画布文件 (design artifact) reuse its own
+ * thread. Records are keyed by a composite (workspace + 设计稿 + artifact)
+ * scope so that switching 画布文件 switches the conversation.
+ *
+ * Scope key hierarchy:
+ *   3-level: workspace\0docId\0artifactId  (per-artifact isolation)
+ *   2-level: workspace\0docId              (legacy, per-document)
+ *   1-level: workspace                     (legacy, pre-document)
  */
 
 export const DESIGN_ASSISTANT_THREAD_TITLE = 'Design Assistant'
@@ -29,6 +33,7 @@ export type DesignThreadRegistry = {
 export type DesignDocThreadRef = {
   workspaceRoot: string
   docId: string
+  artifactId?: string
 }
 
 export function designWorkspaceKey(workspaceRoot: string | undefined | null): string {
@@ -43,14 +48,31 @@ export function designWorkspaceKey(workspaceRoot: string | undefined | null): st
  */
 const DOC_SCOPE_SEP = String.fromCharCode(0)
 
-/** Composite registry key: each 设计稿 has its own design-assistant thread. */
+/**
+ * Composite registry key.
+ * 3 args → per-artifact scope: workspace\0docId\0artifactId
+ * 2 args → per-document scope: workspace\0docId
+ * 0 args → workspace scope (legacy)
+ */
 export function designDocKey(
   workspaceRoot: string | undefined | null,
-  docId: string | undefined | null
+  docId: string | undefined | null,
+  artifactId?: string | undefined | null
 ): string {
   const ws = designWorkspaceKey(workspaceRoot)
   const doc = (docId ?? '').trim()
+  const art = (artifactId ?? '').trim()
+  if (doc && art) return `${ws}${DOC_SCOPE_SEP}${doc}${DOC_SCOPE_SEP}${art}`
   return doc ? `${ws}${DOC_SCOPE_SEP}${doc}` : ws
+}
+
+/** Shortcut: explicitly build a 3-level per-artifact scope key. */
+export function designArtifactScopeKey(
+  workspaceRoot: string | undefined | null,
+  docId: string | undefined | null,
+  artifactId: string | undefined | null
+): string {
+  return designDocKey(workspaceRoot, docId, artifactId)
 }
 
 export function splitDesignDocKey(scopeKey: string): DesignDocThreadRef | null {
@@ -58,9 +80,12 @@ export function splitDesignDocKey(scopeKey: string): DesignDocThreadRef | null {
   const i = key.indexOf(DOC_SCOPE_SEP)
   if (i === -1) return null
   const workspaceRoot = key.slice(0, i)
-  const docId = key.slice(i + DOC_SCOPE_SEP.length).trim()
+  const rest = key.slice(i + DOC_SCOPE_SEP.length)
+  const sepIdx = rest.indexOf(DOC_SCOPE_SEP)
+  const docId = (sepIdx === -1 ? rest : rest.slice(0, sepIdx)).trim()
+  const artifactId = sepIdx === -1 ? undefined : rest.slice(sepIdx + DOC_SCOPE_SEP.length).trim()
   if (!workspaceRoot || !docId) return null
-  return { workspaceRoot, docId }
+  return { workspaceRoot, docId, ...(artifactId ? { artifactId } : {}) }
 }
 
 /** Normalize a stored key, preserving the 设计稿 suffix of a composite scope key. */
@@ -200,9 +225,10 @@ export function markDesignThread(
   workspaceRoot: string,
   docId: string,
   threadId: string,
-  registry: DesignThreadRegistry = readDesignThreadRegistry()
+  registry: DesignThreadRegistry = readDesignThreadRegistry(),
+  artifactId?: string | null
 ): DesignThreadRegistry {
-  const key = designDocKey(workspaceRoot, docId)
+  const key = designDocKey(workspaceRoot, docId, artifactId)
   const id = threadId.trim()
   if (!key || !id) return registry
   const workspaces: DesignThreadRegistry['workspaces'] = {}
@@ -258,8 +284,23 @@ export function activeDesignThreadForWorkspace(
   workspaceRoot: string,
   docId: string,
   threads: NormalizedThread[],
-  registry: DesignThreadRegistry = readDesignThreadRegistry()
+  registry: DesignThreadRegistry = readDesignThreadRegistry(),
+  artifactId?: string | null
 ): NormalizedThread | null {
+  // Prefer per-artifact scope when artifactId is provided
+  const artifactKey = artifactId ? designDocKey(workspaceRoot, docId, artifactId) : null
+  if (artifactKey) {
+    const artifactRecord = registry.workspaces[artifactKey]
+    if (artifactRecord) {
+      const candidates = artifactRecord.threadIds
+        .map((id) => threads.find((thread) => thread.id === id) ?? null)
+        .filter((thread): thread is NormalizedThread => Boolean(thread))
+        .filter((thread) => thread.archived !== true)
+      const result = candidates.find((thread) => thread.id === artifactRecord.activeThreadId) ?? candidates[0] ?? null
+      if (result) return result
+    }
+  }
+  // Fall back to document-level scope
   const key = designDocKey(workspaceRoot, docId)
   if (!key) return null
   const record = registry.workspaces[key]
@@ -295,5 +336,33 @@ export function migrateRegistryToDoc(
     activeThreadId: legacy.activeThreadId || existing?.activeThreadId || threadIds[0] || '',
     threadIds
   }
+  return normalizeDesignThreadRegistry({ version: 1, workspaces })
+}
+
+/**
+ * Migrate existing document-level threads into a per-artifact scope.
+ * The first artifact of a document inherits the document's threads; subsequent
+ * artifacts start with empty thread lists.
+ */
+export function migrateDocThreadsToArtifact(
+  registry: DesignThreadRegistry,
+  workspaceRoot: string,
+  docId: string,
+  artifactId: string
+): DesignThreadRegistry {
+  if (!artifactId) return registry
+  const artifactKey = designDocKey(workspaceRoot, docId, artifactId)
+  if (registry.workspaces[artifactKey]) return registry // already migrated
+  const docKey = designDocKey(workspaceRoot, docId)
+  const docRecord = registry.workspaces[docKey]
+  if (!docRecord || docRecord.threadIds.length === 0) return registry
+  // Check if any other artifact already claimed these threads
+  const anyArtifactHasThreads = Object.entries(registry.workspaces).some(
+    ([key, rec]) => key !== docKey && key !== artifactKey && rec.threadIds.length > 0 && key.startsWith(docKey + DOC_SCOPE_SEP)
+  )
+  if (anyArtifactHasThreads) return registry // another artifact already claimed
+  const workspaces = { ...registry.workspaces }
+  delete workspaces[docKey]
+  workspaces[artifactKey] = { ...docRecord }
   return normalizeDesignThreadRegistry({ version: 1, workspaces })
 }

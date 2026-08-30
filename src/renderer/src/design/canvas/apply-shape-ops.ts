@@ -1,4 +1,5 @@
 import { executeOps, type ExecuteOpsOptions, type OpError } from './shape-ops'
+import { executeDesignToolInvocation } from '../tool-protocol/design-tool-protocol'
 
 export const DESIGN_CANVAS_TOOL_NAMES = new Set([
   'design_canvas',
@@ -152,6 +153,181 @@ export function extractCanvasOpBlocksFromValue(value: unknown): unknown[][] {
   }
   const ops = normalizeDesignCanvasToolCall(value)
   return ops.length > 0 ? [ops] : []
+}
+
+/**
+ * Map a `design_create_screen` tool payload to `add-screen` ShapeOps.
+ * Accepts either a single `{ name, brief?, ... }` or a `screens: [...]` array
+ * (the vocabulary the model is taught). Without this, `design_create_screen`
+ * carried a payload with no `ops` array and was silently dropped.
+ */
+export function normalizeDesignCreateScreen(value: unknown): unknown[] {
+  if (!isRecord(value)) return []
+  const screens = Array.isArray(value.screens) ? value.screens : []
+  const items = screens.length > 0 ? screens : typeof value.name === 'string' ? [value] : []
+  return items.map((item) => {
+    const rec = isRecord(item) ? item : {}
+    const name = typeof rec.name === 'string' && rec.name.trim() ? rec.name.trim() : 'Screen'
+    return copyOptionalFields({ op: 'add-screen', name }, rec, [
+      'brief',
+      'x',
+      'y',
+      'width',
+      'height',
+      'devicePreset'
+    ])
+  })
+}
+
+/**
+ * Map a `design_arrange` tool payload to the corresponding layout ShapeOps
+ * (align / distribute / stack / grid / responsive-reflow).
+ */
+export function normalizeDesignArrange(value: unknown): unknown[] {
+  if (!isRecord(value)) return []
+  const operation = typeof value.operation === 'string' ? value.operation : ''
+  switch (operation) {
+    case 'align':
+      return Array.isArray(value.ids) ? [{ op: 'align', ids: value.ids, axis: value.axis }] : []
+    case 'distribute':
+      return Array.isArray(value.ids) ? [{ op: 'distribute', ids: value.ids, axis: value.axis }] : []
+    case 'stack':
+      return Array.isArray(value.ids)
+        ? [
+            {
+              op: 'stack',
+              ids: value.ids,
+              ...(typeof value.direction === 'string' ? { direction: value.direction } : {}),
+              ...(typeof value.gap === 'number' ? { gap: value.gap } : {}),
+              ...(typeof value.name === 'string' ? { name: value.name } : {}),
+              ...(typeof value.asFrame === 'boolean' ? { asFrame: value.asFrame } : {})
+            }
+          ]
+        : []
+    case 'grid':
+      return typeof value.id === 'string'
+        ? [
+            {
+              op: 'grid',
+              id: value.id,
+              ...(typeof value.cols === 'number' ? { cols: value.cols } : {}),
+              ...(typeof value.rowGap === 'number' ? { rowGap: value.rowGap } : {}),
+              ...(typeof value.colGap === 'number' ? { colGap: value.colGap } : {})
+            }
+          ]
+        : []
+    case 'responsive_reflow':
+      return typeof value.frameId === 'string'
+        ? [
+            {
+              op: 'responsive-reflow',
+              frameId: value.frameId,
+              ...(typeof value.device === 'string' ? { device: value.device } : {})
+            }
+          ]
+        : []
+    default:
+      return []
+  }
+}
+
+/** Map a `design_validate` tool payload to a lint-design-system ShapeOp. */
+export function normalizeDesignValidate(value: unknown): unknown[] {
+  const targetIds = isRecord(value) && Array.isArray(value.targetIds) ? value.targetIds : undefined
+  return [{ op: 'lint-design-system', ...(targetIds ? { targetIds } : {}) }]
+}
+
+/** Tools whose detail payloads carry NO `ops` array but DO have a renderer executor. */
+const STRUCTURED_TOOL_IDS: Record<string, string> = {
+  design_system: 'design.system',
+  'design.ops': 'design.ops',
+  'design.critique': 'design.critique',
+  'design.repair': 'design.repair',
+  'design.generate_screen': 'design.generate_screen',
+  'design.query': 'design.query',
+  'design.snapshot': 'design.snapshot'
+}
+
+export type ApplyDesignToolResult = { affectedIds: string[]; errors: OpError[] }
+
+function runOps(ops: unknown[], source: string, options?: ExecuteOpsOptions): ApplyDesignToolResult {
+  if (ops.length === 0) return { affectedIds: [], errors: [] }
+  const { affectedIds, errors } = applyCanvasOpBlocks([ops], source, options)
+  return { affectedIds, errors }
+}
+
+function toOpError(error: { code: string; message: string; suggestion?: string }): OpError {
+  return {
+    code: error.code as OpError['code'],
+    message: error.message,
+    ...(error.suggestion ? { suggestion: error.suggestion } : {})
+  }
+}
+
+/**
+ * Single entry point that turns a design-agent tool call (by name + parsed JSON
+ * detail) into canvas mutations. This is the contract that lets the agent TAKE
+ * CONTROL of the canvas: every taught tool — `design_create_screen`,
+ * `design_arrange`, `design_validate`, and the structured `design.*` protocol
+ * tools — resolves here instead of being silently ignored.
+ *
+ * - `design_create_screen` / `design_arrange` / `design_validate` → normalized
+ *   ShapeOps applied through the one `executeOps` sink.
+ * - `design.ops` / `design.system` / `design.critique` / `design.repair` /
+ *   `design.generate_screen` / `design.query` / `design.snapshot` → routed to the
+ *   structured protocol executors (`executeDesignToolInvocation`).
+ * - Legacy `design_canvas` / `design_update_shapes` (ops-bearing payloads) → the
+ *   original fenced-block path.
+ */
+export function applyDesignToolCallByName(
+  toolName: unknown,
+  parsed: unknown,
+  options?: { executeOptions?: ExecuteOpsOptions }
+): ApplyDesignToolResult {
+  const name = typeof toolName === 'string' ? toolName : ''
+  switch (name) {
+    case 'design_create_screen':
+      return runOps(
+        normalizeDesignCreateScreen(parsed),
+        `tool:${name}`,
+        options?.executeOptions
+      )
+    case 'design_arrange':
+      return runOps(normalizeDesignArrange(parsed), `tool:${name}`, options?.executeOptions)
+    case 'design_validate':
+      return runOps(normalizeDesignValidate(parsed), `tool:${name}`, options?.executeOptions)
+    default:
+      break
+  }
+  const structuredToolId = STRUCTURED_TOOL_IDS[name]
+  if (structuredToolId) {
+    try {
+      const result = executeDesignToolInvocation({ toolId: structuredToolId, input: parsed })
+      return {
+        affectedIds: result.affectedIds,
+        errors: result.errors.map(toOpError)
+      }
+    } catch (error) {
+      return {
+        affectedIds: [],
+        errors: [
+          {
+            code: 'INVALID_OP',
+            message:
+              error instanceof Error
+                ? `${structuredToolId} failed: ${error.message}`
+                : `${structuredToolId} failed`,
+            suggestion: 'Check the tool arguments against the documented schema.'
+          }
+        ]
+      }
+    }
+  }
+  // Legacy / fenced ops payloads (`design_canvas` action / `design_update_shapes`).
+  const blocks = extractCanvasOpBlocksFromValue(parsed)
+  if (blocks.length === 0) return { affectedIds: [], errors: [] }
+  const { affectedIds, errors } = applyCanvasOpBlocks(blocks, `tool:${name || 'ai'}`, options?.executeOptions)
+  return { affectedIds, errors }
 }
 
 export type SvgArtifactCreateSpec = {

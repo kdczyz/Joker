@@ -75,6 +75,8 @@ export type DesignWorkspaceState = {
   canvasAssistantOpen: boolean
   /** User preference for keeping the floating inspector visible without a selection. Persisted. */
   canvasInspectorPinned: boolean
+  /** When true, the agent is in "接管画布" mode — the canvas chat drives the board and a banner shows. */
+  agentTakeoverMode: boolean
   /** Stitch-style design intent for the floating composer and command pill. */
   designIntentMode: DesignIntentMode
   /** When ON, a "generate" brief is decomposed into multiple cohesive pages. */
@@ -168,6 +170,9 @@ export type DesignWorkspaceState = {
   setCanvasAssistantOpen: (open: boolean) => void
   toggleCanvasAssistantOpen: () => void
   setCanvasInspectorPinned: (pinned: boolean) => void
+  /** Enter/exit the "交给 Agent 接管画布" mode. */
+  setAgentTakeoverMode: (on: boolean) => void
+  toggleAgentTakeoverMode: () => void
   setAssistantModel: (model: string, providerId?: string) => void
   updateDesignContext: (patch: Partial<DesignContext>) => void
   /** Hydrate workspace root + design context defaults from persisted settings. */

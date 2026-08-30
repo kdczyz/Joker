@@ -9,6 +9,7 @@ import { executeDesignPlanInvocation } from './plan-executor'
 import { executeRepairInvocation } from './repair-executor'
 import { executeDesignSystemInvocation } from './system-executor'
 import { executeDesignMotionInvocation } from './motion-executor'
+import { executeDesignQueryInvocation } from './query-executor'
 import type { DesignToolInvocation, DesignToolInvocationResult } from './protocol-types'
 export type { DesignToolInvocation, DesignToolInvocationResult } from './protocol-types'
 
@@ -192,6 +193,22 @@ export const DESIGN_TOOL_PROTOCOL_TOOLS: DesignToolProtocolTool[] = [
     purpose: 'Export DESIGN.md, Penpot handoff, MCP resources, image/prototype, or code handoff payloads.',
     inputs: ['DesignDocument', 'Design Graph', 'DesignSystem', 'artifacts'],
     outputs: ['DESIGN.md', 'resource surface', 'handoff packages']
+  },
+  {
+    id: 'design.query',
+    category: 'operations',
+    purpose: 'Read the CURRENT canvas state on demand — shape ids, names, types, absolute bounds, fills, strokes, corner radius, token bindings, and the active selection.',
+    inputs: ['live CanvasDocument', 'selected object ids', 'optional id filter'],
+    outputs: ['shape inventory', 'selected ids', 'document id'],
+    operationTypes: ['read', 'introspect']
+  },
+  {
+    id: 'design.snapshot',
+    category: 'operations',
+    purpose: 'Alias of design.query — return a compact, fresh snapshot of the live canvas for the agent to reason about.',
+    inputs: ['live CanvasDocument', 'selected object ids'],
+    outputs: ['shape inventory', 'selected ids'],
+    operationTypes: ['read', 'introspect']
   }
 ]
 
@@ -259,5 +276,8 @@ export function executeDesignToolInvocation(
   if (invocation.toolId === 'design.bind_code') return executeBindCodeInvocation(invocation)
   if (invocation.toolId === 'design.implement') return executeImplementInvocation(invocation)
   if (invocation.toolId === 'design.export') return executeDesignExportInvocation(invocation)
+  if (invocation.toolId === 'design.query' || invocation.toolId === 'design.snapshot') {
+    return executeDesignQueryInvocation(invocation)
+  }
   return unsupportedToolResult(invocation)
 }

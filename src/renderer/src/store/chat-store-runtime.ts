@@ -517,12 +517,18 @@ function runtimeStatusText(event: RuntimeStatusEventPayload): string {
     return i18n.t('common:toolUploadWaitStatus', { count: event.toolResultCount ?? 0 })
   }
   if (event.kind === 'model_request_retry') {
-    return i18n.t('common:modelRequestRetryStatus', {
-      status: event.status ?? '',
-      attempt: event.attempt ?? 0,
-      max: event.maxAttempts ?? 0,
-      seconds: Math.ceil((event.delayMs ?? 0) / 1000)
-    })
+    const attempt = event.attempt ?? 0
+    const max = event.maxAttempts ?? 0
+    const seconds = Math.ceil((event.delayMs ?? 0) / 1000)
+    if (typeof event.status === 'number' && event.status >= 100) {
+      return i18n.t('common:modelRequestRetryStatus', {
+        status: event.status,
+        attempt,
+        max,
+        seconds
+      })
+    }
+    return i18n.t('common:modelRecoveryStatus', { attempt, max, seconds })
   }
   if (event.kind === 'tool_catalog_changed') {
     return event.message?.trim() || i18n.t('common:toolCatalogChangedStatus')

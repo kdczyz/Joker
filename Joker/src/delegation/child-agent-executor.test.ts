@@ -119,6 +119,7 @@ describe('DelegationRuntime detached children', () => {
           enabled: true,
           maxParallel: 1,
           maxChildRuns: 10,
+          maxSubagentDepth: 3,
           defaultToolPolicy: 'readOnly',
           profiles: {}
         },

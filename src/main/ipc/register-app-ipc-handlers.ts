@@ -1419,7 +1419,8 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
   // --- GitHub MCP 服务器（一键把已登录 token 注入 Joker MCP 配置）---
   ipcMain.handle('github:mcp:enable', async () => {
     try {
-      await enableGithubMcp()
+      const result = await enableGithubMcp()
+      if (!result.ok) return result
       // 关键：写完 mcp.json 后必须触发与 GUI MCP 设置页相同的同步链路，
       // 否则运行中的 agent 运行时（config.json + 已 spawn 的 MCP 进程）不会
       // 感知到新服务器，对话里也就调不到 GitHub 工具。
