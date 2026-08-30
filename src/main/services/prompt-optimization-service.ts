@@ -66,7 +66,10 @@ function defaultPromptOptimizationModel(
   return firstProviderModel(provider) || mainModel
 }
 
-function effectivePromptOptimizationModel(settings: AppSettingsV1): {
+function effectivePromptOptimizationModel(
+  settings: AppSettingsV1,
+  overrides?: { modelOverride?: string; providerIdOverride?: string }
+): {
   providerId: string
   model: string
   apiKey: string
@@ -78,9 +81,9 @@ function effectivePromptOptimizationModel(settings: AppSettingsV1): {
 } {
   const runtime = resolveJokerRuntimeSettings(settings)
   const promptOptimization = runtime.promptOptimization
-  const providerId = promptOptimization.providerId.trim() || runtime.providerId
+  const providerId = overrides?.providerIdOverride?.trim() || promptOptimization.providerId.trim() || runtime.providerId
   const provider = getModelProviderProfile(settings, providerId)
-  const model = promptOptimization.model.trim() || defaultPromptOptimizationModel(runtime, provider)
+  const model = overrides?.modelOverride?.trim() || promptOptimization.model.trim() || defaultPromptOptimizationModel(runtime, provider)
   const profile = modelProviderModelProfile(provider, model)
   const endpointFormat = profile?.endpointFormat ?? provider.endpointFormat
   return {
@@ -211,11 +214,12 @@ function extractPromptOptimizationContent(rawJson: string, endpointFormat: Model
 
 export async function optimizePrompt(
   settings: AppSettingsV1,
-  sourceText: string
+  sourceText: string,
+  overrides?: { modelOverride?: string; providerIdOverride?: string }
 ): Promise<PromptOptimizationResult> {
   const trimmed = sourceText.trim()
   if (!trimmed) return { ok: false, message: 'Prompt text is empty.' }
-  const modelSettings = effectivePromptOptimizationModel(settings)
+  const modelSettings = effectivePromptOptimizationModel(settings, overrides)
   if (!resolveJokerRuntimeSettings(settings).promptOptimization.enabled) {
     return { ok: false, message: 'Prompt optimization is disabled.' }
   }

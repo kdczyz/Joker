@@ -146,7 +146,7 @@ export function SidebarFrame({
       {children}
 
       {footer ? (
-        <div className="ds-sidebar-footer ds-no-drag mt-auto border-t border-[var(--ds-sidebar-divider)]/70 px-1 pt-2">
+        <div className="ds-sidebar-footer ds-no-drag mt-auto px-1 pt-2">
           {footer}
         </div>
       ) : null}

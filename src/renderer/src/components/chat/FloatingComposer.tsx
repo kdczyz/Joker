@@ -1028,7 +1028,11 @@ export function FloatingComposer({
     const sourceText = input
     setPromptOptimizationBusy(true)
     setPromptOptimizationError(null)
-    void window.JokerGui.optimizePrompt({ text: sourceText })
+    void window.JokerGui.optimizePrompt({
+      text: sourceText,
+      model: composerModel.trim() || undefined,
+      providerId: composerProviderId?.trim() || undefined
+    })
       .then((result) => {
         if (!result.ok) {
           setPromptOptimizationError(result.message)

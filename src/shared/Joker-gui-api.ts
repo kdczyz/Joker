@@ -314,6 +314,10 @@ export type ModelProviderProbeResult =
   | { ok: false; message: string }
 export type PromptOptimizationRequest = {
   text: string
+  /** When provided, use this model instead of settings-based selection. */
+  model?: string
+  /** When provided, use this provider instead of settings-based selection. */
+  providerId?: string
 }
 export type PromptOptimizationResult =
   | { ok: true; text: string; model: string; providerId: string }

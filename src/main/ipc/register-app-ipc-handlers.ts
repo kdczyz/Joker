@@ -915,7 +915,10 @@ export function registerAppIpcHandlers(options: RegisterAppIpcHandlersOptions): 
 
   ipcMain.handle('prompt:optimize', async (_, payload: unknown) => {
     const request = parseIpcPayload('prompt:optimize', promptOptimizationPayloadSchema, payload)
-    return optimizePrompt(await store.load(), request.text)
+    return optimizePrompt(await store.load(), request.text, {
+      modelOverride: request.model,
+      providerIdOverride: request.providerId
+    })
   })
 
   ipcMain.handle('claw:status', async (): Promise<ClawRuntimeStatus> =>

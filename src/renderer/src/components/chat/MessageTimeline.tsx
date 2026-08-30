@@ -1159,7 +1159,7 @@ function LiveTurnProgressRow({ hasActiveGoal }: { hasActiveGoal: boolean }): Rea
     <div className={liveTurnProgressClass(hasActiveGoal)}>
       <div className="ds-live-progress-pill">
         <span className="ds-live-progress-dot" />
-        <span className="ds-shiny-text">{label}</span>
+        <span>{label}</span>
       </div>
     </div>
   )

@@ -2040,6 +2040,20 @@ export type OpenAiProxySettingsV1 = {
 
 export type OpenAiProxySettingsPatchV1 = Partial<OpenAiProxySettingsV1>
 
+/**
+ * Browser-mode settings. When enabled, the Joker runtime HTTP API is exposed
+ * so the renderer can be opened directly in a browser (e.g.
+ * http://127.0.0.1:5173) without Electron. The browser-mode shim in the
+ * renderer proxies `window.JokerGui` calls to this HTTP endpoint.
+ */
+export type BrowserModeConfigV1 = {
+  /** Whether browser access to the runtime API is allowed. */
+  enabled: boolean
+  /** Port the Joker runtime HTTP server listens on (default 18899). */
+  port: number
+}
+export type BrowserModeConfigPatchV1 = Partial<BrowserModeConfigV1>
+
 export type AppSettingsV1 = {
   version: 1
   locale: AppLocale
@@ -2078,6 +2092,8 @@ export type AppSettingsV1 = {
   codePromptPrefix: string
   /** User-disabled skill IDs. Disabled skills are hidden from command surfaces. */
   disabledSkillIds: string[]
+  /** Browser-mode settings — allow the renderer to run outside Electron. */
+  browserMode: BrowserModeConfigV1
 }
 
 export type AppSettingsPatch = Partial<
@@ -2099,4 +2115,5 @@ export type AppSettingsPatch = Partial<
   guiUpdate?: Partial<GuiUpdateConfigV1>
   terminal?: TerminalSettingsPatchV1
   openaiProxy?: OpenAiProxySettingsPatchV1
+  browserMode?: BrowserModeConfigPatchV1
 }

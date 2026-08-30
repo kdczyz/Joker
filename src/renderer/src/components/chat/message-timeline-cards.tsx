@@ -355,7 +355,7 @@ export function WorkMetaRow({
       <div className="flex w-full items-center justify-between gap-3">
         <div className="flex items-center gap-2.5 min-w-0">
           <ThinkingOrb size={28} />
-          <span className="truncate text-[14.5px] font-semibold tracking-tight text-ds-ink ds-shiny-text">
+          <span className="truncate text-[14.5px] font-semibold tracking-tight text-ds-ink">
             {label}
           </span>
         </div>

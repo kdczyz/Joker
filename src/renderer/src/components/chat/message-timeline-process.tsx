@@ -333,7 +333,7 @@ export function ProcessSectionRow({
           }`}
         >
           {SectionIcon ? <ProcessGlyph Icon={SectionIcon} /> : null}
-          <span className={`shrink-0 whitespace-nowrap ${active && !hasError ? 'ds-shiny-text' : ''}`}>{title}</span>
+          <span className={`shrink-0 whitespace-nowrap`}>{title}</span>
           {activeReasoningLine ? (
             <span className="min-w-0 flex-auto truncate text-[12.5px] font-normal text-ds-narrative">
               <span className="opacity-60">· </span>{activeReasoningLine}
@@ -352,7 +352,7 @@ export function ProcessSectionRow({
           }`}
         >
           {SectionIcon ? <ProcessGlyph Icon={SectionIcon} /> : null}
-          <span className={`shrink-0 whitespace-nowrap ${active && !hasError ? 'ds-shiny-text' : ''}`}>{title}</span>
+          <span className={`shrink-0 whitespace-nowrap`}>{title}</span>
           {activeReasoningLine ? (
             <span className="min-w-0 flex-auto truncate text-[12.5px] font-normal text-ds-narrative">
               <span className="opacity-60">· </span>{activeReasoningLine}
@@ -494,7 +494,7 @@ function ProcessStackRows({
               } ${canToggle ? 'cursor-pointer hover:bg-ds-hover/60' : 'cursor-default'}`}
             >
               {RowIcon ? <ProcessGlyph Icon={RowIcon} /> : null}
-              <span className={`min-w-0 flex-1 truncate ${rowActive && !isError ? 'ds-shiny-text' : ''}`}>
+              <span className={`min-w-0 flex-1 truncate`}>
                 <ProcessSummaryText block={block} summary={summary} workspaceRoot={workspaceRoot} />
               </span>
               {canExpand ? (
@@ -613,9 +613,7 @@ function ProcessEntryRow({
       >
         {RowIcon ? <ProcessGlyph Icon={RowIcon} className="mt-0.5" /> : null}
         <span
-          className={`min-w-0 flex-1 ${wrapSummary ? 'whitespace-pre-wrap break-words' : 'truncate'} ${
-            rowActive && !isError ? 'ds-shiny-text' : ''
-          }`}
+          className={`min-w-0 flex-1 ${wrapSummary ? 'whitespace-pre-wrap break-words' : 'truncate'}`}
         >
           {isSearchTool ? (
             <>
@@ -634,7 +632,7 @@ function ProcessEntryRow({
                 {verb}
               </span>
               {rest ? (
-                <span className="ml-1.5 inline-block rounded bg-ds-card/80 px-1.5 py-0.2 border border-ds-border/50 font-mono text-[12px] text-ds-ink">
+                <span className="ml-1.5 inline-block rounded bg-ds-card/80 px-1.5 py-0.2 font-mono text-[12px] text-ds-ink">
                   <ProcessSummaryText block={block} summary={rest} workspaceRoot={workspaceRoot} />
                 </span>
               ) : null}

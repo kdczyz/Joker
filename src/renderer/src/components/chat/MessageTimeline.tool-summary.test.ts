@@ -607,7 +607,6 @@ describe('MessageTimeline Joker runtime metadata smoke', () => {
     expect(html).toContain('Read')
     expect(html).toContain('/tmp/readme.md')
     expect(html).not.toContain('ds-work-logo')
-    expect(html).toContain('ds-shiny-text')
     expect(html).not.toContain('partial tool output while running')
     expect(html).toContain('ds-process-file-reference')
   })
@@ -721,7 +720,6 @@ describe('MessageTimeline Joker runtime metadata smoke', () => {
       })
     )
 
-    expect(html).toContain('ds-shiny-text')
     expect(html).not.toContain('ds-work-logo')
     expect(html).toContain('current reasoning summary')
     // Earlier thinking stays collapsed; only the newest line is previewed.

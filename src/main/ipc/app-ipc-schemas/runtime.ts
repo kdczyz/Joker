@@ -46,7 +46,9 @@ export const providerProbePayloadSchema = z
 
 export const promptOptimizationPayloadSchema = z
   .object({
-    text: trimmedString(100_000)
+    text: trimmedString(100_000),
+    model: z.string().trim().optional(),
+    providerId: z.string().trim().optional()
   })
   .strict()
 
