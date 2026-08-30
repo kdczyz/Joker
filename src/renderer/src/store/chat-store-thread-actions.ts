@@ -465,6 +465,7 @@ export function createThreadActions(
       // and the SSE subscription — they would otherwise add a noticeable delay
       // between clicking send and the message appearing. sendMessage opens its
       // own SSE stream with sinceSeq = lastSeq (0 for a brand-new thread).
+      clearBusyWatchdog()
       set({
         watchTurnCompletion: nextWatch,
         unreadThreadIds: nextUnread,

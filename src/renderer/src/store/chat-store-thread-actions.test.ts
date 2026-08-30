@@ -586,6 +586,33 @@ describe('chat-store-thread-actions selectThread', () => {
       expect.objectContaining({ id: 'user-thr_second', text: 'thr_second' })
     ])
   })
+
+  it('skips getThreadDetail + SSE for a freshly created thread (skipDetail) to remove first-send latency', async () => {
+    const provider = {
+      getThreadDetail: vi.fn(async () => ({ blocks: [], latestSeq: 0, threadStatus: 'idle' })),
+      subscribeThreadEvents: vi.fn(async () => ({ streamId: 'stream_1' }))
+    }
+    registryMock.getProvider.mockReturnValue(provider)
+
+    const { actions, state } = buildHarness()
+    state.activeThreadId = 'thr_existing'
+    state.busy = true
+
+    await actions.selectThread('thr_new', { skipDetail: true })
+
+    // No HTTP detail fetch and no SSE subscription — the design first-send path
+    // creates the thread itself, so loading an empty history is pure overhead.
+    expect(provider.getThreadDetail).not.toHaveBeenCalled()
+    expect(provider.subscribeThreadEvents).not.toHaveBeenCalled()
+    // Optimistic fresh-thread state: selected, idle, empty conversation.
+    expect(state.activeThreadId).toBe('thr_new')
+    expect(state.busy).toBe(false)
+    expect(state.blocks).toEqual([])
+    expect(state.lastSeq).toBe(0)
+    expect(state.error).toBeNull()
+    expect(state.activeThreadRelation).toBe('primary')
+    expect(state.activeThreadParentId).toBeNull()
+  })
 })
 
 describe('chat-store-thread-actions subscribeThreadEventsLive', () => {
