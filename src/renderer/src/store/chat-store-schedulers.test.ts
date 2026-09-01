@@ -2,7 +2,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
   armBusyWatchdog,
   clearBusyWatchdog,
-  resetBusyRecoveryAttempts
+  resetBusyRecoveryAttempts,
+  resetTurnCompletionWatchMemory,
+  stopTurnCompletionPoll,
+  syncTurnCompletionPoll
 } from './chat-store-schedulers'
 import type { ChatState, ChatStoreSet } from './chat-store-types'
 
@@ -25,7 +28,9 @@ function makeHarness(initial: Partial<ChatState> = {}): StoreApi {
     turnReasoningFirstAtByUserId: {},
     turnReasoningLastAtByUserId: {},
     watchTurnCompletion: {},
+    pendingSendThreadIds: {},
     unreadThreadIds: {},
+    runtimeConnection: 'ready',
     queuedMessages: [],
     threads: [],
     recoverActiveTurn: vi.fn().mockResolvedValue(undefined),
@@ -136,5 +141,90 @@ describe('busyTimeout minutes interpolation (#131)', () => {
     vi.advanceTimersByTime(10)
     expect(typeof h.getState().error).toBe('string')
     expect(h.getState().error as string).toMatch(/已等待 9 分钟/)
+  })
+})
+
+describe('syncTurnCompletionPoll (turn not registered yet)', () => {
+  type PollOptions = Parameters<typeof syncTurnCompletionPoll>[2]
+
+  function pollHarness(initial: Partial<ChatState>, looksRunning: () => boolean) {
+    const h = makeHarness(initial)
+    const loadThreadState = vi.fn(async () => ({ blocks: [], threadStatus: 'idle' }))
+    const onCompletedThreads = vi.fn(async (doneIds: string[]) => {
+      h.set((s) => {
+        const watchTurnCompletion = { ...s.watchTurnCompletion }
+        for (const id of doneIds) delete watchTurnCompletion[id]
+        return { watchTurnCompletion }
+      })
+    })
+    const options: PollOptions = {
+      loadThreadState,
+      threadLooksRunning: () => looksRunning(),
+      onCompletedThreads
+    }
+    syncTurnCompletionPoll(h.set, h.get, options)
+    return { h, loadThreadState, onCompletedThreads }
+  }
+
+  beforeEach(() => {
+    vi.useFakeTimers()
+    resetTurnCompletionWatchMemory()
+  })
+
+  afterEach(() => {
+    stopTurnCompletionPoll()
+    resetTurnCompletionWatchMemory()
+    vi.useRealTimers()
+  })
+
+  it('never settles a thread whose send has not reached the runtime', async () => {
+    const { h, loadThreadState, onCompletedThreads } = pollHarness(
+      {
+        watchTurnCompletion: { 'thr-sending': true },
+        pendingSendThreadIds: { 'thr-sending': true }
+      },
+      () => false
+    )
+
+    await vi.advanceTimersByTimeAsync(10_000)
+
+    expect(onCompletedThreads).not.toHaveBeenCalled()
+    // The in-flight thread is not even probed: any snapshot would be idle.
+    expect(loadThreadState).not.toHaveBeenCalled()
+    expect(h.getState().watchTurnCompletion['thr-sending']).toBe(true)
+  })
+
+  it('waits for a second idle sample before settling a turn it never saw running', async () => {
+    const { h, onCompletedThreads } = pollHarness(
+      { watchTurnCompletion: { 'thr-race': true } },
+      () => false
+    )
+
+    await vi.advanceTimersByTimeAsync(0)
+    expect(onCompletedThreads).not.toHaveBeenCalled()
+    expect(h.getState().watchTurnCompletion['thr-race']).toBe(true)
+
+    await vi.advanceTimersByTimeAsync(2_500)
+    expect(onCompletedThreads).toHaveBeenCalledWith(
+      ['thr-race'],
+      expect.anything(),
+      expect.anything(),
+      expect.anything()
+    )
+  })
+
+  it('settles on the first idle sample once the turn was observed running', async () => {
+    let running = true
+    const { onCompletedThreads } = pollHarness(
+      { watchTurnCompletion: { 'thr-live': true } },
+      () => running
+    )
+
+    await vi.advanceTimersByTimeAsync(2_500)
+    expect(onCompletedThreads).not.toHaveBeenCalled()
+
+    running = false
+    await vi.advanceTimersByTimeAsync(2_500)
+    expect(onCompletedThreads).toHaveBeenCalledTimes(1)
   })
 })

@@ -110,6 +110,38 @@ export function threadSnapshotLooksRunning(blocks: ChatBlock[], threadStatus?: s
   return threadHasPendingRuntimeWork(blocks)
 }
 
+/**
+ * Optimistically flip a thread summary to "running" the moment a send starts.
+ *
+ * The runtime only marks the thread `running` once `sendUserMessage` lands,
+ * but the composer goes busy immediately (it still has to resolve settings,
+ * create a Git checkpoint, create the thread…). Without this the sidebar keeps
+ * rendering the *previous* turn's terminal dot — green for completed, red for
+ * aborted — so sending a message and switching conversations right away looks
+ * like the message already finished.
+ */
+export function markThreadTurnRunning(
+  threads: ChatState['threads'],
+  threadId: string | null | undefined,
+  now = Date.now()
+): ChatState['threads'] {
+  const id = threadId?.trim()
+  if (!id) return threads
+  let changed = false
+  const next = (threads ?? []).map((thread) => {
+    if (thread.id !== id) return thread
+    if (thread.status === 'running' && thread.latestTurnStatus === 'running') return thread
+    changed = true
+    return {
+      ...thread,
+      status: thread.status === 'archived' ? thread.status : 'running',
+      latestTurnStatus: 'running',
+      updatedAt: new Date(now).toISOString()
+    }
+  })
+  return changed ? next : threads
+}
+
 export function findLatestUserBlockId(blocks: ChatBlock[]): string | null {
   for (let idx = blocks.length - 1; idx >= 0; idx -= 1) {
     const block = blocks[idx]

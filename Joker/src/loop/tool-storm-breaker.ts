@@ -15,7 +15,7 @@ type RecentToolCall = {
 
 const DEFAULT_WINDOW_SIZE = 8
 const DEFAULT_THRESHOLD = 3
-const DEFAULT_READ_ONLY_THRESHOLD = 15
+const DEFAULT_READ_ONLY_THRESHOLD = 8
 const DEFAULT_INTERACTIVE_THRESHOLD = 3
 const MUTATING_TOOL_NAMES = new Set(['write', 'edit', 'edit_diff', 'apply_patch', 'delete', 'move'])
 const INTERACTIVE_TOOL_NAMES = new Set(['request_user_input', 'user_input'])
@@ -32,6 +32,8 @@ export class ToolStormBreaker {
   private readonly interactiveThreshold: number
   private readonly recent: RecentToolCall[] = []
   private interactiveCount = 0
+  /** Consecutive suppressions; lets the loop detect a stuck repeat-loop. */
+  private consecutiveSuppressions = 0
 
   constructor(options: ToolStormBreakerOptions = {}) {
     this.windowSize = Math.max(1, Math.floor(options.windowSize ?? DEFAULT_WINDOW_SIZE))
@@ -46,15 +48,17 @@ export class ToolStormBreaker {
   inspect(call: ToolCallLike): { suppress: boolean; reason?: string } {
     if (INTERACTIVE_TOOL_NAMES.has(call.toolName)) {
       this.interactiveCount += 1
-      if (this.interactiveCount > this.interactiveThreshold) {
-        return {
-          suppress: true,
-          reason:
-            `${call.toolName} was called ${this.interactiveCount} times in this turn; ` +
-            'interactive prompt guard suppressed the repeated ask. Act on the latest answer, finish, or ask follow-up in normal text.'
-        }
-      }
-      return { suppress: false }
+      const result =
+        this.interactiveCount > this.interactiveThreshold
+          ? {
+              suppress: true,
+              reason:
+                `${call.toolName} was called ${this.interactiveCount} times in this turn; ` +
+                'interactive prompt guard suppressed the repeated ask. Act on the latest answer, finish, or ask follow-up in normal text.'
+            }
+          : { suppress: false }
+      this.consecutiveSuppressions = result.suppress ? this.consecutiveSuppressions + 1 : 0
+      return result
     }
     const name = call.toolName
     const args = stableStringify(call.arguments)
@@ -69,23 +73,32 @@ export class ToolStormBreaker {
       0
     )
     const effectiveThreshold = readOnly ? this.readOnlyThreshold : this.threshold
+    let result: { suppress: boolean; reason?: string }
     if (count >= effectiveThreshold - 1) {
-      return {
+      result = {
         suppress: true,
         reason:
           `${name} was called with identical arguments ${count + 1} times in this turn; ` +
           'repeat-loop guard suppressed the duplicate. Choose a narrower query or explain why another identical call is needed.'
       }
+    } else {
+      this.recent.push({ name, args, readOnly })
+      while (this.recent.length > this.windowSize) this.recent.shift()
+      result = { suppress: false }
     }
+    this.consecutiveSuppressions = result.suppress ? this.consecutiveSuppressions + 1 : 0
+    return result
+  }
 
-    this.recent.push({ name, args, readOnly })
-    while (this.recent.length > this.windowSize) this.recent.shift()
-    return { suppress: false }
+  /** True once identical-tool suppressions have stacked up into a stuck loop. */
+  get isStuck(): boolean {
+    return this.consecutiveSuppressions >= Math.max(this.threshold, 3)
   }
 
   reset(): void {
     this.recent.length = 0
     this.interactiveCount = 0
+    this.consecutiveSuppressions = 0
   }
 
   private clearReadOnlyEntries(): void {

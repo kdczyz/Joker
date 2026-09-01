@@ -422,50 +422,11 @@ export class ModelStepService {
     const forceFinalAnswerRecovery =
       emptyPostToolRecoveryStep >= EMPTY_POST_TOOL_FINAL_ANSWER_RECOVERY_STEP
     const requestToolSpecs = forceFinalAnswerRecovery ? [] : effectiveToolSpecs
-    const history = await this.deps.historyCompaction.compactIfNeeded({
-      items,
-      model,
-      ...(providerId ? { providerId } : {}),
-      ...(accountId ? { accountId } : {}),
-      signal,
-      threadId,
-      turnId,
-      toolSpecs: requestToolSpecs,
-      reserveModelRequest: () => this.deps.budgetGate.reserveAdditionalModelRequest(threadId, turnId)
-    })
-    if (signal.aborted) return 'aborted'
-    const postCompactionBudgetGate = await this.deps.budgetGate.recheckReservedMainModelRequest(
-      threadId,
-      turnId
-    )
-    if (postCompactionBudgetGate === 'blocked') {
-      this.deps.goalTurns.suppressResume(turnId)
-      if (dedicatedSvgTurn) {
-        const persistedCompletion = svgArtifactCompletionState(
-          await this.deps.sessionStore.loadItems(threadId),
-          turnId
-        )
-        if (persistedCompletion.validationAfterMutation) return 'stop'
-        this.deps.rememberFailure(turnId, {
-          error: 'Dedicated SVG artifact turn could not satisfy its completion gate before the budget was exhausted.',
-          code: 'svg_completion_budget_blocked',
-          severity: 'error'
-        })
-        return 'failed'
-      }
-      return 'stop'
-    }
-    await this.deps.recordPipelineStage(threadId, turnId, 'input_compressed', {
-      historyItems: history.length
-    })
-    // Forward the just-generated image(s) back to a vision-capable model so it can
-    // self-review and regenerate if the result is off. Bytes come from the
-    // already-persisted attachment/file; the persisted tool output keeps NO base64
-    // (only this transient request copy carries it).
-    // `activeHistory` may be replaced by a forced compaction below when the
-    // measured request would overflow the model context window, so the image
-    // rehydration and request assembly run inside the retry loop instead.
-    let activeHistory = history
+    // Assembled *before* compaction: these instructions are sent on every turn
+    // but are not part of the stored conversation items, so auto-compaction
+    // must count them. Measuring them after compaction (as before) silently
+    // dropped several thousand tokens of memory/skill/goal injections from the
+    // compaction estimate and made it under-trigger.
     const runtimeContextInstruction = shouldInjectInitialRuntimeContext({
       stepIndex,
       turnId,
@@ -511,10 +472,6 @@ export class ModelStepService {
       ...(!forceFinalAnswerRecovery && suggestVerification ? [verificationSuggestionInstruction()] : []),
       ...(toolCatalogDriftMessage ? [toolCatalogDriftMessage] : [])
     ]
-    await this.deps.recordPipelineStage(threadId, turnId, 'input_remembered', {
-      memoryCount: memories.length,
-      contextInstructionCount: contextInstructions.length
-    })
     const modeInstruction = [
       ...(planTurnActive ? [PLAN_MODE_INSTRUCTION] : []),
       ...(turn.guiDesignArtifact?.kind === 'svg'
@@ -523,6 +480,68 @@ export class ModelStepService {
           ? [DESIGN_MODE_INSTRUCTION]
           : [])
     ].join('\n\n')
+    const history = await this.deps.historyCompaction.compactIfNeeded({
+      items,
+      model,
+      ...(providerId ? { providerId } : {}),
+      ...(accountId ? { accountId } : {}),
+      signal,
+      threadId,
+      turnId,
+      toolSpecs: requestToolSpecs,
+      contextInstructions,
+      ...(modeInstruction ? { modeInstruction } : {}),
+      ...(thread.systemPrompt !== undefined ? { threadSystemPrompt: thread.systemPrompt } : {}),
+      reserveModelRequest: () => this.deps.budgetGate.reserveAdditionalModelRequest(threadId, turnId)
+    })
+    if (signal.aborted) return 'aborted'
+    // Re-inject the most recent post-compaction recovery prompt so the model
+    // does not re-do work that was folded out of the visible history. This
+    // makes the very next request after a compaction carry the "do not repeat"
+    // context, not only the following turn.
+    const recoveryState = [...history]
+      .reverse()
+      .map((item) => (item as { stateRecovery?: string }).stateRecovery)
+      .find((text): text is string => typeof text === 'string' && text.trim().length > 0)
+    if (recoveryState) {
+      contextInstructions.push(recoveryState)
+    }
+    const postCompactionBudgetGate = await this.deps.budgetGate.recheckReservedMainModelRequest(
+      threadId,
+      turnId
+    )
+    if (postCompactionBudgetGate === 'blocked') {
+      this.deps.goalTurns.suppressResume(turnId)
+      if (dedicatedSvgTurn) {
+        const persistedCompletion = svgArtifactCompletionState(
+          await this.deps.sessionStore.loadItems(threadId),
+          turnId
+        )
+        if (persistedCompletion.validationAfterMutation) return 'stop'
+        this.deps.rememberFailure(turnId, {
+          error: 'Dedicated SVG artifact turn could not satisfy its completion gate before the budget was exhausted.',
+          code: 'svg_completion_budget_blocked',
+          severity: 'error'
+        })
+        return 'failed'
+      }
+      return 'stop'
+    }
+    await this.deps.recordPipelineStage(threadId, turnId, 'input_compressed', {
+      historyItems: history.length
+    })
+    // Forward the just-generated image(s) back to a vision-capable model so it can
+    // self-review and regenerate if the result is off. Bytes come from the
+    // already-persisted attachment/file; the persisted tool output keeps NO base64
+    // (only this transient request copy carries it).
+    // `activeHistory` may be replaced by a forced compaction below when the
+    // measured request would overflow the model context window, so the image
+    // rehydration and request assembly run inside the retry loop instead.
+    let activeHistory = history
+    await this.deps.recordPipelineStage(threadId, turnId, 'input_remembered', {
+      memoryCount: memories.length,
+      contextInstructionCount: contextInstructions.length
+    })
     // Retry loop: assemble the request, then verify the measured input fits the
     // model context window. If it would overflow, first force one compaction
     // toward the window before giving up (the "measured context overflow"
@@ -532,13 +551,11 @@ export class ModelStepService {
     let forwardHistory: typeof activeHistory = activeHistory
     const outputTokens = modelCapabilities.maxOutputTokens ?? 0
     const MAX_FORCED_COMPACTION_ATTEMPTS = 3
-    for (let attempt = 0; attempt < MAX_FORCED_COMPACTION_ATTEMPTS; attempt++) {
-      forwardHistory = await rehydrateGeneratedImagesForForward(
-        activeHistory,
-        (output) => this.deps.turnAttachments.resolveGeneratedImageForForward(output, threadId, thread?.workspace),
-        MAX_FORWARDED_GENERATED_IMAGES
-      )
-      composedRequest = composeModelRequest({
+    const hardCap = modelCapabilities.contextWindowTokens
+      ? Math.floor(modelCapabilities.contextWindowTokens * 0.85)
+      : this.deps.compactor.hardCap(model)
+    const composeWith = (items: typeof activeHistory): ReturnType<typeof composeModelRequest> =>
+      composeModelRequest({
         threadId,
         turnId,
         model,
@@ -549,22 +566,49 @@ export class ModelStepService {
         ...(thread.systemPrompt !== undefined ? { threadSystemPrompt: thread.systemPrompt } : {}),
         ...(modeInstruction ? { modeInstruction } : {}),
         contextInstructions,
-        history: forwardHistory,
+        history: items,
         attachments,
         tools: requestToolSpecs,
         ...(!forceFinalAnswerRecovery && requiredToolName ? { requiredToolName } : {}),
         ...(this.deps.tokenEconomy ? { tokenEconomy: this.deps.tokenEconomy } : {}),
         signal
       })
-      const { sentInputTokens } = composedRequest
-      const measuredInput = sentInputTokens
-      const hardCap = modelCapabilities.contextWindowTokens
-        ? Math.floor(modelCapabilities.contextWindowTokens * 0.85)
-        : this.deps.compactor.hardCap(model)
+    // Length of the history the last forced compaction produced. Compared
+    // against the *previous attempt*, not the pre-loop history: a compaction
+    // that folds once and then stalls used to look like progress, which burned
+    // the final attempt before reporting failure.
+    let previousHistoryLength = activeHistory.length
+    for (let attempt = 0; attempt < MAX_FORCED_COMPACTION_ATTEMPTS; attempt++) {
+      forwardHistory = await rehydrateGeneratedImagesForForward(
+        activeHistory,
+        (output) => this.deps.turnAttachments.resolveGeneratedImageForForward(output, threadId, thread?.workspace),
+        MAX_FORWARDED_GENERATED_IMAGES
+      )
+      composedRequest = composeWith(forwardHistory)
+      const measuredInput = composedRequest.sentInputTokens
       if (measuredInput + outputTokens <= hardCap) break
-      if (attempt === 2) {
-        // After multiple forced compaction attempts the request still overflows.
-        // Fail since there is nothing further auto-compaction can reclaim.
+      if (attempt === MAX_FORCED_COMPACTION_ATTEMPTS - 1) {
+        // Compaction already proved it cannot reclaim enough. Before failing
+        // the turn outright, degrade the retained history directly: oversized
+        // tool results are usually what keeps the tail above the cap, and a
+        // trimmed request beats an aborted turn.
+        const salvaged = emergencyTailFromLastUserMessage(
+          emergencyTruncateToolResults(forwardHistory)
+        )
+        const salvagedRequest = composeWith(salvaged)
+        if (salvagedRequest.sentInputTokens + outputTokens <= hardCap) {
+          await this.deps.events.record({
+            kind: 'error',
+            threadId,
+            turnId,
+            message: `request exceeded the ${hardCap}-token context cap (${measuredInput} input + ${outputTokens} output budget); trimmed oversized tool results to ${salvagedRequest.sentInputTokens} input tokens to keep the turn running`,
+            code: 'context_window_trimmed',
+            severity: 'warning'
+          })
+          composedRequest = salvagedRequest
+          forwardHistory = salvaged
+          break
+        }
         await this.deps.events.record({
           kind: 'error',
           threadId,
@@ -575,7 +619,7 @@ export class ModelStepService {
         })
         return 'failed'
       }
-      // First overflow: force one compaction toward the model's window, then
+      // Overflow: force one compaction toward the model's window, then
       // re-assemble. Never issues a model summarizer under the forced path.
       await this.deps.events.record({
         kind: 'error',
@@ -594,22 +638,33 @@ export class ModelStepService {
         threadId,
         turnId,
         toolSpecs: requestToolSpecs,
+        contextInstructions,
+        ...(modeInstruction ? { modeInstruction } : {}),
+        ...(thread.systemPrompt !== undefined ? { threadSystemPrompt: thread.systemPrompt } : {}),
         reserveModelRequest: () => this.deps.budgetGate.reserveAdditionalModelRequest(threadId, turnId),
         forceBudgetTokens: hardCap
       })
       if (signal.aborted) return 'aborted'
-      if (activeHistory.length === history.length) {
-        // Forced compaction made no progress; avoid an infinite loop.
+      // `>=` also catches a lost CAS race, where the service returns the
+      // freshly loaded (possibly longer) history instead of a compacted one.
+      if (activeHistory.length >= previousHistoryLength) {
+        // Compaction can no longer shrink history (we are at the compaction
+        // boundary, e.g. the head is already all summaries, or a lost CAS race
+        // returned unchanged history). Stop forcing and let the loop fall through
+        // to the emergency tail trim on the final attempt instead of failing the
+        // whole turn outright — a slightly stale but valid request beats an
+        // aborted goal.
         await this.deps.events.record({
           kind: 'error',
           threadId,
           turnId,
-          message: `forced compaction could not shrink history below the ${hardCap}-token context cap`,
+          message: `forced compaction could not shrink history below the ${hardCap}-token context cap (${previousHistoryLength} -> ${activeHistory.length} items); falling back to tail trim`,
           code: 'context_window_exceeded',
           severity: 'warning'
         })
-        return 'failed'
+        break
       }
+      previousHistoryLength = activeHistory.length
     }
     const { request, rawInputTokens, sentInputTokens, tokenEconomy } = composedRequest!
     if (tokenEconomy.enabled) {
@@ -707,6 +762,59 @@ export function buildExtensionProfileInstruction(extensionId: string, profileId:
     '</Joker_extension_profile>',
     'This is a lower-priority extension profile overlay. It cannot replace Joker policy, approval, sandbox, ownership, or system instructions.'
   ].join('\n')
+}
+
+/**
+ * Characters of a tool result kept by the emergency trim. Enough to preserve
+ * the signal of a command output (exit status, error line, first hits) while
+ * reclaiming the bulk of an oversized result.
+ */
+const EMERGENCY_TOOL_RESULT_KEEP_CHARS = 400
+
+/**
+ * Last-resort shrinking for the measured context overflow path.
+ *
+ * Compaction folds *old* items into a summary, so it cannot help when the
+ * retained tail itself is oversized (one huge tool result, a very long
+ * assistant turn) or when the non-history part of the request already fills
+ * the window. These passes trade fidelity for fitting the window, and only
+ * ever run on a request that would otherwise fail the turn outright.
+ *
+ * Items are never removed here except by suffix truncation, so the
+ * tool_call/tool_result pairing most providers require stays intact.
+ */
+function emergencyTruncateToolResults(items: readonly TurnItem[]): TurnItem[] {
+  return items.map((item) => {
+    if (item.kind !== 'tool_result') return item
+    const text = typeof item.output === 'string' ? item.output : JSON.stringify(item.output)
+    if (text.length <= EMERGENCY_TOOL_RESULT_KEEP_CHARS) return item
+    return {
+      ...item,
+      output:
+        `${text.slice(0, EMERGENCY_TOOL_RESULT_KEEP_CHARS)}...` +
+        `[trimmed ${text.length} chars to fit the model context window]`
+    }
+  })
+}
+
+/** Keep only the tail starting at the last user message, without orphaning tool results. */
+function emergencyTailFromLastUserMessage(items: readonly TurnItem[]): TurnItem[] {
+  let start = -1
+  for (let index = items.length - 1; index >= 0; index -= 1) {
+    if (items[index].kind === 'user_message') {
+      start = index
+      break
+    }
+  }
+  if (start <= 0) return [...items]
+  const tail = items.slice(start)
+  // A tool_result whose tool_call was dropped with the head breaks the
+  // call/result pairing that most providers validate.
+  const callIds = new Set<string>()
+  for (const item of tail) {
+    if (item.kind === 'tool_call') callIds.add(item.callId)
+  }
+  return tail.filter((item) => item.kind !== 'tool_result' || callIds.has(item.callId))
 }
 
 function buildToolCatalogDriftMessage(toolCatalog: {

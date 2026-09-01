@@ -67,6 +67,7 @@ import {
   collectAssistantTextForTurn,
   findLatestUserBlockId,
   findReusableEmptyThreadId,
+  markThreadTurnRunning,
   reconcileOptimisticUserBlock,
   settlePendingRuntimeWorkAfterInterrupt,
   threadHasPendingRuntimeWork,
@@ -525,7 +526,11 @@ export function createThreadActions(
             )
           : rawBlocks
       const loaded = hydrateBlockModelLabels(id, labeledBlocks)
-      const busy = threadSnapshotLooksRunning(loaded, threadStatus)
+      // A send that has not reached the runtime yet has no running turn for
+      // the snapshot to show, but the thread is still busy — keep it busy so
+      // re-selecting it mid-submit doesn't flicker back to idle.
+      const sending = get().pendingSendThreadIds?.[id] === true
+      const busy = sending || threadSnapshotLooksRunning(loaded, threadStatus)
       // Settle blocks left open by an interrupted turn when the server has
       // already settled, so selecting the thread doesn't keep it wedged (#621).
       const blocks = busy ? loaded : settlePendingRuntimeWorkAfterInterrupt(loaded)
@@ -865,6 +870,27 @@ export function createThreadActions(
       return true
     }
     const now = Date.now()
+    // The runtime only marks the thread as running once `sendUserMessage`
+    // lands, but the composer goes busy right now (settings, Git checkpoint,
+    // thread creation still have to run). Record that in-flight window: the
+    // completion watch armed by a conversation switch reads thread snapshots,
+    // and a pre-turn snapshot looks exactly like "the turn already finished".
+    const markSendPending = (threadId: string | null): void => {
+      if (!threadId) return
+      set((s) => ({
+        pendingSendThreadIds: { ...(s.pendingSendThreadIds ?? {}), [threadId]: true },
+        threads: markThreadTurnRunning(s.threads, threadId, now)
+      }))
+    }
+    const clearSendPending = (threadId: string | null): void => {
+      if (!threadId) return
+      set((s) => {
+        if (!s.pendingSendThreadIds?.[threadId]) return {}
+        const pendingSendThreadIds = { ...s.pendingSendThreadIds }
+        delete pendingSendThreadIds[threadId]
+        return { pendingSendThreadIds }
+      })
+    }
     const userBlockId = queued?.id ?? `u-${now}`
     const attachmentIds =
       queued?.attachmentIds ??
@@ -962,6 +988,7 @@ export function createThreadActions(
       turnStartedAtByUserId: { ...s.turnStartedAtByUserId, [userBlockId]: now },
       queuedMessages: queued ? s.queuedMessages.filter((message) => message.id !== queued.id) : s.queuedMessages
     }))
+    markSendPending(activeThreadId)
     if (!activeThreadId) {
       try {
         const settings = await rendererRuntimeClient.getSettings()
@@ -1013,6 +1040,7 @@ export function createThreadActions(
           throw new Error('Failed to resolve target thread id.')
         }
         activeThreadId = threadId
+        markSendPending(threadId)
         if (composerModel) {
           rememberThreadComposerSelection(threadId, composerModel, composerProviderId)
         }
@@ -1132,6 +1160,9 @@ export function createThreadActions(
         ...(composerContexts.length ? { composerContexts } : {}),
         ...(channel ? { imContext: true } : {})
       })
+      // The turn is registered on the runtime now — thread status and turn
+      // status flip together — so the idle snapshot can no longer be a race.
+      clearSendPending(activeThreadId)
       if (!queued && composerContexts.length > 0) {
         set((state) => ({
           extensionComposerContexts: withoutConsumedComposerContexts(state, composerContexts)
@@ -1249,6 +1280,7 @@ export function createThreadActions(
       return true
     } catch (e) {
       clearBusyWatchdog()
+      clearSendPending(activeThreadId)
       void window.JokerGui.logError('send-message', 'Failed to send message', {
         message: e instanceof Error ? e.message : String(e),
         threadId: activeThreadId

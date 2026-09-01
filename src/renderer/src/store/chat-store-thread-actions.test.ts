@@ -13,6 +13,7 @@ vi.mock('../agent/registry', () => ({
 }))
 
 import { createThreadActions } from './chat-store-thread-actions'
+import { clearBusyWatchdog, stopTurnCompletionPoll } from './chat-store-schedulers'
 
 function thread(id: string): NormalizedThread {
   return {
@@ -54,6 +55,7 @@ function buildHarness(): {
     turnReasoningFirstAtByUserId: {},
     turnReasoningLastAtByUserId: {},
     turnStartedAtByUserId: {},
+    turnTtftMsByUserId: {},
     threads: [thread('thr_existing')]
   } as unknown as ChatState
 
@@ -924,5 +926,97 @@ describe('chat-store-thread-actions createThread conversation mode', () => {
     expect(state.activeThreadId).toBe('thr_new')
     expect(selectThread).toHaveBeenCalledWith('thr_new')
     expect(refreshThreads).toHaveBeenCalled()
+  })
+})
+
+describe('chat-store-thread-actions in-flight send (status dot race)', () => {
+  beforeEach(() => {
+    rendererRuntimeClient.invalidateSettings()
+    registryMock.getProvider.mockReset()
+  })
+
+  afterEach(() => {
+    clearBusyWatchdog()
+    stopTurnCompletionPoll()
+    useWriteWorkspaceStore.getState().resetWorkspace()
+    rendererRuntimeClient.invalidateSettings()
+    vi.unstubAllGlobals()
+  })
+
+  // The full send path checks that the thread's workspace still exists; the
+  // default fixture path ('/workspace/deepseek-gui') does not exist on disk.
+  function realWorkspace(): string {
+    return '/tmp'
+  }
+
+  function stubProvider(sendUserMessage: ReturnType<typeof vi.fn>): void {
+    registryMock.getProvider.mockReturnValue({
+      connect: vi.fn(async () => undefined),
+      sendUserMessage,
+      subscribeThreadEvents: vi.fn(async () => undefined)
+    })
+    vi.stubGlobal('window', {
+      JokerGui: {
+        getSettings: vi.fn(async () => ({
+          agents: { Joker: { providerId: 'deepseek', model: 'deepseek-v4-pro' } },
+          codePromptPrefix: ''
+        })),
+        logError: vi.fn(async () => undefined)
+      }
+    })
+  }
+
+  it('marks the thread running before the runtime registers the turn', async () => {
+    let releaseSend: (() => void) | null = null
+    const sendUserMessage = vi.fn(
+      () =>
+        new Promise<{ threadId: string; turnId: string; userMessageItemId: string }>((resolve) => {
+          releaseSend = () =>
+            resolve({ threadId: 'thr_existing', turnId: 'turn_1', userMessageItemId: 'user_1' })
+        })
+    )
+    stubProvider(sendUserMessage)
+
+    const { actions, state } = buildHarness()
+    state.busy = false
+    state.pendingSendThreadIds = {}
+    state.turnTtftMsByUserId = {}
+    state.threads = [
+      {
+        ...thread('thr_existing'),
+        workspace: realWorkspace(),
+        status: 'idle',
+        latestTurnStatus: 'completed'
+      }
+    ]
+
+    const pending = actions.sendMessage('hello', 'agent')
+    await vi.waitFor(() => {
+      expect(sendUserMessage).toHaveBeenCalled()
+    })
+
+    // The runtime has no turn yet: the sidebar must already show the running
+    // dot (not the previous turn's green completed dot) and the completion
+    // watch must treat this thread as busy.
+    expect(state.pendingSendThreadIds['thr_existing']).toBe(true)
+    expect(state.threads[0]).toMatchObject({ status: 'running', latestTurnStatus: 'running' })
+
+    releaseSend!()
+    await expect(pending).resolves.toBe(true)
+    expect(state.pendingSendThreadIds['thr_existing']).toBeUndefined()
+  })
+
+  it('clears the in-flight marker when the runtime rejects the send', async () => {
+    stubProvider(vi.fn(async () => {
+      throw new Error('send failed')
+    }))
+
+    const { actions, state } = buildHarness()
+    state.busy = false
+    state.pendingSendThreadIds = {}
+
+    await expect(actions.sendMessage('hello', 'agent')).resolves.toBe(false)
+
+    expect(state.pendingSendThreadIds['thr_existing']).toBeUndefined()
   })
 })

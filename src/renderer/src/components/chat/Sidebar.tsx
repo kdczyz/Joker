@@ -143,7 +143,7 @@ export function Sidebar({
               ariaLabel={t('claw')}
               onClick={onToggleConnectPhone}
               active={connectPhoneSidebarOpen}
-              className="h-8 w-8 rounded-[9px] border border-black/[0.06] bg-black/[0.02] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:bg-black/[0.05] dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:bg-white/[0.08]"
+              className="h-8 w-8 rounded-[9px] hover:bg-black/[0.05] dark:hover:bg-white/[0.08]"
             >
               <Smartphone className="h-4 w-4" strokeWidth={1.75} />
             </SidebarIconButton>
@@ -151,7 +151,7 @@ export function Sidebar({
               title={t('toggleTheme')}
               ariaLabel={t('toggleTheme')}
               onClick={onToggleTheme}
-              className="h-8 w-8 rounded-[9px] border border-black/[0.06] bg-black/[0.02] shadow-[0_1px_2px_rgba(0,0,0,0.03)] hover:bg-black/[0.05] dark:border-white/[0.08] dark:bg-white/[0.03] dark:hover:bg-white/[0.08]"
+              className="h-8 w-8 rounded-[9px] hover:bg-black/[0.05] dark:hover:bg-white/[0.08]"
             >
               {/* 图标/文案随主题纯 CSS 切换:此前用 MutationObserver + useState 跟踪
                   data-theme,切换主题会在同一帧同步重渲染整棵侧栏(侧栏还带 zoom:1.08,

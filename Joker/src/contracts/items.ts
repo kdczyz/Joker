@@ -143,7 +143,12 @@ export const CompactionTurnItem = TurnItemBase.extend({
   pinnedConstraints: z.array(z.string()),
   sourceDigest: z.string().min(1).optional(),
   digestMarker: z.string().min(1).optional(),
-  sourceItemIds: z.array(z.string().min(1)).optional()
+  sourceItemIds: z.array(z.string().min(1)).optional(),
+  // Recovered prior-session state (edited files, recent errors, user intent,
+  // "do not re-do completed work") generated after a real compaction. Injected
+  // into the next request's context instructions so the model does not repeat
+  // work that was folded out of the visible history.
+  stateRecovery: z.string().min(1).optional()
 })
 export type CompactionTurnItem = z.infer<typeof CompactionTurnItem>
 

@@ -1057,6 +1057,17 @@ export function SettingsView(): ReactElement {
     update({ agents: JokerSettingsPatch(patch) })
   }
 
+  const toggleTheme = (): void => {
+    if (!form) return
+    const next = form.theme === 'dark' ? 'light' : 'dark'
+    applyTheme(next)
+    update({ theme: next })
+  }
+
+  const openClawSettings = (): void => {
+    setCategory('claw')
+  }
+
   const pickWorkspace = async (): Promise<void> => {
     try {
       setWorkspacePickerError(null)
@@ -1301,6 +1312,8 @@ export function SettingsView(): ReactElement {
         goBack={goBack}
         goToChat={goToChat}
         extensionSettingsAvailable={extensionSettingsAvailable}
+        onToggleTheme={toggleTheme}
+        onOpenClaw={openClawSettings}
         t={t}
       />
 

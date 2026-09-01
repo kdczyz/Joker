@@ -104,7 +104,16 @@ function estimateImageAttachments(attachments?: ModelInputAttachment[]): number 
   }, 0)
 }
 
+/**
+ * Route every raw-string estimate through {@link ContextEstimator} so it uses
+ * the same CJK-aware counting as the history/item estimate. A naive
+ * `length / charsPerToken` underestimates Chinese/Japanese/Korean text by
+ * roughly 4x (CJK costs ~1 token per character, not ~0.25), which silently
+ * disarms both the measured-overflow safety net and the auto-compaction
+ * overhead floor for CJK-heavy system prompts, context instructions and
+ * document attachments.
+ */
 function estimateText(text?: string): number {
   if (!text?.trim()) return 0
-  return Math.max(1, Math.ceil(text.length / CHARS_PER_TOKEN))
+  return Math.max(1, estimator.estimateText(text))
 }

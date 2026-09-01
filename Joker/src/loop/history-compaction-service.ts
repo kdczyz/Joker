@@ -109,6 +109,18 @@ export class HistoryCompactionService {
     threadId: string
     turnId: string
     toolSpecs?: readonly ModelToolSpec[]
+    /**
+     * Per-turn instructions assembled for this request but stored outside the
+     * conversation items (memory injections, skill catalogs, goal/todo
+     * prompts, image reference blocks...). They are sent on every turn and can
+     * add up to several thousand tokens, so the compaction estimate must count
+     * them or it under-triggers.
+     */
+    contextInstructions?: readonly string[]
+    /** Plan/design mode instruction injected above the conversation. */
+    modeInstruction?: string
+    /** Turn-level system prompt override, when the thread defines one. */
+    threadSystemPrompt?: string
     reserveModelRequest?: () => Promise<{ allowed: boolean; reason?: string }>
     /**
      * When set, force compaction toward this token budget even if the
@@ -130,10 +142,18 @@ export class HistoryCompactionService {
     await this.deps.telemetry.hydratePromptPressureIfCold(input.threadId, input.model)
     const pressure = this.deps.telemetry.consumePromptPressure(input.threadId, input.model)
     const thresholdModel = pressure?.model || input.model
+    // Count every part of the request that is sent on each turn but is not
+    // part of the stored conversation items. `threadSystemPrompt` replaces the
+    // immutable prefix system prompt when the thread defines one, matching how
+    // `composeModelRequest` assembles the request.
     const overheadTokens = estimateRequestOverheadTokens({
-      systemPrompt: this.deps.prefix.systemPrompt,
+      systemPrompt: input.threadSystemPrompt ?? this.deps.prefix.systemPrompt,
       prefix: this.deps.prefix.fewShots,
-      tools: input.toolSpecs
+      tools: input.toolSpecs,
+      ...(input.modeInstruction ? { modeInstruction: input.modeInstruction } : {}),
+      ...(input.contextInstructions?.length
+        ? { contextInstructions: [...input.contextInstructions] }
+        : {})
     })
     // Forced compaction ignores the soft/hard estimate thresholds and always
     // runs an aggressive keep-recent=1 pass to reclaim as much history as
@@ -141,7 +161,7 @@ export class HistoryCompactionService {
     const plan = input.forceBudgetTokens !== undefined
       ? {
           mode: 'force',
-          keepRecent: 1,
+          keepRecent: 2,
           reason: `forced compaction: request must fit a ${input.forceBudgetTokens}-token context window`
         } as CompactionPlan
       : this.deps.compactor.planCompaction(input.items, {
@@ -328,6 +348,17 @@ export class HistoryCompactionService {
           result.summaryItem.kind === 'compaction' ? result.summaryItem.sourceItemIds ?? [] : []
         )
         const foldedItems = currentItems.filter((item) => foldedItemIds.has(item.id))
+        // Persist the recovered prior-session state on the summary item so the
+        // next model step can re-inject it as a context instruction. The event
+        // copy recorded below is only consumed by observers, never by the
+        // request builder, so without this the recovery prompt was dead data.
+        const recoveryPrompt = buildCompactionStateRecoveryPrompt(
+          extractCompactionStateSnapshot(foldedItems),
+          result.summaryItem.kind === 'compaction' ? result.summaryItem.summary : ''
+        )
+        if (recoveryPrompt) {
+          ;(result.summaryItem as TurnItem & { stateRecovery?: string }).stateRecovery = recoveryPrompt
+        }
         return {
           changed: true,
           items: insertCompactionIntoVisibleHistory({
@@ -344,14 +375,11 @@ export class HistoryCompactionService {
       if (result) {
         this.deps.clearReadTracker?.(input.threadId)
         await this.deps.rewriteThreadItemsFromSession(input.threadId)
-        // Build state recovery prompt from the folded source items so the
-        // first post-compaction request has key context (borrowed from Grok
-        // Build's CompactionStateContext / <system-reminder> pattern).
-        const snapshot = extractCompactionStateSnapshot(committed.value.foldedItems)
-        const recoveryPrompt = buildCompactionStateRecoveryPrompt(
-          snapshot,
-          result.summaryItem.kind === 'compaction' ? result.summaryItem.summary : ''
-        )
+        // The recovered prior-session state was already persisted on the
+        // summary item inside the build step; surface the same value on the
+        // event for observers (it is never read by the request builder).
+        const recoveryPrompt = (result.summaryItem as TurnItem & { stateRecovery?: string })
+          .stateRecovery
         await this.deps.events.record({
           kind: 'compaction_completed',
           threadId: input.threadId,

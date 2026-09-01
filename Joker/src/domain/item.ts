@@ -200,6 +200,8 @@ export function makeCompactionItem(input: {
   sourceDigest?: string
   digestMarker?: string
   sourceItemIds?: string[]
+  /** Recovered prior-session state to inject into the next request. */
+  stateRecovery?: string
 }): TurnItem {
   return {
     id: input.id,
@@ -216,7 +218,8 @@ export function makeCompactionItem(input: {
     ...(input.auto === undefined ? {} : { auto: input.auto }),
     ...(input.sourceDigest ? { sourceDigest: input.sourceDigest } : {}),
     ...(input.digestMarker ? { digestMarker: input.digestMarker } : {}),
-    ...(input.sourceItemIds ? { sourceItemIds: [...input.sourceItemIds] } : {})
+    ...(input.sourceItemIds ? { sourceItemIds: [...input.sourceItemIds] } : {}),
+    ...(input.stateRecovery ? { stateRecovery: input.stateRecovery } : {})
   }
 }
 

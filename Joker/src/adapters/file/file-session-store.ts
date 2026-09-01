@@ -215,41 +215,57 @@ export class FileSessionStore implements SessionStore {
       this.cacheItems(threadId, cached)
       return [...cached]
     }
-    const version = this.itemsVersionOf(threadId)
-    const startedAt = performance.now()
-    const raw = await readJsonl<TurnItem>(this.messagesPath(threadId))
-    const latestById = new Map<string, TurnItem>()
-    for (const item of raw) {
-      latestById.set(item.id, item)
+    // A write that lands while we read invalidates the snapshot. Retry a bounded
+    // number of times instead of recursing without limit, which could
+    // stack-overflow on a hot, concurrently-written thread (streaming deltas and
+    // tool-result appends both bump the version during an agent step).
+    const MAX_CONCURRENT_READ_RETRIES = 3
+    let bestEffort: TurnItem[] = []
+    for (let attempt = 0; attempt < MAX_CONCURRENT_READ_RETRIES; attempt++) {
+      const version = this.itemsVersionOf(threadId)
+      const startedAt = performance.now()
+      const raw = await readJsonl<TurnItem>(this.messagesPath(threadId))
+      const latestById = new Map<string, TurnItem>()
+      for (const item of raw) {
+        latestById.set(item.id, item)
+      }
+      const seen = new Set<string>()
+      // Walk newest→oldest keeping each id's latest write, push (O(1) amortized),
+      // then reverse once. The previous unshift-per-item was O(n²) and blocked the
+      // event loop for seconds on large threads, starving /health (kdczyz/Joker#621).
+      const deduped: TurnItem[] = []
+      for (let index = raw.length - 1; index >= 0; index -= 1) {
+        const item = raw[index]!
+        if (seen.has(item.id)) continue
+        seen.add(item.id)
+        deduped.push(latestById.get(item.id)!)
+      }
+      const ordered = deduped.reverse()
+      const elapsedMs = performance.now() - startedAt
+      if (elapsedMs >= SLOW_LOAD_ITEMS_LOG_MS) {
+        // A slow cold read points at an oversized thread log as the likely
+        // event-loop staller behind a watchdog restart (#621); the counts say
+        // how bloated messages.jsonl has become.
+        console.warn(
+          `[Joker] loadItems(${threadId}) took ${Math.round(elapsedMs)}ms ` +
+            `for ${raw.length} raw → ${ordered.length} items`
+        )
+      }
+      bestEffort = ordered
+      // No write landed during the read: snapshot is safe to cache and return.
+      if (this.itemsVersionOf(threadId) === version) {
+        this.cacheItems(threadId, ordered)
+        return [...ordered]
+      }
     }
-    const seen = new Set<string>()
-    // Walk newest→oldest keeping each id's latest write, push (O(1) amortized),
-    // then reverse once. The previous unshift-per-item was O(n²) and blocked the
-    // event loop for seconds on large threads, starving /health (kdczyz/Joker#621).
-    const deduped: TurnItem[] = []
-    for (let index = raw.length - 1; index >= 0; index -= 1) {
-      const item = raw[index]!
-      if (seen.has(item.id)) continue
-      seen.add(item.id)
-      deduped.push(latestById.get(item.id)!)
-    }
-    const ordered = deduped.reverse()
-    const elapsedMs = performance.now() - startedAt
-    if (elapsedMs >= SLOW_LOAD_ITEMS_LOG_MS) {
-      // A slow cold read points at an oversized thread log as the likely
-      // event-loop staller behind a watchdog restart (#621); the counts say
-      // how bloated messages.jsonl has become.
-      console.warn(
-        `[Joker] loadItems(${threadId}) took ${Math.round(elapsedMs)}ms ` +
-          `for ${raw.length} raw → ${ordered.length} items`
-      )
-    }
-    // A write that landed while we were reading invalidates this snapshot.
-    if (this.itemsVersionOf(threadId) === version) {
-      this.cacheItems(threadId, ordered)
-      return [...ordered]
-    }
-    return this.loadItems(threadId)
+    // Bounded retries exhausted: return the most recent snapshot we read rather
+    // than recursing forever. A slightly stale read here is preferable to a
+    // crash, and the next model step re-loads with a fresh version.
+    console.warn(
+      `[Joker] loadItems(${threadId}) gave up after ${MAX_CONCURRENT_READ_RETRIES} ` +
+        `concurrent-write retries; returning best-effort snapshot of ${bestEffort.length} items`
+    )
+    return [...bestEffort]
   }
 
   async loadSession(threadId: string): Promise<AgentSession | null> {

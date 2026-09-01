@@ -59,6 +59,7 @@ import {
   collectAssistantTextForTurn,
   findLatestUserBlockId,
   findReusableEmptyThreadId,
+  markThreadTurnRunning,
   reconcileOptimisticUserBlock,
   threadSnapshotLooksRunning,
   threadBelongsToWorkspace
@@ -694,8 +695,15 @@ export function createNavigationActions(
         for (const [k, v] of Object.entries(s.unreadThreadIds)) {
           if (v && validIds.has(k)) u[k] = true
         }
+        // A thread whose send is still in flight has no running turn on the
+        // server yet, so the refreshed summary would revert it to the previous
+        // turn's terminal dot (green/red). Keep the optimistic running state.
+        let refreshedThreads = displayThreads
+        for (const [k, v] of Object.entries(s.pendingSendThreadIds ?? {})) {
+          if (v && validIds.has(k)) refreshedThreads = markThreadTurnRunning(refreshedThreads, k)
+        }
         return {
-          threads: displayThreads,
+          threads: refreshedThreads,
           codeWorkspaceRoots,
           watchTurnCompletion: w,
           unreadThreadIds: u,

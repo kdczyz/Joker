@@ -765,7 +765,22 @@ export class AgentLoop {
         return 'failed'
       }
       await this.drainSteering(threadId, turnId, signal)
-      const stepResult = await this.modelStep(threadId, turnId, signal, step, limits.maxToolCallsPerStep)
+      let stepResult = await this.modelStep(threadId, turnId, signal, step, limits.maxToolCallsPerStep)
+      const breaker = this.toolStormBreakers.get(turnId)
+      if (breaker?.isStuck) {
+        await this.opts.events.record({
+          kind: 'error',
+          threadId,
+          turnId,
+          message: 'Stopping turn: identical tool calls repeated beyond the suppression limit.',
+          code: 'tool_storm_stopped',
+          severity: 'warning'
+        })
+        // Soft-stop the turn so it ends cleanly instead of burning the remaining
+        // step budget on a stuck repeat-loop. Suppression clears on a healthy
+        // model response, so this only fires after sustained identical repeats.
+        if (stepResult !== 'failed' && stepResult !== 'aborted') stepResult = 'stop'
+      }
       if (stepResult === 'stop') {
         // Either accepted guidance wins and forces another model interaction,
         // or the synchronous seal wins and late steer requests are rejected.

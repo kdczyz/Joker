@@ -962,8 +962,12 @@ describe('watched completion notifications', () => {
 })
 
 describe('background turn completion poll', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
   afterEach(() => {
     stopTurnCompletionPoll()
+    vi.useRealTimers()
   })
 
   it('settles the watched thread summary to a terminal dot and drops stale acknowledgment', async () => {
@@ -985,7 +989,9 @@ describe('background turn completion poll', () => {
       }] as unknown as NormalizedThread[]
     })
     syncTurnCompletionPoll(harness.set, harness.get)
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    // A turn the watch never saw running needs a second idle sample before it
+    // is declared done (guards the send-race), so advance past two ticks.
+    await vi.advanceTimersByTimeAsync(2600)
 
     const thread = harness.get().threads.find((candidate) => candidate.id === 'thread-bg')
     expect(thread?.status).toBe('idle')
@@ -998,8 +1004,12 @@ describe('background turn completion poll', () => {
 })
 
 describe('background turn completion poll (failure)', () => {
+  beforeEach(() => {
+    vi.useFakeTimers()
+  })
   afterEach(() => {
     stopTurnCompletionPoll()
+    vi.useRealTimers()
     registryMocks.getThreadDetail.mockClear()
   })
 
@@ -1029,7 +1039,7 @@ describe('background turn completion poll (failure)', () => {
       }] as unknown as NormalizedThread[]
     })
     syncTurnCompletionPoll(harness.set, harness.get)
-    await new Promise((resolve) => setTimeout(resolve, 20))
+    await vi.advanceTimersByTimeAsync(2600)
 
     const thread = harness.get().threads.find((candidate) => candidate.id === 'thread-fail')
     expect(thread?.latestTurnStatus).toBe('failed')

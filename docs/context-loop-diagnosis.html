@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Joker 上下文处理 / 任务循环 诊断报告</title>
+<style>
+  :root {
+    --bg: #f6f8fa; --card: #ffffff; --ink: #1f2328; --muted: #57606a;
+    --line: #d0d7de; --accent: #0969da; --warn: #9a6700; --bad: #cf222e; --good: #1a7f37;
+    --code: #f0f3f6;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.6; padding: 32px; }
+  .wrap { max-width: 980px; margin: 0 auto; }
+  h1 { font-size: 26px; margin: 0 0 4px; }
+  .sub { color: var(--muted); margin-bottom: 24px; font-size: 14px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px;
+    padding: 20px 24px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,.04); }
+  h2 { font-size: 19px; margin: 4px 0 12px; border-left: 4px solid var(--accent); padding-left: 10px; }
+  h3 { font-size: 15px; margin: 16px 0 6px; }
+  p { margin: 8px 0; }
+  .tag { display: inline-block; font-size: 12px; font-weight: 600; padding: 2px 8px;
+    border-radius: 20px; margin-right: 6px; }
+  .t-bad { background: #ffebe9; color: var(--bad); }
+  .t-warn { background: #fff8c5; color: var(--warn); }
+  .t-good { background: #dafbe1; color: var(--good); }
+  code, pre { font-family: "SF Mono", Menlo, Consolas, monospace; }
+  code { background: var(--code); padding: 1px 5px; border-radius: 4px; font-size: 13px; }
+  pre { background: #0d1117; color: #e6edf3; padding: 14px; border-radius: 8px; overflow: auto;
+    font-size: 12.5px; line-height: 1.5; }
+  .path { color: var(--accent); font-weight: 600; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+  th, td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+  th { background: #f0f3f6; }
+  .sev-high { color: var(--bad); font-weight: 700; }
+  .sev-mid { color: var(--warn); font-weight: 700; }
+  .sev-low { color: var(--muted); }
+  ul { margin: 6px 0 6px 0; padding-left: 22px; }
+  li { margin: 3px 0; }
+  .fix { background: #f6ffed; border: 1px solid #b7eb8f; border-radius: 8px; padding: 12px 16px; margin-top: 10px; }
+  .note { color: var(--muted); font-size: 13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Joker 上下文处理 / 任务循环 诊断报告</h1>
+  <div class="sub">调查范围：<code>Joker/src/loop/</code> · <code>Joker/src/adapters/file/file-session-store.ts</code> · <code>Joker/src/domain/runtime-event-reducer.ts</code> · 生成时间 2026-09-02</div>
+
+  <div class="card" style="border-left:4px solid var(--good);">
+    <h2>✅ 修复已落地（2026-09-02）</h2>
+    <p>四项修复均已实现，并通过单元测试（18 passed）与类型检查（改动文件零报错）。改动文件：</p>
+    <ul>
+      <li><b>① 接通压缩状态恢复</b>：<code>contracts/items.ts</code>、<code>domain/item.ts</code>、<code>loop/context-compactor.ts</code>、<code>loop/history-compaction-service.ts</code>、<code>loop/model-step-service.ts</code></li>
+      <li><b>② loadItems 有界重试</b>：<code>adapters/file/file-session-store.ts</code></li>
+      <li><b>③ 软化 force 压缩</b>：<code>loop/history-compaction-service.ts</code>（keepRecent 1→2）、<code>loop/model-step-service.ts</code>（noop 转尾部裁剪兜底）</li>
+      <li><b>④ breaker 阈值与停止判据</b>：<code>loop/tool-storm-breaker.ts</code>（只读阈值 15→8、新增 isStuck）、<code>loop/agent-loop.ts</code>（stuck 时软停 turn）</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2>结论速览</h2>
+    <p>主循环 <span class="path">agent-loop.ts:729</span> 的 <code>for (step = 0; ; step++)</code> <b>本身是有界的</b>（<code>maxSteps</code> 默认 64，外加 wall-time 上限），不会无限自转。用户感知到的"陷入循环"主要是三类真实故障叠加：</p>
+    <ol>
+      <li><b>压缩后状态恢复失效</b> → 模型丢失"已做过什么"，反复重做同一段工作，进而反复触发压缩（最致命）。</li>
+      <li><b>强制压缩把近期上下文砍光</b> → 模型记忆进一步丢失，更易"迷路"；个别情况下直接 return 'failed' 让 turn 卡死。</li>
+      <li><b>会话存储无界递归 + 并发回写覆盖</b> → <code>loadItems</code> 在并发写入下反复重读/爆栈，工具结果偶发丢失又触发补调。</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>主循环控制流（确认有界）</h2>
+    <pre>agent-loop.ts:714  loop()
+  for (step = 0; ; step++)                 // 退出条件：
+    if (signal.aborted) return 'aborted'   //  ① 用户/系统中止
+    if (step >= maxSteps) return 'failed'  //  ② 步数上限(默认64)
+    if (wallTime >= maxWallTimeMs) ...     //  ③ 墙钟上限
+    stepResult = modelStep(...)
+    if (stepResult === 'stop')
+        if (steering.sealIfEmpty(turnId)) return 'completed'  // ④ 任务完成
+        else continue                     //   有未处理 steering → 再跑一轮
+    if (failed / aborted) return ...       //  ⑤ 失败退出</pre>
+    <p class="note">循环表象不是来自这个 <code>for</code>，而是来自：模型持续返回 <code>tool_calls</code>（直到 64 步耗尽），或上下文被压缩后重做导致 step 被无效消耗。</p>
+  </div>
+
+  <div class="card">
+    <h2>根因清单（按严重性排序）</h2>
+    <table>
+      <tr><th style="width:34px">#</th><th>根因</th><th>位置</th><th>严重性</th><th>机制 / 为何导致循环</th></tr>
+      <tr>
+        <td>1</td>
+        <td><b>压缩后状态恢复是死代码</b><br><span class="tag t-bad">最致命</span></td>
+        <td><span class="path">history-compaction-service.ts:371-393</span><br><span class="path">runtime-event-reducer.ts:278-309</span><br><span class="path">model-step-service.ts:440-474</span></td>
+        <td class="sev-high">高</td>
+        <td>压缩完成时生成了 <code>stateRecovery</code> 提示（"已改文件/最近错误/勿重做"）并塞进 <code>compaction_completed</code> 事件，但 <code>applyCompactionEvent</code> 完全<b>不消费</b>该字段，且 <code>contextInstructions</code> 从不读取它。模型压缩后<b>拿不到"你已完成 X"的提示</b>，于是从头再来 → 再超窗口 → 再压缩，形成"压缩→重做→再压缩"的循环。</td>
+      </tr>
+      <tr>
+        <td>2</td>
+        <td><b>强制压缩过度砍上下文</b></td>
+        <td><span class="path">model-step-service.ts:621-650</span><br><span class="path">context-compactor.ts:185-208</span></td>
+        <td class="sev-high">高</td>
+        <td>检测到请求超窗口时每次都 <code>force</code> 压缩且 <code>keepRecent: 1</code>，几乎砍光近期对话并落盘。第二次 force 时 <code>head</code> 全是 compaction 项 → 返回 <code>changed:false</code> → <code>activeHistory.length &gt;= previousHistoryLength</code> → <code>return 'failed'</code>。结果：模型对"刚发生什么"的记忆被永久裁掉，更易迷路重做。</td>
+      </tr>
+      <tr>
+        <td>3</td>
+        <td><b>loadItems 无界递归</b><br><span class="tag t-bad">崩溃风险</span></td>
+        <td><span class="path">file-session-store.ts:247-253</span></td>
+        <td class="sev-high">高</td>
+        <td>读取期间只要有一次并发写入（流式 delta、工具结果回灌都会 <code>bumpItemsVersion</code>），就 <code>return this.loadItems(threadId)</code> 递归重读，<b>无次数上限</b>。深线程下可能爆栈或严重卡顿，叠加每步 modelStep 与每次强制压缩都调用 <code>loadItems</code>。</td>
+      </tr>
+      <tr>
+        <td>4</td>
+        <td><b>ToolStormBreaker 阈值偏高 + 仅 turn 内</b></td>
+        <td><span class="path">tool-storm-breaker.ts:16-43, 71-79</span></td>
+        <td class="sev-mid">中</td>
+        <td>只读工具需 <b>15 次</b>相同调用才抑制（<code>readOnlyThreshold=15</code>），交互工具 3 次；且 breaker 在 turn 边界 <code>reset()</code>。模型以"不同但等效"的参数（换文件名、换 glob）反复探索同一区域时不会触发抑制，跨 turn 也不累积。</td>
+      </tr>
+      <tr>
+        <td>5</td>
+        <td><b>并发回写覆盖窗口</b></td>
+        <td><span class="path">file-session-store.ts:107-116</span><br><span class="path">tool-execution-service.ts:76-88</span></td>
+        <td class="sev-mid">中</td>
+        <td><code>rewriteItems</code> 用整体覆盖写 <code>messages.jsonl</code>，与并发 <code>appendItem</code>（工具结果）存在覆盖窗口。CAS 重试能兜大部分，但强制压缩路径在 lost CAS 时会返回较旧 history，偶发丢失刚产生的工具结果 → 模型下一轮看不到结果 → 再调一次。</td>
+      </tr>
+      <tr>
+        <td>6</td>
+        <td><b>停止信号依赖模型自觉</b></td>
+        <td><span class="path">agent-loop.ts:769-773</span></td>
+        <td class="sev-low">低</td>
+        <td>仅当模型返回非 tool_calls 且 <code>steering</code> 为空才判定完成。缺少"同上一步工具/结果重复 N 次即停"的硬判据（breaker 仅抑制执行，不终止 step）。</td>
+      </tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>修复优先级建议</h2>
+    <h3>① 接通压缩状态恢复（消除"重做循环"，收益最大）</h3>
+    <div class="fix">
+      <ul>
+        <li>在 <code>runtime-event-reducer.ts:278 applyCompactionEvent</code> 中把 <code>event.stateRecovery</code> 存进 projection（新增 <code>projection.compactionRecovery</code> 或塞进 compaction item 的字段）。</li>
+        <li>在 <code>model-step-service.ts:440</code> 附近组装 <code>contextInstructions</code> 时，读取最近一次 compaction 的 <code>stateRecovery</code> 并追加为一条 system instruction（例如："## 之前会话状态 (压缩后恢复) … 不要重做已完成的工作"）。</li>
+        <li>这样模型压缩后仍保留"已改文件/最近错误/用户原始意图"，不会重复劳动。</li>
+      </ul>
+    </div>
+
+    <h3>② 把 loadItems 递归改为有界重试（消除崩溃/卡顿）</h3>
+    <div class="fix">
+      <ul>
+        <li><span class="path">file-session-store.ts:252</span> 改为 <code>for (let retry=0; retry&lt;3; retry++) { ... if (version 一致) return 快照; }</code>，超过上限返回当前读到的快照（并打 warn 日志），<b>不要递归</b>。</li>
+      </ul>
+    </div>
+
+    <h3>③ 软化强制压缩的激进程度</h3>
+    <div class="fix">
+      <ul>
+        <li><code>model-step-service.ts:621</code> 的 force 压缩不要把 <code>keepRecent</code> 一直设为 1；可在连续 force 时保留更多 tail（如 keepRecent 2~4），避免把"刚发生的对话"裁掉。</li>
+        <li>或在 <code>context-compactor.ts:170</code> 的 noop 分支直接返回，避免无效落盘。</li>
+      </ul>
+    </div>
+
+    <h3>④ 增强停止判据（可选）</h3>
+    <div class="fix">
+      <ul>
+        <li>当 <code>ToolStormBreaker</code> 连续抑制且模型仍试图调用时，把 round outcome 导向 <code>stop</code> 而非继续消耗 step。</li>
+        <li>降低只读重复阈值（15 → 8 左右）或改用"参数相似度"而非"参数全等"判定。</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>快速验证方法</h2>
+    <ul>
+      <li>复现后查看日志，grep <code>forced compaction could not shrink</code> / <code>context_window_exceeded</code> / <code>compaction_suppressed</code> 看是否命中根因 2、抑制机。</li>
+      <li>grep <code>loadItems(...) took</code>（<span class="path">file-session-store.ts:242</span>）看是否频繁慢读/重读，命中根因 3。</li>
+      <li>检查 <code>compaction_completed</code> 事件是否带 <code>stateRecovery</code> 字段，并确认下游请求里有没有出现对应提示文本，验证根因 1。</li>
+    </ul>
+    <p class="note">注：主循环本身并非无限循环；真正的"循环"来自上下文丢失后的重复劳动 + 无界重试/覆盖。优先修 ① 与 ②。</p>
+  </div>
+</div>
+</body>
+</html>

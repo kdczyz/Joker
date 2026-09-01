@@ -61,6 +61,7 @@ export function createInitialChatStoreState(workingDirectoryLabel: string) {
     composerDraftAttachments: {},
     extensionComposerContexts: [],
     watchTurnCompletion: {},
+    pendingSendThreadIds: {},
     unreadThreadIds: {},
     acknowledgedStatusDotThreadIds: {},
     sideConversations: {},

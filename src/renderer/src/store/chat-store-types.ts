@@ -254,6 +254,15 @@ export type ChatState = {
   /** Host-authenticated, workspace-scoped context awaiting one main-chat turn. */
   extensionComposerContexts: ExtensionComposerContextEvent[]
   watchTurnCompletion: Record<string, boolean>
+  /**
+   * Thread ids whose send request has left the composer but has not been
+   * registered by the runtime yet. Between those two moments the runtime
+   * still reports the thread as idle, so the completion watch must not read
+   * that idle snapshot as "the turn finished" — doing so paints the green
+   * completed breathing light (plus unread badge and completion
+   * notification) for a turn that is only just starting.
+   */
+  pendingSendThreadIds: Record<string, boolean>
   unreadThreadIds: Record<string, boolean>
   /**
    * Thread ids whose terminal status-dot (completed / interrupted /

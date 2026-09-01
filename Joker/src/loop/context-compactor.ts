@@ -153,6 +153,8 @@ export class ContextCompactor {
     frozenMessageCount?: number
     /** `false` marks a user-requested (`/compact`) compaction; omit for auto. */
     auto?: boolean
+    /** Recovered prior-session state to persist on the summary item. */
+    stateRecovery?: string
   }): {
     next: TurnItem[]
     summaryItem: TurnItem
@@ -238,7 +240,8 @@ export class ContextCompactor {
       auto: input.auto,
       sourceDigest,
       digestMarker,
-      sourceItemIds: head.map((item) => item.id)
+      sourceItemIds: head.map((item) => item.id),
+      ...(input.stateRecovery ? { stateRecovery: input.stateRecovery } : {})
     })
     return { next: [...frozen, summaryItem, ...tail], summaryItem, replacedTokens }
   }

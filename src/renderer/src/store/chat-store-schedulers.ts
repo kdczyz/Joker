@@ -84,6 +84,23 @@ export function stopTurnCompletionPoll(): void {
     clearInterval(turnCompletionPollTimer)
     turnCompletionPollTimer = null
   }
+  resetTurnCompletionWatchMemory()
+}
+
+/**
+ * Per-thread memory for the completion watch:
+ * - `observedRunningThreadIds`: the watch has actually seen the turn running.
+ * - `idleSinceByThreadId`: first consecutive idle sample for a turn that was
+ *   never observed running.
+ *
+ * Both are cleared whenever the poll stops, so nothing leaks between watches.
+ */
+const observedRunningThreadIds = new Set<string>()
+const idleSinceByThreadId = new Map<string, number>()
+
+export function resetTurnCompletionWatchMemory(): void {
+  observedRunningThreadIds.clear()
+  idleSinceByThreadId.clear()
 }
 
 export function syncTurnCompletionPoll(
@@ -125,11 +142,28 @@ async function pollTurnCompletionWatch(
 
   const doneIds: string[] = []
   for (const threadId of ids) {
+    // The send has left the composer but the runtime has not registered the
+    // turn yet (thread creation, settings, Git checkpoint…). Treat that window
+    // as busy: the first tick fires immediately on subscribe, so without this
+    // guard switching conversations right after pressing send settles the
+    // thread as completed — green breathing light, unread badge and a
+    // completion notification for a turn that is only just starting.
+    if (state.pendingSendThreadIds?.[threadId]) continue
     try {
       const { blocks, threadStatus } = await options.loadThreadState(state, threadId)
-      if (!options.threadLooksRunning(blocks, threadStatus)) {
-        doneIds.push(threadId)
+      if (options.threadLooksRunning(blocks, threadStatus)) {
+        observedRunningThreadIds.add(threadId)
+        idleSinceByThreadId.delete(threadId)
+        continue
       }
+      // Never saw this turn running: require a second consecutive idle sample
+      // before calling it done. A thread that is only just being watched can
+      // otherwise look idle for one tick purely because of runtime/UI lag.
+      if (!observedRunningThreadIds.has(threadId) && !idleSinceByThreadId.has(threadId)) {
+        idleSinceByThreadId.set(threadId, Date.now())
+        continue
+      }
+      doneIds.push(threadId)
     } catch {
       /* ignore */
     }
@@ -139,7 +173,17 @@ async function pollTurnCompletionWatch(
     await options.onCompletedThreads(doneIds, state, set, get)
   }
 
-  if (Object.keys(get().watchTurnCompletion).filter((id) => get().watchTurnCompletion[id]).length === 0) {
+  const stillWatched = new Set(
+    Object.keys(get().watchTurnCompletion).filter((id) => get().watchTurnCompletion[id])
+  )
+  for (const threadId of [...observedRunningThreadIds]) {
+    if (!stillWatched.has(threadId)) observedRunningThreadIds.delete(threadId)
+  }
+  for (const threadId of [...idleSinceByThreadId.keys()]) {
+    if (!stillWatched.has(threadId)) idleSinceByThreadId.delete(threadId)
+  }
+
+  if (stillWatched.size === 0) {
     stopTurnCompletionPoll()
   }
 }

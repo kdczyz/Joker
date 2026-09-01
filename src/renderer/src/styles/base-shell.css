@@ -268,13 +268,16 @@
 }
 
 :root[data-platform='darwin'] .ds-workbench-shell {
-  background: rgba(246, 247, 249, 0.6);
+  /* 侧栏透出 workbench-shell 这一层 —— 不透明度越低,macOS 系统磨砂(under-window)
+     越能直接透出来。亮色 0.6 会在浅色磨砂之上再盖一层灰雾,看起来发灰;
+     降到 0.28 让磨砂清晰可见,聊天区因自带实色 bg-ds-canvas 不受影响 */
+  background: rgba(246, 247, 249, 0.28);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
 
 :root[data-platform='darwin'][data-theme='dark'] .ds-workbench-shell {
-  background: rgba(41, 42, 42, 0.6);
+  background: rgba(41, 42, 42, 0.4);
 }
 
 :root[data-platform='darwin'] :is(.ds-sidebar-shell, .ds-settings-sidebar) {
