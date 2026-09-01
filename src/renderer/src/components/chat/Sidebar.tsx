@@ -9,6 +9,7 @@ import {
   FilePen,
   LayoutGrid,
   Moon,
+  Plug,
   Smartphone,
   Sun,
   Workflow
@@ -56,6 +57,7 @@ type Props = {
   onOpenRequirementDraft: (draft: SddDraft) => void
   onOpenSettings: (section?: SettingsRouteSection) => void
   onOpenPlugins: () => void
+  onOpenConnectors: () => void
   onOpenExtensions: () => void
   onToggleTheme: () => void
   onToggleConnectPhone: () => void
@@ -89,6 +91,7 @@ export function Sidebar({
   onOpenRequirementDraft,
   onOpenSettings,
   onOpenPlugins,
+  onOpenConnectors,
   onOpenExtensions,
   onToggleTheme,
   onToggleConnectPhone,
@@ -191,6 +194,15 @@ export function Sidebar({
         </div>
 
         <div className="mt-1 flex flex-col gap-1">
+          <button
+            type="button"
+            data-cursor-spotlight-target
+            onClick={onOpenConnectors}
+            className="group flex min-h-[30px] items-center gap-1.5 rounded-[7px] px-2 py-1 text-[12px] text-[#606066] transition duration-150 hover:bg-black/[0.04] hover:text-[#18181b] dark:text-[#9e9ea6] dark:hover:bg-white/[0.06] dark:hover:text-white"
+          >
+            <Plug className="h-3.5 w-3.5 shrink-0 text-[#606066] transition group-hover:text-[#18181b] dark:text-[#9e9ea6] dark:group-hover:text-white" strokeWidth={1.8} />
+            <span className="truncate">{t('connectors')}</span>
+          </button>
           <button
             type="button"
             data-cursor-spotlight-target

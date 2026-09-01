@@ -119,7 +119,7 @@ export function Workbench(): ReactElement {
     liveReasoning, liveAssistant, error, runtimeErrorDetail, runtimeStatus, busy,
     route, pluginHostRoute, workspaceRoot, conversationWorkspaceRoot, runtimeConnection,
     setRoute, openCode, openSettings,
-    openPlugins, openClaw, openSchedule, openWorkflow, chooseWorkspace, clawChannels,
+    openPlugins, openConnectors, openClaw, openSchedule, openWorkflow, chooseWorkspace, clawChannels,
     activeClawChannelId, selectClawChannel, resetClawChannelSession, setClawChannelModel,
     appendLocalClawTurn, setError, sendMessage, reviewActiveThread, queuedMessages,
     extensionComposerContexts, attachExtensionComposerContext, removeExtensionComposerContext,
@@ -770,7 +770,7 @@ export function Workbench(): ReactElement {
   })
 
   const {
-    closeRightPanel, openCodeMode, openDesignMode, openPluginsView, openExtensionsView, openScheduleView,
+    closeRightPanel, openCodeMode, openDesignMode, openPluginsView, openConnectorsView, openExtensionsView, openScheduleView,
     openThread, openWorkflowView, sidebarView,
     startNewChat, startNewChatInWorkspace, startNewConversation,
     toggleConnectPhone
@@ -779,7 +779,7 @@ export function Workbench(): ReactElement {
     runtimeConnection, sddDraftContent, threads, useWorktreePool, workspaceRoot, worktreeBranch,
     clearFilePreviewTargets, createConversation, createThread, dismissActiveSddDraft,
     findSddDraftForSidebarThread, openClaw, openCode,
-    openPlugins, openSchedule, openWorkflow, openSddRequirementDraftFromHistory,
+    openPlugins, openConnectors, openSchedule, openWorkflow, openSddRequirementDraftFromHistory,
     selectThread, setConnectPhoneSidebarOpen, setFilePreviewTarget, setInput,
     setRightPanelMode, setRoute, setUseWorktreePool
   })
@@ -1116,6 +1116,7 @@ export function Workbench(): ReactElement {
         onOpenRequirementDraft={(draft) => void openSddRequirementDraftFromHistory(draft)}
         onOpenSettings={(section) => openSettings(section)}
         onOpenPlugins={openPluginsView}
+        onOpenConnectors={openConnectorsView}
         onOpenExtensions={openExtensionsView}
         onToggleTheme={toggleTheme}
         onToggleConnectPhone={toggleConnectPhone}

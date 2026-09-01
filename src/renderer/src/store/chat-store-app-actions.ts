@@ -62,6 +62,7 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
   | 'setRoute'
   | 'openSettings'
   | 'openPlugins'
+  | 'openConnectors'
   | 'openClaw'
   | 'openSchedule'
   | 'openWorkflow'
@@ -286,6 +287,9 @@ export function createAppActions(options: CreateAppActionsOptions): Pick<
         route: 'plugins',
         pluginHostRoute: host ?? (state.route === 'claw' ? 'claw' : 'chat')
       })),
+
+    openConnectors: () =>
+      set({ route: 'connectors' }),
 
     openClaw: () => {
       set({ route: 'claw' })

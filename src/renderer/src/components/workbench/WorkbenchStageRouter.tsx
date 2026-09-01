@@ -4,6 +4,9 @@ import { WorkbenchConversationStage, type WorkbenchConversationStageProps } from
 const PluginMarketplaceView = lazy(() =>
   import('../PluginMarketplaceView').then((module) => ({ default: module.PluginMarketplaceView }))
 )
+const ConnectorsView = lazy(() =>
+  import('../ConnectorsView').then((module) => ({ default: module.ConnectorsView }))
+)
 const ScheduleTasksView = lazy(() =>
   import('../schedule/ScheduleTasksView').then((module) => ({ default: module.ScheduleTasksView }))
 )
@@ -110,6 +113,13 @@ export function WorkbenchStageRouter({
         ) : route === 'plugins' ? (
           <Suspense fallback={<div className="h-full bg-ds-main" />}>
             <PluginMarketplaceView
+              leftSidebarCollapsed={leftSidebarCollapsed}
+              onToggleLeftSidebar={onToggleLeftSidebar}
+            />
+          </Suspense>
+        ) : route === 'connectors' ? (
+          <Suspense fallback={<div className="h-full bg-ds-main" />}>
+            <ConnectorsView
               leftSidebarCollapsed={leftSidebarCollapsed}
               onToggleLeftSidebar={onToggleLeftSidebar}
             />

@@ -39,6 +39,7 @@ export type WorkbenchLeftSidebarProps = {
   onOpenRequirementDraft: CodeSidebarProps['onOpenRequirementDraft']
   onOpenSettings: (section?: SettingsRouteSection) => void
   onOpenPlugins: CodeSidebarProps['onOpenPlugins']
+  onOpenConnectors: CodeSidebarProps['onOpenConnectors']
   onOpenExtensions: CodeSidebarProps['onOpenExtensions']
   onToggleTheme: CodeSidebarProps['onToggleTheme']
   onToggleConnectPhone: CodeSidebarProps['onToggleConnectPhone']
@@ -82,6 +83,7 @@ export function WorkbenchLeftSidebar({
   onOpenRequirementDraft,
   onOpenSettings,
   onOpenPlugins,
+  onOpenConnectors,
   onOpenExtensions,
   onToggleTheme,
   onToggleConnectPhone,
@@ -143,6 +145,7 @@ export function WorkbenchLeftSidebar({
               onOpenRequirementDraft={onOpenRequirementDraft}
               onOpenSettings={onOpenSettings}
               onOpenPlugins={onOpenPlugins}
+              onOpenConnectors={onOpenConnectors}
               onOpenExtensions={onOpenExtensions}
               onToggleTheme={onToggleTheme}
               onToggleConnectPhone={onToggleConnectPhone}

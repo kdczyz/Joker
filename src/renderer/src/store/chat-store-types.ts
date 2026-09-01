@@ -109,7 +109,7 @@ export type SettingsRouteSection =
   | 'claw'
   | 'updates'
   | 'dataMigration'
-export type AppRoute = 'chat' | 'design' | 'settings' | 'plugins' | 'extensions' | 'claw' | 'schedule' | 'workflow' | 'fileBrowser'
+export type AppRoute = 'chat' | 'design' | 'settings' | 'plugins' | 'extensions' | 'claw' | 'schedule' | 'workflow' | 'fileBrowser' | 'connectors'
 export type PluginHostRoute = 'chat' | 'claw'
 
 /**
@@ -297,6 +297,7 @@ export type ChatState = {
   openCode: () => Promise<void>
   openSettings: (section?: SettingsRouteSection) => void
   openPlugins: (host?: PluginHostRoute) => void
+  openConnectors: () => void
   openClaw: () => void
   openSchedule: () => void
   openWorkflow: () => void

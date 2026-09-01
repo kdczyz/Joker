@@ -36,6 +36,7 @@ type UseWorkbenchNavigationControllerParams = {
   openClaw: ChatState['openClaw']
   openCode: ChatState['openCode']
   openPlugins: ChatState['openPlugins']
+  openConnectors: ChatState['openConnectors']
   openSchedule: ChatState['openSchedule']
   openWorkflow: ChatState['openWorkflow']
   openSddRequirementDraftFromHistory: (draft: SddDraft) => Promise<void>
@@ -53,6 +54,7 @@ export type WorkbenchNavigationController = {
   openCodeMode: () => void
   openDesignMode: () => void
   openPluginsView: () => void
+  openConnectorsView: () => void
   openExtensionsView: () => void
   openScheduleView: () => void
   openThread: (id: string) => void
@@ -85,6 +87,7 @@ export function useWorkbenchNavigationController({
   openClaw,
   openCode,
   openPlugins,
+  openConnectors,
   openSchedule,
   openWorkflow,
   openSddRequirementDraftFromHistory,
@@ -195,6 +198,11 @@ export function useWorkbenchNavigationController({
     openPlugins(sidebarView === 'claw' ? 'claw' : 'chat')
   }, [openPlugins, setConnectPhoneSidebarOpen, sidebarView])
 
+  const openConnectorsView = useCallback((): void => {
+    setConnectPhoneSidebarOpen(false)
+    openConnectors()
+  }, [openConnectors, setConnectPhoneSidebarOpen])
+
   const openExtensionsView = useCallback((): void => {
     setConnectPhoneSidebarOpen(false)
     setRoute('extensions')
@@ -239,6 +247,7 @@ export function useWorkbenchNavigationController({
     openDesignMode,
     openClawMode,
     openPluginsView,
+    openConnectorsView,
     openExtensionsView,
     openScheduleView,
     openThread,

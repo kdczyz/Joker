@@ -1723,7 +1723,7 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
                 {addMenuOpen ? (
                   <div
                     role="menu"
-                    className="absolute left-0 right-0 z-20 mt-1 max-h-[min(60vh,420px)] overflow-y-auto rounded-xl border border-ds-border bg-ds-card p-1 shadow-lg"
+                    className="absolute left-0 right-0 z-20 mt-1 max-h-[min(60vh,420px)] overflow-y-auto rounded-xl border border-ds-border bg-ds-elevated p-1 shadow-lg"
                   >
                     {planAddEntries.length > 0 ? (
                       <>

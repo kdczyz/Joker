@@ -565,6 +565,7 @@
   "switchOff": "끄기",
   "newChat": "새 채팅",
   "newAgent": "신규 에이전트",
+  "connectors": "커넥터",
   "plugins": "플러그인",
   "claw": "전화 연결",
   "schedule": "예약된 작업",
