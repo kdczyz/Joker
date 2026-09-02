@@ -123,10 +123,11 @@ button:disabled { cursor: default; }
 .workComposerFooter button:disabled { color: var(--faint); background: var(--surface-3); }
 .workComposer > small { display: block; margin-top: 5px; color: #4e4e4e; font-size: 7px; text-align: center; }
 
-.drawerLayer { position: fixed; z-index: 80; inset: 0; display: none; }
-.drawerLayer.open { display: block; }
+.drawerLayer { position: fixed; z-index: 80; inset: 0; visibility: hidden; opacity: 0; transition: visibility 0s 0.28s, opacity 0.28s ease; }
+.drawerLayer.open { visibility: visible; opacity: 1; transition: visibility 0s 0s, opacity 0.28s ease; }
 .drawerScrim { position: absolute; z-index: 0; inset: 0; width: 100%; padding: 0; border: 0; background: rgba(0,0,0,.68); }
-.sideDrawer { position: absolute; z-index: 1; top: 0; bottom: 0; left: 0; width: min(86vw, 340px); display: grid; grid-template-rows: auto auto auto 1fr auto; gap: 8px; padding: calc(12px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom)); border-right: 1px solid var(--line); background: #101010; box-shadow: 22px 0 60px rgba(0,0,0,.34); }
+.sideDrawer { position: absolute; z-index: 1; top: 0; bottom: 0; left: 0; width: min(86vw, 340px); display: grid; grid-template-rows: auto auto auto 1fr auto; gap: 8px; padding: calc(12px + env(safe-area-inset-top)) 10px calc(10px + env(safe-area-inset-bottom)); border-right: 1px solid var(--line); background: #101010; box-shadow: 22px 0 60px rgba(0,0,0,.34); transform: translateX(-100%); transition: transform 0.3s cubic-bezier(0.32, 0.72, 0, 1); will-change: transform; }
+.drawerLayer.open .sideDrawer { transform: translateX(0); }
 .sideDrawer > header { height: 42px; display: flex; align-items: center; justify-content: space-between; padding: 0 4px 0 7px; }
 .drawerBrand { display: flex; align-items: center; gap: 9px; }
 .drawerBrand > span { width: 29px; height: 29px; display: grid; place-items: center; border: 1px solid var(--line-strong); border-radius: 7px; color: var(--white); font-size: 8px; font-weight: 850; }
@@ -490,6 +491,16 @@ button:disabled { cursor: default; }
 .providerManagerList strong { font-size: 13px; }
 .providerManagerList small { color: #88888e; font-size: 9px; }
 
+.providerManagerList > div.builtinProvider {
+  border-style: dashed;
+  border-color: rgba(49, 126, 242, .25);
+  background: #f8fbff;
+}
+
+.providerManagerList > div.builtinProvider .workPickerIcon {
+  color: #4a86e8;
+}
+
 .providerManagerList > div > button:last-child {
   width: 48px;
   height: 48px;
@@ -549,6 +560,47 @@ button:disabled { cursor: default; }
 .addProviderButton:disabled,
 .discoverModelsButton:disabled,
 .saveDiscoveredButton:disabled { opacity: .5; }
+
+.workAiSyncBar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 0 4px;
+}
+
+.workAiSyncButton {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 20px;
+  border: 0;
+  border-radius: 16px;
+  color: #fff;
+  background: var(--accent, #3b82f6);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: opacity .15s;
+}
+
+.workAiSyncButton:disabled { opacity: .6; cursor: not-allowed; }
+
+.workAiSyncButton:active:not(:disabled) { opacity: .8; }
+
+.workAiSyncResult {
+  color: #555;
+  font-size: 11px;
+  white-space: nowrap;
+  animation: workSyncFadeIn .2s ease;
+}
+
+@keyframes workSyncFadeIn {
+  from { opacity: 0; transform: translateY(3px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 .formBack {
   display: flex;

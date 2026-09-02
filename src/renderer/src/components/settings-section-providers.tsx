@@ -78,6 +78,8 @@ import {
   type ProviderModelImportResult
 } from './provider-model-import-dialog'
 import { useAuth } from '../auth/AuthGate'
+import { CloudProvidersPanel } from './settings-cloud-providers'
+import type { CloudAiProvider } from '../auth/authClient'
 
 const MODEL_ENDPOINT_FORMAT_LABEL_KEYS: Record<ModelEndpointFormat, string> = {
   chat_completions: 'modelEndpointChatCompletions',
@@ -2413,6 +2415,14 @@ export function ProvidersSettingsSection({ ctx }: { ctx: Record<string, any> }):
             />
           </div>
         }
+      />
+    </SettingsCard>
+    <SettingsCard title="云端同步">
+      <CloudProvidersPanel
+        onImportProvider={handleImportCloudProvider}
+        getLocalProviders={() => modelProviders}
+        authenticated={cloudAuthenticated}
+        onAutoSyncProviders={handleAutoSyncProviders}
       />
     </SettingsCard>
     {pendingImport && pendingImportProvider ? (

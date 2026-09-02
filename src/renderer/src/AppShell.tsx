@@ -9,6 +9,7 @@ import { ProtectedRendererSurface } from './extensions/ProtectedRendererSurface'
 import { ExtensionSettingsServiceProvider } from './extensions/ExtensionSettingsServiceContext'
 import { RuntimeExtensionSettingsService } from './extensions/runtime-extension-settings-service'
 import { DataMigrationActivityIndicator } from './components/DataMigrationActivityIndicator'
+import { RemoteAgentConnector } from './components/RemoteAgentConnector'
 
 const extensionSettingsService = new RuntimeExtensionSettingsService()
 
@@ -74,6 +75,7 @@ export default function AppShell(): React.ReactElement {
           </Suspense>
         </div>
         <ExtensionWorkbenchLifecycle />
+        <RemoteAgentConnector />
       </div>
     </ExtensionSettingsServiceProvider>
   )

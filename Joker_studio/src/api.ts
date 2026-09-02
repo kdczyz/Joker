@@ -1,4 +1,6 @@
 import { Preferences } from "@capacitor/preferences";
+import { CapacitorHttp } from "@capacitor/core";
+import type { HttpResponse } from "@capacitor/core";
 
 export const API_BASE = (import.meta.env.VITE_AUTH_API_URL || "https://lxqandlzy.me").replace(/\/$/, "");
 const TOKEN_KEY = "joker.auth.token.v1";
@@ -267,6 +269,147 @@ export async function streamWorkChat(
   } finally {
     window.clearTimeout(timeout);
     signal?.removeEventListener("abort", abort);
+  }
+}
+
+/**
+ * 直连 OpenCode Zen API 的聊天，绕过 Cloudflare Worker 中转。
+ * 使用 CapacitorHttp.post() 绕过 WebView CORS 限制。
+ * 请求 stream: true 拿到完整 SSE 文本，然后逐条 delta 延迟 emit 模拟流式输出。
+ */
+export async function streamDirectChat(
+  payload: {
+    messages: Array<{ role: "user" | "assistant"; content: string }>;
+    model: string;
+    thinkingMode?: "fast" | "balanced" | "deep";
+  },
+  onEvent: (event: WorkStreamEvent) => void,
+  signal?: AbortSignal
+): Promise<void> {
+  const {
+    BUILTIN_FREE_BASE_URL,
+    BUILTIN_FREE_CHAT_PATH,
+    BUILTIN_FREE_HEADERS,
+  } = await import("./builtin-free");
+
+  const endpoint = `${BUILTIN_FREE_BASE_URL}${BUILTIN_FREE_CHAT_PATH}`;
+  const messages = payload.messages.slice(-20);
+
+  let aborted = false;
+  const onAbort = () => { aborted = true; };
+  signal?.addEventListener("abort", onAbort, { once: true });
+
+  /** 延迟工具，用于逐条 emit 模拟逐字输出 */
+  const delay = (ms: number) => new Promise<void>((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    if (signal) signal.addEventListener("abort", () => { clearTimeout(timer); resolve(); }, { once: true });
+  });
+
+  try {
+    // 1) CapacitorHttp.post() 使用原生 HTTP 绕过 CORS，请求 stream: true 获取完整 SSE
+    const response: HttpResponse = await CapacitorHttp.post({
+      url: endpoint,
+      headers: {
+        "content-type": "application/json",
+        ...BUILTIN_FREE_HEADERS
+      },
+      data: {
+        model: payload.model,
+        messages,
+        stream: true,
+        stream_options: { include_usage: true }
+      },
+      responseType: "text"
+    });
+
+    if (aborted) throw new DOMException("对话已停止", "AbortError");
+
+    const status = response.status;
+    if (status < 200 || status >= 300) {
+      const errData = typeof response.data === "string" ? response.data : "";
+      // 尝试解析 JSON 错误
+      let errorMsg = `请求失败 (${status})`;
+      let errorCode: string | undefined;
+      try {
+        const parsed = JSON.parse(errData) as Record<string, unknown>;
+        const errObj = parsed?.error;
+        if (typeof errObj === "object" && errObj !== null) {
+          const nested = errObj as Record<string, unknown>;
+          if (typeof nested.message === "string") errorMsg = nested.message;
+          if (typeof nested.code === "string") errorCode = nested.code;
+        } else if (typeof errObj === "string") {
+          errorMsg = errObj;
+        }
+      } catch { /* non-JSON error */ }
+      throw new ApiError(errorMsg, status, errorCode);
+    }
+
+    // 2) 解析完整 SSE 文本，收集所有 delta
+    const sseText = typeof response.data === "string" ? response.data : "";
+    const lines = sseText.split("\n");
+    const deltas: string[] = [];
+    let usageEvent: WorkStreamEvent | null = null;
+    let totalLength = 0;
+    const MAX_STREAM_TEXT = 32_000;
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+      if (!trimmed || trimmed === "data: [DONE]") continue;
+      if (!trimmed.startsWith("data: ")) continue;
+      try {
+        const parsed = JSON.parse(trimmed.slice(6)) as Record<string, unknown>;
+        const choices = Array.isArray(parsed.choices) ? parsed.choices : [];
+        const first = typeof choices[0] === "object" && choices[0] !== null ? choices[0] as Record<string, unknown> : undefined;
+        const delta = (first?.delta ?? first?.message) as Record<string, unknown> | undefined;
+        if (!delta) continue;
+
+        const content = typeof delta.content === "string" ? delta.content : undefined;
+        if (content) {
+          totalLength += content.length;
+          if (totalLength > MAX_STREAM_TEXT) {
+            onEvent({ type: "error", error: "AI 回复内容过长" });
+            return;
+          }
+          deltas.push(content);
+        }
+
+        if (parsed.usage && typeof parsed.usage === "object") {
+          const u = parsed.usage as Record<string, unknown>;
+          usageEvent = {
+            type: "done",
+            model: payload.model,
+            usage: {
+              promptTokens: Number(u.prompt_tokens) || 0,
+              completionTokens: Number(u.completion_tokens) || 0,
+              totalTokens: Number(u.total_tokens) || 0
+            }
+          };
+        }
+      } catch { /* ignore unparseable lines */ }
+    }
+
+    // 3) 逐条 emit delta，模拟逐字输出效果
+    for (const chunk of deltas) {
+      if (aborted) throw new DOMException("对话已停止", "AbortError");
+      onEvent({ type: "delta", delta: chunk });
+      await delay(30);
+    }
+
+    // 4) 发送 done 事件
+    if (aborted) throw new DOMException("对话已停止", "AbortError");
+    if (usageEvent) {
+      onEvent(usageEvent);
+    } else {
+      onEvent({ type: "done", model: payload.model });
+    }
+  } catch (reason) {
+    if (reason instanceof ApiError) throw reason;
+    if (reason instanceof DOMException && reason.name === "AbortError") throw reason;
+    if (aborted) throw new DOMException("对话已停止", "AbortError");
+    if (reason instanceof TypeError) throw new Error("无法连接到 AI 服务，请检查网络后重试");
+    throw reason instanceof Error ? reason : new Error("实时回复失败，请稍后重试");
+  } finally {
+    signal?.removeEventListener("abort", onAbort);
   }
 }
 

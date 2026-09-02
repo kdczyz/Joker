@@ -77,6 +77,7 @@ export function CloudProvidersPanel({
   const [busy, setBusy] = useState<string | null>(null)
   const [notice, setNotice] = useState<NoticeState | null>(null)
   const [syncFlash, setSyncFlash] = useState(false)
+  const [syncAllBusy, setSyncAllBusy] = useState(false)
   const syncFlashTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const refresh = useCallback(async (silent = false) => {
@@ -154,6 +155,33 @@ export function CloudProvidersPanel({
       setBusy(null)
     }
   }, [])
+
+  const handleSyncAll = useCallback(async () => {
+    const toSync = getLocalProviders().filter((p) => p.apiKey.trim())
+    if (toSync.length === 0 || syncAllBusy) return
+    setSyncAllBusy(true)
+    setNotice(null)
+    let ok = 0
+    let fail = 0
+    for (const provider of toSync) {
+      try {
+        const next = await saveCloudAiConfig(localProviderToSavePayload(provider))
+        setConfig(next)
+        ok++
+      } catch {
+        fail++
+      }
+    }
+    setSyncAllBusy(false)
+    if (fail === 0 && ok > 0) {
+      setNotice({ tone: 'success', message: `已同步 ${ok} 个接口到云端` })
+      void window.JokerGui.remoteAgent.notifyConfigSync()
+    } else if (ok === 0) {
+      setNotice({ tone: 'error', message: '同步失败，请检查网络' })
+    } else {
+      setNotice({ tone: 'success', message: `${ok} 个成功，${fail} 个失败` })
+    }
+  }, [syncAllBusy])
 
   const handleDelete = useCallback(async (providerId: string, name: string) => {
     setBusy(`del-${providerId}`)
@@ -300,7 +328,18 @@ export function CloudProvidersPanel({
 
       {localProviders.filter((p) => p.apiKey.trim()).length > 0 ? (
         <div className="border-t border-ds-border-muted px-4 py-3">
-          <div className="mb-2 text-[12.5px] font-medium text-ds-muted">将本地接口保存到云端账号</div>
+          <div className="mb-2 flex items-center justify-between">
+            <div className="text-[12.5px] font-medium text-ds-muted">将本地接口保存到云端账号</div>
+            <button
+              type="button"
+              onClick={() => void handleSyncAll()}
+              disabled={syncAllBusy}
+              className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-[11.5px] font-semibold text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+            >
+              {syncAllBusy ? <Loader2 className="h-3 w-3 animate-spin" /> : <Upload className="h-3 w-3" strokeWidth={2} />}
+              {syncAllBusy ? '同步中…' : '一键同步全部'}
+            </button>
+          </div>
           <div className="flex flex-col gap-1.5">
             {localProviders
               .filter((p) => p.apiKey.trim())

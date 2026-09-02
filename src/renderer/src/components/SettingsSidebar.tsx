@@ -21,12 +21,13 @@ import {
   User,
   UsersRound,
   PackageOpen,
-  Smartphone
+  Smartphone,
+  Wifi
 } from 'lucide-react'
 import { useAuth } from '../auth/AuthGate'
 import { SidebarIconButton } from './sidebar/SidebarPrimitives'
 
-type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'claw'
+type SettingsCategory = 'profile' | 'general' | 'providers' | 'speechToText' | 'agents' | 'subagents' | 'archives' | 'permissions' | 'worktree' | 'memory' | 'shortcuts' | 'updates' | 'extensions' | 'dataMigration' | 'webSearch' | 'github' | 'claw' | 'remote'
 
 export function SettingsSidebar({
   category,
@@ -109,6 +110,15 @@ export function SettingsSidebar({
         >
           <Smartphone className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
           {t('claw')}
+        </button>
+        <button
+          type="button"
+          data-cursor-spotlight-target
+          className={catCls('remote')}
+          onClick={() => setCategory('remote')}
+        >
+          <Wifi className="h-4 w-4 shrink-0 opacity-70" strokeWidth={1.75} />
+          {t('remote')}
         </button>
         <button
           type="button"

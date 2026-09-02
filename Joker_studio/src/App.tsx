@@ -49,11 +49,13 @@ import {
   RemoteWorkspaceSession,
   request,
   streamWorkChat,
+  streamDirectChat,
   User,
   writeCachedUser,
   writeLocalState,
   writeToken
 } from "./api";
+import { isBuiltinFreeProvider } from "./builtin-free";
 import { ConnectionState, RemoteController } from "./remote";
 import { requestedImageModel } from "./image-model";
 
@@ -107,6 +109,8 @@ interface ClientSession extends RemoteWorkspaceSession {
 interface MobilePreferences {
   runMode: RunMode;
   thinkingMode: ThinkingMode;
+  defaultProviderId?: string;
+  defaultModel?: string;
 }
 
 interface WorkAiProvider {
@@ -121,6 +125,7 @@ interface WorkAiProvider {
   imageModels?: string[];
   apiKeyPreview?: string;
   updatedAt?: string;
+  builtin?: boolean;
 }
 
 interface WorkAiConfig {
@@ -138,6 +143,7 @@ interface WorkAiConfig {
   providers?: WorkAiProvider[];
   apiKeyPreview?: string;
   updatedAt?: string;
+  builtinId?: string;
 }
 
 interface WorkChatMessage {
@@ -750,6 +756,8 @@ export function App() {
 
   function newWorkSession() {
     const session = createWorkChatSession(preferences.thinkingMode);
+    if (preferences.defaultProviderId) session.providerId = preferences.defaultProviderId;
+    if (preferences.defaultModel) session.model = preferences.defaultModel;
     setWorkSessions((current) => [session, ...current].slice(0, 60));
     setActiveWorkSessionId(session.id);
     navigate("work");
@@ -769,6 +777,7 @@ export function App() {
   function updateWorkSessionOptions(options: { providerId: string; model: string; imageModel?: string; thinkingMode: ThinkingMode }) {
     if (!activeWorkSession) return;
     setWorkSessions((current) => current.map((session) => session.id === activeWorkSession.id ? { ...session, ...options, updatedAt: Date.now() } : session));
+    setPreferences((prev) => ({ ...prev, defaultProviderId: options.providerId, defaultModel: options.model }));
   }
 
   function openCodeMode(keepDrawerOpen: boolean) {
@@ -848,7 +857,7 @@ export function App() {
         <div className="topBarSide">
           {isRootScreen ? <button className="iconButton" onClick={() => setDrawer(true)} aria-label="打开菜单"><Menu size={22} /></button> : <button className="iconButton" onClick={goBack} aria-label="返回"><ArrowLeft size={22} /></button>}
         </div>
-        <div className="topBarTitle">{isModeRoot ? <button className="topModelButton" onClick={() => setModeMenu(!modeMenuOpen)} aria-haspopup="menu" aria-expanded={modeMenuOpen}><strong>{activeScreen === "work" ? "聊天" : "Code"}</strong><ChevronDown className={modeMenuOpen ? "open" : ""} size={14} /></button> : <strong>{title}</strong>}<span className={activeScreen === "work" ? (workConfig.configured ? "online" : "offline") : connection}>{activeScreen === "work" ? (activeWorkSession?.model || workConfig.model || (workConfig.configured ? "云端可用" : "待配置")) : activeScreen === "console" ? currentModel : connectionCopy(connection)}</span></div>
+        <div className="topBarTitle">{isModeRoot ? <button className="topModelButton" onClick={() => setModeMenu(!modeMenuOpen)} aria-haspopup="menu" aria-expanded={modeMenuOpen}><strong>{activeScreen === "work" ? "聊天" : "Code"}</strong><ChevronDown className={modeMenuOpen ? "open" : ""} size={14} /></button> : <strong>{title}</strong>}<span className={activeScreen === "work" ? (workConfig.configured || workConfig.builtinId ? "online" : "offline") : connection}>{activeScreen === "work" ? (activeWorkSession?.model || workConfig.model || (workConfig.configured || workConfig.builtinId ? "云端可用" : "待配置")) : activeScreen === "console" ? currentModel : connectionCopy(connection)}</span></div>
         <div className="topBarSide right">
           {activeScreen === "work" && <button className="iconButton" onClick={newWorkSession} aria-label="新建聊天"><SquarePen size={21} /></button>}
         </div>
@@ -1092,6 +1101,7 @@ function WorkScreen({ config, loadingConfig, messages, initialProviderId, initia
       updatedAt: config.updatedAt
     }];
   }, [config]);
+  const hasBuiltin = Boolean(config.builtinId);
   const initialProvider = providers.find((provider) => provider.id === initialProviderId) || providers.find((provider) => provider.id === config.selectedProviderId) || providers[0];
   const [prompt, setPrompt] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1174,7 +1184,7 @@ function WorkScreen({ config, loadingConfig, messages, initialProviderId, initia
   async function submit(event: FormEvent) {
     event.preventDefault();
     const content = prompt.trim();
-    if (!content || busy || !config.configured || !selectedProvider || !activeModel) return;
+    if (!content || busy || (!config.configured && !hasBuiltin) || !selectedProvider || !activeModel) return;
     const configuredImageModels = [...new Set([selectedProvider.defaultImageModel, ...(selectedProvider.imageModels ?? [])].filter((candidate): candidate is string => Boolean(candidate)))];
     const requestedImage = requestedImageModel(content, configuredImageModels);
     if (requestedImage.reference && !requestedImage.model) {
@@ -1200,14 +1210,20 @@ function WorkScreen({ config, loadingConfig, messages, initialProviderId, initia
     const streamController = new AbortController();
     streamAbortRef.current = streamController;
     try {
-      await streamWorkChat({
-        providerId: selectedProvider.id,
-        model,
-        imageModel: requestImageModel,
-        autoImage: true,
-        thinkingMode,
-        messages: nextMessages.slice(-20).map((message) => ({ role: message.role, content: message.content }))
-      }, (streamEvent) => {
+      const chatMessages = nextMessages.slice(-20).map((message) => ({ role: message.role, content: message.content }));
+      const chatFn = isBuiltinFreeProvider(selectedProvider.id)
+        ? (onEvent: (event: import("./api").WorkStreamEvent) => void, signal?: AbortSignal) =>
+            streamDirectChat({ model, thinkingMode, messages: chatMessages }, onEvent, signal)
+        : (onEvent: (event: import("./api").WorkStreamEvent) => void, signal?: AbortSignal) =>
+            streamWorkChat({
+              providerId: selectedProvider.id,
+              model,
+              imageModel: requestImageModel,
+              autoImage: true,
+              thinkingMode,
+              messages: chatMessages
+            }, onEvent, signal);
+      await chatFn((streamEvent) => {
         if (streamEvent.type === "delta") {
           assistantMessage = { ...assistantMessage, content: assistantMessage.content + streamEvent.delta };
           publish();
@@ -1241,8 +1257,8 @@ function WorkScreen({ config, loadingConfig, messages, initialProviderId, initia
 
   return <section className="workPage">
     <div className="workTimeline" ref={timelineRef}>
-      {!config.configured ? <EmptyState icon={loadingConfig ? <LoaderCircle className="spin" size={28} /> : <KeyRound size={28} />} title={loadingConfig ? "正在读取聊天配置" : "配置云端 AI"} copy="保存 OpenAI 兼容接口后，即使电脑不在线也可以继续聊天。" action={loadingConfig ? undefined : "前往设置"} onAction={loadingConfig ? undefined : onConfigure} />
-        : messages.length === 0 ? <div className="workWelcome"><div><span>RC</span></div><h1>有什么可以帮忙的？</h1><p>选择接口和模型后，回复会实时显示。</p><div className="suggestionChips">{["整理今天的工作计划", "总结一段文字", "帮我分析一个问题"].map((text, index) => <button key={text} onClick={() => setPrompt(text)}><span>0{index + 1}</span>{text}<ChevronRight size={15} /></button>)}</div></div>
+      {!config.configured && !hasBuiltin ? <EmptyState icon={loadingConfig ? <LoaderCircle className="spin" size={28} /> : <KeyRound size={28} />} title={loadingConfig ? "正在读取聊天配置" : "配置云端 AI"} copy="保存 OpenAI 兼容接口后，即使电脑不在线也可以继续聊天。" action={loadingConfig ? undefined : "前往设置"} onAction={loadingConfig ? undefined : onConfigure} />
+        : messages.length === 0 ? <div className="workWelcome"><div><span>RC</span></div><h1>有什么可以帮忙的？</h1><p>{hasBuiltin && !providers.some((p) => !p.builtin) ? "内置免费模型已就绪，回复会实时显示。" : "选择接口和模型后，回复会实时显示。"}</p><div className="suggestionChips">{["整理今天的工作计划", "总结一段文字", "帮我分析一个问题"].map((text, index) => <button key={text} onClick={() => setPrompt(text)}><span>0{index + 1}</span>{text}<ChevronRight size={15} /></button>)}</div></div>
           : <div className="workMessages">{messages.map((message, index) => {
             const streaming = busy && message.role === "assistant" && index === messages.length - 1;
             return <div className={`workMessage ${message.role}`} key={message.id}><div className="bubble">{message.images?.length ? <div className="workImageGrid">{message.images.map((generated) => <button type="button" key={generated.id} aria-label={`打开图片 ${generated.name}`} onClick={() => setPreviewImage(generated)}><img src={generated.dataUrl || generated.url} alt={generated.revisedPrompt || generated.name || "AI 生成图片"} loading="lazy" /></button>)}</div> : null}{message.content ? <p>{message.content}</p> : streaming ? <div className="typing"><i /><i /><i /></div> : null}{message.role === "assistant" && <footer>{streaming ? <LoaderCircle className="spin" size={11} /> : message.images?.length ? <Image size={11} /> : <Cloud size={11} />}{streaming ? "正在处理请求" : message.model || model}{message.usage?.totalTokens ? ` · ${message.usage.totalTokens.toLocaleString()} tokens` : ""}</footer>}</div></div>;
@@ -1251,13 +1267,13 @@ function WorkScreen({ config, loadingConfig, messages, initialProviderId, initia
     <form className="workComposer" onSubmit={submit}>
       <div className="workComposerTools">
         <div className="workChatControls">
-          <button type="button" className="compactSelect workUnifiedModelButton" aria-label="选择接口或模型" aria-expanded={picker === "provider" || picker === "model"} onClick={() => onPickerChange(picker === "provider" || picker === "model" ? null : "provider")} disabled={!config.configured || providers.length === 0}><Bot size={13} /><span>{activeModel || "选择模型"}</span><ChevronDown size={11} /></button>
-          <button type="button" className="compactSelect workThinkingButton" aria-label="选择思考强度" aria-expanded={picker === "thinking"} onClick={() => onPickerChange("thinking")} disabled={!config.configured}><Brain size={13} /><span>{THINKING_MODES.find((option) => option.id === thinkingMode)?.label}</span><ChevronDown size={11} /></button>
+          <button type="button" className="compactSelect workUnifiedModelButton" aria-label="选择接口或模型" aria-expanded={picker === "provider" || picker === "model"} onClick={() => onPickerChange(picker === "provider" || picker === "model" ? null : "provider")} disabled={(!config.configured && !hasBuiltin) || providers.length === 0}><Bot size={13} /><span>{activeModel || "选择模型"}</span><ChevronDown size={11} /></button>
+          <button type="button" className="compactSelect workThinkingButton" aria-label="选择思考强度" aria-expanded={picker === "thinking"} onClick={() => onPickerChange("thinking")} disabled={!config.configured && !hasBuiltin}><Brain size={13} /><span>{THINKING_MODES.find((option) => option.id === thinkingMode)?.label}</span><ChevronDown size={11} /></button>
         </div>
       </div>
       <div className="workComposerShell">
-        <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} rows={1} placeholder={!config.configured ? "请先配置聊天 AI" : "发送消息"} disabled={!config.configured || busy} />
-        <button type={busy ? "button" : "submit"} className={`workComposerSend ${busy ? "workStopButton" : ""}`} aria-label={busy ? "停止生成" : "发送消息"} onClick={busy ? stopResponse : undefined} disabled={!busy && (!config.configured || !prompt.trim() || !selectedProvider || !activeModel)}>{busy ? <Square size={15} fill="currentColor" /> : <Send size={18} />}</button>
+        <textarea value={prompt} onChange={(event) => setPrompt(event.target.value)} rows={1} placeholder={(!config.configured && !hasBuiltin) ? "请先配置聊天 AI" : "发送消息"} disabled={(!config.configured && !hasBuiltin) || busy} />
+        <button type={busy ? "button" : "submit"} className={`workComposerSend ${busy ? "workStopButton" : ""}`} aria-label={busy ? "停止生成" : "发送消息"} onClick={busy ? stopResponse : undefined} disabled={!busy && ((!config.configured && !hasBuiltin) || !prompt.trim() || !selectedProvider || !activeModel)}>{busy ? <Square size={15} fill="currentColor" /> : <Send size={18} />}</button>
       </div>
       <small>{busy ? "点击停止按钮可打断本次回复" : "图片需求会自动调用当前接口的生图模型。"}</small>
     </form>
@@ -1320,16 +1336,77 @@ function WorkAiSettings({ config, onChange }: { config: WorkAiConfig; onChange: 
   }] : [];
   const currentProvider = providers.find((provider) => provider.id === config.selectedProviderId) || providers[0];
   const [open, setOpen] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncResult, setSyncResult] = useState<string>("");
 
   function closeManager() {
     setOpen(false);
+    setSyncResult("");
+  }
+
+  async function syncToCloud() {
+    if (syncing || providers.length === 0) return;
+    const syncable = providers.filter((provider) => !provider.builtin);
+    if (syncable.length === 0) { setSyncResult("没有需要同步的接口"); setTimeout(() => setSyncResult(""), 3000); return; }
+    setSyncing(true);
+    setSyncResult("");
+    let ok = 0;
+    let fail = 0;
+    for (const provider of syncable) {
+      try {
+        await request<WorkAiConfig>("/v1/work/ai-config", {
+          method: "PUT",
+          body: JSON.stringify({
+            providerId: provider.id,
+            displayName: provider.displayName,
+            baseUrl: provider.baseUrl,
+            chatCompletionsPath: provider.chatCompletionsPath,
+            imageGenerationPath: provider.imageGenerationPath,
+            model: provider.model,
+            models: provider.models,
+            defaultImageModel: provider.defaultImageModel,
+            imageModels: provider.imageModels ?? []
+          })
+        });
+        ok++;
+      } catch {
+        fail++;
+      }
+    }
+    setSyncing(false);
+    if (fail === 0 && ok > 0) {
+      setSyncResult(`已同步 ${ok} 个接口到云端`);
+      try {
+        const fresh = await request<WorkAiConfig>("/v1/work/ai-config");
+        onChange(fresh);
+      } catch { /* ignore */ }
+    } else if (ok === 0) {
+      setSyncResult(`同步失败，请检查网络`);
+    } else {
+      setSyncResult(`${ok} 个成功，${fail} 个失败`);
+    }
+    setTimeout(() => setSyncResult(""), 4000);
+  }
+
+  function renderProviderList() {
+    return providers.map((provider) => (
+      <div key={provider.id} className={provider.builtin ? "builtinProvider" : undefined}>
+        <span className="providerManagerName"><span className="providerManagerIcon"><Bot size={18} /></span><span><strong>{provider.displayName}</strong><small>{provider.models.length} 个模型 · {serviceHost(provider.baseUrl)}</small></span></span>
+        <span className="providerManagerBadge"><span title={provider.apiKeyPreview || "无密钥"}>{provider.apiKeyPreview || "—"}</span></span>
+      </div>
+    ));
+  }
+
+  function renderSyncBar() {
+    return <div className="workSyncBar"><button type="button" className="syncButton" disabled={syncing} onClick={syncToCloud}><LoaderCircle className={syncing ? "spin" : ""} size={15} /><span>{syncing ? "同步中" : "同步到云端"}</span></button>{syncResult && <span className="syncResult"><Check size={14} />{syncResult}</span>}</div>;
   }
 
   return <section className="settingsSection workAiSettings"><div className="settingsHeading"><span>聊天 AI</span><small>{providers.length} 个接口</small></div>
     <button type="button" className="workAiEntry" onClick={() => setOpen(true)}><span className="workAiEntryIcon"><Cloud size={20} /></span><span><strong>{currentProvider?.displayName || "等待电脑端配置"}</strong><small>{currentProvider ? `${currentProvider.models.length} 个文本 · ${currentProvider.imageModels?.length || 0} 个图片模型 · ${serviceHost(currentProvider.baseUrl)}` : "请在电脑端 AI 接口中添加"}</small></span><ChevronRight size={18} /></button>
     <div className="workAiSecurity"><LockKeyhole size={15} /><span>与电脑端共用同一套接口；配置变更会自动同步，密钥仅在服务器端加密使用。</span></div>
     {open && <div className="workAiManagerLayer"><button type="button" className="workPickerScrim" aria-label="关闭接口管理" onClick={closeManager} /><section className="workAiManager" role="dialog" aria-modal="true" aria-label="AI 接口列表"><header><div><p className="overline">SHARED AI</p><h2>接口列表</h2><span>与电脑端 AI 接口共用同一套配置</span></div><button type="button" onClick={closeManager} aria-label="关闭"><X size={19} /></button></header>
-      <div className="providerManagerList sharedProviderList">{providers.map((provider) => <div className={provider.id === config.selectedProviderId ? "selected" : ""} key={provider.id}><button type="button" onClick={() => onChange({ ...config, selectedProviderId: provider.id, ...provider })}><span className="workPickerIcon"><Cloud size={18} /></span><span><strong>{provider.displayName}</strong><small>{provider.models.length} 个文本 · {provider.imageModels?.length || 0} 个图片模型 · {serviceHost(provider.baseUrl)}</small></span>{provider.id === config.selectedProviderId && <Check size={16} />}</button></div>)}{providers.length === 0 && <div className="managerEmpty"><KeyRound size={25} /><strong>电脑端还没有接口</strong><span>请在电脑端「AI 接口」中添加，保存后会自动同步到这里。</span></div>}</div>
+      <div className="providerManagerList sharedProviderList">{renderProviderList()}{providers.length === 0 && <div className="managerEmpty"><KeyRound size={25} /><strong>电脑端还没有接口</strong><span>请在电脑端「AI 接口」中添加，保存后会自动同步到这里。</span></div>}</div>
+      {renderSyncBar()}
     </section></div>}
   </section>;
 }

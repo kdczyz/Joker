@@ -1,7 +1,8 @@
 import { AuthenticatedUser, authenticate } from "./auth";
 import { corsHeaders, HttpError, isObject, json, readJsonObject, requiredString } from "./http";
 
-type WorkEnv = Env & { AI_CONFIG_SECRET?: string };
+type WorkEnv = Env & { AI_CONFIG_SECRET?: string; BUILTIN_FREE_PROVIDER_URL?: string; BUILTIN_FREE_PROVIDER_KEY?: string; BUILTIN_FREE_PROVIDER_MODEL?: string; BUILTIN_FREE_PROVIDER_MODELS?: string; BUILTIN_FREE_PROVIDER_NAME?: string; };
+const BUILTIN_FREE_PROVIDER_ID = "__joker_builtin_free__";
 const MAX_UPSTREAM_JSON_BYTES = 2 * 1024 * 1024;
 const MAX_IMAGE_JSON_BYTES = 14 * 1024 * 1024;
 const MAX_STREAM_TEXT_LENGTH = 32_000;
@@ -77,6 +78,17 @@ async function decryptApiKey(row: WorkAiProviderRow, env: WorkEnv): Promise<stri
     return new TextDecoder().decode(decrypted);
   } catch {
     throw new HttpError(503, "AI 配置无法解密，请重新保存 API Key", "ai_config_decrypt_failed");
+  }
+}
+
+/** Detect Codex/ChatGPT subscription OAuth credential blobs. */
+function isCodexOAuthCredential(value: string): boolean {
+  if (!value.startsWith('{')) return false;
+  try {
+    const parsed = JSON.parse(value) as Record<string, unknown>;
+    return parsed.kind === 'codex-oauth';
+  } catch {
+    return false;
   }
 }
 
@@ -205,7 +217,7 @@ function rowImageModels(row: WorkAiProviderRow): string[] {
   return [...new Set([...configured, ...inferWorkImageModels(rowModels(row))])];
 }
 
-function publicProvider(row: WorkAiProviderRow) {
+function publicProvider(row: WorkAiProviderRow, builtin?: boolean) {
   const imageModels = rowImageModels(row);
   const models = rowModels(row).filter((model) => !imageModels.includes(model));
   return {
@@ -219,18 +231,105 @@ function publicProvider(row: WorkAiProviderRow) {
     defaultImageModel: row.default_image_model ?? imageModels[0],
     imageModels,
     apiKeyPreview: row.api_key_preview,
-    updatedAt: new Date(row.updated_at).toISOString()
+    updatedAt: new Date(row.updated_at).toISOString(),
+    ...(builtin ? { builtin: true as const } : {})
   };
 }
 
-function publicConfig(rows: WorkAiProviderRow[], selectedProviderId?: string) {
-  if (rows.length === 0) return { configured: false, providers: [] };
-  const selected = rows.find((row) => row.provider_id === selectedProviderId) ?? rows[0]!;
+/**
+ * OpenCode Zen free-tier models. Desktop client identifies itself with special
+ * headers so requests are bucketed to the free desktop tier instead of the
+ * anonymous "Console" bucket.
+ */
+const OPENCODE_ZEN_URL = "https://opencode.ai/zen/v1";
+const OPENCODE_ZEN_MODELS = [
+  "big-pickle",
+  "hy3-free",
+  "ling-3.0-flash-fin-free",
+  "mimo-v2.5-free",
+  "muse-spark-1.2-contributor-free",
+  "nemotron-3-ultra-free",
+  "nemotron-3.5-lightning-free"
+];
+/**
+ * Send `x-opencode-client: "desktop"` so the upstream free-tier bucket
+ * matches the desktop client quota instead of the stricter "mobile" or
+ * anonymous "Console" buckets that trigger 429 rate-limit errors.
+ */
+const OPENCODE_ZEN_HEADERS: Record<string, string> = {
+  "user-agent": "opencode/1.2.0",
+  "x-opencode-client": "desktop"
+};
+
+function builtinFreeProvider(env: WorkEnv): { id: string; displayName: string; baseUrl: string; chatCompletionsPath: string; model: string; models: string[]; apiKey: string; upstreamHeaders?: Record<string, string> } | null {
+  // Explicit env vars override the built-in default.
+  const baseUrl = env.BUILTIN_FREE_PROVIDER_URL || OPENCODE_ZEN_URL;
+  const apiKey = env.BUILTIN_FREE_PROVIDER_KEY || "";
+  const model = env.BUILTIN_FREE_PROVIDER_MODEL || OPENCODE_ZEN_MODELS[0] || "big-pickle";
+  const extraModels = env.BUILTIN_FREE_PROVIDER_MODELS
+    ? env.BUILTIN_FREE_PROVIDER_MODELS.split(",").map((m) => m.trim()).filter((m) => m.length > 0)
+    : [];
+  const models = [...new Set(extraModels.length > 0 ? extraModels : OPENCODE_ZEN_MODELS)];
+  const isZen = baseUrl === OPENCODE_ZEN_URL || baseUrl === OPENCODE_ZEN_URL.replace(/\/+$/, "");
+  return {
+    id: BUILTIN_FREE_PROVIDER_ID,
+    displayName: env.BUILTIN_FREE_PROVIDER_NAME || "Joker Free",
+    baseUrl,
+    chatCompletionsPath: "/chat/completions",
+    model,
+    models,
+    apiKey,
+    ...(isZen ? { upstreamHeaders: OPENCODE_ZEN_HEADERS } : {})
+  };
+}
+
+function builtinFreeProviderPublic(env: WorkEnv) {
+  const provider = builtinFreeProvider(env);
+  if (!provider) return undefined;
+  return {
+    id: provider.id,
+    displayName: provider.displayName,
+    baseUrl: provider.baseUrl,
+    chatCompletionsPath: provider.chatCompletionsPath,
+    model: provider.model,
+    models: provider.models,
+    apiKeyPreview: "\u2022\u2022\u2022\u2022built-in",
+    updatedAt: new Date().toISOString(),
+    builtin: true as const
+  };
+}
+
+function publicConfig(rows: WorkAiProviderRow[], selectedProviderId?: string, env?: WorkEnv) {
+  const builtin = env ? builtinFreeProviderPublic(env) : undefined;
+  const builtinRow: WorkAiProviderRow | undefined = builtin ? {
+    user_id: "",
+    provider_id: builtin.id,
+    display_name: builtin.displayName,
+    base_url: builtin.baseUrl,
+    chat_completions_path: builtin.chatCompletionsPath,
+    image_generation_path: "/images/generations",
+    model: builtin.model,
+    models_json: JSON.stringify(builtin.models),
+    default_image_model: null,
+    image_models_json: "[]",
+    api_key_ciphertext: "",
+    api_key_iv: "",
+    api_key_preview: builtin.apiKeyPreview,
+    created_at: Date.now(),
+    updated_at: Date.now()
+  } : undefined;
+
+  const allRows = builtinRow ? [builtinRow, ...rows] : rows;
+  if (allRows.length === 0) return { configured: false, providers: [] };
+  const builtinId = builtin?.id;
+  const selected = builtin && selectedProviderId === builtin.id ? builtinRow
+    : allRows.find((row) => row.provider_id === selectedProviderId) ?? allRows[0]!;
   return {
     configured: true,
-    selectedProviderId: selected.provider_id,
-    ...publicProvider(selected),
-    providers: rows.map(publicProvider)
+    selectedProviderId: selected!.provider_id,
+    ...publicProvider(selected!, builtinId !== undefined && selected!.provider_id === builtinId),
+    builtinId,
+    providers: allRows.map((row) => publicProvider(row, builtinId !== undefined && row.provider_id === builtinId))
   };
 }
 
@@ -265,7 +364,7 @@ async function authenticated(request: Request, env: WorkEnv): Promise<Authentica
 export async function getWorkAiConfig(request: Request, env: WorkEnv): Promise<Response> {
   const auth = await authenticated(request, env);
   const selectedProviderId = new URL(request.url).searchParams.get("providerId") || undefined;
-  return json(publicConfig(await providersForUser(env.DB, auth.user.id), selectedProviderId));
+  return json(publicConfig(await providersForUser(env.DB, auth.user.id), selectedProviderId, env));
 }
 
 export async function discoverWorkAiModels(request: Request, env: WorkEnv): Promise<Response> {
@@ -343,8 +442,9 @@ export async function saveWorkAiConfig(request: Request, env: WorkEnv): Promise<
   const defaultImageModel = configuredDefaultImageModel || imageModels[0];
   const current = await providerForUser(env.DB, auth.user.id, providerId);
   const suppliedKey = typeof body.apiKey === "string" ? body.apiKey.trim() : "";
+  const isCodexOAuthKey = isCodexOAuthCredential(suppliedKey);
   if (!current && suppliedKey.length < 8) throw new HttpError(400, "首次配置必须填写 API Key", "api_key_required");
-  if (suppliedKey.length > 512) throw new HttpError(400, "API Key 格式不正确", "invalid_api_key");
+  if (!isCodexOAuthKey && suppliedKey.length > 512) throw new HttpError(400, "API Key 格式不正确", "invalid_api_key");
   const encrypted = suppliedKey ? await encryptApiKey(suppliedKey, env) : undefined;
   const now = Date.now();
   await env.DB.prepare(`
@@ -382,7 +482,7 @@ export async function saveWorkAiConfig(request: Request, env: WorkEnv): Promise<
     current?.created_at ?? now,
     now
   ).run();
-  return json(publicConfig(await providersForUser(env.DB, auth.user.id), providerId));
+  return json(publicConfig(await providersForUser(env.DB, auth.user.id), providerId, env));
 }
 
 export async function deleteWorkAiConfig(request: Request, env: WorkEnv): Promise<Response> {
@@ -395,7 +495,7 @@ export async function deleteWorkAiConfig(request: Request, env: WorkEnv): Promis
     await env.DB.prepare("DELETE FROM work_ai_providers WHERE user_id = ?").bind(auth.user.id).run();
     await env.DB.prepare("DELETE FROM work_ai_configs WHERE user_id = ?").bind(auth.user.id).run();
   }
-  return json(publicConfig(await providersForUser(env.DB, auth.user.id)));
+  return json(publicConfig(await providersForUser(env.DB, auth.user.id), undefined, env));
 }
 
 function parseMessages(value: unknown): WorkMessage[] {
@@ -654,19 +754,53 @@ function relayCompletionStream(upstream: Response, fallbackModel: string): Respo
   }), { headers: streamHeaders() });
 }
 
+function resolveWorkConfig(providerId: string | undefined, userId: string, db: D1Database, env: WorkEnv): Promise<{ config: WorkAiProviderRow; apiKey: string; upstreamHeaders?: Record<string, string> } | { builtin: true; config: WorkAiProviderRow; apiKey: string; upstreamHeaders?: Record<string, string> }> {
+  if (providerId === BUILTIN_FREE_PROVIDER_ID) {
+    const builtin = builtinFreeProvider(env);
+    if (!builtin) throw new HttpError(404, "内置免费接口不可用", "builtin_not_available");
+    return Promise.resolve({
+      builtin: true,
+      config: {
+        user_id: userId,
+        provider_id: builtin.id,
+        display_name: builtin.displayName,
+        base_url: builtin.baseUrl,
+        chat_completions_path: builtin.chatCompletionsPath,
+        image_generation_path: "/images/generations",
+        model: builtin.model,
+        models_json: JSON.stringify(builtin.models),
+        default_image_model: null,
+        image_models_json: "[]",
+        api_key_ciphertext: "",
+        api_key_iv: "",
+        api_key_preview: "\u2022\u2022\u2022\u2022built-in",
+        created_at: Date.now(),
+        updated_at: Date.now()
+      },
+      apiKey: builtin.apiKey,
+      upstreamHeaders: builtin.upstreamHeaders
+    });
+  }
+  return providerForUser(db, userId, providerId).then(async (row) => {
+    if (!row) throw new HttpError(409, providerId ? "所选 AI 接口不存在" : "请先在设置中配置聊天 AI 接口", "work_ai_not_configured");
+    return { config: row, apiKey: await decryptApiKey(row, env) };
+  });
+}
+
 export async function workChat(request: Request, env: WorkEnv): Promise<Response> {
   const auth = await authenticated(request, env);
   const body = await readJsonObject(request);
   const messages = parseMessages(body.messages);
   const providerId = typeof body.providerId === "string" && body.providerId.trim() ? normalizedProviderId(body.providerId) : undefined;
-  const config = await providerForUser(env.DB, auth.user.id, providerId);
-  if (!config) throw new HttpError(409, providerId ? "所选 AI 接口不存在" : "请先在设置中配置聊天 AI 接口", "work_ai_not_configured");
+  const resolved = await resolveWorkConfig(providerId, auth.user.id, env.DB, env);
+  const config = resolved.config;
+  const apiKey = resolved.apiKey;
+  const upstreamHeaders = resolved.upstreamHeaders;
   const selectedModel = typeof body.model === "string" && body.model.trim()
     ? requiredString(body.model, "模型", { max: 160 })
     : config.model;
   const wantsStream = body.stream === true;
   const selectedThinkingMode = thinkingMode(body.thinkingMode);
-  const apiKey = await decryptApiKey(config, env);
   const latestUserPrompt = [...messages].reverse().find((message) => message.role === "user")?.content || "";
   if (body.autoImage === true && shouldGenerateWorkImage(latestUserPrompt)) {
     const requestedImage = requestedWorkImageModel(latestUserPrompt, rowImageModels(config));
@@ -685,7 +819,7 @@ export async function workChat(request: Request, env: WorkEnv): Promise<Response
   const controls = reasoningControls(config.base_url, selectedModel, selectedThinkingMode);
   const fetchUpstream = (payload: Record<string, unknown>) => fetch(endpoint, {
     method: "POST",
-    headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json", accept: wantsStream ? "text/event-stream" : "application/json" },
+    headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json", accept: wantsStream ? "text/event-stream" : "application/json", ...upstreamHeaders },
     body: JSON.stringify(payload),
     signal: AbortSignal.timeout(wantsStream ? 300_000 : 90_000)
   });
@@ -799,8 +933,6 @@ export async function workGenerateImage(request: Request, env: WorkEnv): Promise
   const auth = await authenticated(request, env);
   const body = await readJsonObject(request);
   const providerId = typeof body.providerId === "string" && body.providerId.trim() ? normalizedProviderId(body.providerId) : undefined;
-  const config = await providerForUser(env.DB, auth.user.id, providerId);
-  if (!config) throw new HttpError(409, providerId ? "所选 AI 接口不存在" : "请先配置图片 AI 接口", "work_ai_not_configured");
-  const apiKey = await decryptApiKey(config, env);
-  return json(await generateImagesForProvider(config, apiKey, body));
+  const resolved = await resolveWorkConfig(providerId, auth.user.id, env.DB, env);
+  return json(await generateImagesForProvider(resolved.config, resolved.apiKey, body));
 }

@@ -107,6 +107,7 @@ export type SettingsRouteSection =
   | 'shortcuts'
   | 'easterEgg'
   | 'claw'
+  | 'remote'
   | 'updates'
   | 'dataMigration'
 export type AppRoute = 'chat' | 'design' | 'settings' | 'plugins' | 'extensions' | 'claw' | 'schedule' | 'workflow' | 'fileBrowser' | 'connectors'
